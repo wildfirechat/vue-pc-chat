@@ -27,7 +27,7 @@
 
       <a
           class="button"
-          href="https://github.com/wildfirechat/vue-chat"
+          href="https://github.com/wildfirechat/vue-pc-chat"
           target="_blank">
         Star on Github
         <i class="icon-ion-social-github"/>

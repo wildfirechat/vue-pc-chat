@@ -102,6 +102,7 @@ let store = {
             this._loadFriendList();
             this._loadFriendRequest();
             this._loadSelfUserInfo();
+            this._loadDefaultConversationList();
             conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
         });
 

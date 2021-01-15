@@ -26,14 +26,15 @@ export function connect(userId, token) {
 }
 
 // pc
-export const remote = null;
-export const ipcRenderer = null;
-export const ipcMain = null;
-export const fs = null;
-export const currentWindow = null;
-export const BrowserWindow = null;
-export const AppPath = null;
-export const desktopCapturer = null;
+export const remote = require('electron').remote;
+export const ipcRenderer = require('electron').ipcRenderer;
+export const ipcMain = require('electron').ipcMain;
+// export const fs = require('file-system').fs;
+export const currentWindow = require('electron').remote.getCurrentWindow();
+export const BrowserWindow = require('electron').remote.BrowserWindow;
+export const AppPath = require('electron').remote.app.getAppPath();
+export const desktopCapturer = require('electron').desktopCapturer;
 
 // for web
-export const PostMessageEventEmitter = require('./windowEmitter');
+
+export const PostMessageEventEmitter = null;

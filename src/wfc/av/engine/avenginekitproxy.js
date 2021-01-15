@@ -101,8 +101,10 @@ export class AvEngineKitProxy {
         }
         wfc.sendConversationMessage(msg.conversation, content, msg.toUsers, (messageId, timestamp) => {
 
+            // do nothing
         }, (uploaded, total) => {
 
+            // do nothing
         }, (messageUid, timestamp) => {
             this.emitToVoip('sendMessageResult', {
                 error: 0,
@@ -353,7 +355,16 @@ export class AvEngineKitProxy {
                 this.onVoipWindowClose();
             });
 
-            win.loadURL(path.join('file://', AppPath, 'src/index.html?' + type));
+            // win.loadURL(path.join('file://', AppPath, 'src/index.html?' + type));
+            let hash = window.location.hash;
+            let url = window.location.origin;
+            if (hash) {
+                url += "/#/voip"
+            } else {
+                url += "/voip"
+            }
+            url += '/' + type
+            win.loadURL(url);
             win.show();
         } else {
             console.log('location', window.location);
@@ -377,6 +388,8 @@ export class AvEngineKitProxy {
                 case 'conference':
                     width = 600
                     height = 800;
+                    break;
+                default:
                     break;
             }
             let win = window.open(url, '_blank', `width=${width},height=${height},left=200,top=200,toolbar=no,menubar=no,resizable=no,location=no, maximizable`);
