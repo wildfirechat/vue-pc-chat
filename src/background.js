@@ -15,7 +15,6 @@ protocol.registerSchemesAsPrivileged([
 async function createWindow() {
   global.sharedObj = {proto: proto};
   // global.sharedObj = {proto: require('../marswrapper.node')};
-  console.log('.node loaded', global.sharedObj)
   // Create the browser window.
   const win = new BrowserWindow({
     width: 800,

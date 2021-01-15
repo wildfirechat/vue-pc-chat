@@ -11,6 +11,9 @@ module.exports = {
     // },
 
     pluginOptions: {
+        chainWebpack: config => {
+            config.module.rules.delete('eslint');
+        },
         electronBuilder: {
             chainWebpackMainProcess: (config) => {
                 // Chain webpack config for electron main process only
