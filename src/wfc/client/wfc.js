@@ -1442,7 +1442,7 @@ export class WfcManager {
      */
     init(args = []) {
         impl.init(args);
-        avenginekit.setup(self);
+        // avenginekit.setup(self);
     }
 
     /**

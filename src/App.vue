@@ -76,10 +76,10 @@ export default {
 
 :root {
   --main-border-radius: 10px;
-  --main-margin-left: 80px;
-  --main-margin-right: 80px;
-  --main-margin-top: 50px;
-  --main-margin-bottom: 50px;
+  --main-margin-left: 0px;
+  --main-margin-right: 0px;
+  --main-margin-top: 0px;
+  --main-margin-bottom: 0px;
   --tippy-right: 0px;
 }
 

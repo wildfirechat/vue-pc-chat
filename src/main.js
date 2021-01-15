@@ -13,11 +13,15 @@ import './wfc.css'
 import './assets/fonts/icomoon/style.css'
 import store from "@/store";
 import visibility from 'vue-visibility-change';
+import {remote} from "electron";
+
+var sharedObj = remote.getGlobal('sharedObj');
 
 Vue.config.productionTip = false
 
 // init
-wfc.init()
+console.log('heooo', sharedObj)
+wfc.init([sharedObj.proto])
 store.init();
 console.log('init wfc', wfc)
 // init end
