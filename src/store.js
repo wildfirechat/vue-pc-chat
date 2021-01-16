@@ -224,6 +224,7 @@ let store = {
                 return;
             }
             if (!conversationState.currentConversationInfo || !message.conversation.equal(conversationState.currentConversationInfo.conversation)) {
+                console.log('not current conv')
                 return;
             }
             let length = conversationState.currentConversationMessageList.length;
@@ -405,6 +406,7 @@ let store = {
     },
 
     async sendFile(conversation, file) {
+        console.log('send file', file)
         let msg = new Message();
         msg.conversation = conversation;
 

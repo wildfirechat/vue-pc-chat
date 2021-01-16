@@ -203,7 +203,6 @@ export default {
   mounted() {
     // 必须
     avenginekit.setup();
-    console.log('xxoo', this, this.$refs)
     this.setupSessionCallback();
   },
 

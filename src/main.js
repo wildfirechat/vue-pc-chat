@@ -20,10 +20,17 @@ var sharedObj = remote.getGlobal('sharedObj');
 Vue.config.productionTip = false
 
 // init
-console.log('heooo', sharedObj)
-wfc.init([sharedObj.proto])
-store.init();
-console.log('init wfc', wfc)
+{
+    // sharedObj 在voip窗口也存在，奇怪
+    if(window.location.href.indexOf('voip') < 0){
+        console.log('init wfc')
+        wfc.init([sharedObj.proto])
+        store.init();
+        console.log('init wfc', wfc)
+    }else {
+        console.log('voip window, not init wfc')
+    }
+}
 // init end
 
 Vue.use(VueRouter)

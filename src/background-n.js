@@ -2,28 +2,24 @@ import fs from 'fs';
 import tmp from 'tmp';
 import {
     app,
-    powerMonitor,
     BrowserWindow,
-    Tray,
-    Menu,
-    ipcMain,
     clipboard,
-    shell,
-    nativeImage,
     dialog,
     globalShortcut,
+    ipcMain,
+    Menu,
+    powerMonitor, protocol,
     session,
+    shell,
+    Tray,
 } from 'electron';
 // import debug from 'electron-debug'
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
-import AutoLaunch from 'auto-launch';
-import {autoUpdater} from 'electron-updater';
-import axios from 'axios';
 import i18n from 'i18n';
-// import proto from './marswrapper.node';
+import proto from '../marswrapper.node';
 
-import pkg from './package.json';
+import pkg from '../package.json';
 import Badge from 'electron-windows-badge';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 
@@ -36,7 +32,7 @@ i18n.configure({
 });
 Locales.setLocale('ch');
 
-global.sharedObj = {proto: require('./marswrapper.node')};
+global.sharedObj = {proto: proto};
 
 let forceQuit = false;
 let downloading = false;
@@ -388,7 +384,6 @@ function checkForUpdates() {
         return;
     }
 
-    autoUpdater.checkForUpdates();
 }
 
 function updateTray(unread = 0) {
@@ -409,9 +404,9 @@ function updateTray(unread = 0) {
         let contextmenu = Menu.buildFromTemplate(trayMenu);
         let icon;
         if (!isOsx) {
-            icon = `${__dirname}/src/assets/images/icon.png`;
+            icon = `${__dirname}/assets/images/icon.png`;
         } else {
-            icon = `${__dirname}/src/assets/images/tray.png`;
+            icon = `${__dirname}/assets/images/tray.png`;
         }
 
 
@@ -447,29 +442,6 @@ function updateTray(unread = 0) {
 
 }
 
-async function autostart() {
-    var launcher = new AutoLaunch({
-        name: 'wildfireChat',
-        path: '/Applications/wildfirechat.app',
-    });
-
-    if (settings.startup) {
-        if (!isOsx) {
-            mainWindow.webContents.send('show-errors', {
-                message: 'Currently only supports the OSX.'
-            });
-            return;
-        }
-
-        launcher.enable()
-            .catch(ex => {
-                console.error(ex);
-            });
-    } else {
-        launcher.disable();
-    }
-}
-
 function createMenu() {
     var menu = Menu.buildFromTemplate(mainMenu);
 
@@ -488,7 +460,12 @@ function regShortcut() {
     // }
 }
 
-const createMainWindow = () => {
+// Scheme must be registered before the app is ready
+protocol.registerSchemesAsPrivileged([
+    { scheme: 'app', privileges: { secure: true, standard: true } }
+])
+
+const createMainWindow = async () => {
     var mainWindowState = windowStateKeeper({
         defaultWidth: 900,
         defaultHeight: 650,
@@ -515,15 +492,21 @@ const createMainWindow = () => {
     const badgeOptions = {}
     winBadge = new Badge(mainWindow, badgeOptions);
 
-    mainWindow.setSize(400, 480);
-    createProtocol('app')
-    // Load the index.html when not in development
-    mainWindow.loadURL('app://./index.html')
+    if (process.env.WEBPACK_DEV_SERVER_URL) {
+        // Load the url of the dev server if in development mode
+        await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
+        if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
+    } else {
+        createProtocol('app')
+        // Load the index.html when not in development
+        mainWindow.loadURL('app://./index.html')
+    }
     mainWindow.webContents.on('did-finish-load', () => {
         try {
             mainWindow.show();
             mainWindow.focus();
         } catch (ex) {
+            // do nothing
         }
     });
 
@@ -613,7 +596,6 @@ const createMainWindow = () => {
 
         try {
             updateTray();
-            autostart();
         } catch (ex) {
             console.error(ex);
         }
@@ -800,16 +782,15 @@ app.on('second-instance', () => {
 
 
 app.on('ready', () => {
-    console.log('jjjjjjjjjjjjjjjaa')
     createMainWindow();
     screenshots = new Screenshots()
-    globalShortcut.register('ctrl+shift+a', () =>{
+    globalShortcut.register('ctrl+shift+a', () => {
         isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
         screenshots.startCapture()
     });
     // 点击确定按钮回调事件
     screenshots.on('ok', (e, {viewer}) => {
-        if(isMainWindowFocusedWhenStartScreenshot){
+        if (isMainWindowFocusedWhenStartScreenshot) {
             mainWindow.webContents.send('screenshots-ok');
         }
         console.log('capture', viewer)
@@ -829,10 +810,10 @@ app.on('ready', () => {
         console.log('capture', viewer)
     })
     session.defaultSession.webRequest.onBeforeSendHeaders(
-         (details, callback) => {
-             // 可根据实际需求，配置 Origin，默认置为空
+        (details, callback) => {
+            // 可根据实际需求，配置 Origin，默认置为空
             details.requestHeaders.Origin = '';
-            callback({ cancel: false, requestHeaders: details.requestHeaders });
+            callback({cancel: false, requestHeaders: details.requestHeaders});
         }
     );
     // debug({showDevTools: true, devToolsMode: 'undocked'})
@@ -909,54 +890,3 @@ function toggleTrayIcon(icon) {
     tray.setImage(icon);
 }
 
-autoUpdater.on('update-not-available', e => {
-    dialog.showMessageBox({
-        type: 'info',
-        buttons: ['OK'],
-        title: pkg.name,
-        message: `${pkg.name} is up to date :)`,
-        detail: `${pkg.name} ${pkg.version} is currently the newest version available, It looks like you're already rocking the latest version!`
-    });
-
-    console.log('Update not available.');
-});
-
-autoUpdater.on('update-available', e => {
-    downloading = true;
-    checkForUpdates();
-});
-
-autoUpdater.on('error', err => {
-    dialog.showMessageBox({
-        type: 'error',
-        buttons: ['Cancel update'],
-        title: pkg.name,
-        message: `Failed to update ${pkg.name} :(`,
-        detail: `An error occurred in retrieving update information, Please try again later.`,
-    });
-
-    downloading = false;
-    console.error(err);
-});
-
-autoUpdater.on('update-downloaded', info => {
-    var {releaseNotes, releaseName} = info;
-    var index = dialog.showMessageBox({
-        type: 'info',
-        buttons: ['Restart', 'Later'],
-        title: pkg.name,
-        message: `The new version has been downloaded. Please restart the application to apply the updates.`,
-        detail: `${releaseName}\n\n${releaseNotes}`
-    });
-    downloading = false;
-
-    if (index === 1) {
-        return;
-    }
-
-    autoUpdater.quitAndInstall();
-    setTimeout(() => {
-        mainWindow = null;
-        disconnectAndQuit();
-    });
-});

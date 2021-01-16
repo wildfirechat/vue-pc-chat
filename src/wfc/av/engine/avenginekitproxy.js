@@ -13,6 +13,7 @@ import DetectRTC from 'detectrtc';
 import Config from "../../../config";
 import {longValue, numberValue} from '../../util/longUtil'
 import CallEndReason from './callEndReason'
+import Conversation from "@/wfc/model/conversation";
 
 const path = require('path');
 
@@ -99,7 +100,8 @@ export class AvEngineKitProxy {
                 return;
             }
         }
-        wfc.sendConversationMessage(msg.conversation, content, msg.toUsers, (messageId, timestamp) => {
+        let conversation = new Conversation(msg.conversation.type, msg.conversation.target, msg.conversation.line)
+        wfc.sendConversationMessage(conversation, content, msg.toUsers, (messageId, timestamp) => {
 
             // do nothing
         }, (uploaded, total) => {
