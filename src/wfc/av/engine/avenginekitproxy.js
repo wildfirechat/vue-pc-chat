@@ -361,7 +361,7 @@ export class AvEngineKitProxy {
             let hash = window.location.hash;
             let url = window.location.origin;
             if (hash) {
-                url += "/#/voip"
+                url = window.location.href.replace(hash, '#/voip');
             } else {
                 url += "/voip"
             }
