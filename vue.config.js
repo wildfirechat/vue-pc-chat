@@ -2,16 +2,7 @@
 
 const CopywebpackPlugin = require('copy-webpack-plugin')
 module.exports = {
-    // configureWebpack: {
-    //     plugins: [],
-    //     rules: [
-    //         {
-    //             test: /\.node$/,
-    //             loader: 'native-ext-loader',
-    //         }
-    //     ],
-    // },
-
+    publicPath: '.',
     chainWebpack: config => {
         config.module.rules.delete('eslint');
     },
@@ -21,6 +12,7 @@ module.exports = {
             config.module.rules.delete('eslint');
         },
         electronBuilder: {
+            externals: ['electron-screenshots'],
             chainWebpackMainProcess: (config) => {
                 // Chain webpack config for electron main process only
                 config.module
@@ -29,9 +21,9 @@ module.exports = {
                     .use('native-ext-loader')
                     .loader('native-ext-loader')
                     .end();
-                config.externals({
-                    'electron-screenshots': 'require("electron-screenshots")'
-                });
+                // config.externals({
+                //     'electron-screenshots': 'require("electron-screenshots")'
+                // });
                 config.plugin('copy').use(CopywebpackPlugin, [
                     [
                         {
@@ -40,6 +32,10 @@ module.exports = {
                         },
                         {
                             from: `${__dirname}/src/assets/images/**/*`,
+                            to: `${__dirname}/dist_electron`,
+                        },
+                        {
+                            from: `${__dirname}/locales/*`,
                             to: `${__dirname}/dist_electron`,
                         },
                         // {
