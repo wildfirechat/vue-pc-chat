@@ -27,30 +27,9 @@ module.exports = {
                 config.plugin('copy').use(CopywebpackPlugin, [
                     [
                         {
-                            from: `${__dirname}/src/assets/fonts/**/*`,
+                            from: `${__dirname}/public/**/*`,
                             to: `${__dirname}/dist_electron`,
                         },
-                        {
-                            from: `${__dirname}/src/assets/images/**/*`,
-                            to: `${__dirname}/dist_electron`,
-                        },
-                        {
-                            from: `${__dirname}/locales/*`,
-                            to: `${__dirname}/dist_electron`,
-                        },
-                        // {
-                        //     from: `${config.assets}/twemoji/**/*`,
-                        //     to: config.dist,
-                        // },
-                        // {
-                        //     from: path.resolve(__dirname, '../package.json'),
-                        //     to: config.dist,
-                        // },
-                        // {
-                        //     //from: path.resolve(__dirname, '../locales/*'),
-                        //     from: `${__dirname}/src/assets/fonts/**/*`,
-                        //     to: `${__dirname}/dist_electron`,
-                        // }
                     ]
                 ]);
             },

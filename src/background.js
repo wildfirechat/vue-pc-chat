@@ -8,7 +8,8 @@ import {
     globalShortcut,
     ipcMain,
     Menu,
-    powerMonitor, protocol,
+    powerMonitor,
+    protocol,
     session,
     shell,
     Tray,
@@ -25,13 +26,17 @@ import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-    { scheme: 'app', privileges: { secure: true, standard: true } }
+    {scheme: 'app', privileges: {secure: true, standard: true}}
 ])
+
+const isDevelopment = process.env.NODE_ENV !== 'production'
+
+const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
 let Locales = {};
 i18n.configure({
     locales: ['en', 'ch'],
-    directory: __dirname + '/locales',
+    directory: workingDir  + '/locales',
     register: Locales
 });
 Locales.setLocale('ch');
@@ -270,13 +275,13 @@ let mainMenu = [
             {
                 label: Locales.__('Help').FeedBack,
                 click() {
-                    shell.openExternal('https://github.com/wildfirechat/pc-chat/issues');
+                    shell.openExternal('https://github.com/wildfirechat/vue-pc-chat/issues');
                 }
             },
             {
                 label: Locales.__('Help').Fork,
                 click() {
-                    shell.openExternal('https://github.com/wildfirechat/pc-chat');
+                    shell.openExternal('https://github.com/wildfirechat/vue-pc-chat');
                 }
             },
             {
@@ -322,7 +327,7 @@ let trayMenu = [
     {
         label: Locales.__('Help').Fork,
         click() {
-            shell.openExternal('https://github.com/wildfirechat/pc-chat');
+            shell.openExternal('https://github.com/wildfirechat/vue-pc-chat');
         }
     },
     {
@@ -372,7 +377,7 @@ let trayMenu = [
         }
     }
 ];
-const icon = `${__dirname}/images/dock.png`;
+const icon = `${workingDir}/images/dock.png`;
 let blink = null
 
 function checkForUpdates() {
@@ -408,9 +413,9 @@ function updateTray(unread = 0) {
         let contextmenu = Menu.buildFromTemplate(trayMenu);
         let icon;
         if (!isOsx) {
-            icon = `${__dirname}/images/icon.png`;
+            icon = `${workingDir}/images/icon.png`;
         } else {
-            icon = `${__dirname}/images/tray.png`;
+            icon = `${workingDir}/images/tray.png`;
         }
 
 
@@ -484,7 +489,7 @@ const createMainWindow = async () => {
             scrollBounce: true,
             nodeIntegration: true,
             nativeWindowOpen: true,
-            webSecurity:false,
+            webSecurity: false,
         },
         frame: !isWin,
         icon
@@ -748,8 +753,7 @@ const createMainWindow = async () => {
         app.setAboutPanelOptions({
             applicationName: pkg.name,
             applicationVersion: pkg.version,
-            copyright: 'Made with 💖 by trazyn && wildfiechat. \n https://github.com/wildfirechat/pc-chat',
-            credits: `With the invaluable help of: \n https://github.com/trazyn/weweChat`,
+            copyright: 'Made with 💖 by wildfiechat. \n https://github.com/wildfirechat/vue-pc-chat',
             version: pkg.version
         });
     }
@@ -864,11 +868,11 @@ function execBlink(flag, _interval) {
     let interval = _interval ? _interval : 500;
     let icons;
     if (!isOsx) {
-        icons = [`${__dirname}/images/icon.png`,
-            `${__dirname}/images/Remind_icon.png`];
+        icons = [`${workingDir}/images/icon.png`,
+            `${workingDir}/images/Remind_icon.png`];
     } else {
-        icons = [`${__dirname}/images/tray.png`,
-            `${__dirname}/images/Remind_icon.png`];
+        icons = [`${workingDir}/images/tray.png`,
+            `${workingDir}/images/Remind_icon.png`];
     }
 
     let count = 0;
