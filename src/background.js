@@ -26,7 +26,7 @@ import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-    {scheme: 'app', privileges: {secure: true, standard: true}}
+    {scheme: 'app', privileges: {secure: true, standard: true, bypassCSP: true}}
 ])
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -36,7 +36,7 @@ const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 let Locales = {};
 i18n.configure({
     locales: ['en', 'ch'],
-    directory: workingDir  + '/locales',
+    directory: workingDir + '/locales',
     register: Locales
 });
 Locales.setLocale('ch');
@@ -785,44 +785,60 @@ app.on('second-instance', () => {
     }
 })
 
+function registerLocalResourceProtocol() {
+    protocol.registerFileProtocol('local-resource', (request, callback) => {
+        const url = request.url.replace(/^local-resource:\/\//, '')
+        // Decode URL to prevent errors when loading filenames with UTF-8 chars or chars like "#"
+        const decodedUrl = decodeURI(url) // Needed in case URL contains spaces
+        try {
+            return callback(decodedUrl)
+        } catch (error) {
+            console.error('ERROR: registerLocalResourceProtocol: Could not get file path:', error)
+        }
+    })
+}
 
 app.on('ready', () => {
-    createMainWindow();
-    screenshots = new Screenshots()
-    globalShortcut.register('ctrl+shift+a', () => {
-        isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
-        screenshots.startCapture()
-    });
-    // 点击确定按钮回调事件
-    screenshots.on('ok', (e, {viewer}) => {
-        if (isMainWindowFocusedWhenStartScreenshot) {
-            mainWindow.webContents.send('screenshots-ok');
-        }
-        console.log('capture', viewer)
-    })
-    // 点击取消按钮回调事件
-    screenshots.on('cancel', () => {
-        // console.log('capture', 'cancel1')
-    })
-    screenshots.on('cancel', e => {
-        // 执行了preventDefault
-        // 点击取消不会关闭截图窗口
-        // e.preventDefault()
-        // console.log('capture', 'cancel2')
-    })
-    // 点击保存按钮回调事件
-    screenshots.on('save', (e, {viewer}) => {
-        console.log('capture', viewer)
-    })
-    session.defaultSession.webRequest.onBeforeSendHeaders(
-        (details, callback) => {
-            // 可根据实际需求，配置 Origin，默认置为空
-            details.requestHeaders.Origin = '';
-            callback({cancel: false, requestHeaders: details.requestHeaders});
-        }
-    );
-    // debug({showDevTools: true, devToolsMode: 'undocked'})
-});
+        createMainWindow();
+
+        registerLocalResourceProtocol();
+
+        screenshots = new Screenshots()
+        globalShortcut.register('ctrl+shift+a', () => {
+            isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
+            screenshots.startCapture()
+        });
+        // 点击确定按钮回调事件
+        screenshots.on('ok', (e, {viewer}) => {
+            if (isMainWindowFocusedWhenStartScreenshot) {
+                mainWindow.webContents.send('screenshots-ok');
+            }
+            console.log('capture', viewer)
+        })
+        // 点击取消按钮回调事件
+        screenshots.on('cancel', () => {
+            // console.log('capture', 'cancel1')
+        })
+        screenshots.on('cancel', e => {
+            // 执行了preventDefault
+            // 点击取消不会关闭截图窗口
+            // e.preventDefault()
+            // console.log('capture', 'cancel2')
+        })
+        // 点击保存按钮回调事件
+        screenshots.on('save', (e, {viewer}) => {
+            console.log('capture', viewer)
+        })
+        session.defaultSession.webRequest.onBeforeSendHeaders(
+            (details, callback) => {
+                // 可根据实际需求，配置 Origin，默认置为空
+                details.requestHeaders.Origin = '';
+                callback({cancel: false, requestHeaders: details.requestHeaders});
+            }
+        );
+        // debug({showDevTools: true, devToolsMode: 'undocked'})
+    }
+);
 
 // app.on('window-all-closed', () => {
 //     if (process.platform !== 'darwin') {
