@@ -8,7 +8,7 @@ import {
     globalShortcut,
     ipcMain,
     Menu,
-    powerMonitor,
+    powerMonitor, protocol,
     session,
     shell,
     Tray,
@@ -23,6 +23,10 @@ import pkg from '../package.json';
 import Badge from 'electron-windows-badge';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 
+// Scheme must be registered before the app is ready
+protocol.registerSchemesAsPrivileged([
+    { scheme: 'app', privileges: { secure: true, standard: true } }
+])
 
 let Locales = {};
 i18n.configure({
@@ -368,7 +372,7 @@ let trayMenu = [
         }
     }
 ];
-const icon = `${__dirname}/src/assets/images/dock.png`;
+const icon = `${__dirname}/images/dock.png`;
 let blink = null
 
 function checkForUpdates() {
@@ -404,9 +408,9 @@ function updateTray(unread = 0) {
         let contextmenu = Menu.buildFromTemplate(trayMenu);
         let icon;
         if (!isOsx) {
-            icon = `${__dirname}/assets/images/icon.png`;
+            icon = `${__dirname}/images/icon.png`;
         } else {
-            icon = `${__dirname}/assets/images/tray.png`;
+            icon = `${__dirname}/images/tray.png`;
         }
 
 
@@ -860,11 +864,11 @@ function execBlink(flag, _interval) {
     let interval = _interval ? _interval : 500;
     let icons;
     if (!isOsx) {
-        icons = [`${__dirname}/src/assets/images/icon.png`,
-            `${__dirname}/src/assets/images/Remind_icon.png`];
+        icons = [`${__dirname}/images/icon.png`,
+            `${__dirname}/images/Remind_icon.png`];
     } else {
-        icons = [`${__dirname}/src/assets/images/tray.png`,
-            `${__dirname}/src/assets/images/Remind_icon.png`];
+        icons = [`${__dirname}/images/tray.png`,
+            `${__dirname}/images/Remind_icon.png`];
     }
 
     let count = 0;

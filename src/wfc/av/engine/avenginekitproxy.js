@@ -367,6 +367,7 @@ export class AvEngineKitProxy {
             }
             url += '/' + type
             win.loadURL(url);
+            console.log('voip windows url', url)
             win.show();
         } else {
             console.log('location', window.location);
