@@ -171,7 +171,6 @@ export default {
   display: block;
   margin: 10px auto;
   border-radius: 3px;
-  -webkit-app-region: no-drag;
 }
 
 .menu {
@@ -182,13 +181,13 @@ export default {
   height: 100%;
   display: flex;
   flex-direction: column;
+  -webkit-app-region: drag
 }
 
 .menu ul li {
   margin: 10px;
   height: 40px;
   line-height: 50px;
-  -webkit-app-region: no-drag;
 }
 
 .menu ul li:last-of-type {

@@ -85,7 +85,6 @@ export default {
   border: 1px solid #e5e5e5;
   border-radius: 3px;
   background-color: #eeeeee;
-  -webkit-app-region: no-drag;
 }
 
 .search-input-container button {
@@ -95,7 +94,6 @@ export default {
   background-color: #fafafa;
   border-radius: 3px;
   border: 1px solid #e5e5e5;
-  -webkit-app-region: no-drag;
 }
 
 .search-input-container button:active {

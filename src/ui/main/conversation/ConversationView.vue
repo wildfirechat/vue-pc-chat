@@ -477,7 +477,6 @@ export default {
 .title-container a {
   text-decoration: none;
   color: #181818;
-  -webkit-app-region: no-drag;
 }
 
 .title-container a:active {
