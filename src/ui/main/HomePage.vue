@@ -161,6 +161,7 @@ export default {
   border-top-left-radius: var(--main-border-radius);
   border-bottom-left-radius: var(--main-border-radius);
   padding: 20px 0;
+  -webkit-app-region: drag;
 }
 
 .avatar {

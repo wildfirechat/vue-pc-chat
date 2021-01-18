@@ -448,6 +448,12 @@ export default {
   border-top-right-radius: var(--main-border-radius);
   border-bottom-right-radius: var(--main-border-radius);
   /*border-left: 1px solid #e6e6e6;*/
+  -webkit-app-region: drag;
+}
+
+.conversation-empty-container h1 {
+  font-size: 17px;
+  font-weight: normal;
 }
 
 .title-container {
@@ -460,6 +466,7 @@ export default {
   background-color: #f5f5f5;
   border-bottom: 1px solid #e6e6e6;
   border-top-right-radius: var(--main-border-radius);
+  -webkit-app-region: drag;
 }
 
 .title-container h1 {
@@ -472,7 +479,7 @@ export default {
   color: #181818;
 }
 
-.title-container a:active{
+.title-container a:active {
   color: #d6d6d6;
 }
 

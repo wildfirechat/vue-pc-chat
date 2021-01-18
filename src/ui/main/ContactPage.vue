@@ -6,12 +6,15 @@
         :group="sharedContactState.currentGroup"
         class="contact-detail-container"/>
     <UserDetailView
-        v-if="sharedContactState.currentFriend"
+        v-else-if="sharedContactState.currentFriend"
         :user="sharedContactState.currentFriend"
         class="contact-detail-container"/>
     <FriendRequestDetailView
-        v-if="sharedContactState.currentFriendRequest"
+        v-else-if="sharedContactState.currentFriendRequest"
         class="contact-detail-container"/>
+    <div v-else class="contact-empty-container">
+      <h1>^~^</h1>
+    </div>
   </div>
 </template>
 
@@ -60,4 +63,21 @@ ul {
   flex: 1;
   background-color: white;
 }
+
+.contact-empty-container {
+  flex: 1;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top-right-radius: var(--main-border-radius);
+  border-bottom-right-radius: var(--main-border-radius);
+  -webkit-app-region: drag;
+}
+
+.contact-empty-container h1 {
+  font-size: 17px;
+  font-weight: normal;
+}
+
 </style>
