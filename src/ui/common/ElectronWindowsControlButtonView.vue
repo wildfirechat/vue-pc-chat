@@ -41,8 +41,6 @@ export default {
     maximize() {
       const win = remote.getCurrentWindow();
       if (win.isMaximized()) {
-        win.maximize();
-      } else {
         win.unmaximize();
       }
       this.$nextTick(() => {
