@@ -10,6 +10,9 @@
 1. ```npm install```
 2. ```npm run electron:serve```
 
+## 打包
+```npm run electron:build```
+
 ## 截图
 ![](./image/contact.png)
 ![](./image/group-conversation-info.png)
