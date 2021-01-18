@@ -1,5 +1,7 @@
 <template>
   <div class="home-container">
+    <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
+                                      v-if="sharedMiscState.isElectronWindows"/>
     <div class="home">
       <section class="menu-container">
         <div>
@@ -77,11 +79,13 @@ import store from "@/store";
 import wfc from "@/wfc/client/wfc";
 import EventType from "@/wfc/client/wfcEvent";
 import ConnectionStatus from "@/wfc/client/connectionStatus";
+import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 
 export default {
   data() {
     return {
       sharedContactState: store.state.contact,
+      sharedMiscState: store.state.misc,
     };
   },
 
@@ -134,7 +138,10 @@ export default {
     console.log('home destroy')
   },
 
-  components: {UserCardView},
+  components: {
+    UserCardView,
+    ElectronWindowsControlButtonView
+  },
 };
 </script>
 
