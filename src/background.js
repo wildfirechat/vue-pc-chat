@@ -471,15 +471,15 @@ function regShortcut() {
 
 const createMainWindow = async () => {
     var mainWindowState = windowStateKeeper({
-        defaultWidth: 900,
-        defaultHeight: 650,
+        defaultWidth: 1080,
+        defaultHeight: 720,
     });
 
     mainWindow = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
-        minWidth: 400,
-        minHeight: 400,
+        minWidth: 800,
+        minHeight: 480,
         titleBarStyle: 'hidden',
         backgroundColor: 'none',
         // 以下两属性设置时会导致win不能正常unmaximize. electron bug
@@ -531,7 +531,6 @@ const createMainWindow = async () => {
     mainWindow.on('close', e => {
         if (forceQuit || !tray) {
             mainWindow = null;
-            console.log('closexxxxxxxxxxxxxxx')
             disconnectAndQuit();
         } else {
             e.preventDefault();
@@ -736,7 +735,7 @@ const createMainWindow = async () => {
     ipcMain.once('logined', event => {
         mainWindow.setResizable(true);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
-        mainWindow.setMinimumSize(800, 600);
+        mainWindow.setMinimumSize(800, 480);
         mainWindowState.manage(mainWindow);
     });
 
