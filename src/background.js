@@ -675,35 +675,6 @@ const createMainWindow = async () => {
         downloadFileMap.set(encodeURI(filename), {messageId: messageId, fileName: args.fileName});
 
         mainWindow.webContents.loadURL(filename)
-
-        // // TODO bug here
-        // fs.exists(filename, (exists) => {
-        //     if (!exists) {
-        //         fs.writeFileSync(filename, args.raw.replace(/^data:image\/png;base64,/, ''), {
-        //             encoding: 'base64',
-        //             // Overwrite file
-        //             flag: 'wx',
-        //         });
-        //     }
-        //     event.returnValue = filename;
-        // });
-
-        // dialog.showSaveDialog({defaultPath: filename,}, (fileName) => {
-        //     if (fileName === undefined) {
-        //         console.log("You didn't save the file");
-        //         event.returnValue = '';
-        //         return;
-        //     }
-        //
-        //     let content = args.raw.replace(/^data:image\/png;base64,/, '');
-        //     // fileName is a string that contains the path and filename created in the save file dialog.
-        //     fs.writeFileSync(fileName, content, 'base64', (err) => {
-        //         if (err) {
-        //             console.log("An error ocurred creating the file " + err.message)
-        //         }
-        //     });
-        //     event.returnValue = fileName;
-        // });
     });
 
     ipcMain.on('open-file', async (event, filename) => {
@@ -836,7 +807,7 @@ app.on('ready', () => {
         // debug({showDevTools: true, devToolsMode: 'undocked'})
         try {
             updateTray()
-        }catch (e) {
+        } catch (e) {
             // do nothing
         }
     }

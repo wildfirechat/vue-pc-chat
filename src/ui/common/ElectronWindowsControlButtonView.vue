@@ -1,3 +1,4 @@
+<!--只运行在electron里面-->
 <template>
   <div id="window-controls">
 
@@ -110,15 +111,15 @@ export default {
   background: rgba(255, 255, 255, 0.2);
 }
 
-#min-button:hover{
+#min-button:hover {
   background: #d6d6d6 !important;
 }
 
-#max-button:hover{
+#max-button:hover {
   background: #d6d6d6 !important;
 }
 
-#restore-button:hover{
+#restore-button:hover {
   background: #d6d6d6 !important;
 }
 
