@@ -38,7 +38,7 @@ export default {
   data() {
     return {
       url: '',
-      sharedMiscState:store.state.misc,
+      sharedMiscState: store.state.misc,
     }
   },
   methods: {
@@ -56,9 +56,9 @@ export default {
       root.style.setProperty('--main-margin-bottom', '0');
     }
 
-    console.log('xxxxl', this.sharedMiscState.isElectronWindows)
-    if(this.sharedMiscState.isElectronWindows){
+    if (this.sharedMiscState.isElectronWindows) {
       root.style.setProperty('--main-border-radius', '0')
+      root.style.setProperty('--home-menu-padding-top', '60px')
     }
   },
 
@@ -87,6 +87,7 @@ export default {
   --main-margin-top: 0px;
   --main-margin-bottom: 0px;
   --tippy-right: 0px;
+  --home-menu-padding-top: 20px;
 }
 
 .tippy-tooltip {

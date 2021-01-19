@@ -42,6 +42,8 @@ export default {
       const win = remote.getCurrentWindow();
       if (win.isMaximized()) {
         win.unmaximize();
+      } else {
+        win.maximize();
       }
       this.$nextTick(() => {
         this.toggleMaxRestoreButtons();
@@ -106,6 +108,18 @@ export default {
 
 #window-controls .button:active {
   background: rgba(255, 255, 255, 0.2);
+}
+
+#min-button:hover{
+  background: #d6d6d6 !important;
+}
+
+#max-button:hover{
+  background: #d6d6d6 !important;
+}
+
+#restore-button:hover{
+  background: #d6d6d6 !important;
 }
 
 #close-button:hover {

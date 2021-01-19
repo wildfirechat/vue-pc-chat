@@ -167,7 +167,7 @@ export default {
   background: linear-gradient(180deg, #292a2c 0%, #483a3a 100%);
   border-top-left-radius: var(--main-border-radius);
   border-bottom-left-radius: var(--main-border-radius);
-  padding: 60px 0 20px 0;
+  padding: var(--home-menu-padding-top) 0 20px 0;
   -webkit-app-region: drag;
 }
 
