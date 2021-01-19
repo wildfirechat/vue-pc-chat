@@ -14,7 +14,6 @@ import {
     shell,
     Tray,
 } from 'electron';
-// import debug from 'electron-debug'
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
 import i18n from 'i18n';
@@ -317,21 +316,10 @@ let trayMenu = [
         type: 'separator'
     },
     {
-        label: '偏好...',
-        accelerator: 'Cmd+,',
-        click() {
-            mainWindow.show();
-            mainWindow.webContents.send('show-settings');
-        }
-    },
-    {
         label: Locales.__('Help').Fork,
         click() {
             shell.openExternal('https://github.com/wildfirechat/vue-pc-chat');
         }
-    },
-    {
-        type: 'separator'
     },
     {
         label: Locales.__('View').ToggleDevtools,
@@ -341,21 +329,8 @@ let trayMenu = [
             mainWindow.toggleDevTools();
         }
     },
-    // {
-    //     label: 'Hide menu bar icon',
-    //     click() {
-    //         mainWindow.webContents.send('hide-tray');
-    //     }
-    // },
     {
         type: 'separator'
-    },
-    {
-        label: Locales.__('Main').Check,
-        accelerator: 'Cmd+U',
-        click() {
-            checkForUpdates();
-        }
     },
     {
         label: Locales.__('Main').Quit,
@@ -604,38 +579,6 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on('show-window', event => {
-        if (!mainWindow.isVisible()) {
-            mainWindow.show();
-            mainWindow.focus();
-        }
-    });
-
-    ipcMain.on('close-window', event => {
-        mainWindow.hide();
-    });
-
-    ipcMain.on('min-window', event => {
-        mainWindow.minimize();
-    });
-
-    // ipcMain.on('max-window', event => {
-    //     mainWindow.maximize();
-    // });
-
-    ipcMain.on('unmax-window', event => {
-        mainWindow.unmaximize();
-    });
-
-    ipcMain.on('toggle-max', event => {
-        var isMax = mainWindow.isMaximized();
-        if (isMax) {
-            mainWindow.unmaximize();
-        } else {
-            mainWindow.maximize();
-        }
-    });
-
     ipcMain.on('exec-blink', (event, args) => {
         var isBlink = args.isBlink;
         execBlink(isBlink, args.interval);
@@ -688,13 +631,6 @@ const createMainWindow = async () => {
     ipcMain.on('open-map', (event, args) => {
         event.preventDefault();
         shell.openExternal(args.map);
-    });
-
-    ipcMain.on('open-image', async (event, args) => {
-        var filename = `${imagesCacheDir}/img_${args.dataset.id}.png`;
-
-        fs.writeFileSync(filename, args.base64.replace(/^data:image\/png;base64,/, ''), 'base64');
-        shell.openItem(filename);
     });
 
     ipcMain.on('is-suspend', (event, args) => {
@@ -804,7 +740,6 @@ app.on('ready', () => {
                 callback({cancel: false, requestHeaders: details.requestHeaders});
             }
         );
-        // debug({showDevTools: true, devToolsMode: 'undocked'})
         try {
             updateTray()
         } catch (e) {
