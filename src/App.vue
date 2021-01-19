@@ -38,6 +38,7 @@ export default {
   data() {
     return {
       url: '',
+      sharedMiscState:store.state.misc,
     }
   },
   methods: {
@@ -47,12 +48,17 @@ export default {
   },
 
   created() {
+    let root = document.documentElement;
     if (window.location.href.indexOf('voip') >= 0) {
-      let root = document.documentElement;
       root.style.setProperty('--main-margin-left', '0');
       root.style.setProperty('--main-margin-right', '0');
       root.style.setProperty('--main-margin-top', '0');
       root.style.setProperty('--main-margin-bottom', '0');
+    }
+
+    console.log('xxxxl', this.sharedMiscState.isElectronWindows)
+    if(this.sharedMiscState.isElectronWindows){
+      root.style.setProperty('--main-border-radius', '0')
     }
   },
 
