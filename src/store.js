@@ -408,8 +408,20 @@ let store = {
         }
     },
 
+    /**
+     *
+     * @param conversation
+     * @param {File | string} file html File 类型或者绝对路径，绝对路径只在electron里面生效
+     * @return {Promise<boolean>}
+     */
     async sendFile(conversation, file) {
         console.log('send file', file)
+        if(typeof file === 'string'){
+            file = {
+                path: file,
+                name: file.substring((file.lastIndexOf('/') + 1))
+            }
+        }
         let msg = new Message();
         msg.conversation = conversation;
 
