@@ -5,7 +5,7 @@
           @click="showConversation(conversationInfo)"
           v-for="conversationInfo in sharedConversationState.conversationInfoList"
           :key="conversationInfoKey(conversationInfo)"
-          v-bind:class="{active: sharedConversationState.currentConversationInfo && sharedConversationState.currentConversationInfo.conversation === conversationInfo.conversation,
+          v-bind:class="{active: sharedConversationState.currentConversationInfo && sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation),
                           top:conversationInfo.isTop}"
           @contextmenu.prevent="$refs.menu.open($event,conversationInfo)"
       >
