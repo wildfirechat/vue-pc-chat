@@ -597,14 +597,10 @@ const createMainWindow = async () => {
         mainWindow.webContents.send('conference-request', args);
     });
 
-    ipcMain.on('settings-apply', (event, args) => {
-        settings = args.settings;
-        mainWindow.setAlwaysOnTop(!!settings.alwaysOnTop);
-
-        try {
-            updateTray();
-        } catch (ex) {
-            console.error(ex);
+    ipcMain.on('click-notification', (event, args) => {
+        if (!mainWindow.isVisible()) {
+            mainWindow.show();
+            mainWindow.focus();
         }
     });
 
@@ -838,6 +834,11 @@ app.on('ready', () => {
             }
         );
         // debug({showDevTools: true, devToolsMode: 'undocked'})
+        try {
+            updateTray()
+        }catch (e) {
+            // do nothing
+        }
     }
 );
 

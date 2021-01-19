@@ -19,6 +19,7 @@ import MessageConfig from "@/wfc/client/messageConfig";
 import PersistFlag from "@/wfc/messages/persistFlag";
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
+import {ipcRenderer, isElectron} from "@/platform";
 
 /**
  * 一些说明
@@ -92,8 +93,8 @@ let store = {
             isPageHidden: false,
             enableNotification: true,
             notificationMessageDetail: true,
-           isElectronWindows: process && process.platform === 'win32'
-           //  isElectronWindows: true,
+            // isElectronWindows: process && process.platform === 'win32'
+            isElectronWindows: true,
         },
     },
 
@@ -842,7 +843,11 @@ let store = {
                 icon: icon,
                 timeout: 4000,
                 onClick: () => {
-                    window.focus();
+                    if (isElectron()) {
+                        ipcRenderer.send('click-notification')
+                    } else {
+                        window.focus();
+                    }
                     this.close();
                     this.setCurrentConversation(msg.conversation)
                 }
