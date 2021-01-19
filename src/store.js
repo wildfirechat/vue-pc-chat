@@ -93,8 +93,8 @@ let store = {
             isPageHidden: false,
             enableNotification: true,
             notificationMessageDetail: true,
-            // isElectronWindows: process && process.platform === 'win32'
-            isElectronWindows: true,
+            isElectronWindows: process && process.platform === 'win32'
+            // isElectronWindows: true,
         },
     },
 
@@ -185,7 +185,7 @@ let store = {
                 if (msg && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
                     if (conversationState.currentConversationMessageList) {
                         let lastTimestamp = 0;
-                        conversationState.currentConversationMessageList.map(msg => {
+                        conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.map(msg => {
                             if (eq(msg.messageUid, messageUid)) {
                                 let newMsg = wfc.getMessageByUid(messageUid);
                                 this._patchMessage(newMsg, lastTimestamp);
@@ -223,6 +223,7 @@ let store = {
 
 
         wfc.eventEmitter.on(EventType.SendMessage, (message) => {
+            this._loadDefaultConversationList();
             if (!this._isDisplayMessage(message)) {
                 return;
             }
@@ -286,7 +287,6 @@ let store = {
             wfc.setConversationTimestamp(conversation, new Date().getTime());
             info = wfc.getConversationInfo(conversation);
             this._patchConversationInfo(info);
-            conversationState.currentConversationInfo = info;
             this._loadDefaultConversationList();
         }
         this.setCurrentConversationInfo(info);
@@ -416,7 +416,7 @@ let store = {
      */
     async sendFile(conversation, file) {
         console.log('send file', file)
-        if(typeof file === 'string'){
+        if (typeof file === 'string') {
             file = {
                 path: file,
                 name: file.substring((file.lastIndexOf('/') + 1))
@@ -513,6 +513,7 @@ let store = {
                 if (msgs.length === 0) {
                     completeCB();
                 } else {
+                    this._loadDefaultConversationList();
                     loadedCB();
                 }
             },
@@ -549,6 +550,22 @@ let store = {
         this._loadDefaultConversationList();
     },
 
+    getMessageById(messageId) {
+        let msg = wfc.getMessageById(messageId);
+        if (msg) {
+            this._patchMessage(msg, 0);
+        }
+        return msg;
+    },
+
+    getMessageByUid(messageUid) {
+        let msg = wfc.getMessageByUid(messageUid);
+        if (msg) {
+            this._patchMessage(msg, 0);
+        }
+        return msg;
+    },
+
     _patchMessage(m, lastTimestamp) {
         // TODO
         // _from
@@ -559,7 +576,7 @@ let store = {
         } else {
             m._from._displayName = wfc.getUserDisplayNameEx(m._from);
         }
-        if (numberValue(m.timestamp) - numberValue(lastTimestamp) > 5 * 60 * 1000) {
+        if (numberValue(lastTimestamp) > 0 && numberValue(m.timestamp) - numberValue(lastTimestamp) > 5 * 60 * 1000) {
             m._showTime = true;
             m._timeStr = helper.timeFormat(m.timestamp)
         }

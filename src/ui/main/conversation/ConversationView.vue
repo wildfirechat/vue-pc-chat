@@ -469,7 +469,6 @@ export default {
   background-color: #f5f5f5;
   border-bottom: 1px solid #e6e6e6;
   border-top-right-radius: var(--main-border-radius);
-  -webkit-app-region: drag;
 }
 
 .title-container h1 {
