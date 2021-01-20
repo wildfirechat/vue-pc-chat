@@ -66,7 +66,15 @@ export default {
       let conv = conversationInfo.conversation;
       return conv.target + '-' + conv.type + '-' + conv.line;
     },
+    scrollActiveElementCenter() {
+      let el = this.$el.getElementsByClassName("active")[0];
+      el && el.scrollIntoView({behavior: "instant", block: "center"});
+    },
   },
+  activated() {
+    this.scrollActiveElementCenter();
+  },
+
   components: {
     ConversationItemView,
   },
