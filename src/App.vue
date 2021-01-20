@@ -32,6 +32,7 @@
 
 <script>
 import store from "@/store";
+import {isElectron} from "@/platform";
 
 export default {
   name: 'App',
@@ -49,15 +50,15 @@ export default {
 
   created() {
     let root = document.documentElement;
-    if (window.location.href.indexOf('voip') >= 0) {
-      root.style.setProperty('--main-margin-left', '0');
-      root.style.setProperty('--main-margin-right', '0');
-      root.style.setProperty('--main-margin-top', '0');
-      root.style.setProperty('--main-margin-bottom', '0');
+    if (isElectron() || window.location.href.indexOf('voip') >= 0) {
+      root.style.setProperty('--main-margin-left', '0px');
+      root.style.setProperty('--main-margin-right', '0px');
+      root.style.setProperty('--main-margin-top', '0px');
+      root.style.setProperty('--main-margin-bottom', '0px');
     }
 
     if (this.sharedMiscState.isElectronWindows) {
-      root.style.setProperty('--main-border-radius', '0')
+      root.style.setProperty('--main-border-radius', '0px')
       root.style.setProperty('--home-menu-padding-top', '60px')
     }
   },
@@ -82,10 +83,10 @@ export default {
 
 :root {
   --main-border-radius: 10px;
-  --main-margin-left: 0px;
-  --main-margin-right: 0px;
-  --main-margin-top: 0px;
-  --main-margin-bottom: 0px;
+  --main-margin-left: 80px;
+  --main-margin-right: 80px;
+  --main-margin-top: 50px;
+  --main-margin-bottom: 50px;
   --tippy-right: 0px;
   --home-menu-padding-top: 20px;
 }

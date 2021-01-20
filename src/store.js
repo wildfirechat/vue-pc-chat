@@ -101,12 +101,14 @@ let store = {
     init() {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
             miscState.connectionStatus = status;
-            this._loadFavGroupList();
-            this._loadFriendList();
-            this._loadFriendRequest();
-            this._loadSelfUserInfo();
-            this._loadDefaultConversationList();
-            conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
+            if (status === ConnectionStatus.ConnectionStatusConnected) {
+                this._loadFavGroupList();
+                this._loadFriendList();
+                this._loadFriendRequest();
+                this._loadSelfUserInfo();
+                this._loadDefaultConversationList();
+                conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
+            }
         });
 
         wfc.eventEmitter.on(EventType.UserInfosUpdate, (userInfos) => {
@@ -618,8 +620,14 @@ let store = {
         let requests = wfc.getIncommingFriendRequest()
         requests = requests.concat(wfc.getOutgoingFriendRequest());
         requests.sort((a, b) => numberValue(a.timestamp) - numberValue(b.timestamp))
+        let uids = [];
         requests.forEach(fr => {
-            fr._target = wfc.getUserInfo(fr.target, false);
+            uids.push(fr.target);
+        });
+        let userInfos = wfc.getUserInfos(uids, '' )
+        requests.forEach(fr => {
+            let userInfo = userInfos.find((u => u.uid === fr.target));
+            fr._target = userInfo;
         });
 
         contactState.friendRequestList = requests;
