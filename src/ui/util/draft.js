@@ -1,10 +1,11 @@
 import wfc from "../../wfc/client/wfc";
 import {stringValue} from "../../wfc/util/longUtil";
+import store from "@/store";
 
-export default class Draft{
+export default class Draft {
 
-    static setConversationDraft(conversation, draftText, quoteMessage){
-        if(!draftText && !quoteMessage){
+    static setConversationDraft(conversation, draftText, quoteMessage) {
+        if (!draftText && !quoteMessage) {
             wfc.setConversationDraft(conversation, '');
             return;
         }
@@ -15,26 +16,30 @@ export default class Draft{
         wfc.setConversationDraft(conversation, JSON.stringify(obj));
     }
 
-    static getConversationDraft(conversation){
+    static getConversationDraftEx(conversationInfo) {
         let obj = {
             text: '',
             quotedMessage: null
         }
-        let conversationInfo = wfc.getConversationInfo(conversation);
-        if(!conversationInfo.draft){
+        if (!conversationInfo || !conversationInfo.draft) {
             return obj;
         }
         // 兼容处理
-        if(!conversationInfo.draft.startsWith("{")){
+        if (!conversationInfo.draft.startsWith("{")) {
             obj.text = conversationInfo.draft;
             return obj;
         }
-        let draft =  JSON.parse(conversationInfo.draft);
+        let draft = JSON.parse(conversationInfo.draft);
         obj.text = draft.text;
-        if(draft.quoteMessageUid){
-            let msg = wfc.getMessageByUid(draft.quoteMessageUid);
+        if (draft.quoteMessageUid) {
+            let msg = store.getMessageByUid(draft.quoteMessageUid);
             obj.quotedMessage = msg;
         }
         return obj;
+    }
+
+    static getConversationDraft(conversation) {
+        let conversationInfo = wfc.getConversationInfo(conversation);
+        return this.getConversationDraftEx(conversationInfo);
     }
 }
