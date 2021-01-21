@@ -32,7 +32,11 @@
         </div>
         <div ref="conversationMessageList" class="conversation-message-list" v-on:scroll="onScroll" infinite-wrapper>
           <infinite-loading :identifier="loadingIdentifier" force-use-infinite-wrapper direction="top"
-                            @infinite="infiniteHandler"/>
+                            @infinite="infiniteHandler">
+            <template slot="spinner">加载中...</template>
+            <template slot="no-more">没有更多消息</template>
+            <template slot="no-results">已加载全部消息 :(</template>
+          </infinite-loading>
           <ul>
             <!--todo item.messageId or messageUid as key-->
             <li v-for="(message) in sharedConversationState.currentConversationMessageList"
