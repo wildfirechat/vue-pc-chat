@@ -93,7 +93,9 @@ export default {
     draft() {
       let draft = Draft.getConversationDraftEx(this.conversationInfo);
       let draftText = '[草稿]' + draft.text;
-      draftText = draftText.replace(/<img [:a-zA-Z0-9_\-=\/."]+>/g, '[图片]')
+      draftText = draftText.replace(/<img [:a-zA-Z0-9_+; ,\-=\/."]+>/g, '[图片]')
+      draftText = draftText.replace(/&nbsp;/g, ' ');
+      draftText = draftText.replace(/<br>/g, '')
       if (draft.quotedMessage) {
         draftText += '...'
       }

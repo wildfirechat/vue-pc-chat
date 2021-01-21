@@ -456,7 +456,6 @@ export default {
 
     storeDraft(conversation, quotedMessage) {
       let draftText = this.$refs['input'].innerHTML.trim();
-      console.log('xxx storeDrafty', quotedMessage)
       Draft.setConversationDraft(conversation, draftText, quotedMessage)
     },
 
