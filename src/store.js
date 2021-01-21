@@ -108,6 +108,8 @@ let store = {
                 this._loadSelfUserInfo();
                 this._loadDefaultConversationList();
                 conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
+
+                this.updateTray();
             }
         });
 
@@ -182,6 +184,7 @@ let store = {
             if (miscState.isPageHidden && miscState.enableNotification) {
                 this.notify(msg);
             }
+            this.updateTray();
         });
 
         wfc.eventEmitter.on(EventType.RecallMessage, (operator, messageUid) => {
@@ -628,7 +631,7 @@ let store = {
         requests.forEach(fr => {
             uids.push(fr.target);
         });
-        let userInfos = wfc.getUserInfos(uids, '' )
+        let userInfos = wfc.getUserInfos(uids, '')
         requests.forEach(fr => {
             let userInfo = userInfos.find((u => u.uid === fr.target));
             fr._target = userInfo;
@@ -874,6 +877,11 @@ let store = {
         miscState.isPageHidden = hidden;
     },
 
+    clearConversationUnreadStatus(conversation) {
+        wfc.clearConversationUnreadStatus(conversation);
+        this.updateTray();
+    },
+
     notify(msg) {
         let content = msg.messageContent;
         let icon = require('@/assets/images/icon.png');
@@ -895,6 +903,21 @@ let store = {
             });
         }
     },
+
+    updateTray() {
+        if (!isElectron()) {
+            return;
+        }
+        let count = 0;
+        conversationState.conversationInfoList.forEach(info => {
+            if (info.isSilent) {
+                return;
+            }
+            let unreadCount = info.unreadCount;
+            count += unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll;
+        });
+        ipcRenderer.send('message-unread', {count: count})
+    }
 }
 
 let conversationState = store.state.conversation;

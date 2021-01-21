@@ -298,13 +298,6 @@ let mainMenu = [
     }
 ];
 let trayMenu = [
-    // {
-    //     label: `你有 0 条消息`,
-    //     click() {
-    //         mainWindow.show();
-    //         mainWindow.webContents.send('show-messages');
-    //     }
-    // },
     {
         label: '切换主窗口',
         click() {
@@ -371,13 +364,7 @@ function checkForUpdates() {
 }
 
 function updateTray(unread = 0) {
-    // if (!isOsx) {
-    // Always show the tray icon on windows
     settings.showOnTray = true;
-    // }
-
-    // Update unread mesage count
-    // trayMenu[0].label = `你有 ${unread} 条信息`;
 
     if (settings.showOnTray) {
         if (tray
@@ -407,6 +394,10 @@ function updateTray(unread = 0) {
                 tray.on('click', () => {
                     mainWindow.show();
                 });
+            }
+
+            if (isOsx) {
+                tray.setTitle(unread > 0 ? ' ' + unread : '');
             }
 
             tray.setImage(icon);
@@ -585,10 +576,11 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('message-unread', (event, args) => {
-        var counter = args.counter;
+        let count = args.count;
+        console.log('message-unread', count)
         //if (settings.showOnTray) {
-        updateTray(counter);
-        app.setBadgeCount(counter);
+        updateTray(count);
+        app.badgeCount = count;
         //}
     });
 
@@ -791,13 +783,8 @@ function clearBlink() {
 function execBlink(flag, _interval) {
     let interval = _interval ? _interval : 500;
     let icons;
-    if (!isOsx) {
-        icons = [`${workingDir}/images/icon.png`,
-            `${workingDir}/images/Remind_icon.png`];
-    } else {
-        icons = [`${workingDir}/images/tray.png`,
-            `${workingDir}/images/Remind_icon.png`];
-    }
+    icons = [`${workingDir}/images/tray.png`,
+        `${workingDir}/images/Remind_icon.png`];
 
     let count = 0;
     if (flag) {
