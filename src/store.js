@@ -420,22 +420,33 @@ let store = {
     /**
      *
      * @param conversation
-     * @param {File | string} file html File 类型或者绝对路径，绝对路径只在electron里面生效
+     * @param {File | string} file html File 类型或者url，绝对路径只在electron里面生效
      * @return {Promise<boolean>}
      */
     async sendFile(conversation, file) {
         console.log('send file', file)
+        let fileOrLocalPath = null;
+        let remotePath = null;
         if (typeof file === 'string') {
+            if (file.startsWith('/')) {
+                fileOrLocalPath = file;
+            } else {
+                remotePath = file;
+            }
+
             file = {
                 path: file,
                 name: file.substring((file.lastIndexOf('/') + 1))
             }
+        } else {
+            fileOrLocalPath = file;
         }
         let msg = new Message();
         msg.conversation = conversation;
 
-        var mediaType = helper.getMediaType(file.name.split('.').slice(-1).pop());
-        var messageContentmediaType = {
+        let mediaType = helper.getMediaType(file.name.split('.').slice(-1).pop());
+        // todo other file type
+        let messageContentmediaType = {
             'pic': MessageContentMediaType.Image,
             'video': MessageContentMediaType.Video,
             'doc': MessageContentMediaType.File,
@@ -449,7 +460,7 @@ let store = {
                     return false;
                 }
                 // let img64 = self.imgDataUriToBase64(imageThumbnail);
-                messageContent = new ImageMessageContent(file, null, iThumbnail.split(',')[1]);
+                messageContent = new ImageMessageContent(fileOrLocalPath, remotePath, iThumbnail.split(',')[1]);
                 break;
             case MessageContentMediaType.Video:
                 let vThumbnail = await videoThumbnail(file);
@@ -457,10 +468,10 @@ let store = {
                     return false;
                 }
                 // let video64 = self.imgDataUriToBase64(videoThumbnail);
-                messageContent = new VideoMessageContent(file, null, vThumbnail.split(',')[1]);
+                messageContent = new VideoMessageContent(fileOrLocalPath, remotePath, vThumbnail.split(',')[1]);
                 break;
             case MessageContentMediaType.File:
-                messageContent = new FileMessageContent(file);
+                messageContent = new FileMessageContent(fileOrLocalPath, remotePath);
                 break;
             default:
                 return false;

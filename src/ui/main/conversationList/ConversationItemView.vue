@@ -32,6 +32,9 @@ import ConversationInfo from "@/wfc/model/conversationInfo";
 import ConversationType from "@/wfc/model/conversationType";
 import store from "@/store";
 import Draft from "@/ui/util/draft";
+import FileMessageContent from "@/wfc/messages/fileMessageContent";
+import Message from "@/wfc/messages/message";
+import wfc from "@/wfc/client/wfc";
 
 export default {
   name: "ConversationItemView",
@@ -49,7 +52,6 @@ export default {
   },
   methods: {
     dragEvent(e, v) {
-      console.log('ci', this.dragAndDropEnterCount)
       if (v === 'dragenter') {
         this.dragAndDropEnterCount++;
       } else if (v === 'dragleave') {
@@ -63,8 +65,19 @@ export default {
           }
         } else {
           // TODO
-          // toast
-          console.log('一次最多发送5个文件');
+          let url = e.dataTransfer.getData('URL');
+          if (url) {
+            store.sendFile(this.conversationInfo.conversation, url);
+          } else {
+            let text = e.dataTransfer.getData('text');
+            if (text.startsWith('{')) {
+              let obj = JSON.parse(text);
+              let file = new FileMessageContent(null, obj.url, obj.name, obj.size)
+              let message = new Message(this.conversationInfo.conversation, file)
+              wfc.sendMessage(message);
+            }
+          }
+          console.log('一次最多发送5个文件', e.dataTransfer, e.dataTransfer.getData('URL'));
         }
       } else if (v === 'dragover') {
         // If not st as 'copy', electron will open the drop file
