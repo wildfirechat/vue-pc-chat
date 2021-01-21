@@ -577,7 +577,6 @@ const createMainWindow = async () => {
 
     ipcMain.on('message-unread', (event, args) => {
         let count = args.count;
-        console.log('message-unread', count)
         //if (settings.showOnTray) {
         updateTray(count);
         app.badgeCount = count;
