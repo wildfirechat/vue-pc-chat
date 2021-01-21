@@ -136,6 +136,10 @@ let store = {
 
         });
 
+        wfc.eventEmitter.on(EventType.ConversationInfoUpdate, (conversationInfo) => {
+            this._loadDefaultConversationList();
+        });
+
         wfc.eventEmitter.on(EventType.ReceiveMessage, (msg, hasMore) => {
             if (conversationState.currentConversationInfo && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
                 // 移动端，目前只有单聊会发送typing消息
