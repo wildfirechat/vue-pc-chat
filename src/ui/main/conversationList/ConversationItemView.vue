@@ -124,6 +124,9 @@ export default {
   position: relative;
   width: 45px;
   height: 45px;
+  min-width: 45px;
+  min-height: 45px;
+  background: #d6d6d6;
   top: 50%;
   transform: translateY(-50%);
   border-radius: 3px;
