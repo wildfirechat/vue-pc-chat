@@ -93,6 +93,7 @@ let store = {
             isPageHidden: false,
             enableNotification: true,
             notificationMessageDetail: true,
+            isElectron: isElectron(),
             isElectronWindows: process && process.platform === 'win32'
             // isElectronWindows: true,
         },
