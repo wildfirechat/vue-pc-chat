@@ -17,7 +17,7 @@
           <p class="time single-line">{{ conversationInfo._timeStr }}</p>
         </div>
         <div class="content">
-          <p class="draft single-line" v-if="shouldShowDraft">{{ draft }}</p>
+          <p class="draft single-line" v-if="shouldShowDraft" v-html="draft"></p>
           <p class="message single-line" v-else>
             {{ lastMessageContent }}</p>
           <i v-if="conversationInfo.isSilent" class="icon-ion-android-volume-mute"></i>
