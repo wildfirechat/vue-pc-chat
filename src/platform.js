@@ -29,7 +29,8 @@ export function connect(userId, token) {
 export const remote = require('electron').remote;
 export const ipcRenderer = require('electron').ipcRenderer;
 export const ipcMain = require('electron').ipcMain;
-// export const fs = require('file-system').fs;
+export const shell = require('electron').shell;
+export const fs = require('file-system').fs;
 export const currentWindow = require('electron').remote.getCurrentWindow();
 export const BrowserWindow = require('electron').remote.BrowserWindow;
 export const AppPath = require('electron').remote.app.getAppPath();

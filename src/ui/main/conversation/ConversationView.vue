@@ -103,6 +103,12 @@
           <li v-if="isRecallable(message)">
             <a @click.prevent="recallMessage(message)">撤回</a>
           </li>
+          <li v-if="isLocalFile(message)">
+            <a @click.prevent="openFile(message)">打开</a>
+          </li>
+          <li v-if="isLocalFile(message)">
+            <a @click.prevent="openDir(message)">打开目录</a>
+          </li>
         </vue-context>
       </div>
     </div>
@@ -132,6 +138,8 @@ import ForwardMessageByCreateConversationView
   from "@/ui/main/conversation/message/forward/ForwardMessageByCreateConversationView";
 import ScaleLoader from 'vue-spinner/src/ScaleLoader'
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
+import {fs, isElectron, shell} from "@/platform";
+import FileMessageContent from "@/wfc/messages/fileMessageContent";
 
 export default {
   components: {
@@ -301,6 +309,26 @@ export default {
 
     isRecallable(message) {
       return message && message.direction === 0 && new Date().getTime() - numberValue(message.timestamp) < 60 * 1000;
+    },
+
+    isLocalFile(message) {
+      if (message && isElectron()) {
+        let file = message.messageContent;
+        if (file instanceof FileMessageContent) {
+          return fs.existsSync(file.localPath);
+        }
+      }
+      return false;
+    },
+
+    openFile(message) {
+      let file = message.messageContent;
+      shell.openItem(file.localPath);
+    },
+
+    openDir(message) {
+      let file = message.messageContent;
+      shell.showItemInFolder(file.localPath);
     },
 
     recallMessage(message) {

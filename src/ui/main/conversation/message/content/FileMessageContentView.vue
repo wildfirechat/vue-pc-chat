@@ -1,6 +1,6 @@
 <template>
   <div class="file-message-container"
-       @click="downloadFile"
+       @click="clickFile"
        v-bind:class="{out:message.direction === 0}">
     <img :src="fileIcon" alt="">
     <div class="flex-column flex-align-start" draggable="true" @dragstart="dragFile($event)">
@@ -14,6 +14,7 @@
 import Message from "@/wfc/messages/message";
 import helper from "@/ui/util/helper";
 import {downloadFile} from "@/platformHelper";
+import {fs, isElectron, shell} from "@/platform";
 
 export default {
   name: "FileMessageContentView",
@@ -24,8 +25,17 @@ export default {
     }
   },
   methods: {
-    downloadFile() {
-      downloadFile(this.message)
+    clickFile() {
+      if (isElectron()) {
+        let localPath = this.message.messageContent.localPath;
+        if (localPath && fs.existsSync(localPath)) {
+          shell.openItem(localPath);
+        } else {
+          downloadFile(this.message)
+        }
+      } else {
+        downloadFile(this.message)
+      }
     },
 
     dragFile(event) {
@@ -36,7 +46,7 @@ export default {
         size: file.size
       }
       event.dataTransfer.setData('text', JSON.stringify(fileObj))
-    }
+    },
   },
   mounted() {
     console.log('file message', this.message)

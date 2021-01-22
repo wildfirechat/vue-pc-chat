@@ -611,13 +611,14 @@ const createMainWindow = async () => {
         mainWindow.webContents.loadURL(filename)
     });
 
-    ipcMain.on('open-file', async (event, filename) => {
-        shell.openItem(filename);
-    });
-
-    ipcMain.on('open-folder', async (event, dir) => {
-        shell.openItem(dir);
-    });
+    // 直接在ui层处理了
+    // ipcMain.on('open-file', async (event, filename) => {
+    //     shell.openItem(filename);
+    // });
+    //
+    // ipcMain.on('open-folder', async (event, dir) => {
+    //     shell.openItem(dir);
+    // });
 
     ipcMain.on('open-map', (event, args) => {
         event.preventDefault();

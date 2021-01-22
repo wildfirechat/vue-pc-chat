@@ -130,6 +130,7 @@ export default {
 
 .avatar-container {
   display: flex;
+  padding-left: 2px;
   align-items: center;
 }
 

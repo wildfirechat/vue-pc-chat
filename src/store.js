@@ -263,6 +263,24 @@ let store = {
                 conversationState.currentConversationRead = wfc.getConversationRead(conversationState.currentConversationInfo.conversation);
             }
         });
+
+        if (isElectron()) {
+            ipcRenderer.on('file-downloaded', (event, args) => {
+                let messageId = args.messageId;
+                let localPath = args.filePath;
+                let msg = wfc.getMessageById(messageId);
+                if (msg) {
+                    msg.messageContent.localPath = localPath;
+                    wfc.updateMessageContent(messageId, msg.messageContent);
+
+                    conversationState.currentConversationMessageList.forEach(m => {
+                        if (m.messageId === messageId) {
+                            m.messageContent = msg.messageContent;
+                        }
+                    });
+                }
+            })
+        }
     },
 
     // conversation actions
