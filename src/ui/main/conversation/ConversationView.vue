@@ -452,7 +452,10 @@ export default {
       // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
     }
     if (this.sharedConversationState.currentConversationInfo) {
-      store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
+      let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
+      if (unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll > 0) {
+      	store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
+      }
     }
   },
 

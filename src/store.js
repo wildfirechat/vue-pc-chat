@@ -618,7 +618,7 @@ let store = {
     removeConversation(conversation) {
         wfc.removeConversation(conversation, false);
         if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversation)) {
-            conversationState.currentConversationInfo = null;
+            this.setCurrentConversationInfo(null);
         }
         this._loadDefaultConversationList();
     },
