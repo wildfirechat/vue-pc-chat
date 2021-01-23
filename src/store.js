@@ -53,6 +53,8 @@ let store = {
 
             enableMessageMultiSelection: false,
             quotedMessage: null,
+
+            downloadingMessageIds: [],
         },
 
         contact: {
@@ -269,6 +271,9 @@ let store = {
             ipcRenderer.on('file-downloaded', (event, args) => {
                 let messageId = args.messageId;
                 let localPath = args.filePath;
+                console.log('file-downloaded', args)
+
+                conversationState.downloadingMessageIds = conversationState.downloadingMessageIds.filter(v => v !== messageId);
                 let msg = wfc.getMessageById(messageId);
                 if (msg) {
                     msg.messageContent.localPath = localPath;
@@ -280,7 +285,18 @@ let store = {
                         }
                     });
                 }
-            })
+            });
+
+            ipcRenderer.on('file-download-failed', (event, args) => {
+                let messageId = args.messageId;
+                conversationState.downloadingMessageIds = conversationState.downloadingMessageIds.filter(v => v !== messageId);
+                // TODO 其他下载失败处理
+            });
+
+            ipcRenderer.on('file-download-progress', (event, args) => {
+                let messageId = args.messageId;
+                // do nothing now
+            });
         }
     },
 
@@ -637,6 +653,19 @@ let store = {
             info._timeStr = '';
         }
         return info;
+    },
+
+    addDownloadingMessage(messageId) {
+        conversationState.downloadingMessageIds.push(messageId);
+        console.log('add downloading')
+    },
+
+    isDownloadingMessage(messageId) {
+        // web端尚未测试，先屏蔽
+        if (!isElectron()) {
+            return false;
+        }
+        return conversationState.downloadingMessageIds.indexOf(messageId) >= 0
     },
 
     // contact actions

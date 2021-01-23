@@ -15,6 +15,7 @@ import Message from "@/wfc/messages/message";
 import helper from "@/ui/util/helper";
 import {downloadFile} from "@/platformHelper";
 import {fs, isElectron, shell} from "@/platform";
+import store from "@/store";
 
 export default {
   name: "FileMessageContentView",
@@ -24,6 +25,11 @@ export default {
       required: true,
     }
   },
+  data() {
+    return {
+      sharedConversationState: store.state.conversation,
+    }
+  },
   methods: {
     clickFile() {
       if (isElectron()) {
@@ -31,7 +37,13 @@ export default {
         if (localPath && fs.existsSync(localPath)) {
           shell.openItem(localPath);
         } else {
-          downloadFile(this.message)
+          if (!this.message.isDownloading) {
+            downloadFile(this.message)
+            store.addDownloadingMessage(this.message.messageId)
+          } else {
+            // TODO toast 下载中
+            console.log('file isDownloading')
+          }
         }
       } else {
         downloadFile(this.message)
@@ -75,7 +87,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  max-width: 80%;
+  max-width: 500px;
   min-width: 150px;
 }
 
@@ -83,6 +95,7 @@ export default {
   width: 32px;
   height: 32px;
   margin-right: 10px;
+  min-width: 32px;
   border-radius: 3px;
 }
 

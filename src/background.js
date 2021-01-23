@@ -536,6 +536,7 @@ const createMainWindow = async () => {
                 console.log('Download successfully')
                 mainWindow.webContents.send('file-downloaded', {messageId: messageId, filePath: item.getSavePath()});
             } else {
+                mainWindow.webContents.send('file-download-failed', {messageId: messageId});
                 console.log(`Download failed: ${state}`)
             }
             downloadFileMap.delete(item.getURL());
