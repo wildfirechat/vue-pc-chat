@@ -337,6 +337,16 @@ let store = {
     },
 
     setCurrentConversationInfo(conversationInfo) {
+        if (!conversationInfo) {
+            conversationState.currentConversationInfo = null;
+            conversationState.shouldAutoScrollToBottom = false;
+            conversationState.currentConversationMessageList.length = 0;
+            conversationState.currentConversationDeliveries = null;
+            conversationState.currentConversationRead = null;
+            conversationState.enableMessageMultiSelection = false;
+            return;
+        }
+
         if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation)) {
             return;
         }
@@ -346,7 +356,7 @@ let store = {
         this._loadCurrentConversationMessages();
 
         conversationState.currentConversationDeliveries = wfc.getConversationDelivery(conversationInfo.conversation);
-        conversationInfo.currentConversationRead = wfc.getConversationRead(conversationInfo.conversation);
+        conversationState.currentConversationRead = wfc.getConversationRead(conversationInfo.conversation);
 
         conversationState.enableMessageMultiSelection = false;
         conversationState.quotedMessage = null;
@@ -355,6 +365,14 @@ let store = {
         conversationState.inputtingUser = null;
 
         pickState.messages.length = 0;
+    },
+
+    quitGroup(groupId) {
+        wfc.quitGroup(groupId, [0], null, () => {
+            this.setCurrentConversationInfo(null)
+        }, (err) => {
+            console.log('quit group error', err)
+        })
     },
 
     toggleMessageMultiSelection(message) {

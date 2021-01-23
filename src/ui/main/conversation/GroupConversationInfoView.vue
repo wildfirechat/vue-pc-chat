@@ -15,11 +15,11 @@
       <div class="search-item">
         <input type="text" placeholder="搜索">
       </div>
-      <div @click="showCreateConversationModal" class="action-item">
+      <div v-if="enableAddGroupMember" @click="showCreateConversationModal" class="action-item">
         <div class="icon">+</div>
         <p>添加成员</p>
       </div>
-      <div @click="showRemoveGroupMemberModal" class="action-item">
+      <div v-if="enableRemoveGroupMember" @click="showRemoveGroupMemberModal" class="action-item">
         <div class="icon">-</div>
         <p>移除成员</p>
       </div>
@@ -28,7 +28,7 @@
                    :padding-left="'20px'"
       />
     </div>
-    <div class="quit-group-item">
+    <div @click="quitGroup" class="quit-group-item">
       退出群聊
     </div>
   </div>
@@ -41,6 +41,8 @@ import store from "@/store";
 import PickUserView from "@/ui/main/pick/PickUserView";
 import wfc from "@/wfc/client/wfc";
 import axios from "axios";
+import GroupMemberType from "@/wfc/model/groupMemberType";
+import GroupType from "@/wfc/model/groupType";
 
 export default {
   name: "GroupConversationInfoView",
@@ -143,13 +145,33 @@ export default {
         this.groupAnnouncement = '点击编辑群公告';
       }
     },
+
+    quitGroup() {
+      store.quitGroup(this.conversationInfo.conversation.target)
+    },
   },
 
   created() {
     this.getGroupAnnouncement();
   },
 
-  computed: {}
+  computed: {
+    enableAddGroupMember() {
+      let selfUid = wfc.getUserId();
+      let groupInfo = this.conversationInfo.conversation._target;
+      if (groupInfo.type === GroupType.Restricted) {
+        let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
+        return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+      }
+      return true;
+    },
+
+    enableRemoveGroupMember() {
+      let selfUid = wfc.getUserId();
+      let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
+      return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+    }
+  }
 };
 </script>
 
