@@ -628,6 +628,6 @@ export default {
 }
 
 .conversation-info-container.active {
-  display: block;
+  display: flex;
 }
 </style>
