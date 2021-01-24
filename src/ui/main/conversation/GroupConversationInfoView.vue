@@ -11,10 +11,10 @@
                :placeholder="groupAnnouncement">
       </label>
     </header>
-    <div class="member-container">
       <div class="search-item">
         <input type="text" placeholder="搜索">
       </div>
+    <div class="member-container">
       <div v-if="enableAddGroupMember" @click="showCreateConversationModal" class="action-item">
         <div class="icon">+</div>
         <p>添加成员</p>

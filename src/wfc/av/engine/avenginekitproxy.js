@@ -278,7 +278,7 @@ export class AvEngineKitProxy {
             return;
         }
         if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || (!audioOnly && !this.hasWebcam)) {
-            console.log('not support voip', this.isSupportVoip, this.hasSpeaker);
+            console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone);
             return;
         }
         let callId = conversation.target + Math.floor(Math.random() * 10000);

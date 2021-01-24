@@ -5,6 +5,23 @@
            v-click-outside="hideSearchView">
     <div class="search-result">
       <ul>
+        <li class="category-item" v-if="sharedSearchState.userSearchResult.length > 0">
+          <label>新用户</label>
+          <ul>
+            <li v-for="(user, index) in toShowUserList" :key="index">
+              <div class="search-result-item contact">
+                <img :src="user.portrait">
+                <span>{{ user.displayName }}</span>
+                <button @click="addFriend(user)">添加</button>
+              </div>
+            </li>
+          </ul>
+          <div v-if="!shouldShowAllUser&& this.sharedSearchState.userSearchResult.length > 5"
+               class="show-all"
+               @click.stop="showAllUser">
+            查看全部({{ this.sharedSearchState.contactSearchResult.length }})
+          </div>
+        </li>
         <li class="category-item" v-if="sharedSearchState.contactSearchResult.length > 0">
           <label>联系人</label>
           <ul>
@@ -53,6 +70,7 @@ import ClickOutside from "vue-click-outside";
 import store from "@/store";
 import Conversation from "@/wfc/model/conversation";
 import ConversationType from "@/wfc/model/conversationType";
+import FriendRequestView from "@/ui/main/contact/FriendRequestView";
 
 export default {
   name: "SearchResultView",
@@ -62,6 +80,7 @@ export default {
   data() {
     return {
       sharedSearchState: store.state.search,
+      shouldShowAllUser: false,
       shouldShowAllContact: false,
       shouldShowAllGroup: false,
     }
@@ -93,6 +112,23 @@ export default {
   },
 
   methods: {
+    addFriend(user) {
+      this.$modal.show(
+          FriendRequestView,
+          {
+            userInfo: user,
+          },
+          {
+            name: 'friend-request-modal',
+            width: 600,
+            height: 250,
+            clickToClose: false,
+          }, {
+          })
+    },
+    showAllUser() {
+      this.shouldShowAllUser = true;
+    },
     showAllContact() {
       this.shouldShowAllContact = true;
     },
@@ -108,12 +144,16 @@ export default {
     },
 
     chatToContact(contact) {
+      //TODO
+      // fixme 联系人页面点击，未切换到会话页面
       let conversation = new Conversation(ConversationType.Single, contact.uid, 0);
       store.setCurrentConversation(conversation);
       store.toggleSearchView(false);
     },
 
     chatToGroup(group) {
+      //TODO
+      // fixme 联系人页面点击，未切换到会话页面
       let conversation = new Conversation(ConversationType.Group, group.target, 0);
       store.setCurrentConversation(conversation);
       store.toggleSearchView(false);
@@ -122,6 +162,9 @@ export default {
   },
 
   computed: {
+    toShowUserList: function () {
+      return !this.shouldShowAllUser && this.sharedSearchState.userSearchResult.length > 5 ? this.sharedSearchState.userSearchResult.slice(0, 4) : this.sharedSearchState.userSearchResult;
+    },
     toShowContactList: function () {
       return !this.shouldShowAllContact && this.sharedSearchState.contactSearchResult.length > 5 ? this.sharedSearchState.contactSearchResult.slice(0, 4) : this.sharedSearchState.contactSearchResult;
     },
@@ -194,6 +237,10 @@ export default {
 .search-result-item.contact span {
   font-size: 14px;
   padding-left: 10px;
+}
+
+.search-result-item.contact button {
+  margin-left: auto;
 }
 
 .search-result-item.group {
