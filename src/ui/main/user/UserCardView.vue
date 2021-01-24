@@ -2,7 +2,7 @@
   <section @click.stop="" class="user-info-container">
     <div class="header">
       <div class="desc">
-        <h2>{{ userInfo._displayName}}</h2>
+        <h2>{{ userInfo._displayName }}</h2>
         <label>野火ID: {{ userInfo.name }}</label>
       </div>
       <div>
@@ -82,7 +82,7 @@ export default {
 
   computed: {
     isFriend() {
-      return wfc.isMyFriend(this.userInfo.uid)
+      return this.userInfo.uid === wfc.getUserId() || wfc.isMyFriend(this.userInfo.uid)
     }
   }
 };

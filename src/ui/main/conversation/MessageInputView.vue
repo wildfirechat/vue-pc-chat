@@ -460,10 +460,10 @@ export default {
       this.$refs['input'].innerHTML = draft.text;
     },
 
-    storeDraft(conversation, quotedMessage) {
+    storeDraft(conversationInfo, quotedMessage) {
       let draftText = this.$refs['input'].innerHTML.trim();
-      if (draftText !== this.conversationInfo.draft) {
-        Draft.setConversationDraft(conversation, draftText, quotedMessage)
+      if (draftText !== conversationInfo.draft) {
+        Draft.setConversationDraft(conversationInfo.conversation, draftText, quotedMessage)
       }
     },
 
@@ -491,7 +491,7 @@ export default {
   watch: {
     conversationInfo() {
       if (this.lastConversationInfo && !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation)) {
-        this.storeDraft(this.lastConversationInfo.conversation, lastQuotedMessage);
+        this.storeDraft(this.lastConversationInfo, lastQuotedMessage);
       }
 
       this.lastConversationInfo = this.conversationInfo;
