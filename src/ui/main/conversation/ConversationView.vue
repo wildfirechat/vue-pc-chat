@@ -157,9 +157,8 @@ export default {
   // props: ["conversation"],
   data() {
     return {
+      conversationInfo: null,
       showConversationInfo: false,
-      isInviteConversationMember: false,
-      isShowConversationMember: false,
       sharedConversationState: store.state.conversation,
       sharedContactState: store.state.contact,
       sharedPickState: store.state.pick,
@@ -170,7 +169,6 @@ export default {
       saveMessageListViewFlexGrow: -1,
 
       dragAndDropEnterCount: 0,
-
     };
   },
 
@@ -454,9 +452,14 @@ export default {
     if (this.sharedConversationState.currentConversationInfo) {
       let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
       if (unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll > 0) {
-      	store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
+        store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
       }
     }
+
+    if (this.conversationInfo && !this.conversationInfo.conversation.equal(this.sharedConversationState.currentConversationInfo.conversation)) {
+      this.showConversationInfo = false;
+    }
+    this.conversationInfo = this.sharedConversationState.currentConversationInfo;
   },
 
   computed: {
