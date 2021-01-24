@@ -12,7 +12,7 @@
               <div class="search-result-item contact">
                 <img :src="user.portrait">
                 <span>{{ user.displayName }}</span>
-                <button @click="addFriend(user)">添加</button>
+                <button @click.stop="addFriend(user)">添加</button>
               </div>
             </li>
           </ul>
@@ -123,8 +123,7 @@ export default {
             width: 600,
             height: 250,
             clickToClose: false,
-          }, {
-          })
+          }, {})
     },
     showAllUser() {
       this.shouldShowAllUser = true;
@@ -218,10 +217,6 @@ export default {
   background-color: #d9d9d9;
 }
 
-.search-result-item.active {
-  background-color: #d9d9d9;
-}
-
 .search-result-item.contact {
   width: 100%;
   display: flex;
@@ -241,6 +236,18 @@ export default {
 
 .search-result-item.contact button {
   margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 3px;
+  border: 1px solid #cccccc;
+  outline: none;
+}
+
+.search-result-item.contact:active {
+  background-color: white;
+}
+
+.search-result-item.contact button:active {
+  background: #cccccc;
 }
 
 .search-result-item.group {
