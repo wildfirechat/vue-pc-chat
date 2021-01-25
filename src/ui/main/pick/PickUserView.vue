@@ -9,7 +9,7 @@
                                :users="filterUsers"
                                :initial-checked-users="initialCheckedUsers"
                                :uncheckable-users="uncheckableUsers"
-                               :show-category-label=showCategoryLabel
+                               :show-category-label="showCategoryLabel && !filterQuery"
                                :padding-left="'20px'"
                                enable-category-label-sticky/>
       </div>
