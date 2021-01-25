@@ -115,4 +115,8 @@ export default {
   font-size: 16px;
 }
 
+.rightarrow:before {
+  border-left-color: white;
+}
+
 </style>
