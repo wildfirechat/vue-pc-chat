@@ -59,6 +59,8 @@ const helper = {
             case ['ai', 'apk', 'exe', 'ipa', 'pdf', 'ppt', 'psd'].includes(extension):
                 filename = extension;
                 break;
+            default:
+                break;
         }
 
         return `${filename}.png`;

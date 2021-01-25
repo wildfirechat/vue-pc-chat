@@ -2,11 +2,11 @@
   <div class="pick-contact-container">
     <section class="contact-list-container">
       <div class="input-container">
-        <input type="text" placeholder="搜索">
+        <input type="text" placeholder="搜索" v-model="filterQuery">
       </div>
       <div class="friend-list-container">
         <CheckableUserListView :enable-pick="true"
-                               :users="users"
+                               :users="filterUsers"
                                :initial-checked-users="initialCheckedUsers"
                                :uncheckable-users="uncheckableUsers"
                                :show-category-label=showCategoryLabel
@@ -79,6 +79,7 @@ export default {
   data() {
     return {
       sharedPickState: store.state.pick,
+      filterQuery: '',
     }
   },
   methods: {
@@ -123,6 +124,13 @@ export default {
       return users.filter(u => {
         return this.initialCheckedUsers.findIndex(iu => iu.uid === u.uid) === -1
       })
+    },
+    filterUsers() {
+      if (this.filterQuery) {
+        return store.filterUsers(this.users, this.filterQuery);
+      } else {
+        return this.users;
+      }
     }
   },
 

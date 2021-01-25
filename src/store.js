@@ -738,19 +738,12 @@ let store = {
             return u;
         }).sort((a, b) => a.__sortPinyin.localeCompare(b.__sortPinyin));
 
-        let lastFirstLetter = null;
         userInfos.forEach(u => {
             let uFirstLetter = u.__sortPinyin[1];
             if (uFirstLetter >= 'a' && uFirstLetter <= 'z') {
-                if (!lastFirstLetter || lastFirstLetter !== uFirstLetter) {
-                    u._category = uFirstLetter;
-                    lastFirstLetter = u._category;
-                }
+                u._category = uFirstLetter;
             } else {
-                if (lastFirstLetter !== '#') {
-                    u._category = '#';
-                    lastFirstLetter = u._category;
-                }
+                u._category = '#';
             }
         });
         return userInfos;
@@ -841,7 +834,19 @@ let store = {
 
         console.log('friend searchResult', result)
         return result;
+    },
 
+    filterUsers(users, filter) {
+        if (!users || !filter || !filter.trim()) {
+            return users;
+        }
+        let queryPinyin = convert(filter, {style: 0}).join('').trim().toLowerCase();
+        let result = users.filter(u => {
+            return u._displayName.indexOf(filter) > -1 || u._displayName.indexOf(queryPinyin) > -1
+                || u._pinyin.indexOf(filter) > -1 || u._pinyin.indexOf(queryPinyin) > -1
+                || u._firstLetters.indexOf(filter) > -1 || u._firstLetters.indexOf(queryPinyin) > -1
+        });
+        return result;
     },
 
     // TODO 匹配类型，是群名称匹配上了，还是群成员的名称匹配上了？

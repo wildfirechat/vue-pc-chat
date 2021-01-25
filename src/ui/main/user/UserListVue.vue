@@ -120,8 +120,10 @@ export default {
     groupedUsers() {
       let groupedUsers = [];
       let current = {};
+      let lastCategory = null;
       this.users.forEach((user) => {
-        if (user._category) {
+        if (!lastCategory || lastCategory !== user._category) {
+          lastCategory = user._category;
           current = {
             category: user._category,
             users: [user],

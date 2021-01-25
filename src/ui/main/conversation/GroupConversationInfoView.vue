@@ -11,15 +11,15 @@
                :placeholder="groupAnnouncement">
       </label>
     </header>
-      <div class="search-item">
-        <input type="text" placeholder="搜索">
-      </div>
+    <div class="search-item">
+      <input type="text" v-model="filterQuery" placeholder="搜索">
+    </div>
     <div class="member-container">
-      <div v-if="enableAddGroupMember" @click="showCreateConversationModal" class="action-item">
+      <div v-if="enableAddGroupMember && !filterQuery" @click="showCreateConversationModal" class="action-item">
         <div class="icon">+</div>
         <p>添加成员</p>
       </div>
-      <div v-if="enableRemoveGroupMember" @click="showRemoveGroupMemberModal" class="action-item">
+      <div v-if="enableRemoveGroupMember && !filterQuery" @click="showRemoveGroupMemberModal" class="action-item">
         <div class="icon">-</div>
         <p>移除成员</p>
       </div>
@@ -54,7 +54,8 @@ export default {
   },
   data() {
     return {
-      users: store.getConversationMemberUsrInfos(this.conversationInfo.conversation),
+      groupMemberUserInfos: store.getConversationMemberUsrInfos(this.conversationInfo.conversation),
+      filterQuery: '',
       sharedContactState: store.state.contact,
       groupAnnouncement: '',
     }
@@ -170,8 +171,16 @@ export default {
       let selfUid = wfc.getUserId();
       let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
       return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+    },
+
+    users() {
+      if (this.filterQuery) {
+        return store.filterUsers(this.groupMemberUserInfos, this.filterQuery)
+      } else {
+        return this.groupMemberUserInfos;
+      }
     }
-  }
+  },
 };
 </script>
 
