@@ -83,7 +83,7 @@
         <vue-context ref="menu" v-slot="{data:message}" :close-on-scroll="true">
           <!--          更多menu item-->
           <li v-if="isCopyable(message)">
-            <a @click.prevent="">复制</a>
+            <a @click.prevent="copy(message)">复制</a>
           </li>
           <li>
             <a @click.prevent="delMessage(message)">删除</a>
@@ -140,6 +140,8 @@ import ScaleLoader from 'vue-spinner/src/ScaleLoader'
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import {fs, isElectron, shell} from "@/platform";
 import FileMessageContent from "@/wfc/messages/fileMessageContent";
+import ImageMessageContent from "@/wfc/messages/imageMessageContent";
+import {copyImg, copyText} from "@/ui/util/clipboard";
 
 export default {
   components: {
@@ -294,7 +296,7 @@ export default {
 
     // message context menu
     isCopyable(message) {
-      return message && message.messageContent instanceof TextMessageContent;
+      return message && (message.messageContent instanceof TextMessageContent || message.messageContent instanceof ImageMessageContent);
     },
 
     isForwardable(message) {
@@ -317,6 +319,15 @@ export default {
         }
       }
       return false;
+    },
+
+    copy(message) {
+      let content = message.messageContent;
+      if (content instanceof TextMessageContent) {
+        copyText(content.content)
+      } else {
+        copyImg(content.remotePath)
+      }
     },
 
     openFile(message) {
