@@ -13,7 +13,7 @@ switch (process.platform) {
         }
         break
     case "win32":
-        if (process.arch === 'x32') {
+        if (process.arch === 'ia32') {
             protoName += '.win32'
         } else {
             protoName += '.win64'
