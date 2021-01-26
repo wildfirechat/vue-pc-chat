@@ -34,7 +34,7 @@
         <div ref="conversationMessageList" class="conversation-message-list" v-on:scroll="onScroll" infinite-wrapper>
           <infinite-loading :identifier="loadingIdentifier" force-use-infinite-wrapper direction="top"
                             @infinite="infiniteHandler">
-            <template slot="spinner">加载中...</template>
+<!--            <template slot="spinner">加载中...</template>-->
             <template slot="no-more">没有更多消息</template>
             <template slot="no-results">已加载全部消息 :(</template>
           </infinite-loading>
@@ -81,7 +81,7 @@
             class="conversation-info-container"
         />
 
-        <vue-context ref="menu" v-slot="{data:message}" :close-on-scroll="true">
+        <vue-context ref="menu" v-slot="{data:message}" :close-on-scroll="true" v-on:close="onMenuClose">
           <!--          更多menu item-->
           <li v-if="isCopyable(message)">
             <a @click.prevent="copy(message)">复制</a>
@@ -293,6 +293,10 @@ export default {
 
     dragEnd() {
       this.isHandlerDragging = false;
+    },
+
+    onMenuClose() {
+      console.log('xxoxooojjo')
     },
 
     // message context menu

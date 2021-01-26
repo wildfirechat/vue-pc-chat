@@ -100,7 +100,7 @@ export default {
         return false;
       }
       let draft = Draft.getConversationDraftEx(this.conversationInfo);
-      return draft.text !== '' || draft.quotedMessage !== null;
+      return draft.text.trim() !== '' || draft.quotedMessage !== null;
     },
 
     draft() {
@@ -226,6 +226,7 @@ export default {
 .content .draft {
   color: red;
   font-size: 13px;
+  height: 20px;
 }
 
 .content .message {

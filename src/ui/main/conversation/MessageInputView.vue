@@ -462,8 +462,15 @@ export default {
 
     storeDraft(conversationInfo, quotedMessage) {
       let draftText = this.$refs['input'].innerHTML.trim();
-      if (draftText !== conversationInfo.draft) {
-        Draft.setConversationDraft(conversationInfo.conversation, draftText, quotedMessage)
+      let tmp = draftText.replace(/<br>/g, '').replace(/<div><\/div>/g, '')
+      if (tmp.length === 0) {
+        if (conversationInfo.draft !== '') {
+          Draft.setConversationDraft(conversationInfo.conversation, tmp, quotedMessage)
+        }
+      } else {
+        if (draftText !== conversationInfo.draft) {
+          Draft.setConversationDraft(conversationInfo.conversation, draftText, quotedMessage)
+        }
       }
     },
 

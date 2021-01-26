@@ -230,7 +230,7 @@ header label input {
 }
 
 .member-container {
-  flex: 1 1 auto;
+  flex: 1;
   overflow: auto;
 }
 
@@ -279,7 +279,8 @@ header label input {
   color: red;
   align-items: center;
   justify-content: center;
-  height: 55px;
+  height: 50px;
+  max-height: 50px;
   border-top: 1px solid #ececec;
 }
 
