@@ -17,15 +17,12 @@
               trigger="click"
               arrow
           >
-            <UserCardView v-on:close="closeUserCard" :user-info="sharedContactState.selfUserInfo"/>
-            <!--            <div class="user-info-container">-->
-            <!--              <h3>Header</h3>-->
-            <!--              <p style="color: black">TODO - data binding</p>-->
-            <!--              <button @click="test">Click</button>-->
-            <!--            </div>-->
+            <UserCardView v-if="sharedContactState.selfUserInfo" v-on:close="closeUserCard"
+                          :user-info="sharedContactState.selfUserInfo"/>
           </tippy>
 
           <a href="#"><img
+              v-if="sharedContactState.selfUserInfo"
               ref="userCardTippy"
               name="infoTrigger"
               class="avatar"
