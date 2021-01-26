@@ -1,7 +1,7 @@
 <template>
   <div class="home-container">
     <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
-                                      v-if="sharedMiscState.isElectronWindows"/>
+                                      v-if="sharedMiscState.isElectronWindowsOrLinux"/>
     <div class="home">
       <section class="menu-container">
         <div>

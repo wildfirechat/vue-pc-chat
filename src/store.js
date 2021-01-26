@@ -98,7 +98,7 @@ let store = {
             enableNotification: true,
             notificationMessageDetail: true,
             isElectron: isElectron(),
-            isElectronWindows: process && process.platform === 'win32'
+            isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
             // isElectronWindows: true,
         },
     },

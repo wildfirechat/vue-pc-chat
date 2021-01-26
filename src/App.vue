@@ -58,7 +58,7 @@ export default {
       root.style.setProperty('--home-menu-padding-top', '60px')
     }
 
-    if (this.sharedMiscState.isElectronWindows) {
+    if (this.sharedMiscState.isElectronWindowsOrLinux) {
       root.style.setProperty('--main-border-radius', '0px')
     }
   },
