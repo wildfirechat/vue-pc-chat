@@ -99,7 +99,7 @@ let store = {
             notificationMessageDetail: true,
             isElectron: isElectron(),
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
-            // isElectronWindows: true,
+            // isElectronWindowsOrLinux: true,
         },
     },
 
