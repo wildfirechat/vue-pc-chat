@@ -64,6 +64,7 @@ import wfc from "@/wfc/client/wfc";
 import EventType from "@/wfc/client/wfcEvent";
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
+import {removeItem, storage} from "@/ui/util/storageHelper";
 
 export default {
   data() {
@@ -109,6 +110,12 @@ export default {
 
         if (this.$router.currentRoute.path !== '/') {
           this.$router.push({path: "/"});
+        }
+        if (status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
+            || status === ConnectionStatus.ConnectionStatusTokenIncorrect
+            || status === ConnectionStatus.ConnectionStatusRejected) {
+          removeItem("userId");
+          removeItem('token')
         }
       }
     }

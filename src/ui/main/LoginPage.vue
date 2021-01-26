@@ -44,6 +44,7 @@ import PCSession from "@/wfc/model/pcsession";
 import jrQRCode from 'jr-qrcode'
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import EventType from "@/wfc/client/wfcEvent";
+import {getItem, removeItem, setItem, storage} from "@/ui/util/storageHelper";
 
 export default {
   name: 'App',
@@ -61,10 +62,10 @@ export default {
     wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
     axios.defaults.baseURL = Config.APP_SERVER;
 
-    let userId = this.storageGetItem('userId');
-    let token = this.storageGetItem('token');
+    let userId = getItem('userId');
+    let token = getItem('token');
     if (userId) {
-      let portrait = this.storageGetItem("userPortrait");
+      let portrait = getItem("userPortrait");
       this.qrCode = portrait;
 
       if (Config.ENABLE_AUTO_LOGIN && token) {
@@ -130,14 +131,14 @@ export default {
               let userId = response.data.result.userId;
               let imToken = response.data.result.token;
               wfc.connect(userId, imToken);
-              this.storageSetItem('userId', userId);
-              this.storageSetItem('token', imToken);
+              setItem('userId', userId);
+              setItem('token', imToken);
             }
             break;
           case 9:
             this.qrCode = response.data.result.portrait;
-            this.storageSetItem("userName", response.data.result.userName);
-            this.storageSetItem("userPortrait", response.data.result.portrait);
+            setItem("userName", response.data.result.userName);
+            setItem("userPortrait", response.data.result.portrait);
 
             if (this.loginStatus === 0) {
               this.loginStatus = 1;
@@ -159,7 +160,7 @@ export default {
     },
 
     sendQuickLoginRequest() {
-      let userId = this.storageGetItem("userId");
+      let userId = getItem("userId");
       this.createPCLoginSession(userId);
       this.loginStatus = 3;
     },
@@ -167,10 +168,10 @@ export default {
     cancel() {
 
       this.loginStatus = 0;
-      this.storageRemoveItem("userId");
-      this.storageRemoveItem("token");
-      this.storageRemoveItem("userName");
-      this.storageRemoveItem("userPortrait")
+      removeItem("userId");
+      removeItem("token");
+      removeItem("userName");
+      removeItem("userPortrait")
 
       this.createPCLoginSession(null);
       this.refreshQrCode();
@@ -188,39 +189,6 @@ export default {
       }
     },
 
-    // TODO 考虑挪到wfc.js里面去
-    storageGetItem(key) {
-      if (!this.storage) {
-        return;
-      }
-      return this.storage.getItem(key);
-    },
-
-    storageSetItem(key, value) {
-      if (!this.storage) {
-        return;
-      }
-      this.storage.setItem(key, value);
-    },
-
-    storageRemoveItem(key) {
-      if (!this.storage) {
-        return;
-      }
-      this.storage.removeItem(key);
-    }
-  },
-
-  computed: {
-    storage() {
-      let s = null;
-      if (Config.CLIENT_ID_STRATEGY === 1) {
-        s = sessionStorage;
-      } else if (Config.CLIENT_ID_STRATEGY === 2) {
-        s = localStorage;
-      }
-      return s;
-    }
   },
 
   destroyed() {

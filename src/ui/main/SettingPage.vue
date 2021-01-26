@@ -40,6 +40,7 @@
 <script>
 import wfc from "@/wfc/client/wfc";
 import store from "@/store";
+import {removeItem, storage} from "@/ui/util/storageHelper";
 
 export default {
   name: "SettingPage",
@@ -50,8 +51,10 @@ export default {
   },
   methods: {
     logout() {
-      localStorage.removeItem("userId");
-      sessionStorage.removeItem("userId");
+      removeItem("userId");
+      removeItem('token');
+      // localStorage.removeItem("token")
+      // sessionStorage.removeItem("token")
       wfc.disconnect();
     }
   },
