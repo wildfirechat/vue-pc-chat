@@ -72,6 +72,7 @@ ul {
   align-items: center;
   border-top-right-radius: var(--main-border-radius);
   border-bottom-right-radius: var(--main-border-radius);
+  -webkit-app-region: drag;
 }
 
 .contact-empty-container h1 {

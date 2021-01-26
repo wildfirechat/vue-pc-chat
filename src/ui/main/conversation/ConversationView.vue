@@ -15,7 +15,8 @@
           <h1 class="single-line">{{ conversationTitle }}</h1>
           <a href="#"><i class="icon-ion-ios-settings-strong"
                          style="display: inline-block"
-                         v-bind:style="{marginTop:sharedMiscState.isElectronWindows ?  '30px' : '0'}" ref="setting"
+                         v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
+                         ref="setting"
                          @click="toggleConversationInfo"/></a>
         </div>
       </header>
@@ -501,6 +502,7 @@ export default {
   border-top-right-radius: var(--main-border-radius);
   border-bottom-right-radius: var(--main-border-radius);
   /*border-left: 1px solid #e6e6e6;*/
+  -webkit-app-region: drag;
 }
 
 .conversation-empty-container h1 {
@@ -518,6 +520,7 @@ export default {
   background-color: #f5f5f5;
   border-bottom: 1px solid #e6e6e6;
   border-top-right-radius: var(--main-border-radius);
+  -webkit-app-region: drag;
 }
 
 .title-container h1 {
