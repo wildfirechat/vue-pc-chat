@@ -998,8 +998,8 @@ let store = {
                         ipcRenderer.send('click-notification')
                     } else {
                         window.focus();
+                        this.close();
                     }
-                    this.close();
                     this.setCurrentConversation(msg.conversation)
                 }
             });
