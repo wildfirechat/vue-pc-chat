@@ -21,6 +21,7 @@ import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
 import {ipcRenderer, isElectron} from "@/platform";
 import SearchType from "@/wfc/model/searchType";
+import Config from "@/config";
 
 /**
  * 一些说明
@@ -697,6 +698,10 @@ let store = {
 
     _loadFriendList() {
         let friends = wfc.getMyFriendList(false);
+        let fileHelperIndex = friends.indexOf(Config.FILE_HELPER_ID);
+        if (fileHelperIndex < 0) {
+            friends.push(Config.FILE_HELPER_ID);
+        }
         if (friends && friends.length > 0) {
             let friendList = wfc.getUserInfos(friends, '');
             contactState.friendList = this._patchAndSortUserInfos(friendList, '');
