@@ -143,16 +143,18 @@ export default {
     },
 
     chatToContact(contact) {
-      //TODO
-      // fixme 联系人页面点击，未切换到会话页面
+      if (this.$router.currentRoute.path !== '/home') {
+        this.$router.replace("/home");
+      }
       let conversation = new Conversation(ConversationType.Single, contact.uid, 0);
       store.setCurrentConversation(conversation);
       store.toggleSearchView(false);
     },
 
     chatToGroup(group) {
-      //TODO
-      // fixme 联系人页面点击，未切换到会话页面
+      if (this.$router.currentRoute.path !== '/home') {
+        this.$router.replace("/home");
+      }
       let conversation = new Conversation(ConversationType.Group, group.target, 0);
       store.setCurrentConversation(conversation);
       store.toggleSearchView(false);
