@@ -1,19 +1,32 @@
 #!/usr/bin/env node
 
 //var opsys = process.platform;
+const argv = process.argv;
 let protoName = "marswrapper";
-switch (process.platform) {
+
+platform = process.platform;
+arch = process.arch;
+
+if (argv.length === 4) {
+    platform = argv[2];
+    arch = argv[3];
+}
+
+switch (platform) {
     case "darwin":
         protoName += '.mac'
+        if (arch === 'arm64') {
+            protoName += '.arm64'
+        }
         break;
     case "linux":
         protoName += '.linux'
-        if (process.arch === 'arm64') {
+        if (arch === 'arm64') {
             protoName += '.arm64'
         }
         break
     case "win32":
-        if (process.arch === 'ia32') {
+        if (arch === 'ia32') {
             protoName += '.win32'
         } else {
             protoName += '.win64'
@@ -25,7 +38,7 @@ switch (process.platform) {
 }
 protoName += '.node'
 
-console.log("Try copy " + protoName + "\n\n")
+console.log("Copy " + protoName + "\n\n")
 
 var shelljs = require('shelljs');
 var addCheckMark = require('./checkmark');

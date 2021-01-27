@@ -50,6 +50,42 @@ module.exports = {
             // Note that it is ignored when --debug flag is used with "electron:serve", as you must launch Electron yourself
             // Command line args (excluding --debug, --dashboard, and --headless) are passed to Electron as well
             // mainProcessArgs: ['--arg-name', 'arg-value']
+            // outputDir: 'release',
+            builderOptions: {
+              productName: 'wildfirechat',
+              appId: 'cn.wildfire.chat',
+              compression: 'normal',
+              artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
+              mac: {
+                extendInfo: {
+                  NSCameraUsageDescription: "This app requires camera access to record video.",
+                  NSMicrophoneUsageDescription: "This app requires microphone access to record audio."
+                },
+                hardenedRuntime: true,
+                gatekeeperAssess: false
+              },
+              linux: {
+                category: "Chat",
+                executableName: "wildfireChat",
+                target: [
+                  'deb',
+                  'AppImage'
+                ]
+              },
+              win: {
+                target: "nsis",
+                requestedExecutionLevel: "asInvoker"
+              },
+              nsis: {
+                oneClick: false,
+                allowToChangeInstallationDirectory: true,
+                artifactName: '${productName}-${version}-${os}-${arch}-setup.${ext}',
+                deleteAppDataOnUninstall: true,
+                perMachine: false,
+                createDesktopShortcut: true,
+                shortcutName: "wildfireChat"
+              }
+            }
         }
     },
 }

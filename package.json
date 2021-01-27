@@ -2,13 +2,21 @@
   "name": "wf-pc-chat",
   "version": "0.1.0",
   "private": true,
+  "author": {
+    "email": "imndxx@gmail.com"
+  },
   "scripts": {
     "electron:build": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:build",
     "electron:serve": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:serve",
     "electron:dev": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "electron:generate-icons": "electron-icon-builder --input=./public/images/icon.png --output=build --flatten"
+    "electron:generate-icons": "electron-icon-builder --input=./public/images/icon.png --output=build --flatten",
+    "cross-package-win": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 x64 && vue-cli-service electron:build --win --x64 -p never",
+    "cross-package-win32": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 ia32 && vue-cli-service electron:build --win --ia32 -p never",
+    "cross-package-linux": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux x64 && vue-cli-service electron:build --linux --x64 -p never",
+    "cross-package-linux-arm64": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
+    "cross-package-mac": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin x64 && vue-cli-service electron:build --mac --x64 -p never"
   },
   "main": "background.js",
   "dependencies": {

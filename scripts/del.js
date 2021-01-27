@@ -7,7 +7,7 @@ if (argv.length <= 2) {
 }
 const targets = argv[2]
 
-console.log("Try del " + targets + "\n\n")
+console.log("Del " + targets + "\n\n")
 
 var shelljs = require('shelljs');
 var addCheckMark = require('./checkmark');
