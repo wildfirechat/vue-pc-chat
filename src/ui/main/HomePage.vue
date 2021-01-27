@@ -117,6 +117,7 @@ export default {
           this.$router.push({path: "/"});
         }
         if (status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
+            || status === ConnectionStatus.ConnectionStatusLogout
             || status === ConnectionStatus.ConnectionStatusTokenIncorrect
             || status === ConnectionStatus.ConnectionStatusRejected) {
           removeItem("userId");
