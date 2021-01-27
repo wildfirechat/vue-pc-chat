@@ -129,6 +129,10 @@ let store = {
             // TODO 其他相关逻辑
         });
 
+        wfc.eventEmitter.on(EventType.SettingUpdate, () => {
+            this._loadDefaultConversationList();
+        });
+
         wfc.eventEmitter.on(EventType.FriendRequestUpdate, (newFrs) => {
             this._loadFriendRequest();
         });
