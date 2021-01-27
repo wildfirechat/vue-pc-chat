@@ -105,7 +105,9 @@ export default {
   },
 
   mounted() {
-    this.tippyStyleFix()
+    if (!this.clickUserItemFunc) {
+      this.tippyStyleFix()
+    }
   },
 
   activated() {
@@ -113,7 +115,9 @@ export default {
   },
 
   destroyed() {
-    this.tippyStyleReset()
+    if (!this.clickUserItemFunc) {
+      this.tippyStyleReset()
+    }
   },
 
   computed: {
