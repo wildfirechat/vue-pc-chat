@@ -8,6 +8,7 @@ import {
     globalShortcut,
     ipcMain,
     Menu,
+    nativeImage as NativeImage,
     powerMonitor,
     protocol,
     session,
@@ -706,11 +707,15 @@ app.on('ready', () => {
             screenshots.startCapture()
         });
         // 点击确定按钮回调事件
-        screenshots.on('ok', (e, {viewer}) => {
+        screenshots.on('ok', (e, data) => {
             if (isMainWindowFocusedWhenStartScreenshot) {
-                mainWindow.webContents.send('screenshots-ok');
+                let filename = tmp.tmpNameSync() + '.png';
+                let image = NativeImage.createFromDataURL(data.dataURL);
+                fs.writeFileSync(filename, image.toPNG());
+
+                mainWindow.webContents.send('screenshots-ok', {filePath: filename});
             }
-            console.log('capture', viewer)
+            console.log('capture')
         })
         // 点击取消按钮回调事件
         screenshots.on('cancel', () => {

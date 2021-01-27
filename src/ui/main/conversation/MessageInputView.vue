@@ -493,6 +493,20 @@ export default {
     }
     this.lastConversationInfo = this.conversationInfo;
     this.focusInput();
+
+    if (isElectron()) {
+      ipcRenderer.on('screenshots-ok', (event, args) => {
+        if (args.filePath) {
+          document.execCommand('insertImage', false, 'local-resource://' + args.filePath);
+        }
+      });
+    }
+  },
+
+  destroyed() {
+    if (isElectron()) {
+      ipcRenderer.removeAllListeners('screenshots-ok');
+    }
   },
 
   watch: {
