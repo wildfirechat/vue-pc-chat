@@ -316,13 +316,18 @@ let store = {
     },
 
     _loadDefaultConversationList() {
-        this.loadConversationList([0, 1], [0])
+        this._loadConversationList([0, 1], [0])
     },
 
-    loadConversationList(conversationType = [0, 1], lines = [0]) {
+    _loadConversationList(conversationType = [0, 1], lines = [0]) {
         let conversationList = wfc.getConversationList(conversationType, lines);
         conversationList.forEach(info => {
             this._patchConversationInfo(info);
+            // side affect
+            if (conversationState.currentConversationInfo
+                && conversationState.currentConversationInfo.conversation.equal(info.conversation)) {
+                conversationState.currentConversationInfo = info;
+            }
         });
         conversationState.conversationInfoList = conversationList;
     },
