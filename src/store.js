@@ -149,6 +149,9 @@ let store = {
         });
 
         wfc.eventEmitter.on(EventType.ReceiveMessage, (msg, hasMore) => {
+            if (!hasMore) {
+                this._loadDefaultConversationList();
+            }
             if (conversationState.currentConversationInfo && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
                 // 移动端，目前只有单聊会发送typing消息
                 if (msg.messageContent.type === MessageContentType.Typing) {
@@ -184,9 +187,6 @@ let store = {
                 conversationState.currentConversationMessageList.push(msg);
             }
 
-            if (!hasMore) {
-                this._loadDefaultConversationList();
-            }
             if (miscState.isPageHidden && miscState.enableNotification) {
                 this.notify(msg);
             }
