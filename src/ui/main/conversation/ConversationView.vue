@@ -506,7 +506,6 @@ export default {
   border-top-right-radius: var(--main-border-radius);
   border-bottom-right-radius: var(--main-border-radius);
   /*border-left: 1px solid #e6e6e6;*/
-  -webkit-app-region: drag;
 }
 
 .conversation-empty-container h1 {
