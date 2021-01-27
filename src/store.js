@@ -797,7 +797,8 @@ let store = {
             searchState.groupSearchResult = this.searchFavGroup(query);
             searchState.conversationSearchResult = this.searchConversation(query);
             searchState.messageSearchResult = this.searchMessage(query);
-            this.searchUser(query);
+            // 默认不搜索新用户
+            // this.searchUser(query);
 
         } else {
             searchState.contactSearchResult = [];

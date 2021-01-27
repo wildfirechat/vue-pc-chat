@@ -1,10 +1,12 @@
 <template>
   <div class="search-input-container">
     <input id="searchInput"
+           ref="input"
            autocomplete="off"
            v-on:focus="onFocus(true)"
            v-model="sharedSearchState.query"
-           type="text" placeholder="search"/>
+           @keydown.esc="cancel"
+           type="text" placeholder="搜索"/>
     <button @click="showCreateConversationModal">+</button>
   </div>
 </template>
@@ -27,6 +29,25 @@ export default {
     },
 
     showCreateConversationModal() {
+      let beforeOpen = () => {
+        console.log('Opening...')
+      };
+      let beforeClose = (event) => {
+        console.log('Closing...', event, event.params)
+        // What a gamble... 50% chance to cancel closing
+        if (event.params.confirm) {
+          let users = event.params.users;
+          store.createConversation(users);
+
+          console.log('confirm')
+        } else {
+          console.log('cancel')
+          // TODO clear pick state
+        }
+      };
+      let closed = (event) => {
+        console.log('Close...', event)
+      };
       this.$modal.show(
           PickerUserView,
           {
@@ -38,29 +59,14 @@ export default {
             height: 480,
             clickToClose: false,
           }, {
-            'before-open': this.beforeOpen,
-            'before-close': this.beforeClose,
-            'closed': this.closed,
+            'before-open': beforeOpen,
+            'before-close': beforeClose,
+            'closed': closed,
           })
     },
-    beforeOpen(event) {
-      console.log('Opening...')
-    },
-    beforeClose(event) {
-      console.log('Closing...', event, event.params)
-      // What a gamble... 50% chance to cancel closing
-      if (event.params.confirm) {
-        let users = event.params.users;
-        store.createConversation(users);
-
-        console.log('confirm')
-      } else {
-        console.log('cancel')
-        // TODO clear pick state
-      }
-    },
-    closed(event) {
-      console.log('Close...', event)
+    cancel() {
+      store.toggleSearchView(false);
+      this.$refs['input'].blur();
     }
   }
 }
@@ -80,7 +86,8 @@ export default {
   height: 25px;
   margin-left: 10px;
   margin-right: 10px;
-  text-align: center;
+  padding: 0 10px;
+  text-align: left;
   flex: 1;
   border: 1px solid #e5e5e5;
   border-radius: 3px;
