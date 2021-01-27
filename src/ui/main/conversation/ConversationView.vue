@@ -18,7 +18,6 @@
                          v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
                          ref="setting"
                          @click="toggleConversationInfo"/></a>
-          <div class="drag-area"></div>
         </div>
       </header>
       <div ref="conversationContentContainer" class="conversation-content-container"
@@ -528,14 +527,6 @@ export default {
   position: relative;
 }
 
-.title-container .drag-area {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 140px;
-  -webkit-app-region: drag;
-}
 
 .title-container h1 {
   font-size: 16px;

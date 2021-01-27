@@ -53,6 +53,7 @@
       <keep-alive>
         <router-view :key="$route.fullPath"></router-view>
       </keep-alive>
+      <div class="drag-area" :style="dragAreaLeft"></div>
     </div>
   </div>
 </template>
@@ -72,6 +73,7 @@ export default {
       sharedContactState: store.state.contact,
       sharedMiscState: store.state.misc,
       shareConversationState: store.state.conversation,
+      isSetting: false,
     };
   },
 
@@ -81,18 +83,21 @@ export default {
         return
       }
       this.$router.replace("/home");
+      this.isSetting = false;
     },
     go2Contact() {
       if (this.$router.currentRoute.path === '/home/contact') {
         return;
       }
       this.$router.replace("/home/contact");
+      this.isSetting = false;
     },
     go2Setting() {
       if (this.$router.currentRoute.path === '/home/setting') {
         return;
       }
       this.$router.push({path: "/home/setting"});
+      this.isSetting = true;
     },
 
     closeUserCard() {
@@ -118,7 +123,7 @@ export default {
           removeItem('token')
         }
       }
-    }
+    },
   },
 
   computed: {
@@ -132,6 +137,17 @@ export default {
         count += unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll;
       });
       return count;
+    },
+    dragAreaLeft() {
+      if (this.isSetting) {
+        return {
+          left: '70px'
+        }
+      } else {
+        return {
+          left: 'calc(70px + 250px)'
+        }
+      }
     }
 
   },
@@ -240,5 +256,14 @@ i:hover {
 
 i.active {
   color: #34b7f1;
+}
+
+.drag-area {
+  position: absolute;
+  top: 0;
+  height: 60px;
+  right: 140px;
+  z-index: -1;
+  -webkit-app-region: drag;
 }
 </style>
