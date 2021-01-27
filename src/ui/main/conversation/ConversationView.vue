@@ -18,6 +18,7 @@
                          v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
                          ref="setting"
                          @click="toggleConversationInfo"/></a>
+          <div class="drag-area"></div>
         </div>
       </header>
       <div ref="conversationContentContainer" class="conversation-content-container"
@@ -34,7 +35,7 @@
         <div ref="conversationMessageList" class="conversation-message-list" v-on:scroll="onScroll" infinite-wrapper>
           <infinite-loading :identifier="loadingIdentifier" force-use-infinite-wrapper direction="top"
                             @infinite="infiniteHandler">
-<!--            <template slot="spinner">加载中...</template>-->
+            <!--            <template slot="spinner">加载中...</template>-->
             <template slot="no-more">没有更多消息</template>
             <template slot="no-results">已加载全部消息 :(</template>
           </infinite-loading>
@@ -524,6 +525,15 @@ export default {
   background-color: #f5f5f5;
   border-bottom: 1px solid #e6e6e6;
   border-top-right-radius: var(--main-border-radius);
+  position: relative;
+}
+
+.title-container .drag-area {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 140px;
   -webkit-app-region: drag;
 }
 
