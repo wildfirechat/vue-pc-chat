@@ -472,7 +472,7 @@ export default {
       }
     }
 
-    if (this.conversationInfo && !this.conversationInfo.conversation.equal(this.sharedConversationState.currentConversationInfo.conversation)) {
+    if (this.conversationInfo && this.sharedConversationState.currentConversationInfo && !this.conversationInfo.conversation.equal(this.sharedConversationState.currentConversationInfo.conversation)) {
       this.showConversationInfo = false;
     }
     this.conversationInfo = this.sharedConversationState.currentConversationInfo;
