@@ -139,7 +139,7 @@ export default {
 .quoted-message {
   display: flex;
   max-width: 100%;
-  background-color: #e7e7e7;
+  background-color: #e9e9e9;
   border-radius: 5px;
   padding: 5px 10px;
   margin-right: 10px;

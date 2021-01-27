@@ -1,8 +1,8 @@
 <template>
   <section>
-    <div class="message-time-container">
+    <div class="message-time-container" v-bind:class="{checked:sharedPickState.messages.indexOf(message) >= 0}">
       <p v-if="this.message._showTime" class="time">{{ message._timeStr }}</p>
-      <div class="message-content-container">
+      <div class="message-content-container" v-bind:class="{checked:sharedPickState.messages.indexOf(message) >= 0}">
         <input id="checkbox" v-if="sharedConversationState.enableMessageMultiSelection" type="checkbox" class="checkbox"
                :value="message" placeholder="" v-model="sharedPickState.messages">
 
@@ -225,19 +225,24 @@ export default {
   width: 100%;
   display: flex;
   flex-direction: column;
-  padding: 10px 20px;
   align-items: flex-end;
 }
 
+.message-time-container.checked {
+  background-color: #e7e7e7;
+}
+
 .message-time-container .time {
-  align-self: center;
+  width: 100%;
   margin-bottom: 20px;
+  text-align: center;
   color: #b4b4b4;
   font-size: 10px;
+  background-color: #f3f3f3;
 }
 
 .message-time-container .receipt {
-  margin-right: 50px;
+  margin-right: 70px;
   font-size: 12px;
   color: #b4b4b4;
 }
@@ -245,10 +250,12 @@ export default {
 .message-content-container {
   width: 100%;
   display: flex;
+  padding: 10px 20px;
   justify-content: space-between;
   align-items: center;
   position: relative;
 }
+
 
 .message-avatar-content-container {
   display: flex;
