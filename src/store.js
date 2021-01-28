@@ -181,6 +181,13 @@ let store = {
                 if (!this._isDisplayMessage(msg)) {
                     return;
                 }
+                let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
+                    return m.messageId === msg.messageId;
+                });
+                if (msgIndex > -1) {
+                    console.log('msg duplicate')
+                    return;
+                }
 
                 // 会把下来加载更多加载的历史消息给清理了
                 let lastTimestamp = 0;
