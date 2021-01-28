@@ -45,6 +45,7 @@ import jrQRCode from 'jr-qrcode'
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import EventType from "@/wfc/client/wfcEvent";
 import {getItem, removeItem, setItem, storage} from "@/ui/util/storageHelper";
+import {isElectron} from "@/platform";
 
 export default {
   name: 'App',
@@ -188,7 +189,21 @@ export default {
         this.$router.replace({path: "/home"});
       }
     },
+  },
 
+  computed: {
+    pStyle() {
+      if (isElectron()) {
+        return {
+          color: 'white',
+          padding: '5px',
+        }
+      } else {
+        return {
+          padding: '5px',
+        }
+      }
+    }
   },
 
   destroyed() {
@@ -262,9 +277,5 @@ export default {
   background-color: #d6d6d6;
 }
 
-p {
-  color: white;
-  padding: 5px;
-}
 
 </style>
