@@ -6,7 +6,7 @@
           <i class="arrow right" v-bind:class="{down: sharedContactState.expandFriendRequestList}"></i>
           <span class="title">新的朋友</span>
         </div>
-        <NewFriendListView v-if="sharedContactState.expandFriendRequestList" />
+        <NewFriendListView v-if="sharedContactState.expandFriendRequestList"/>
       </li>
       <li>
         <div @click="showGroups" class="category-item-container">
@@ -26,7 +26,7 @@
           </div>
         </div>
         <UserListVue :enable-pick="false"
-                     :users="sharedContactState.friendList"
+                     :users="sharedContactState.favContactList.concat(sharedContactState.friendList)"
                      :click-user-item-func="setCurrentUser"
                      :padding-left="'30px'"
                      v-if="sharedContactState.expandFriendList"/>

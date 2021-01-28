@@ -71,6 +71,7 @@ let store = {
             friendList: [],
             friendRequestList: [],
             favGroupList: [],
+            favContactList: [],
 
             selfUserInfo: null,
         },
@@ -110,6 +111,7 @@ let store = {
             if (status === ConnectionStatus.ConnectionStatusConnected) {
                 this._loadFavGroupList();
                 this._loadFriendList();
+                this._loadFavContactList();
                 this._loadFriendRequest();
                 this._loadSelfUserInfo();
                 this._loadDefaultConversationList();
@@ -131,6 +133,7 @@ let store = {
 
         wfc.eventEmitter.on(EventType.SettingUpdate, () => {
             this._loadDefaultConversationList();
+            this._loadFavContactList();
         });
 
         wfc.eventEmitter.on(EventType.FriendRequestUpdate, (newFrs) => {
@@ -139,6 +142,7 @@ let store = {
 
         wfc.eventEmitter.on(EventType.FriendListUpdate, (updatedFriendIds) => {
             this._loadFriendList();
+            this._loadFavContactList();
         });
 
         wfc.eventEmitter.on(EventType.GroupInfosUpdate, (groupInfos) => {
@@ -775,6 +779,17 @@ let store = {
 
     _loadFavGroupList() {
         contactState.favGroupList = wfc.getFavGroupList();
+    },
+
+    _loadFavContactList() {
+        let favUserIds = wfc.getFavUsers();
+        if (favUserIds.length > 0) {
+            contactState.favContactList = this.getUserInfos(favUserIds, '')
+            contactState.favContactList.forEach(u => {
+                u._category = '☆ 星标朋友';
+            })
+        }
+        console.log('星标好友', contactState.favContactList)
     },
 
     setCurrentFriendRequest(friendRequest) {

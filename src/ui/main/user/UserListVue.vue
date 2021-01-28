@@ -28,7 +28,9 @@
                    :ref="'userCardTippy-'+user.uid"
                    :name="'user-'+user.uid"
                    :style="paddingStyle"
-                   v-bind:class="{active: sharedContactState.currentFriend && user.uid === sharedContactState.currentFriend.uid}"
+                   v-bind:class="{active: sharedContactState.currentFriend
+                        && user._category === sharedContactState.currentFriend._category
+                        && user.uid === sharedContactState.currentFriend.uid}"
                    @click.stop="clickUserItem(user)">
                 <img class="avatar" :src="user.portrait" alt="">
                 <span
