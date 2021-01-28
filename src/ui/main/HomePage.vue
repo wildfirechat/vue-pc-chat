@@ -26,6 +26,7 @@
               ref="userCardTippy"
               name="infoTrigger"
               class="avatar"
+              draggable="false"
               :src="sharedContactState.selfUserInfo.portrait"
               alt=""
           /></a>

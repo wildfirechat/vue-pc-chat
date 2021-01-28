@@ -8,7 +8,7 @@
   >
     <div class="conversation-item">
       <div class="header">
-        <img class="avatar" :src="conversationInfo.conversation._target.portrait" alt=""/>
+        <img class="avatar" draggable="false" :src="conversationInfo.conversation._target.portrait" alt=""/>
         <em v-if="unread > 0" class="badge" v-bind:class="{silent:conversationInfo.isSilent}">{{ unread }}</em>
       </div>
       <div class="content-container">

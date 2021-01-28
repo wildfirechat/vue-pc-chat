@@ -6,7 +6,7 @@
         <label>野火ID: {{ userInfo.name }}</label>
       </div>
       <div>
-        <img class="avatar" v-bind:src="userInfo.portrait"/>
+        <img class="avatar" draggable="false" v-bind:src="userInfo.portrait"/>
       </div>
     </div>
     <div class="content">

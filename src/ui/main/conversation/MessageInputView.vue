@@ -27,6 +27,7 @@
     <div @keyup.enter="send($event)"
          ref="input" class="input"
          @paste="handlePaste"
+         draggable="false"
          autofocus
          placeholder="hello" contenteditable="true">
     </div>

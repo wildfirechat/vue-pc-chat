@@ -39,6 +39,7 @@
           <img ref="userCardTippy"
                :name="'infoTrigger' + this.message.messageId"
                class="avatar"
+               draggable="false"
                src="@/assets/images/user-fallback.png">
         </div>
       </div>

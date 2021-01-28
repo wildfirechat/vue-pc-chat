@@ -23,6 +23,7 @@
           <img ref="userCardTippy"
                :name="'infoTrigger' + this.message.messageId"
                class="avatar"
+               draggable="false"
                :src="message._from.portrait">
         </div>
         <!--消息内容 根据情况，if-else-->
