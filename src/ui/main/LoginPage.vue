@@ -1,6 +1,9 @@
 <template>
   <div class="login-container">
-    <img v-bind:src="qrCode" alt="qr-code">
+    <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
+                                      :maximizable="false"
+                                      v-if="sharedMiscState.isElectronWindowsOrLinux"/>
+    <img v-bind:src="qrCode" alt="">
 
     <div class="login-action-container">
       <!--    等待扫码-->
@@ -44,13 +47,16 @@ import PCSession from "@/wfc/model/pcsession";
 import jrQRCode from 'jr-qrcode'
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import EventType from "@/wfc/client/wfcEvent";
-import {getItem, removeItem, setItem, storage} from "@/ui/util/storageHelper";
+import {getItem, removeItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
+import store from "@/store";
+import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 
 export default {
   name: 'App',
   data() {
     return {
+      sharedMiscState: store.state.misc,
       qrCode: '',
       userName: '',
       loginStatus: 0, //0 等待扫码； 1 已经扫码； 2 存在session，等待发送给客户端验证；3 已经发送登录请求 4 调试时，自动登录
@@ -213,6 +219,10 @@ export default {
     if (this.qrCodeTimer) {
       clearInterval(this.qrCodeTimer)
     }
+  },
+
+  components: {
+    ElectronWindowsControlButtonView,
   }
 
 }
@@ -230,6 +240,7 @@ export default {
   border-radius: 3px;
   width: 250px;
   height: 250px;
+  background-color: #e7e7e7;
 }
 
 .pending-scan,

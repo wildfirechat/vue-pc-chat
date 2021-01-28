@@ -446,11 +446,13 @@ const createMainWindow = async () => {
     mainWindow = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
-        width: 1080,
-        height: 720,
+        width: 400,
+        height: 480,
         minWidth: 800,
         minHeight: 480,
         titleBarStyle: 'hidden',
+        maximizable: false,
+        resizable: false,
         backgroundColor: 'none',
         // 以下两属性设置时会导致win不能正常unmaximize. electron bug
         // transparent: true,
@@ -635,6 +637,7 @@ const createMainWindow = async () => {
     ipcMain.once('logined', (event, args) => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.setResizable(true);
+        mainWindow.setMaximizable(true);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.setMinimumSize(800, 480);
         mainWindowState.manage(mainWindow);
