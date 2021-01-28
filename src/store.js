@@ -984,8 +984,11 @@ let store = {
 
     _loadUserLocalSettings() {
         let userId = wfc.getUserId();
-        miscState.enableNotification = getItem(userId + '-' + 'notification') === '1'
-        miscState.enableNotificationMessageDetail = getItem(userId + '-' + 'notificationDetail') === '1'
+        // 默认允许通知
+        let setting = getItem(userId + '-' + 'notification');
+        miscState.enableNotification = setting === null || setting === '1'
+        setting = getItem(userId + '-' + 'notificationDetail');
+        miscState.enableNotificationMessageDetail = setting === null || setting === '1'
         miscState.enableCloseWindowToExit = getItem(userId + '-' + 'closeWindowToExit') === '1'
     },
 
