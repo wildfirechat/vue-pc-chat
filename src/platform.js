@@ -21,10 +21,6 @@ export function isElectron() {
     return false;
 }
 
-export function connect(userId, token) {
-    wfc.connect(userId, token);
-}
-
 // pc
 export const remote = require('electron').remote;
 export const ipcRenderer = require('electron').ipcRenderer;

@@ -22,6 +22,7 @@ import TextMessageContent from "@/wfc/messages/textMessageContent";
 import {ipcRenderer, isElectron} from "@/platform";
 import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
+import {getItem, setItem} from "@/ui/util/storageHelper";
 
 /**
  * 一些说明
@@ -106,6 +107,7 @@ let store = {
     },
 
     init() {
+        console.log('init store')
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
             miscState.connectionStatus = status;
             if (status === ConnectionStatus.ConnectionStatusConnected) {
@@ -115,6 +117,7 @@ let store = {
                 this._loadFriendRequest();
                 this._loadSelfUserInfo();
                 this._loadDefaultConversationList();
+                this._loadUserLocalSettings();
                 conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
 
                 this.updateTray();
@@ -789,7 +792,6 @@ let store = {
                 u._category = '☆ 星标朋友';
             })
         }
-        console.log('星标好友', contactState.favContactList)
     },
 
     setCurrentFriendRequest(friendRequest) {
@@ -980,6 +982,31 @@ let store = {
             });
     },
 
+    _loadUserLocalSettings() {
+        let userId = wfc.getUserId();
+        miscState.enableNotification = getItem(userId + '-' + 'notification') === '1'
+        miscState.enableNotificationMessageDetail = getItem(userId + '-' + 'notificationDetail') === '1'
+        miscState.enableCloseWindowToExit = getItem(userId + '-' + 'closeWindowToExit') === '1'
+    },
+
+    setEnableNotification(enable) {
+        miscState.enableNotification = enable;
+        setItem(contactState.selfUserInfo.uid + '-' + 'notification', enable ? '1' : '0')
+    },
+
+    setEnableNotificationDetail(enable) {
+        miscState.enableNotificationMessageDetail = enable;
+        setItem(contactState.selfUserInfo.uid + '-' + 'notificationDetail', enable ? '1' : '0')
+    },
+
+    setEnableCloseWindowToExit(enable) {
+        miscState.enableCloseWindowToExit = enable;
+        setItem(contactState.selfUserInfo.uid + '-' + 'closeWindowToExit', enable ? '1' : '0')
+        if (isElectron()) {
+            ipcRenderer.send('enable-close-window-to-exit', enable)
+        }
+    },
+
     // clone一下，别影响到好友列表
     getUserInfos(userIds, groupId) {
         let userInfos = wfc.getUserInfos(userIds, groupId);
@@ -1029,7 +1056,7 @@ let store = {
         let icon = require('@/assets/images/icon.png');
         if (MessageConfig.getMessageContentPersitFlag(content.type) === PersistFlag.Persist_And_Count) {
             Push.create("新消息来了", {
-                body: miscState.notificationMessageDetail ? content.digest() : '',
+                body: miscState.enableNotificationMessageDetail ? content.digest() : '',
                 // TODO 下面好像不生效，更新成图片链接
                 icon: icon,
                 timeout: 4000,

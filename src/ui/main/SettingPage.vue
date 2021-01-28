@@ -4,12 +4,21 @@
       <h2>设置</h2>
       <label>
         开启通知
-        <input type="checkbox" v-model="sharedMiscState.enableNotification">
+        <input type="checkbox"
+               :checked="sharedMiscState.enableNotification"
+               @change="enableNotification($event.target.checked)">
       </label>
       <label>
         通知显示消息内容
-        <input v-bind:disabled="!sharedMiscState.enableNotification" type="checkbox"
-               v-model="sharedMiscState.notificationMessageDetail">
+        <input v-bind:disabled="!sharedMiscState.enableNotification"
+               type="checkbox"
+               :checked="sharedMiscState.enableNotificationMessageDetail"
+               @change="enableNotificationDetail($event.target.checked)">
+      </label>
+      <label v-if="sharedMiscState.isElectron">
+        关闭窗口时，直接退出
+        <input type="checkbox" :checked="sharedMiscState.enableCloseWindowToExit"
+               @change="enableCloseWindowToExit($event.target.checked)">
       </label>
     </div>
     <footer>
@@ -40,7 +49,7 @@
 <script>
 import wfc from "@/wfc/client/wfc";
 import store from "@/store";
-import {removeItem, storage} from "@/ui/util/storageHelper";
+import {removeItem} from "@/ui/util/storageHelper";
 
 export default {
   name: "SettingPage",
@@ -56,7 +65,18 @@ export default {
       // localStorage.removeItem("token")
       // sessionStorage.removeItem("token")
       wfc.disconnect();
-    }
+    },
+
+    enableNotification(enable) {
+      store.setEnableNotification(enable)
+    },
+    enableNotificationDetail(enable) {
+      store.setEnableNotificationDetail(enable)
+    },
+    enableCloseWindowToExit(enable) {
+      store.setEnableCloseWindowToExit(enable)
+    },
+
   },
 }
 </script>

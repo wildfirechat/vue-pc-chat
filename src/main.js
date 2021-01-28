@@ -29,7 +29,6 @@ Vue.config.productionTip = false
             wfc.init();
         }
         store.init();
-        console.log('init wfc', wfc)
     } else {
         console.log('voip window, not init wfc')
     }

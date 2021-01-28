@@ -45,7 +45,7 @@ import jrQRCode from 'jr-qrcode'
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import EventType from "@/wfc/client/wfcEvent";
 import {getItem, removeItem, setItem, storage} from "@/ui/util/storageHelper";
-import {isElectron} from "@/platform";
+import {ipcRenderer, isElectron} from "@/platform";
 
 export default {
   name: 'App',
@@ -187,6 +187,9 @@ export default {
       }
       if (status === ConnectionStatus.ConnectionStatusConnected) {
         this.$router.replace({path: "/home"});
+        if (isElectron()) {
+          ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+        }
       }
     },
   },

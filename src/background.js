@@ -57,6 +57,7 @@ let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
 
 let isSuspend = false;
+let closeWindowToExit = true;
 let userData = app.getPath('userData');
 let imagesCacheDir = `${userData}/images`;
 let voicesCacheDir = `${userData}/voices`;
@@ -498,7 +499,7 @@ const createMainWindow = async () => {
     });
 
     mainWindow.on('close', e => {
-        if (forceQuit || !tray) {
+        if (forceQuit || !tray || closeWindowToExit) {
             mainWindow = null;
             disconnectAndQuit();
         } else {
@@ -631,11 +632,15 @@ const createMainWindow = async () => {
         event.returnValue = isSuspend;
     });
 
-    ipcMain.once('logined', event => {
+    ipcMain.once('logined', (event, args) => {
+        closeWindowToExit = args.closeWindowToExit;
         mainWindow.setResizable(true);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.setMinimumSize(800, 480);
         mainWindowState.manage(mainWindow);
+    });
+    ipcMain.on('enable-close-window-to-exit', (event, enable) => {
+        closeWindowToExit = enable;
     });
 
     powerMonitor.on('resume', () => {
