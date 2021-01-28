@@ -388,6 +388,9 @@ function updateTray(unread = 0) {
             if (!tray) {
                 // Init tray icon
                 tray = new Tray(icon);
+                if (process.platform === 'linux') {
+                    tray.setContextMenu(contextmenu);
+                }
 
                 tray.on('right-click', () => {
                     tray.popUpContextMenu(contextmenu);
