@@ -636,7 +636,7 @@ export default {
 
 .message-input-container {
   height: 200px;
-  min-height: 100px;
+  min-height: 200px;
 }
 
 .conversation-info-container {
