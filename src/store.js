@@ -217,6 +217,7 @@ let store = {
                     }
                 }
             }
+            this.updateTray();
         });
 
         // 服务端删除
@@ -230,6 +231,7 @@ let store = {
                     }
                 }
             }
+            this.updateTray();
         });
         // 本地删除
         wfc.eventEmitter.on(EventType.DeleteMessage, (messageId) => {
@@ -634,6 +636,7 @@ let store = {
             this.setCurrentConversationInfo(null);
         }
         this._loadDefaultConversationList();
+        this.updateTray();
     },
 
     getMessageById(messageId) {
