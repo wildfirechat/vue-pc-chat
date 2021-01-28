@@ -29,12 +29,12 @@
 
 ## 开发
 1. ```npm install```
-2. ```npm run electron:serve```
+2. ```npm run dev```
 
 ## 打包
 打包为当前平台架构软件
 ```
-npm run electron:build
+npm run package
 ```
 
 ## 交叉打包
