@@ -566,7 +566,7 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('click-notification', (event, args) => {
-        if (!mainWindow.isVisible()) {
+        if (!mainWindow.isVisible() || mainWindow.isMinimized()) {
             mainWindow.show();
             mainWindow.focus();
         }
@@ -577,8 +577,8 @@ const createMainWindow = async () => {
         execBlink(isBlink, args.interval);
     });
 
-    ipcMain.on('message-unread', (event, args) => {
-        let count = args.count;
+    ipcMain.on('update-badge', (event, args) => {
+        let count = args;
         //if (settings.showOnTray) {
         updateTray(count);
         app.badgeCount = count;

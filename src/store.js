@@ -1036,7 +1036,7 @@ let store = {
             let unreadCount = info.unreadCount;
             count += unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll;
         });
-        ipcRenderer.send('message-unread', {count: count})
+        ipcRenderer.send('update-badge', count)
     }
 }
 
