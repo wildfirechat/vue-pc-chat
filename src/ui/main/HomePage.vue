@@ -40,7 +40,7 @@
                 <em v-show="unread > 0" class="badge">{{ unread > 99 ? '99' : unread }}</em>
               </div>
             </li>
-            <li><i class="icon-ion-ios-contact"
+            <li><i class="icon-ion-android-contact"
                    v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
                    @click="go2Contact"></i></li>
             <li>
@@ -141,13 +141,14 @@ export default {
       return count;
     },
     dragAreaLeft() {
+      // 65为左边菜单栏的宽度，250为会话列表的宽度
       if (this.isSetting) {
         return {
-          left: '70px'
+          left: '65px'
         }
       } else {
         return {
-          left: 'calc(70px + 250px)'
+          left: 'calc(65px + 250px)'
         }
       }
     }
@@ -183,8 +184,8 @@ export default {
 }
 
 .menu-container {
-  width: 70px;
-  min-width: 70px;
+  width: 65px;
+  min-width: 65px;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -247,13 +248,14 @@ export default {
 }
 
 i {
-  font-size: 24px;
-  color: #000;
+  font-size: 26px;
+  color: #868686;
+  outline-color: red;
   cursor: pointer;
 }
 
 i:hover {
-  color: #34b7f1;
+  color: deepskyblue;
 }
 
 i.active {
