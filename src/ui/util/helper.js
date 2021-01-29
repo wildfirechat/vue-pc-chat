@@ -184,7 +184,7 @@ const helper = {
             return this.timeFormat(date);
         } else {
             let thatDate = new Date(date);
-            return thatDate.getFullYear() + '/' + thatDate.getMonth() + '/' + thatDate.getDay();
+            return thatDate.getFullYear() + '/' + (thatDate.getMonth() + 1) + '/' + thatDate.getDate();
         }
     },
 

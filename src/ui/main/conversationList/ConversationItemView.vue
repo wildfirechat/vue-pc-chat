@@ -14,12 +14,14 @@
       <div class="content-container">
         <div class="title-time-container">
           <h2 class="title single-line">{{ conversationTitle }}</h2>
-          <p class="time single-line">{{ conversationInfo._timeStr }}</p>
+          <p class="time">{{ conversationInfo._timeStr }}</p>
         </div>
         <div class="content">
           <p class="draft single-line" v-if="shouldShowDraft" v-html="draft"></p>
-          <p class="message single-line" v-else>
-            {{ lastMessageContent }}</p>
+          <p class="last-message-desc single-line" v-else>
+            <i v-if="conversationInfo.unreadCount && (conversationInfo.unreadCount.unreadMention + conversationInfo.unreadCount.unreadMentionAll) > 0">[有人@我]</i>
+            {{ lastMessageContent }}
+          </p>
           <i v-if="conversationInfo.isSilent" class="icon-ion-android-volume-mute"></i>
         </div>
       </div>
@@ -35,6 +37,7 @@ import Draft from "@/ui/util/draft";
 import FileMessageContent from "@/wfc/messages/fileMessageContent";
 import Message from "@/wfc/messages/message";
 import wfc from "@/wfc/client/wfc";
+import NotificationMessageContent from "@/wfc/messages/notification/notificationMessageContent";
 
 export default {
   name: "ConversationItemView",
@@ -117,7 +120,16 @@ export default {
 
     lastMessageContent() {
       let conversationInfo = this.conversationInfo;
-      return (conversationInfo.lastMessage && conversationInfo.lastMessage.messageContent) ? conversationInfo.lastMessage.messageContent.digest(conversationInfo.lastMessage) : '';
+      if (conversationInfo.lastMessage && conversationInfo.lastMessage.messageContent) {
+
+        let senderName = '';
+        if (conversationInfo.conversation.type === 1 && conversationInfo.lastMessage.direction === 1 && !(conversationInfo.lastMessage.messageContent instanceof NotificationMessageContent)) {
+          senderName = conversationInfo.lastMessage._from._displayName + ': ';
+        }
+        return senderName + conversationInfo.lastMessage.messageContent.digest(conversationInfo.lastMessage);
+      } else {
+        return '';
+      }
     },
 
     unread() {
@@ -210,6 +222,7 @@ export default {
   font-style: normal;
   font-weight: normal;
   padding-right: 10px;
+  flex: 1;
 }
 
 .content-container .title-time-container .time {
@@ -229,9 +242,14 @@ export default {
   height: 20px;
 }
 
-.content .message {
+.content .last-message-desc {
   color: #b8b8b8;
   font-size: 13px;
+}
+
+.content .last-message-desc i {
+  font-style: normal;
+  color: red;
 }
 
 .content i {

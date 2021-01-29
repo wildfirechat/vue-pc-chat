@@ -208,7 +208,7 @@ let store = {
                 conversationState.currentConversationMessageList.push(msg);
             }
 
-            if (msg.conversation.type != 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
+            if (msg.conversation.type !== 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
                 this.notify(msg);
             }
             this.updateTray();
@@ -702,6 +702,11 @@ let store = {
         } else {
             info._timeStr = '';
         }
+
+        if (info.lastMessage) {
+            this._patchMessage(info.lastMessage, 0)
+        }
+
         return info;
     },
 
