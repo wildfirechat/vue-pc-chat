@@ -67,7 +67,7 @@ let store = {
             currentFriend: null,
 
             expandFriendRequestList: false,
-            expandFriendList: false,
+            expandFriendList: true,
             expandGroup: false,
 
             friendList: [],
@@ -102,8 +102,8 @@ let store = {
             enableNotification: true,
             notificationMessageDetail: true,
             isElectron: isElectron(),
-            isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
-            // isElectronWindowsOrLinux: true,
+            // isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
+            isElectronWindowsOrLinux: true,
         },
     },
 
@@ -138,6 +138,7 @@ let store = {
         wfc.eventEmitter.on(EventType.SettingUpdate, () => {
             this._loadDefaultConversationList();
             this._loadFavContactList();
+            this._loadFavGroupList();
         });
 
         wfc.eventEmitter.on(EventType.FriendRequestUpdate, (newFrs) => {
@@ -738,7 +739,8 @@ let store = {
     _loadFriendRequest() {
         let requests = wfc.getIncommingFriendRequest()
         requests = requests.concat(wfc.getOutgoingFriendRequest());
-        requests.sort((a, b) => numberValue(a.timestamp) - numberValue(b.timestamp))
+        requests.sort((a, b) => numberValue(b.timestamp) - numberValue(a.timestamp))
+        requests = requests.length >= 20 ? requests.slice(0, 20) : requests;
         let uids = [];
         requests.forEach(fr => {
             uids.push(fr.target);
