@@ -100,7 +100,9 @@ let store = {
             connectionStatus: ConnectionStatus.ConnectionStatusUnconnected,
             isPageHidden: false,
             enableNotification: true,
-            notificationMessageDetail: true,
+            enableNotificationMessageDetail: true,
+            enableCloseWindowToExit: false,
+            enableAutoLogin: false,
             isElectron: isElectron(),
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
             // isElectronWindowsOrLinux: true,
@@ -998,6 +1000,7 @@ let store = {
         setting = getItem(userId + '-' + 'notificationDetail');
         miscState.enableNotificationMessageDetail = setting === null || setting === '1'
         miscState.enableCloseWindowToExit = getItem(userId + '-' + 'closeWindowToExit') === '1'
+        miscState.enableAutoLogin = getItem(userId + '-' + 'autoLogin') === '1'
     },
 
     setEnableNotification(enable) {
@@ -1013,9 +1016,12 @@ let store = {
     setEnableCloseWindowToExit(enable) {
         miscState.enableCloseWindowToExit = enable;
         setItem(contactState.selfUserInfo.uid + '-' + 'closeWindowToExit', enable ? '1' : '0')
-        if (isElectron()) {
-            ipcRenderer.send('enable-close-window-to-exit', enable)
-        }
+        ipcRenderer.send('enable-close-window-to-exit', enable)
+    },
+
+    setEnableAutoLogin(enable) {
+        miscState.enableAutoLogin = enable;
+        setItem(contactState.selfUserInfo.uid + '-' + 'autoLogin', enable ? '1' : '0')
     },
 
     // clone一下，别影响到好友列表

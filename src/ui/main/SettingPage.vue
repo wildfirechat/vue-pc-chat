@@ -20,6 +20,11 @@
         <input type="checkbox" :checked="sharedMiscState.enableCloseWindowToExit"
                @change="enableCloseWindowToExit($event.target.checked)">
       </label>
+      <label v-if="sharedMiscState.isElectron">
+        自动登录
+        <input type="checkbox" :checked="sharedMiscState.enableAutoLogin"
+               @change="enableAutoLogin($event.target.checked)">
+      </label>
     </div>
     <footer>
       <a class="button" target="_blank" @click="logout">
@@ -77,6 +82,9 @@ export default {
       store.setEnableCloseWindowToExit(enable)
     },
 
+    enableAutoLogin(enable) {
+      store.setEnableAutoLogin(enable);
+    }
   },
 }
 </script>

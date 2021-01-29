@@ -639,8 +639,8 @@ const createMainWindow = async () => {
 
     ipcMain.once('logined', (event, args) => {
         closeWindowToExit = args.closeWindowToExit;
-        mainWindow.setResizable(true);
-        mainWindow.setMaximizable(true);
+        mainWindow.resizable = true;
+        mainWindow.maximizable = true;
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.setMinimumSize(800, 480);
         mainWindowState.manage(mainWindow);

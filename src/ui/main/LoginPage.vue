@@ -16,6 +16,10 @@
       <div v-else-if="loginStatus === 1" class="scanned">
         <p>{{ userName }}扫码成功</p>
         <p>请在手机上点击确认以登录</p>
+        <label>
+          记住登录
+          <input type="checkbox" v-model="enableAutoLogin">
+        </label>
         <button @click="cancel" class="button-cancel">取消登录</button>
       </div>
 
@@ -63,6 +67,7 @@ export default {
       qrCodeTimer: null,
       appToken: '',
       lastAppToken: '',
+      enableAutoLogin: false,
     }
   },
   created() {
@@ -75,7 +80,8 @@ export default {
       let portrait = getItem("userPortrait");
       this.qrCode = portrait;
 
-      if (Config.ENABLE_AUTO_LOGIN && token) {
+      let autoLogin = getItem(userId + '-' + 'autoLogin') === '1'
+      if (autoLogin && token) {
         wfc.connect(userId, token);
         this.loginStatus = 4;
       } else {
@@ -195,6 +201,9 @@ export default {
         this.$router.replace({path: "/home"});
         if (isElectron()) {
           ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+          if (this.enableAutoLogin) {
+            store.setEnableAutoLogin(this.enableAutoLogin)
+          }
         }
       }
     },
@@ -257,38 +266,47 @@ export default {
   margin-top: 20px;
 }
 
+.login-action-container label {
+  margin-top: 5px;
+  padding: 5px;
+  font-size: 14px;
+  color: gray;
+}
+
 .login-action-container button {
-  margin: 5px 0;
-  height: 40px;
-  width: 250px;
   outline: none;
+  font-size: 14px;
   border: none;
   border-radius: 3px;
 }
 
 .button-cancel {
+  margin-top: 10px;
   background-color: transparent;
-  color: #d6d6d6;
+  color: gray;
 }
 
 .button-cancel:active {
-  color: white;
+  color: #4168e0;
 }
 
 .button-cancel:hover {
-  color: white;
+  color: #4168e0;
 }
 
 .button-confirm {
-  background-color: white;
+  width: 200px;
+  height: 40px;
+  color: white;
+  background-color: #4168e0a0;
 }
 
 .button-confirm:hover {
-  background-color: #d6d6d6;
+  background-color: #4168e0;
 }
 
 .button-confirm:active {
-  background-color: #d6d6d6;
+  background-color: #4168e0;
 }
 
 
