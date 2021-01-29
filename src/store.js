@@ -10,6 +10,7 @@ import {imageThumbnail, mergeImages, videoThumbnail} from "@/ui/util/imageUtil";
 import MessageContentMediaType from "@/wfc/messages/messageContentMediaType";
 import Conversation from "@/wfc/model/conversation";
 import MessageContentType from "@/wfc/messages/messageContentType";
+import MessageStatus from '@/wfc/messages/messageStatus';
 import Message from "@/wfc/messages/message";
 import ImageMessageContent from "@/wfc/messages/imageMessageContent";
 import VideoMessageContent from "@/wfc/messages/videoMessageContent";
@@ -206,7 +207,7 @@ let store = {
                 conversationState.currentConversationMessageList.push(msg);
             }
 
-            if (miscState.isPageHidden && miscState.enableNotification && msg.conversation.type != 2) {
+            if (msg.conversation.type != 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
                 this.notify(msg);
             }
             this.updateTray();
@@ -1057,19 +1058,25 @@ let store = {
     notify(msg) {
         let content = msg.messageContent;
         let icon = require('@/assets/images/icon.png');
+        var tip
         if (MessageConfig.getMessageContentPersitFlag(content.type) === PersistFlag.Persist_And_Count) {
-          let silent = false;
-          conversationState.conversationInfoList.forEach(info => {
-              if (info.conversation.equal(msg.conversation)) {
-                silent = info.isSilent;
-                //break;
-              }
-          });
-          if(silent) {
-            return;
+          if(msg.status != MessageStatus.AllMentioned && msg.status != MessageStatus.Mentioned) {
+            let silent = false;
+            conversationState.conversationInfoList.forEach(info => {
+                if (info.conversation.equal(msg.conversation)) {
+                  silent = info.isSilent;
+                  //break;
+                }
+            });
+            if(silent) {
+              return;
+            }
+            tip = "新消息来了";
+          } else {
+            tip = "有人@你";
           }
 
-            Push.create("新消息来了", {
+            Push.create(tip, {
                 body: miscState.enableNotificationMessageDetail ? content.digest() : '',
                 // TODO 下面好像不生效，更新成图片链接
                 icon: icon,
