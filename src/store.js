@@ -206,7 +206,7 @@ let store = {
                 conversationState.currentConversationMessageList.push(msg);
             }
 
-            if (miscState.isPageHidden && miscState.enableNotification) {
+            if (miscState.isPageHidden && miscState.enableNotification && msg.conversation.type != 2) {
                 this.notify(msg);
             }
             this.updateTray();
@@ -1058,6 +1058,17 @@ let store = {
         let content = msg.messageContent;
         let icon = require('@/assets/images/icon.png');
         if (MessageConfig.getMessageContentPersitFlag(content.type) === PersistFlag.Persist_And_Count) {
+          let silent = false;
+          conversationState.conversationInfoList.forEach(info => {
+              if (info.conversation.equal(msg.conversation)) {
+                silent = info.isSilent;
+                //break;
+              }
+          });
+          if(silent) {
+            return;
+          }
+
             Push.create("新消息来了", {
                 body: miscState.enableNotificationMessageDetail ? content.digest() : '',
                 // TODO 下面好像不生效，更新成图片链接
@@ -1086,7 +1097,7 @@ let store = {
                 return;
             }
             let unreadCount = info.unreadCount;
-            count += unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll;
+            count += unreadCount.unread;
         });
         ipcRenderer.send('update-badge', count)
     }
@@ -1099,4 +1110,3 @@ let pickState = store.state.pick;
 let miscState = store.state.misc;
 
 export default store
-

@@ -136,7 +136,7 @@ export default {
           return;
         }
         let unreadCount = info.unreadCount;
-        count += unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll;
+        count += unreadCount.unread;
       });
       return count;
     },

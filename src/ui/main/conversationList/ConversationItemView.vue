@@ -123,7 +123,7 @@ export default {
     unread() {
       let conversationInfo = this.conversationInfo;
       let unreadCount = conversationInfo.unreadCount;
-      return unreadCount ? (unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll) : 0;
+      return unreadCount ? (unreadCount.unread) : 0;
     }
   },
 };

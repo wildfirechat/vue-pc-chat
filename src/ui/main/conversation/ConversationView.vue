@@ -467,7 +467,7 @@ export default {
     }
     if (this.sharedConversationState.currentConversationInfo) {
       let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
-      if (unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll > 0) {
+      if (unreadCount.unread > 0) {
         store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
       }
     }
