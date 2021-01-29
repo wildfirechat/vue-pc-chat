@@ -102,8 +102,8 @@ let store = {
             enableNotification: true,
             notificationMessageDetail: true,
             isElectron: isElectron(),
-            // isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
-            isElectronWindowsOrLinux: true,
+            isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
+            // isElectronWindowsOrLinux: true,
         },
     },
 
@@ -1060,23 +1060,23 @@ let store = {
     notify(msg) {
         let content = msg.messageContent;
         let icon = require('@/assets/images/icon.png');
-        var tip
+        let tip
         if (MessageConfig.getMessageContentPersitFlag(content.type) === PersistFlag.Persist_And_Count) {
-          if(msg.status != MessageStatus.AllMentioned && msg.status != MessageStatus.Mentioned) {
-            let silent = false;
-            conversationState.conversationInfoList.forEach(info => {
-                if (info.conversation.equal(msg.conversation)) {
-                  silent = info.isSilent;
-                  //break;
+            if (msg.status !== MessageStatus.AllMentioned && msg.status !== MessageStatus.Mentioned) {
+                let silent = false;
+                for (const info of conversationState.conversationInfoList) {
+                    if (info.conversation.equal(msg.conversation)) {
+                        silent = info.isSilent;
+                        break;
+                    }
                 }
-            });
-            if(silent) {
-              return;
+                if (silent) {
+                    return;
+                }
+                tip = "新消息来了";
+            } else {
+                tip = "有人@你";
             }
-            tip = "新消息来了";
-          } else {
-            tip = "有人@你";
-          }
 
             Push.create(tip, {
                 body: miscState.enableNotificationMessageDetail ? content.digest() : '',
