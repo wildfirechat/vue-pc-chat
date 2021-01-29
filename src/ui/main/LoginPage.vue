@@ -4,6 +4,7 @@
                                       :maximizable="false"
                                       v-if="sharedMiscState.isElectronWindowsOrLinux"/>
     <img v-bind:src="qrCode" alt="">
+    <div class="drag-area"/>
 
     <div class="login-action-container">
       <!--    等待扫码-->
@@ -306,5 +307,15 @@ export default {
   background-color: #4168e0;
 }
 
+
+.drag-area {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: -1;
+  -webkit-app-region: drag;
+}
 
 </style>

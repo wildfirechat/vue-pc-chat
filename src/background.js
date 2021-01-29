@@ -441,7 +441,7 @@ function regShortcut() {
 }
 
 const createMainWindow = async () => {
-    var mainWindowState = windowStateKeeper({
+    let mainWindowState = windowStateKeeper({
         defaultWidth: 1080,
         defaultHeight: 720,
     });
@@ -637,14 +637,23 @@ const createMainWindow = async () => {
         event.returnValue = isSuspend;
     });
 
-    ipcMain.once('logined', (event, args) => {
+    ipcMain.on('logined', (event, args) => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.resizable = true;
         mainWindow.maximizable = true;
+        mainWindow.setMinimumSize(800, 600);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
-        mainWindow.setMinimumSize(800, 480);
         mainWindowState.manage(mainWindow);
     });
+
+    ipcMain.on('logouted', (event, args) => {
+        mainWindowState.unmanage();
+        mainWindow.resizable = false;
+        mainWindow.maximizable = false;
+        mainWindow.setMinimumSize(400, 480);
+        mainWindow.setSize(400, 480);
+    });
+
     ipcMain.on('enable-close-window-to-exit', (event, enable) => {
         closeWindowToExit = enable;
     });

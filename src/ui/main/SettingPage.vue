@@ -55,6 +55,7 @@
 import wfc from "@/wfc/client/wfc";
 import store from "@/store";
 import {clear} from "@/ui/util/storageHelper";
+import {ipcRenderer, isElectron} from "@/platform";
 
 export default {
   name: "SettingPage",
@@ -67,6 +68,9 @@ export default {
     logout() {
       clear();
       wfc.disconnect();
+      if (isElectron()) {
+        ipcRenderer.send('logouted');
+      }
     },
 
     enableNotification(enable) {
