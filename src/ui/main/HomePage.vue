@@ -44,6 +44,11 @@
                    v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
                    @click="go2Contact"></i></li>
             <li>
+              <i class="icon-ion-ios-folder"
+                 v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
+                 @click="go2Files"></i>
+            </li>
+            <li>
               <i class="icon-ion-android-settings"
                  v-bind:class="{active : this.$router.currentRoute.path === '/home/setting'}"
                  @click="go2Setting"></i>
@@ -91,6 +96,13 @@ export default {
         return;
       }
       this.$router.replace("/home/contact");
+      this.isSetting = false;
+    },
+    go2Files() {
+      if (this.$router.currentRoute.path === '/home/files') {
+        return;
+      }
+      this.$router.replace("/home/files");
       this.isSetting = false;
     },
     go2Setting() {

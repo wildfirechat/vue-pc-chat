@@ -5,6 +5,7 @@ import ContactPage from './ui/main/ContactPage'
 import SettingPage from './ui/main/SettingPage'
 import Single from "@/ui/voip/Single";
 import Multi from "@/ui/voip/Multi";
+import FileRecordPage from "@/ui/main/FileRecordPage";
 
 const routers = [
     {
@@ -29,6 +30,11 @@ const routers = [
                 path: 'setting',
                 name: 'setting',
                 component: SettingPage,
+            },
+            {
+                path: 'files',
+                name: 'files',
+                component: FileRecordPage,
             }
         ]
     },
