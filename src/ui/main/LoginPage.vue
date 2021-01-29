@@ -51,7 +51,7 @@ import PCSession from "@/wfc/model/pcsession";
 import jrQRCode from 'jr-qrcode'
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import EventType from "@/wfc/client/wfcEvent";
-import {getItem, removeItem, setItem} from "@/ui/util/storageHelper";
+import {getItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
@@ -181,10 +181,7 @@ export default {
     cancel() {
 
       this.loginStatus = 0;
-      removeItem("userId");
-      removeItem("token");
-      removeItem("userName");
-      removeItem("userPortrait")
+      clear();
 
       this.createPCLoginSession(null);
       this.refreshQrCode();

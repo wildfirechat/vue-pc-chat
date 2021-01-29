@@ -20,3 +20,9 @@ export function setItem(key, value) {
         storage.setItem(key, value);
     }
 }
+
+export function clear() {
+    if (storage) {
+        storage.clear();
+    }
+}

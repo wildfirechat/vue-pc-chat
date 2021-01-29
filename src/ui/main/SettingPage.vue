@@ -54,7 +54,7 @@
 <script>
 import wfc from "@/wfc/client/wfc";
 import store from "@/store";
-import {removeItem} from "@/ui/util/storageHelper";
+import {clear} from "@/ui/util/storageHelper";
 
 export default {
   name: "SettingPage",
@@ -65,10 +65,7 @@ export default {
   },
   methods: {
     logout() {
-      removeItem("userId");
-      removeItem('token');
-      // localStorage.removeItem("token")
-      // sessionStorage.removeItem("token")
+      clear();
       wfc.disconnect();
     },
 
