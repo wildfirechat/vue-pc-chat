@@ -102,13 +102,13 @@ export default {
 .setting-container .content {
   flex: 1;
   margin-left: 20px;
-  margin-top: 25px;
+  margin-top: 10px;
 }
 
 .setting-container .content h2 {
   font-weight: normal;
   font-style: normal;
-  padding-bottom: 30px;
+  padding-bottom: 10px;
 }
 
 .setting-container .content label {

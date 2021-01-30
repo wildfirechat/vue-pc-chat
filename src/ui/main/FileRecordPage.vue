@@ -201,13 +201,16 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: calc(100% - 70px);
+  flex: 1;
+  width: calc(100% - 68px);
   background-color: #f7f7f7;
 }
 
 .file-record-page .title {
   padding-left: 20px;
   height: 40px;
+  font-weight: normal;
+  font-style: normal;
 }
 
 .file-record-page .file-record-container {
