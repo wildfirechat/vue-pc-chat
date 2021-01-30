@@ -141,14 +141,14 @@ export default {
       return count;
     },
     dragAreaLeft() {
-      // 70为左边菜单栏的宽度，250为会话列表的宽度
+      // 68为左边菜单栏的宽度，250为会话列表的宽度
       if (this.isSetting) {
         return {
-          left: '70px'
+          left: '68px'
         }
       } else {
         return {
-          left: 'calc(70px + 250px)'
+          left: 'calc(68px + 250px)'
         }
       }
     }
@@ -184,8 +184,8 @@ export default {
 }
 
 .menu-container {
-  width: 70px;
-  min-width: 70px;
+  width: 68px;
+  min-width: 68px;
   height: 100%;
   display: flex;
   flex-direction: column;
