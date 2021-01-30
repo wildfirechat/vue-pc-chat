@@ -43,7 +43,7 @@
                src="@/assets/images/user-fallback.png">
         </div>
       </div>
-      <p v-if="sharedConversationState.isMessageReceiptEnable" class="receipt" @click="showMessageReceiptDetail">
+      <p v-if="shouldShowMessageReceipt" class="receipt" @click="showMessageReceiptDetail">
         {{ messageReceipt }}</p>
     </div>
   </section>
@@ -61,6 +61,7 @@ import ConversationType from "@/wfc/model/conversationType";
 import {gte} from "@/wfc/util/longUtil";
 import MessageReceiptDetailView from "@/ui/main/conversation/message/MessageReceiptDetailView";
 import QuoteMessageView from "@/ui/main/conversation/message/QuoteMessageView";
+import Config from "@/config";
 
 export default {
   name: "NormalOutMessageContentView",
@@ -214,8 +215,12 @@ export default {
 
     isDownloading() {
       return store.isDownloadingMessage(this.message.messageId);
+    },
+
+    shouldShowMessageReceipt() {
+      return this.sharedConversationState.isMessageReceiptEnable && ["FireRobot", Config.FILE_HELPER_ID].indexOf(this.message.conversation.target) < 0;
     }
-  }
+  },
 
 }
 </script>
