@@ -461,7 +461,7 @@ const createMainWindow = async () => {
         // transparent: true,
         // resizable: false,
         webPreferences: {
-            scrollBounce: true,
+            scrollBounce: false,
             nodeIntegration: true,
             nativeWindowOpen: true,
             webSecurity: false,
