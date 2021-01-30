@@ -13,6 +13,7 @@
     </header>
     <div class="search-item">
       <input type="text" v-model="filterQuery" placeholder="搜索">
+      <i class="icon-ion-ios-search"></i>
     </div>
     <div class="member-container">
       <div v-if="enableAddGroupMember && !filterQuery" @click="showCreateConversationModal" class="action-item">
@@ -235,12 +236,33 @@ header label input {
 }
 
 .search-item {
+  position: relative;
   padding: 10px 20px;
 }
 
 .search-item input {
   width: 100%;
-  padding: 1px 5px;
+  padding: 0 10px 0 20px;
+  height: 25px;
+  border-radius: 3px;
+  border: 1px solid #ededed;
+  background-color: white;
+  text-align: left;
+  outline: none;
+}
+
+.search-item input:active {
+  border: 1px solid #4168e0;
+}
+
+.search-item input:focus {
+  border: 1px solid #4168e0;
+}
+
+.search-item i {
+  position: absolute;
+  left: 25px;
+  top: 15px;
 }
 
 .action-item {
