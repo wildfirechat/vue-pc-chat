@@ -1072,6 +1072,10 @@ let store = {
         let content = msg.messageContent;
         let icon = require('@/assets/images/icon.png');
         let tip
+        //Todo 
+        if(msg.direction === 0 /* && !(type===0 && target===file_transfer_id)*/) {
+          return;
+        }
         if (MessageConfig.getMessageContentPersitFlag(content.type) === PersistFlag.Persist_And_Count) {
             if (msg.status !== MessageStatus.AllMentioned && msg.status !== MessageStatus.Mentioned) {
                 let silent = false;
