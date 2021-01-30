@@ -7,6 +7,7 @@
            v-model="sharedSearchState.query"
            @keydown.esc="cancel"
            type="text" placeholder="搜索"/>
+    <i class="icon-ion-ios-search"></i>
     <button @click="showCreateConversationModal">+</button>
   </div>
 </template>
@@ -80,18 +81,33 @@ export default {
   align-items: center;
   background-color: #fafafa;
   -webkit-app-region: drag;
+  position: relative;
 }
 
 .search-input-container input {
   height: 25px;
   margin-left: 10px;
   margin-right: 10px;
-  padding: 0 10px;
+  padding: 0 10px 0 20px;
   text-align: left;
   flex: 1;
   border: 1px solid #e5e5e5;
   border-radius: 3px;
+  outline: none;
   background-color: #eeeeee;
+}
+
+.search-input-container input:active {
+  border: 1px solid #4168e0;
+}
+
+.search-input-container input:focus {
+  border: 1px solid #4168e0;
+}
+
+.search-input-container i {
+  position: absolute;
+  left: 15px;
 }
 
 .search-input-container button {

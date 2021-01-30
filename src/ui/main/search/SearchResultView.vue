@@ -246,10 +246,6 @@ export default {
   outline: none;
 }
 
-.search-result-item.contact:active {
-  background-color: white;
-}
-
 .search-result-item.contact button:active {
   background: #cccccc;
 }
