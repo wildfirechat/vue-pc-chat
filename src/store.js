@@ -691,7 +691,7 @@ let store = {
         return m;
     },
 
-    _patchConversationInfo(info) {
+    _patchConversationInfo(info, patchLastMessage = true) {
         if (info.conversation.type === ConversationType.Single) {
             info.conversation._target = wfc.getUserInfo(info.conversation.target, false);
             info.conversation._target._displayName = wfc.getUserDisplayNameEx(info.conversation._target);
@@ -705,7 +705,7 @@ let store = {
             info._timeStr = '';
         }
 
-        if (info.lastMessage) {
+        if (info.lastMessage && patchLastMessage) {
             this._patchMessage(info.lastMessage, 0)
         }
 
@@ -1057,6 +1057,45 @@ let store = {
             userInfos = this.getGroupMemberUserInfos(conversation.target, true);
         }
         return userInfos;
+    },
+
+    getMyFileRecords(beforeUid, count, successCB, failCB) {
+        if (!successCB) {
+            return;
+        }
+        wfc.getMyFileRecords(beforeUid, count, fileRecords => {
+            this._patchFileRecords(fileRecords)
+            successCB(fileRecords);
+        }, failCB)
+    },
+
+    getConversationFileRecords(conversation, beforeMessageUid, count, successCB, failCB) {
+        wfc.getConversationFileRecords(conversation, '', beforeMessageUid, count, fileRecords => {
+            this._patchFileRecords(fileRecords)
+            successCB(fileRecords);
+        }, failCB);
+    },
+
+    _patchFileRecords(fileRecords) {
+        fileRecords.forEach(fileRecord => {
+            let groupId = fileRecord.conversation.type === 1 ? fileRecord.conversation.target : '';
+            if (groupId) {
+                fileRecord._userDisplayName = wfc.getGroupMemberDisplayName(groupId, fileRecord.userId);
+            } else {
+                fileRecord._userDisplayName = wfc.getUserDisplayName(fileRecord.userId);
+            }
+            let conversationInfo = wfc.getConversationInfo(fileRecord.conversation);
+            this._patchConversationInfo(conversationInfo, false);
+
+            if (fileRecord.conversation.type === 0) {
+                fileRecord._conversationDisplayName = '与' + conversationInfo.conversation._target._displayName + '的聊天';
+            } else {
+                fileRecord._conversationDisplayName = conversationInfo.conversation._target._displayName;
+            }
+            fileRecord._timeStr = helper.dateFormat(fileRecord.timestamp);
+            fileRecord._sizeStr = helper.humanSize(fileRecord.size)
+            fileRecord._fileIconName = helper.getFiletypeIcon(fileRecord.name.substring(fileRecord.name.lastIndexOf('.')))
+        });
     },
 
     setPageVisibility(hidden) {
