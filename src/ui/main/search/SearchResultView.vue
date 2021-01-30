@@ -2,7 +2,9 @@
   <section class="search-result-container"
            v-if="sharedSearchState.show"
            v-bind:class="{active:sharedSearchState.show}"
-           v-click-outside="hideSearchView">
+           v-click-outside="hideSearchView"
+           @click="hideSearchView"
+  >
     <div class="search-result">
       <ul>
         <li class="category-item" v-if="sharedSearchState.userSearchResult.length > 0">
