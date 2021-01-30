@@ -1446,6 +1446,14 @@ export class WfcManager {
     }
 
     /**
+     * 内部使用，electron主窗口之外的，其他窗口，attach到主窗口初始化的proto上，可以调用get相关方法，但没有通知
+     * @param protoObj
+     */
+    attach(protoObj){
+        impl.attach(protoObj);
+    }
+
+    /**
      * utf8转base64
      * @param {string} str
      * @returns {string}

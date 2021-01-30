@@ -31,11 +31,6 @@ const routers = [
                 name: 'setting',
                 component: SettingPage,
             },
-            {
-                path: 'files',
-                name: 'files',
-                component: FileRecordPage,
-            }
         ]
     },
     {
@@ -48,6 +43,11 @@ const routers = [
         path: '/voip/multi',
         component: Multi,
     },
+    {
+        name: 'files',
+        path: '/files',
+        component: FileRecordPage,
+    }
     // {
     //     name: 'voip-conference',
     //     path: '/voip/conference',

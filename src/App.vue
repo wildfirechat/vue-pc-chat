@@ -64,12 +64,13 @@ export default {
   },
 
   mounted() {
-    if (window.location.href.indexOf('voip') >= 0) {
+    let href = window.location.href;
+    if (href.indexOf('voip') >= 0 || href.indexOf('files')) {
       let app = document.getElementById("app");
       let el = document.getElementById("blur-container");
-      app.removeChild(el)
+      el && app.removeChild(el)
       el = document.getElementById('styled_video_container');
-      app.removeChild(el)
+      el && app.removeChild(el)
       el = document.getElementById('main-content-container');
       el.style.backgroundColor = '#292929'
     }

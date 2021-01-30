@@ -104,24 +104,19 @@ let store = {
             enableCloseWindowToExit: false,
             enableAutoLogin: false,
             isElectron: isElectron(),
-            isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux')
+            isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
             // isElectronWindowsOrLinux: true,
+            isMainWindow: false,
         },
     },
 
-    init() {
+    init(isMainWindow) {
         console.log('init store')
+        // 目前，通知只可能在主窗口触发
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
             miscState.connectionStatus = status;
             if (status === ConnectionStatus.ConnectionStatusConnected) {
-                this._loadFavGroupList();
-                this._loadFriendList();
-                this._loadFavContactList();
-                this._loadFriendRequest();
-                this._loadSelfUserInfo();
-                this._loadDefaultConversationList();
-                this._loadUserLocalSettings();
-                conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
+                this._loadDefaultData();
 
                 this.updateTray();
             }
@@ -327,6 +322,23 @@ let store = {
                 // do nothing now
             });
         }
+
+        if (!isMainWindow && wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected) {
+            this._loadDefaultData();
+        }
+
+        miscState.isMainWindow = isMainWindow;
+    },
+
+    _loadDefaultData() {
+        this._loadFavGroupList();
+        this._loadFriendList();
+        this._loadFavContactList();
+        this._loadFriendRequest();
+        this._loadSelfUserInfo();
+        this._loadDefaultConversationList();
+        this._loadUserLocalSettings();
+        conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
     },
 
     // conversation actions
@@ -1070,8 +1082,8 @@ let store = {
         }, failCB)
     },
 
-    getConversationFileRecords(conversation, beforeMessageUid, count, successCB, failCB) {
-        wfc.getConversationFileRecords(conversation, '', beforeMessageUid, count, fileRecords => {
+    getConversationFileRecords(conversation, fromUser, beforeMessageUid, count, successCB, failCB) {
+        wfc.getConversationFileRecords(conversation, fromUser, beforeMessageUid, count, fileRecords => {
             this._patchFileRecords(fileRecords)
             successCB(fileRecords);
         }, failCB);
@@ -1152,7 +1164,7 @@ let store = {
     },
 
     updateTray() {
-        if (!isElectron()) {
+        if (!isElectron() || !miscState.isMainWindow) {
             return;
         }
         let count = 0;

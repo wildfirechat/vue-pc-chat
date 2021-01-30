@@ -1,68 +1,94 @@
 <template>
-  <section class="file-record-page">
-    <h2 class="title">文件记录</h2>
-    <div class="file-record-container">
+  <section>
+    <div class="file-record-page">
+      <h2 class="title">文件记录</h2>
+      <div class="file-record-container">
 
-      <div class="category-container">
-        <!--      我的-->
-        <!--      聊天-->
-        <ul>
-          <li>
-            <div class="category-item" v-bind:class="{active:showMyFileRecords}" @click="showMyFiles">
-              <i class="icon-ion-folder"></i>
-              <p>我的</p>
-            </div>
-          </li>
-          <li>
-            <div class="category-item" v-bind:class="{active:!showMyFileRecords}" @click="showConversations">
-              <i class="icon-ion-ios-chatboxes"></i>
-              <p>聊天</p>
-            </div>
-          </li>
-        </ul>
-
-      </div>
-      <div v-if="!showMyFileRecords" class="conversation-list-container">
-        <!--      聊天列表-->
-        <ul>
-          <li v-for="conversationInfo in sharedConversationState.conversationInfoList"
-              @click="getConversationFileRecords(conversationInfo.conversation)"
-              :key="conversationInfoKey(conversationInfo)">
-            <div class="conversation-item"
-                 v-bind:class="{active:currentConversation && currentConversation.equal(conversationInfo.conversation)}">
-              <img :src="conversationInfo.conversation._target.portrait" alt="">
-              <p class="single-line">{{ conversationInfo.conversation._target._displayName }}</p>
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="file-record-list-container" infinite-wrapper>
-        <!--      文件记录-->
-        <div v-if="fileRecords.length > 0">
+        <div class="category-container">
           <ul>
-            <li v-for="fr in fileRecords"
-                :key="fr.messageUid.toString()">
-              <div class="file-record-item" @click="clickFile(fr)">
-                <img :src="require(`@/assets/images/filetypes/${fr._fileIconName}`)" alt="">
-                <div class="file-name-sender-container">
-                  <p class="name single-line"> {{ fr.name }}</p>
-                  <p class="sender single-line">{{ fr._userDisplayName + ' | ' + fr._conversationDisplayName }}</p>
-                </div>
-                <div class="file-date-size-container">
-                  <p class="date single-line">{{ fr._timeStr }}</p>
-                  <p class="size single-line">{{ fr._sizeStr }}</p>
-                </div>
+            <li>
+              <div class="category-item" v-bind:class="{active:category === CATEGORY_ALL}"
+                   @click="showAllFiles">
+                <i class="icon-ion-folder"></i>
+                <p>全部</p>
+              </div>
+            </li>
+            <li>
+              <div class="category-item" v-bind:class="{active:category === CATEGORY_ME}"
+                   @click="showMyFiles">
+                <i class="icon-ion-android-send"></i>
+                <p>我的</p>
+              </div>
+            </li>
+            <li>
+              <div class="category-item" v-bind:class="{active: category === CATEGORY_CONVERSATION}"
+                   @click="showConversations">
+                <i class="icon-ion-ios-chatboxes"></i>
+                <p>聊天</p>
+              </div>
+            </li>
+            <li>
+              <div class="category-item" v-bind:class="{active: category === CATEGORY_SENDER}"
+                   @click="showSenders">
+                <i class="icon-ion-person"></i>
+                <p>发送者</p>
               </div>
             </li>
           </ul>
-          <infinite-loading :identifier="loadingIdentifier" force-use-infinite-wrapper direction="bottom"
-                            @infinite="infiniteHandler">
-            <!--            <template slot="spinner">加载中...</template>-->
-            <template slot="no-more">没有更多文件</template>
-            <template slot="no-results">已加载全部文件 :(</template>
-          </infinite-loading>
+
         </div>
-        <div v-else class="file-record-empty-container">没有文件记录</div>
+        <div v-if="category === CATEGORY_CONVERSATION"
+             class="conversation-list-container">
+          <!--      聊天列表-->
+          <ul>
+            <li v-for="conversationInfo in sharedConversationState.conversationInfoList"
+                @click="showConversationFiles(conversationInfo.conversation)"
+                :key="conversationInfoKey(conversationInfo)">
+              <div class="conversation-item"
+                   v-bind:class="{active:currentConversation && currentConversation.equal(conversationInfo.conversation)}">
+                <img :src="conversationInfo.conversation._target.portrait" alt="">
+                <p class="single-line">{{ conversationInfo.conversation._target._displayName }}</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div v-if="category === CATEGORY_SENDER"
+             class="conversation-list-container">
+          <!--      发送者列表-->
+          <UserListVue :users="sharedContactState.friendList"
+                       :show-category-label="false"
+                       :current-user="currentUser"
+                       :click-user-item-func="showUserFiles"
+          />
+        </div>
+        <div class="file-record-list-container" infinite-wrapper>
+          <!--      文件记录-->
+          <div v-if="fileRecords.length > 0">
+            <ul>
+              <li v-for="fr in fileRecords"
+                  :key="fr.messageUid.toString()">
+                <div class="file-record-item" @click="clickFile(fr)">
+                  <img :src="require(`@/assets/images/filetypes/${fr._fileIconName}`)" alt="">
+                  <div class="file-name-sender-container">
+                    <p class="name single-line"> {{ fr.name }}</p>
+                    <p class="sender single-line">{{ fr._userDisplayName + ' | ' + fr._conversationDisplayName }}</p>
+                  </div>
+                  <div class="file-date-size-container">
+                    <p class="date single-line">{{ fr._timeStr }}</p>
+                    <p class="size single-line">{{ fr._sizeStr }}</p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+            <infinite-loading :identifier="loadingIdentifier" force-use-infinite-wrapper direction="bottom"
+                              @infinite="infiniteHandler">
+              <!--            <template slot="spinner">加载中...</template>-->
+              <template slot="no-more">没有更多文件</template>
+              <template slot="no-results">已加载全部文件 :(</template>
+            </infinite-loading>
+          </div>
+          <div v-else class="file-record-empty-container">没有文件记录</div>
+        </div>
       </div>
     </div>
   </section>
@@ -70,18 +96,26 @@
 
 <script>
 import store from "@/store";
-import ConversationType from "@/wfc/model/conversationType";
 import InfiniteLoading from "vue-infinite-loading";
 import {ipcRenderer, isElectron} from "@/platform";
+import UserListVue from "@/ui/main/user/UserListVue";
+
 
 export default {
   name: "FileRecordPage",
   data() {
     return {
-      showMyFileRecords: true,
+      category: 'all',
       currentConversation: null,
+      currentUser: null,
       sharedConversationState: store.state.conversation,
+      sharedContactState: store.state.contact,
       fileRecords: [],
+
+      CATEGORY_ME: 'me',
+      CATEGORY_ALL: 'all',
+      CATEGORY_CONVERSATION: 'conversation',
+      CATEGORY_SENDER: 'sender',
     }
   },
   methods: {
@@ -89,50 +123,82 @@ export default {
       let conv = conversationInfo.conversation;
       return conv.target + '-' + conv.type + '-' + conv.line;
     },
-    conversationTitle(info) {
-      if (info.conversation.type === ConversationType.Single) {
-        return info.conversation._target.displayName;
-      } else {
-        return info.conversation._target.name;
-      }
-    },
-    showMyFiles() {
-      if (this.showMyFileRecords) {
+
+    showAllFiles() {
+      if (this.category === this.CATEGORY_ALL) {
         return;
       }
-      this.showMyFileRecords = true;
+      this.category = this.CATEGORY_ALL;
+      this.fileRecords = [];
+      this.getConversationFileRecords('', '')
+    },
+
+    showMyFiles() {
+      if (this.category === this.CATEGORY_ME) {
+        return;
+      }
+      this.category = this.CATEGORY_ME;
       this.fileRecords = [];
       this.getMyFileRecords();
     },
 
     showConversations() {
-      if (!this.showMyFileRecords) {
+      if (this.category === this.CATEGORY_CONVERSATION) {
         return;
       }
-      this.showMyFileRecords = false;
+      this.category = this.CATEGORY_CONVERSATION;
       this.fileRecords = [];
       if (this.currentConversation) {
-        this.getConversationFileRecords(this.currentConversation, true)
+        this.showConversationFiles(this.currentConversation, true);
       }
     },
+
+    showSenders() {
+      if (this.category === this.CATEGORY_SENDER) {
+        return;
+      }
+      this.category = this.CATEGORY_SENDER;
+      this.fileRecords = [];
+      if (this.currentUser) {
+        this.showUserFiles(this.currentUser)
+      }
+    },
+
+    showConversationFiles(conversation, force = false) {
+      if (!force && this.currentConversation && this.currentConversation.equal(conversation)) {
+        return;
+      }
+      this.currentConversation = conversation;
+      this.fileRecords = [];
+      this.getConversationFileRecords(conversation, '')
+    },
+
+    showUserFiles(user, force = false) {
+      if (!force && this.currentUser && this.currentUser.uid === user.uid) {
+        return;
+      }
+      this.currentUser = user;
+      this.fileRecords = [];
+      this.getConversationFileRecords('', user.uid)
+    },
+
 
     getMyFileRecords() {
       store.getMyFileRecords(0, 20, fileRecords => {
         this.fileRecords = this.fileRecords.concat(fileRecords);
-
       }, err => {
         // TODO
 
       })
     },
 
-    getConversationFileRecords(conversation, force = false) {
-      if (!force && this.currentConversation && this.currentConversation.equal(conversation)) {
-        return;
-      }
-      this.currentConversation = conversation;
+    getUserFiles(userInfo) {
+      // TODO
+    },
+
+    getConversationFileRecords(conversation, fromUser) {
       this.fileRecords = [];
-      store.getConversationFileRecords(conversation, 0, 20, fileRecords => {
+      store.getConversationFileRecords(conversation, fromUser, 0, 20, fileRecords => {
         this.fileRecords = this.fileRecords.concat(fileRecords);
       }, err => {
         // TODO
@@ -141,7 +207,10 @@ export default {
 
     infiniteHandler($state) {
       let lastMessageUid = this.fileRecords.length > 0 ? this.fileRecords[this.fileRecords.length - 1].messageUid : 0;
-      console.log('to load more file records', $state, lastMessageUid.toString());
+      console.log('xxx load more file records', $state, lastMessageUid.toString());
+      this.fileRecords.forEach(fr => {
+        console.log('bxxxx ' + fr.messageUid.toString())
+      })
       let successCB = (fileRecords) => {
         if (fileRecords.length === 0) {
           console.log('load file records complete')
@@ -149,16 +218,31 @@ export default {
           return;
         }
         this.fileRecords = this.fileRecords.concat(fileRecords);
+        this.fileRecords.forEach(fr => {
+          console.log('xxxx ' + fr.messageUid.toString())
+        })
         $state.loaded();
       };
       let failCB = (err) => {
         $state.complete()
         console.log('getMyFileRecords error', err)
       };
-      if (this.showMyFileRecords) {
-        store.getMyFileRecords(lastMessageUid, 20, successCB, failCB);
-      } else if (this.currentConversation) {
-        store.getConversationFileRecords(this.currentConversation, lastMessageUid, 20, successCB, failCB)
+
+      switch (this.category) {
+        case this.CATEGORY_ALL:
+          store.getConversationFileRecords('', '', lastMessageUid, 20, successCB, failCB)
+          break;
+        case this.CATEGORY_ME:
+          store.getMyFileRecords(lastMessageUid, 20, successCB, failCB);
+          break;
+        case this.CATEGORY_CONVERSATION:
+          store.getConversationFileRecords(this.currentConversation, '', lastMessageUid, 20, successCB, failCB)
+          break;
+        case this.CATEGORY_SENDER:
+          store.getConversationFileRecords('', this.currentUser.uid, lastMessageUid, 20, successCB, failCB)
+          break;
+        default:
+          break;
       }
     },
 
@@ -176,48 +260,67 @@ export default {
 
   computed: {
     loadingIdentifier() {
-      if (this.showMyFileRecords) {
-        return 'my-fileRecords';
-      } else {
-        return this.currentConversation.type + '-' + this.currentConversation.target + '-' + this.currentConversation.line;
+      let identifier = ''
+      switch (this.category) {
+        case this.CATEGORY_ALL:
+          identifier = 'all'
+          break;
+        case this.CATEGORY_ME:
+          identifier = 'me'
+          break;
+        case this.CATEGORY_CONVERSATION:
+          identifier = 'conversation-' + this.currentConversation.type + '-' + this.currentConversation.target + '-' + this.currentConversation.line;
+          break;
+        case this.CATEGORY_SENDER:
+          identifier = 'user-' + this.currentUser.uid;
+          break;
+        default:
+          break;
       }
+      return identifier;
     }
   },
 
   mounted() {
-    this.getMyFileRecords();
+    // all
+    this.getConversationFileRecords('', '')
+  },
+
+  created() {
+    document.title = '文件记录';
   },
 
   components: {
+    UserListVue,
     InfiniteLoading,
   }
 }
 </script>
 
-<style scoped>
+<style lang="css" scoped>
 
 .file-record-page {
-  padding-top: 10px;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  flex: 1;
-  width: calc(100% - 68px);
   background-color: #f7f7f7;
 }
 
 .file-record-page .title {
   padding-left: 20px;
   height: 40px;
+  display: none;
   font-weight: normal;
   font-style: normal;
 }
 
 .file-record-page .file-record-container {
   flex: 1;
-  height: calc(100% - 40px);
+  height: 100%;
   display: flex;
   flex-direction: row;
+  justify-content: flex-start;
 }
 
 .file-record-container .category-container {
@@ -229,7 +332,7 @@ export default {
   display: flex;
   flex-direction: row;
   padding: 5px 0 5px 20px;
-  height: 40px;
+  height: 50px;
   align-items: center;
 }
 
@@ -249,7 +352,8 @@ export default {
 
 .conversation-list-container {
   border-left: 1px solid #e4e4e4;
-  width: 240px;
+  border-right: 1px solid #e4e4e4;
+  width: 185px;
   height: 100%;
   overflow: auto;
 }

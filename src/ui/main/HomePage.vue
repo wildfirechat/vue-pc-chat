@@ -72,6 +72,7 @@ import EventType from "@/wfc/client/wfcEvent";
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 import {removeItem, storage} from "@/ui/util/storageHelper";
+import {BrowserWindow} from "@/platform";
 
 export default {
   data() {
@@ -80,6 +81,7 @@ export default {
       sharedMiscState: store.state.misc,
       shareConversationState: store.state.conversation,
       isSetting: false,
+      fileWindow: null,
     };
   },
 
@@ -99,11 +101,48 @@ export default {
       this.isSetting = false;
     },
     go2Files() {
-      if (this.$router.currentRoute.path === '/home/files') {
+      // if (this.$router.currentRoute.path === '/home/files') {
+      //   return;
+      // }
+      // this.$router.replace("/home/files");
+      // this.isSetting = false;
+      if (this.fileWindow) {
+        this.fileWindow.show();
+        this.fileWindow.focus();
         return;
       }
-      this.$router.replace("/home/files");
-      this.isSetting = false;
+      let win = new BrowserWindow(
+          {
+            width: 800,
+            title: '文件记录',
+            height: 730,
+            resizable: true,
+            maximizable: true,
+            webPreferences: {
+              scrollBounce: false,
+              nativeWindowOpen: true,
+              nodeIntegration: true,
+            },
+          }
+      );
+      this.fileWindow = win;
+
+      // win.webContents.openDevTools();
+      win.on('close', () => {
+        this.fileWindow = null;
+      });
+
+      // win.loadURL(path.join('file://', AppPath, 'src/index.html?' + type));
+      let hash = window.location.hash;
+      let url = window.location.origin;
+      if (hash) {
+        url = window.location.href.replace(hash, '#/files');
+      } else {
+        url += "/files"
+      }
+      win.loadURL(url);
+      console.log('files windows url', url)
+      win.show();
     },
     go2Setting() {
       if (this.$router.currentRoute.path === '/home/setting') {

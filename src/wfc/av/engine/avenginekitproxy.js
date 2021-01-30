@@ -344,7 +344,7 @@ export class AvEngineKitProxy {
                     resizable: true,
                     maximizable: true,
                     webPreferences: {
-                        scrollBounce: true,
+                        scrollBounce: false,
                         nativeWindowOpen: true,
                         nodeIntegration: true,
                     },
