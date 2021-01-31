@@ -43,7 +43,7 @@
             <li><i class="icon-ion-android-contact"
                    v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
                    @click="go2Contact"></i></li>
-            <li>
+            <li v-if="sharedMiscState.isElectron">
               <i class="icon-ion-ios-folder"
                  v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
                  @click="go2Files"></i>
@@ -114,8 +114,9 @@ export default {
       let win = new BrowserWindow(
           {
             width: 800,
-            title: '文件记录',
             height: 730,
+            minWidth: 640,
+            minHeight: 400,
             resizable: true,
             maximizable: true,
             webPreferences: {
