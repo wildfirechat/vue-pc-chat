@@ -1,13 +1,13 @@
 <template>
   <section class="fav-page">
     <FavCategoryListPanel class="fav-category-list-panel"/>
-    <FavView class="fav-view"/>
+    <FavView class="fav-list-view"/>
   </section>
 </template>
 
 <script>
 import FavCategoryListPanel from "@/ui/main/FavCategoryListPanel";
-import FavView from "@/ui/main/FavView";
+import FavView from "@/ui/main/FavListView";
 
 export default {
   name: "FavPage",
@@ -40,7 +40,7 @@ export default {
   height: 100%;
 }
 
-.fav-view {
+.fav-list-view {
   flex: 1;
 }
 
