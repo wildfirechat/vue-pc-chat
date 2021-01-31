@@ -44,6 +44,11 @@
                    v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
                    @click="go2Contact"></i></li>
             <li v-if="sharedMiscState.isElectron">
+              <i class="icon-ion-android-favorite"
+                 v-bind:class="{active : this.$router.currentRoute.path === '/home/fav'}"
+                 @click="go2Fav"></i>
+            </li>
+            <li v-if="sharedMiscState.isElectron">
               <i class="icon-ion-ios-folder"
                  v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
                  @click="go2Files"></i>
@@ -100,12 +105,14 @@ export default {
       this.$router.replace("/home/contact");
       this.isSetting = false;
     },
+    go2Fav() {
+      if (this.$router.currentRoute.path === '/home/fav') {
+        return;
+      }
+      this.$router.replace("/home/fav");
+      this.isSetting = false;
+    },
     go2Files() {
-      // if (this.$router.currentRoute.path === '/home/files') {
-      //   return;
-      // }
-      // this.$router.replace("/home/files");
-      // this.isSetting = false;
       if (this.fileWindow) {
         this.fileWindow.show();
         this.fileWindow.focus();

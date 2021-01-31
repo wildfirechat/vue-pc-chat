@@ -8,7 +8,7 @@
            @keydown.esc="cancel"
            type="text" placeholder="搜索"/>
     <i class="icon-ion-ios-search"></i>
-    <button @click="showCreateConversationModal">+</button>
+    <button v-if="showAddButton" @click="showCreateConversationModal">+</button>
   </div>
 </template>
 
@@ -18,6 +18,16 @@ import PickerUserView from "@/ui/main/pick/PickUserView";
 
 export default {
   name: "SearchView",
+  props: {
+    showAddButton: {
+      type: Boolean,
+      default: true,
+    },
+    searchType: {
+      type: String,
+      default: '',
+    }
+  },
   data() {
     return {
       sharedSearchState: store.state.search,
