@@ -405,12 +405,24 @@ export default {
 
 
 .file-record-item {
+  position: relative;
   height: 70px;
+  width: 100%;
   display: flex;
   padding: 0 35px 0 35px;
-  border-bottom: 1px solid #f2f2f2;
   align-items: center;
   justify-content: space-between;
+}
+
+.file-record-item:after {
+  display: block;
+  position: absolute;
+  content: " ";
+  height: 0;
+  top: 70px;
+  left: 40px;
+  right: 35px;
+  border-bottom: 1px solid #f2f2f2;
 }
 
 .file-record-item:active {
