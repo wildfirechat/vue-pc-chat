@@ -65,7 +65,7 @@ export default {
 
   mounted() {
     let href = window.location.href;
-    if (href.indexOf('voip') >= 0 || href.indexOf('files')) {
+    if (href.indexOf('voip') >= 0 || href.indexOf('files') >= 0) {
       let app = document.getElementById("app");
       let el = document.getElementById("blur-container");
       el && app.removeChild(el)
