@@ -486,6 +486,23 @@ let store = {
 
     /**
      *
+     * @param src {String} 媒体url
+     * @param thumb {String} base64格式的缩略图，但不包含'data:image/png;base64,'
+     * @param autoplay
+     */
+    previewMedia(src, thumb, autoplay = true) {
+        conversationState.previewMediaItems.length = 0;
+        conversationState.previewMediaItems.push({
+            src: src,
+            thumb: 'data:image/png;base64,' + thumb,
+            autoplay: autoplay,
+        });
+        conversationState.previewMediaIndex = 0;
+        console.log('preview media', conversationState.previewMediaItems, conversationState.previewMediaIndex)
+    },
+
+    /**
+     *
      * @param message
      * @param {Boolean} continuous  true，预览周围的媒体消息；false，只预览第一个参数传入的那条媒体消息
      */

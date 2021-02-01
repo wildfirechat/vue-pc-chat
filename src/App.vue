@@ -26,6 +26,13 @@
       </video>
     </div>
 
+    <CoolLightBox
+        :items="sharedConversationState.previewMediaItems"
+        :index="sharedConversationState.previewMediaIndex"
+        :slideshow="false"
+        @close="sharedConversationState.previewMediaIndex = null">
+    </CoolLightBox>
+
     <router-view id="main-content-container" class="main-content-container"></router-view>
   </div>
 </template>
@@ -33,6 +40,8 @@
 <script>
 import store from "@/store";
 import {isElectron} from "@/platform";
+import CoolLightBox from 'vue-cool-lightbox'
+import 'vue-cool-lightbox/dist/vue-cool-lightbox.min.css'
 
 export default {
   name: 'App',
@@ -40,6 +49,7 @@ export default {
     return {
       url: '',
       sharedMiscState: store.state.misc,
+      sharedConversationState: store.state.conversation,
     }
   },
   methods: {
@@ -74,6 +84,9 @@ export default {
       el = document.getElementById('main-content-container');
       el.style.backgroundColor = '#292929'
     }
+  },
+  components: {
+    CoolLightBox,
   }
 }
 

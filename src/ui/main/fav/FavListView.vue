@@ -5,7 +5,7 @@
       <ul>
         <li v-for="(favItem, index) in (filteredFavItems)"
             :key="index">
-          <div class="fav-item-container">
+          <div class="fav-item-container" @click="handleClick(favItem)">
             <div class="fav-item-content">
               <!--            文件-->
               <div v-if="favItem.type === 5" class="fav-item-file">
@@ -56,6 +56,8 @@ import helper from "@/ui/util/helper";
 import MessageContentType from "@/wfc/messages/messageContentType";
 import wfc from "@/wfc/client/wfc";
 import InfiniteLoading from "vue-infinite-loading";
+import store from "@/store";
+import {ipcRenderer} from "@/platform";
 
 export default {
   name: "FavListView",
@@ -142,6 +144,25 @@ export default {
         }
       });
     },
+    handleClick(favItem) {
+      switch (favItem.type) {
+        case MessageContentType.Image:
+        case MessageContentType.Video:
+          store.previewMedia(favItem.url, favItem.data.thumb)
+          break;
+        case MessageContentType.File:
+          ipcRenderer.send('file-download', {
+            // TODO -1时，不通知进度
+            messageId: -1,
+            remotePath: favItem.url,
+            fileName: favItem.title,
+          });
+          break;
+        default:
+          console.log('todo click', favItem)
+          break;
+      }
+    }
   },
 
   computed: {
@@ -241,6 +262,10 @@ export default {
   right: 80px;
   bottom: 0;
   border-bottom: 1px solid #e4e4e4;
+}
+
+.fav-item-container:active {
+  background-color: #dedede;
 }
 
 .fav-item-content {

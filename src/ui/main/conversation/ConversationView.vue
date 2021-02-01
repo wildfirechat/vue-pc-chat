@@ -1,11 +1,5 @@
 <template>
   <section>
-    <CoolLightBox
-        :items="sharedConversationState.previewMediaItems"
-        :index="sharedConversationState.previewMediaIndex"
-        :slideshow="false"
-        @close="sharedConversationState.previewMediaIndex = null">
-    </CoolLightBox>
     <div v-if="sharedConversationState.currentConversationInfo == null" class="conversation-empty-container">
       <h1>^~^</h1>
     </div>
@@ -129,8 +123,6 @@ import TextMessageContent from "@/wfc/messages/textMessageContent";
 import store from "@/store";
 import wfc from "@/wfc/client/wfc";
 import {numberValue} from "@/wfc/util/longUtil";
-import CoolLightBox from 'vue-cool-lightbox'
-import 'vue-cool-lightbox/dist/vue-cool-lightbox.min.css'
 import InfiniteLoading from 'vue-infinite-loading';
 import MultiSelectActionView from "@/ui/main/conversation/MessageMultiSelectActionView";
 import ForwardMessageByPickConversationView
@@ -153,7 +145,6 @@ export default {
     MessageInputView,
     GroupConversationInfoView,
     SingleConversationInfoView,
-    CoolLightBox,
     InfiniteLoading,
     ScaleLoader,
   },

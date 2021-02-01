@@ -87,7 +87,7 @@
               <template slot="no-results">已加载全部文件 :(</template>
             </infinite-loading>
           </div>
-          <div v-else class="file-record-empty-container">没有文件记录</div>
+          <div v-else class="file-record-empty-container">{{ emptyDesc }}</div>
         </div>
       </div>
     </div>
@@ -207,10 +207,6 @@ export default {
 
     infiniteHandler($state) {
       let lastMessageUid = this.fileRecords.length > 0 ? this.fileRecords[this.fileRecords.length - 1].messageUid : 0;
-      console.log('xxx load more file records', $state, lastMessageUid.toString());
-      this.fileRecords.forEach(fr => {
-        console.log('bxxxx ' + fr.messageUid.toString())
-      })
       let successCB = (fileRecords) => {
         if (fileRecords.length === 0) {
           console.log('load file records complete')
@@ -218,9 +214,6 @@ export default {
           return;
         }
         this.fileRecords = this.fileRecords.concat(fileRecords);
-        this.fileRecords.forEach(fr => {
-          console.log('xxxx ' + fr.messageUid.toString())
-        })
         $state.loaded();
       };
       let failCB = (err) => {
@@ -278,6 +271,16 @@ export default {
           break;
       }
       return identifier;
+    },
+    emptyDesc() {
+      let desc = '没有文件记录';
+      if (this.category === this.CATEGORY_CONVERSATION && this.currentConversation === null) {
+        desc = '没有选择会话'
+      } else if (this.category === this.CATEGORY_SENDER && this.currentUser === null) {
+        desc = '没有选择发送者';
+      }
+
+      return desc;
     }
   },
 
