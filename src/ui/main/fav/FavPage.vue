@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import FavCategoryListPanel from "@/ui/main/FavCategoryListPanel";
-import FavView from "@/ui/main/FavListView";
+import FavCategoryListPanel from "@/ui/main/fav/FavCategoryListPanel";
+import FavView from "@/ui/main/fav/FavListView";
 
 export default {
   name: "FavPage",
