@@ -15,6 +15,13 @@
             </div>
           </li>
           <li>
+            <div class="category-item" v-bind:class="{active:category === CATEGORY_FILE}"
+                 @click="showFileFav">
+              <i class="icon-ion-android-document"></i>
+              <p>文件</p>
+            </div>
+          </li>
+          <li>
             <div class="category-item" v-bind:class="{active:category === CATEGORY_MEDIA}"
                  @click="showMediaFav">
               <i class="icon-ion-image"></i>
@@ -50,6 +57,7 @@ export default {
 
       CATEGORY_ALL: 'all',
       CATEGORY_MEDIA: 'media',
+      CATEGORY_FILE: 'file',
       CATEGORY_COMPOSITE: 'composite',
     };
   },
@@ -61,6 +69,14 @@ export default {
         return;
       }
       this.category = this.CATEGORY_ALL;
+
+    },
+    showFileFav() {
+      // TODO
+      if (this.category === this.CATEGORY_FILE) {
+        return;
+      }
+      this.category = this.CATEGORY_FILE;
 
     },
     showMediaFav() {
