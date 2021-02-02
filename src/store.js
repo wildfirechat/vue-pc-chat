@@ -500,6 +500,12 @@ let store = {
         conversationState.previewMediaIndex = 0;
         console.log('preview media', conversationState.previewMediaItems, conversationState.previewMediaIndex)
     },
+    previewMedias(mediaItems, index) {
+        conversationState.previewMediaItems.length = 0;
+        conversationState.previewMediaItems.push(...mediaItems);
+        conversationState.previewMediaIndex = index;
+        console.log('preview medias', conversationState.previewMediaItems, conversationState.previewMediaIndex)
+    },
 
     /**
      *

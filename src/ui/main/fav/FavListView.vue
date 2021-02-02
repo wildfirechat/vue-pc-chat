@@ -2,7 +2,27 @@
   <section class="fav-list-container">
     <h2>{{ title }}</h2>
     <div infinite-wrapper>
-      <ul>
+      <div v-if="category === 'media'">
+        <div v-for="group in groupedMediaItems"
+             :key="group.category"
+             class="media-category-container">
+          <p>{{ group.category }}</p>
+          <ul class="media-category-items">
+            <li v-for="(favItem, index ) in group.items"
+                @click="handleClickMedia(index, group.items)"
+                :key="favItem.id">
+              <div v-if="favItem.type === 3" class="media-item-image">
+                <img :src="favItem.url">
+              </div>
+              <div v-else class="media-item-video">
+                <video preload="metadata" :src="favItem.url"/>
+                <i class="icon-ion-play"></i>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <ul v-else>
         <li v-for="(favItem, index) in (filteredFavItems)"
             :key="index">
           <div class="fav-item-container" @click="handleClick(favItem)">
@@ -14,7 +34,6 @@
                   <p class="name">{{ favItem.title }}</p>
                   <p class="size">{{ favItem._sizeStr }}</p>
                 </div>
-
               </div>
               <!--            图片-->
               <div v-else-if="favItem.type === 3" class="fav-item-image">
@@ -162,6 +181,17 @@ export default {
           console.log('todo click', favItem)
           break;
       }
+    },
+    handleClickMedia(index, favItems) {
+      let mediaItems = [];
+      favItems.forEach(favItem => {
+        mediaItems.push({
+          src:favItem.url,
+          thumb: 'data:image/png;base64,' + favItem.data.thumb,
+          autoplay: true,
+        })
+      })
+      store.previewMedias(mediaItems, index)
     }
   },
 
@@ -207,6 +237,28 @@ export default {
       return items;
     },
 
+    groupedMediaItems() {
+      let items = this.favItems.filter(fi => fi.type === MessageContentType.Image || fi.type === MessageContentType.Video)
+      let groupedItems = [];
+
+      let months = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
+
+      let map = new Map();
+      items.forEach(item => {
+        let favDate = new Date(item.timestamp);
+        let category = months[favDate.getMonth()] + ' ' + favDate.getFullYear();
+        if (!map.has(category)) {
+          map.set(category, [item]);
+        } else {
+          map.get(category).push(item);
+        }
+      });
+      groupedItems = Array.from(map).map(([category, items]) => ({category: category, items: items}))
+
+      console.log('groupedItems', groupedItems)
+      // groupedItems = groupedItems.concat(groupedItems)
+      return groupedItems;
+    },
   },
 
   mounted() {
@@ -369,6 +421,49 @@ export default {
   font-size: 12px;
   color: #b2b2b2;
   padding-top: 3px;
+}
+
+.media-category-container {
+  display: flex;
+  flex-direction: column;
+  padding: 0 80px;
+}
+
+.media-category-container p {
+  font-size: 14px;
+  padding: 20px 0 10px 0;
+}
+
+.media-category-items {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.media-item-image img {
+  width: 70px;
+  height: 70px;
+  padding: 2px;
+}
+
+.media-item-video {
+  position: relative;
+}
+
+.media-item-video video {
+  width: 70px;
+  height: 70px;
+}
+
+.media-item-video i {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  width: 10px;
+  margin-right: auto;
 }
 
 </style>
