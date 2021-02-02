@@ -347,6 +347,7 @@ export default {
 .fav-item-image img {
   height: 70px;
   width: 140px;
+  object-fit: cover;
 }
 
 .fav-item-file {
@@ -446,6 +447,7 @@ export default {
 .media-item-image img {
   width: 70px;
   height: 70px;
+  object-fit: cover;
   padding: 2px;
 }
 
