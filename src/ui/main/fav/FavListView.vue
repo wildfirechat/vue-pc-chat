@@ -398,6 +398,7 @@ export default {
   background-color: lightgrey;
   height: 70px;
   width: 140px;
+  object-fit: cover;
 }
 
 .fav-item-video i {
@@ -458,6 +459,8 @@ export default {
 .media-item-video video {
   width: 70px;
   height: 70px;
+  object-fit: cover;
+  padding: 2px;
 }
 
 .media-item-video i {
