@@ -18,7 +18,7 @@
             animation="fade"
             trigger="click"
         >
-          <PreviewMessageView :message="quotedMessage"/>
+          <PreviewQuotedMessageView :message="quotedMessage"/>
         </tippy>
         <p
             :name="'messagePreview' + this.message.messageId  + this.quotedMessage.messageId + enableMessagePreview">
@@ -38,7 +38,7 @@
 import store from "@/store";
 import MessageContentType from "@/wfc/messages/messageContentType";
 import Message from "@/wfc/messages/message";
-import PreviewMessageView from "@/ui/main/conversation/message/PreviewMessageView";
+import PreviewQuotedMessageView from "@/ui/main/conversation/message/PreviewQuotedMessageView";
 
 export default {
   name: "QuoteMessageView",
@@ -124,7 +124,7 @@ export default {
     }
   },
   components: {
-    PreviewMessageView,
+    PreviewQuotedMessageView,
   }
 }
 
@@ -145,7 +145,7 @@ export default {
   margin-right: 10px;
 }
 
-.quoted-message > p{
+.quoted-message > p {
   max-width: 100%;
   max-height: 50px;
   flex: 1;

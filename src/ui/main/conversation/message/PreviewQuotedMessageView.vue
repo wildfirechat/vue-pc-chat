@@ -9,14 +9,12 @@ import Message from "@/wfc/messages/message";
 import {parser as emojiParse} from "@/ui/util/emoji";
 
 export default {
-  name: "previewMessageView",
+  name: "previewQuotedMessageView",
   props: {
     message: {
       type: Message,
       required: true,
     }
-  },
-  mounted() {
   },
 
   computed: {
