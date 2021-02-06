@@ -661,10 +661,12 @@ const createMainWindow = async () => {
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
+        global.sharedObj.proto.onAppResume();
     });
 
     powerMonitor.on('suspend', () => {
         isSuspend = true;
+        global.sharedObj.proto.onAppSuspend();
     });
 
     if (isOsx) {
