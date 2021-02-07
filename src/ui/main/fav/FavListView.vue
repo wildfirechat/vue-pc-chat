@@ -143,7 +143,11 @@ export default {
     _patchFavItem(favItems) {
       favItems.forEach(fi => {
         if (fi.data) {
-          fi.data = JSON.parse(fi.data);
+          if (fi.type === MessageContentType.Composite_Message) {
+            // TODO
+          } else {
+            fi.data = JSON.parse(fi.data);
+          }
         }
         fi._timeStr = helper.dateFormat(fi.timestamp);
         if (fi.type === MessageContentType.File) {
@@ -177,6 +181,9 @@ export default {
             fileName: favItem.title,
           });
           break;
+        case MessageContentType.Composite_Message:
+          // TODO
+          break;
         default:
           console.log('todo click', favItem)
           break;
@@ -186,7 +193,7 @@ export default {
       let mediaItems = [];
       favItems.forEach(favItem => {
         mediaItems.push({
-          src:favItem.url,
+          src: favItem.url,
           thumb: 'data:image/png;base64,' + favItem.data.thumb,
           autoplay: true,
         })
