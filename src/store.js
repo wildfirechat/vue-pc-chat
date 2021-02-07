@@ -339,6 +339,9 @@ let store = {
         this._loadDefaultConversationList();
         this._loadUserLocalSettings();
         conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
+        if (conversationState.currentConversationInfo) {
+            this._loadCurrentConversationMessages();
+        }
     },
 
     // conversation actions
