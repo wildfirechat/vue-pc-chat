@@ -977,6 +977,11 @@ let store = {
         }
     },
 
+    isUserPicked(user){
+        let index = pickState.users.findIndex(u => u.uid === user.uid);
+        return index >= 0;
+    },
+
     pickOrUnpickConversation(conversation) {
         let index = pickState.conversations.findIndex(c => (conversation.target === c.target && conversation.line === c.line && conversation.type === c.type))
         if (index >= 0) {

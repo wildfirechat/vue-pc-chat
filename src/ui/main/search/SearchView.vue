@@ -62,7 +62,7 @@ export default {
       this.$modal.show(
           PickerUserView,
           {
-            users: this.sharedContactState.friendList,
+            users: this.sharedContactState.favContactList.concat(this.sharedContactState.friendList),
             confirmTitle: '创建',
           }, {
             name: 'pick-user-modal',

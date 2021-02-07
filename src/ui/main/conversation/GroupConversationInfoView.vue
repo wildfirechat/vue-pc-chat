@@ -83,7 +83,7 @@ export default {
       this.$modal.show(
           PickUserView,
           {
-            users: this.sharedContactState.friendList,
+            users: this.sharedContactState.favContactList.concat(this.sharedContactState.friendList),
             initialCheckedUsers: groupMemberUserInfos,
             uncheckableUsers: groupMemberUserInfos,
             confirmTitle: '添加',
@@ -175,16 +175,8 @@ export default {
 
     enableRemoveGroupMember() {
       let selfUid = wfc.getUserId();
-      let groupInfo = this.conversationInfo.conversation._target;
-      if (groupInfo.type === GroupType.Restricted) {
-        if (groupInfo.joinType === 0 || groupInfo.joinType === 1) {
-          return true;
-        } else if (groupInfo.joinType === 2) {
-          let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
-          return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
-        }
-      }
-      return true;
+      let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
+      return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
 
     },
 
