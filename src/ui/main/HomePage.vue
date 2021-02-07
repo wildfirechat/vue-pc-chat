@@ -170,7 +170,8 @@ export default {
           || status === ConnectionStatus.ConnectionStatusLogout
           || status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
           || status === ConnectionStatus.ConnectionStatusTokenIncorrect
-          || status === ConnectionStatus.ConnectionStatusUnconnected
+          // TODO 断网时，显示网络断开状态
+          // || status === ConnectionStatus.ConnectionStatusUnconnected
           || wfc.getUserId() === '') {
 
         if (this.$router.currentRoute.path !== '/') {
