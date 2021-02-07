@@ -52,7 +52,7 @@ import PCSession from "@/wfc/model/pcsession";
 import jrQRCode from 'jr-qrcode'
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import EventType from "@/wfc/client/wfcEvent";
-import {getItem, setItem} from "@/ui/util/storageHelper";
+import {getItem, setItem, clear} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
