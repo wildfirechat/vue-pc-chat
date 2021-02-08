@@ -28,14 +28,15 @@ Vue.config.productionTip = false
         } else {
             wfc.init();
         }
+        store.init(true);
     } else {
         console.log('voip/files window, not init wfc')
-        if (isElectron() && href.indexOf('files') > 0) {
+        if (isElectron()) {
             let sharedObj = remote.getGlobal('sharedObj');
             wfc.attach(sharedObj.proto)
         }
+        store.init(false);
     }
-    store.init();
 }
 // init end
 
