@@ -111,7 +111,7 @@ export default {
 
     draft() {
       let draft = Draft.getConversationDraftEx(this.conversationInfo);
-      let draftText = '[草稿]' + draft.text;
+      let draftText = '<em>[草稿]</em>' + draft.text;
       draftText = draftText.replace(/<img [:a-zA-Z0-9_+; ,\-=\/."]+>/g, '[图片]')
       draftText = draftText.replace(/&nbsp;/g, ' ');
       draftText = draftText.replace(/<br>/g, '')
@@ -240,9 +240,15 @@ export default {
 }
 
 .content .draft {
-  color: red;
   font-size: 13px;
   height: 20px;
+}
+
+/*refer to: https://blog.csdn.net/weixin_42412046/article/details/80804285*/
+>>> .content .draft em {
+  color: red;
+  font-style: normal;
+  padding-right: 5px;
 }
 
 .content .last-message-desc {
