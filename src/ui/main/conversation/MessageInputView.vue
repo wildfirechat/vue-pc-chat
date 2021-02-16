@@ -455,10 +455,22 @@ export default {
       })
     },
 
+    moveCursorToEnd(contentEditableDiv){
+
+      let range = document.createRange();
+      range.selectNodeContents(contentEditableDiv);
+      range.collapse(false);
+      let sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    },
+
     restoreDraft() {
       let draft = Draft.getConversationDraftEx(this.conversationInfo)
       store.quoteMessage(draft.quotedMessage);
-      this.$refs['input'].innerHTML = draft.text;
+      let input = this.$refs['input'];
+      input.innerHTML = draft.text;
+      this.moveCursorToEnd(input);
     },
 
     storeDraft(conversationInfo, quotedMessage) {
