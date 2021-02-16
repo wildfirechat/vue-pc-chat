@@ -102,6 +102,9 @@ export default {
       if (this.shareConversationState.currentConversationInfo && this.shareConversationState.currentConversationInfo.conversation.equal(this.conversationInfo.conversation)) {
         return false;
       }
+      if (this.conversationInfo.unreadCount.unreadMention + this.conversationInfo.unreadCount.unreadMentionAll > 0) {
+        return false;
+      }
       let draft = Draft.getConversationDraftEx(this.conversationInfo);
       return draft.text.trim() !== '' || draft.quotedMessage !== null;
     },
