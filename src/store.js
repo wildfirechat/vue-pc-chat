@@ -24,6 +24,7 @@ import {ipcRenderer, isElectron} from "@/platform";
 import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
+import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 
 /**
  * 一些说明
@@ -454,8 +455,8 @@ let store = {
         pickState.messages.length = 0;
     },
 
-    forwardMessage(forwardType, conversations, messages, extraMessageText) {
-        conversations.forEach(conversation => {
+    forwardMessage(forwardType, targetConversations, messages, extraMessageText) {
+        targetConversations.forEach(conversation => {
             // let msg =new Message(conversation, message.messageContent)
             // wfc.sendMessage(msg)
             // 或者下面这种
@@ -465,6 +466,19 @@ let store = {
                 });
             } else {
                 // 合并转发
+                let compositeMessageContent = new CompositeMessageContent();
+                let title = '';
+                let conversation = messages[0].conversation;
+                if (conversation.type === ConversationType.Single) {
+                    let users = store.getUserInfos([wfc.getUserId(), conversation.target], '');
+                    title = users[0]._displayName + '和' + users[1]._displayName;
+                } else {
+                    title = '群的聊天记录';
+                }
+                compositeMessageContent.title = title;
+                compositeMessageContent.messages = messages;
+
+                wfc.sendConversationMessage(conversation, compositeMessageContent);
             }
 
             if (extraMessageText) {
