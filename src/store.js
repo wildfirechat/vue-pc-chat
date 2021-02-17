@@ -107,6 +107,7 @@ let store = {
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
             // isElectronWindowsOrLinux: true,
             isMainWindow: false,
+            isCommercialServer: wfc.isCommercialServer(),
         },
     },
 
@@ -977,7 +978,7 @@ let store = {
         }
     },
 
-    isUserPicked(user){
+    isUserPicked(user) {
         let index = pickState.users.findIndex(u => u.uid === user.uid);
         return index >= 0;
     },
