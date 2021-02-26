@@ -4,7 +4,7 @@ import EventType from "@/wfc/client/wfcEvent";
 import ConversationType from "@/wfc/model/conversationType";
 import {eq, gt, numberValue} from "@/wfc/util/longUtil";
 import helper from "@/ui/util/helper";
-import convert from 'pinyin'
+import convert from '@/vendor/pinyin'
 import GroupType from "@/wfc/model/groupType";
 import {imageThumbnail, mergeImages, videoThumbnail} from "@/ui/util/imageUtil";
 import MessageContentMediaType from "@/wfc/messages/messageContentMediaType";
