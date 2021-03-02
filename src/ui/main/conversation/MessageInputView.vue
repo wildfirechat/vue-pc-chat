@@ -456,7 +456,7 @@ export default {
       })
     },
 
-    moveCursorToEnd(contentEditableDiv){
+    moveCursorToEnd(contentEditableDiv) {
 
       let range = document.createRange();
       range.selectNodeContents(contentEditableDiv);
@@ -476,7 +476,11 @@ export default {
 
     storeDraft(conversationInfo, quotedMessage) {
       let draftText = this.$refs['input'].innerHTML.trim();
-      let tmp = draftText.replace(/<br>/g, '').replace(/<div><\/div>/g, '')
+      let tmp = draftText.replace(/<br>/g, '')
+          .replace(/<div><\/div>/g, '')
+          .replace(/&nbsp;/g, '')
+          .trim();
+
       if (tmp.length === 0) {
         if (conversationInfo.draft !== '') {
           Draft.setConversationDraft(conversationInfo.conversation, tmp, quotedMessage)
