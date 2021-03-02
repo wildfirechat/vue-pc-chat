@@ -85,7 +85,6 @@ export default {
       showEmojiDialog: false,
       tribute: null,
       mentions: [],
-      isMention: false,
       emojiCategories: categoriesDefault,
       emojis: emojisDefault,
       lastConversationInfo: null,
@@ -127,8 +126,7 @@ export default {
     },
 
     send(e) {
-      if (this.isMention) {
-        this.isMention = false;
+      if (this.tribute && this.tribute.isActive) {
         return;
       }
 
@@ -411,7 +409,6 @@ export default {
           //     return '<span contenteditable="false"><a href="http://zurb.com" target="_blank" title="' + item.original.email + '">' + item.original.value + '</a></span>';
           // }
           this.mentions.push({key: item.original.key, value: item.original.value});
-          this.isMention = true;
 
           return '@' + item.original.key;
         },
