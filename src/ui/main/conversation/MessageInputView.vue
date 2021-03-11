@@ -326,7 +326,7 @@ export default {
             users: store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, true),
             initialCheckedUsers: [this.sharedContactState.selfUserInfo],
             uncheckableUsers: [this.sharedContactState.selfUserInfo],
-            confirmTitle: '确定',
+            confirmTitle: this.$t('common.confirm'),
           }, {
             name: 'pick-user-modal',
             width: 600,
@@ -384,11 +384,11 @@ export default {
       let mentionMenuItems = [];
       let groupInfo = wfc.getGroupInfo(conversation.target);
       mentionMenuItems.push({
-        key: "所有人",
+        key: this.$t('conversation.all_people'),
         value: '@' + conversation.target,
         avatar: groupInfo.portrait,
         //searchKey: '所有人' + pinyin.letter('所有人', '', null)
-        searchKey: '所有人' + 'suoyouren' + 'syr'
+        searchKey: this.$t('conversation.all_people') + 'suoyouren' + 'syr'
       });
 
       let groupMemberUserInfos = store.getGroupMemberUserInfos(conversation.target, false);

@@ -17,16 +17,16 @@
     <vue-context ref="menu" v-slot="{data:conversationInfo}">
       <li>
         <a @click.prevent="setConversationTop(conversationInfo)">{{
-            conversationInfo && conversationInfo.isTop ? '取消置顶' : '置顶'
+            conversationInfo && conversationInfo.isTop ? this.$t('conversation.cancel_sticky_top') : this.$t('conversation.sticky_top')
           }}</a>
       </li>
       <li>
         <a @click.prevent="setConversationSilent(conversationInfo)">{{
-            conversationInfo && conversationInfo.isSilent ? '允许消息通知' : '消息免打扰'
+            conversationInfo && conversationInfo.isSilent ? this.$t('conversation.enable_notification') : this.$t('conversation.disable_notification')
           }}</a>
       </li>
       <li>
-        <a @click.prevent="removeConversation(conversationInfo)">删除</a>
+        <a @click.prevent="removeConversation(conversationInfo)">{{$t('common.delete')}}</a>
       </li>
     </vue-context>
   </section>

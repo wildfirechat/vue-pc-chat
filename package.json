@@ -46,6 +46,7 @@
     "vue-click-outside": "^1.1.0",
     "vue-context": "^6.0.0",
     "vue-cool-lightbox": "^2.6.9",
+    "vue-i18n": "^8.24.0",
     "vue-infinite-loading": "^2.4.5",
     "vue-js-modal": "^2.0.0-rc.6",
     "vue-router": "^3.4.9",
