@@ -85,6 +85,33 @@
         "ongoing": "通话中",
         "duration": "通话时长"
     },
+    "pick": {
+        "pick_contact": "选择联系人",
+        "picked_contact": "已选择联系人"
+    },
+    "search": {
+        "new_user": "新用户",
+        "view_all": "查看全部",
+        "message_history": "聊天记录",
+        "search_message_history": "搜索聊天记录..."
+    },
+    "file_record": {
+        "no_more": "没有更多文件",
+        "all_file_load": "已加载全部文件 :("
+    },
+    "setting": {
+        "setting": "设置",
+        "enable_notification": "开启通知",
+        "enable_notification_detail": "通知显示消息内容",
+        "close_window_to_exit": "关闭窗口时，直接退出",
+        "auto_login": "自动登录",
+        "exit_switch_user": "退出/切换账号",
+        "feedback": "发送反馈给我们",
+        "lang": "语言",
+        "zh_cn": "简体中文",
+        "zh_tw": "繁體中文",
+        "en": "English"
+    },
     "common": {
         "add": "添加",
         "remove": "移除",
@@ -94,9 +121,14 @@
         "alias": "备注",
         "area": "地区",
         "label": "标签",
+        "conversation": "聊天",
+        "sender": "发送者",
+        "all": "全部",
+        "mine": "我的",
         "unknown": "未知",
         "search": "搜索",
         "back": "返回",
+        "create": "创建",
         "none": "无",
         "copy": "复制",
         "delete": "删除",

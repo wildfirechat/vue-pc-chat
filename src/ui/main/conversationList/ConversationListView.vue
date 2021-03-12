@@ -17,12 +17,12 @@
     <vue-context ref="menu" v-slot="{data:conversationInfo}">
       <li>
         <a @click.prevent="setConversationTop(conversationInfo)">{{
-            conversationInfo && conversationInfo.isTop ? this.$t('conversation.cancel_sticky_top') : this.$t('conversation.sticky_top')
+            conversationInfo && conversationInfo.isTop ? $t('conversation.cancel_sticky_top') : $t('conversation.sticky_top')
           }}</a>
       </li>
       <li>
         <a @click.prevent="setConversationSilent(conversationInfo)">{{
-            conversationInfo && conversationInfo.isSilent ? this.$t('conversation.enable_notification') : this.$t('conversation.disable_notification')
+            conversationInfo && conversationInfo.isSilent ? $t('conversation.enable_notification') : $t('conversation.disable_notification')
           }}</a>
       </li>
       <li>
