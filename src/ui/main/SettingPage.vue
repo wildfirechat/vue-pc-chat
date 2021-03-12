@@ -25,12 +25,18 @@
         <input type="checkbox" :checked="sharedMiscState.enableAutoLogin"
                @change="enableAutoLogin($event.target.checked)">
       </label>
+        <div>
+            {{$t('setting.lang')}}
+        <dropdown class="my-dropdown-toggle"
+                  :options="langs"
+                  :selected="currentLang"
+                  v-on:updateOption="setLang"
+                  :placeholder="'Select an Item'"
+                  :closeOnOutsideClick="true">
+        </dropdown>
+        </div>
     </div>
     <footer>
-      <a class="button" target="_blank" @click="logout">
-          {{$t('setting.lang')}}
-          <!--        <i class="icon-ion-ios-email-outline"/>-->
-      </a>
       <a class="button" target="_blank" @click="logout">
           {{$t('setting.exit_switch_user')}}
         <!--        <i class="icon-ion-ios-email-outline"/>-->
@@ -58,14 +64,17 @@
 <script>
 import wfc from "@/wfc/client/wfc";
 import store from "@/store";
+import dropdown from 'vue-dropdowns';
 import {clear} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
+import {getItem, setItem} from "../util/storageHelper";
 
 export default {
   name: "SettingPage",
   data() {
     return {
       sharedMiscState: store.state.misc,
+      langs:[{lang:'zh-CN', name:'简体中文'}, {lang:'zh-TW', name:'繁體中文'}, {lang:'en', name:'English'}],
     }
   },
   methods: {
@@ -89,7 +98,43 @@ export default {
 
     enableAutoLogin(enable) {
       store.setEnableAutoLogin(enable);
+    },
+
+    setLang(lang){
+        setItem('lang', lang.lang)
+        this.$router.go();
+        console.log('owjojw', lang)
     }
+  },
+    computed:{
+      currentLang(){
+          let lang = getItem('lang')
+          let obj;
+          switch (lang){
+              case 'zh-TW':
+                  obj = {
+                      lang: 'zh-TW',
+                      name: '繁體中文'
+                  }
+                  break;
+              case 'en':
+                  obj = {
+                      lang: 'en',
+                      name: 'English'
+                  }
+                  break;
+              default:
+                  obj = {
+                      lang: 'zh-CN',
+                      name: '简体中文'
+                  }
+                  break;
+          }
+          return obj;
+      }
+    },
+  components: {
+      'dropdown': dropdown,
   },
 }
 </script>

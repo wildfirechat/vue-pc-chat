@@ -151,6 +151,7 @@ export default {
         }
         fi._timeStr = helper.dateFormat(fi.timestamp);
         if (fi.type === MessageContentType.File) {
+          fi.title = fi.title ? fi.title : 'unname'
           fi._fileIconName = helper.getFiletypeIcon(fi.title.substring(fi.title.lastIndexOf('.')))
           fi._sizeStr = helper.humanSize(fi.data.size)
         }
