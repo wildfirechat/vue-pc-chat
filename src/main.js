@@ -14,6 +14,7 @@ import './assets/fonts/icomoon/style.css'
 import store from "@/store";
 import visibility from 'vue-visibility-change';
 import {isElectron, remote} from "@/platform";
+import {getItem} from "./ui/util/storageHelper";
 
 Vue.config.productionTip = false
 
@@ -52,6 +53,19 @@ Vue.use(VModal);
 
 Vue.use(visibility);
 
+import VueI18n from 'vue-i18n'
+Vue.use(VueI18n)
+
+const i18n = new VueI18n({
+    // 使用localStorage存储语言状态是为了保证页面刷新之后还是保持原来选择的语言状态
+    locale: getItem('lang') ? getItem('lang') : 'zh-CN', // 定义默认语言为中文
+    messages: {
+        'zh-CN': require('@/assets/lang/zh-CN.json'),
+        'zh-TW': require('@/assets/lang/zh-TW.json'),
+        'en': require('@/assets/lang/en.json')
+    }
+})
+
 const router = new VueRouter({
     mode: 'hash',
     routes: routers,
@@ -60,6 +74,7 @@ const router = new VueRouter({
 var vm = new Vue({
     el: '#app',
     router,
+    i18n,
     render: h => h(App),
 })
 vm.store = store.state;

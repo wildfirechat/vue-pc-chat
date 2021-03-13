@@ -80,7 +80,7 @@ export default {
               wfc.sendMessage(message);
             }
           }
-          console.log('一次最多发送5个文件', e.dataTransfer, e.dataTransfer.getData('URL'));
+          console.log(this.$t('conversation.drag_to_send_limit_tip'), e.dataTransfer, e.dataTransfer.getData('URL'));
         }
       } else if (v === 'dragover') {
         // If not st as 'copy', electron will open the drop file
@@ -111,7 +111,7 @@ export default {
 
     draft() {
       let draft = Draft.getConversationDraftEx(this.conversationInfo);
-      let draftText = '<em>[草稿]</em>' + draft.text;
+      let draftText = `<em>[${this.$t('common.draft')}]</em>` + draft.text;
       draftText = draftText.replace(/<img [:a-zA-Z0-9_+; ,\-=\/."]+>/g, '[图片]')
       draftText = draftText.replace(/&nbsp;/g, ' ');
       draftText = draftText.replace(/<br>/g, '')
