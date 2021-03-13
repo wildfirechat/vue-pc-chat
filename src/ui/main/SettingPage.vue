@@ -102,35 +102,15 @@ export default {
 
     setLang(lang){
         setItem('lang', lang.lang)
-        this.$router.go();
-        console.log('owjojw', lang)
     }
   },
     computed:{
       currentLang(){
           let lang = getItem('lang')
-          let obj;
-          switch (lang){
-              case 'zh-TW':
-                  obj = {
-                      lang: 'zh-TW',
-                      name: '繁體中文'
-                  }
-                  break;
-              case 'en':
-                  obj = {
-                      lang: 'en',
-                      name: 'English'
-                  }
-                  break;
-              default:
-                  obj = {
-                      lang: 'zh-CN',
-                      name: '简体中文'
-                  }
-                  break;
-          }
-          return obj;
+          lang = lang ? lang : 'zh-CN';
+          let index = this.langs.findIndex(l => l.lang === lang);
+          index = index >= 0 ? index : 0;
+          return this.langs[index];
       }
     },
   components: {
