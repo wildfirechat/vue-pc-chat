@@ -25,6 +25,7 @@ import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
+import Worker from "worker-loader!./bigFileUpload.js";
 
 /**
  * 一些说明
@@ -557,6 +558,60 @@ let store = {
         }
     },
 
+    uploadBigFile(file, mediaType, progressCB, successCB, failCB) {
+        let worker = new Worker();
+        wfc.getUploadMediaUrl(file.name, mediaType, (uploadUrl, remoteUrl, backUploadUrl, serverType) => {
+            worker.onmessage = (msg) => {
+                let data = msg.data;
+                let fileName = data.name;
+                switch (data.type) {
+                    case 'progress':
+                        let progress = data.progress;
+                        let total = data.total;
+                        console.log('upload big file progress', fileName, Math.ceil(progress / total * 100))
+                        progressCB && progressCB(progress, total);
+                        break;
+                    case 'done':
+                        console.log('upload big file success', fileName, remoteUrl)
+                        successCB && successCB(fileName, remoteUrl);
+                        worker.terminate();
+                        break;
+                    default:
+                        break;
+                }
+            }
+            worker.onerror = (e) => {
+                // TODO error code
+                failCB && failCB(e);
+                worker.terminate();
+                console.log('worker onError', e)
+            }
+            worker.postMessage({
+                type: 'upload',
+                file: file,
+                uploadUrl: uploadUrl,
+                remoteUrl: remoteUrl,
+                backUploadUrl: backUploadUrl,
+                serverType: serverType
+            })
+        }, (e) => {
+            console.log('getUploadMediaUrl e', e)
+        })
+
+        return worker;
+    },
+
+    sendBigFile(conversation, file) {
+        console.log('upload and then send big file')
+        this.uploadBigFile(file, 4, null, (remoteUrl) => {
+                let msgContent = new FileMessageContent(null, remoteUrl, file.name, file.size)
+                wfc.sendConversationMessage(conversation, msgContent,)
+            },
+            (error) => {
+                console.log('sendBigFile error', error);
+            })
+    },
+
     /**
      *
      * @param conversation
@@ -565,6 +620,14 @@ let store = {
      */
     async sendFile(conversation, file) {
         console.log('send file', file)
+        if (file.size && file.size > 100 * 1024 * 1024) {
+            if (wfc.isSupportBigFilesUpload()) {
+                this.sendBigFile(conversation, file);
+            } else {
+                console.log('file too big, and not support upload big file')
+            }
+            return;
+        }
         let fileOrLocalPath = null;
         let remotePath = null;
         if (typeof file === 'string') {
@@ -1170,7 +1233,7 @@ let store = {
         let content = msg.messageContent;
         let icon = require('@/assets/images/icon.png');
         let tip
-        //Todo 
+        //Todo
         if (msg.direction === 0 /* && !(type===0 && target===file_transfer_id)*/) {
             return;
         }
