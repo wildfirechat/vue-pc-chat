@@ -177,6 +177,9 @@ export default {
         let length = e.dataTransfer.files.length;
         if (length > 0 && length < 5) {
           for (let i = 0; i < length; i++) {
+              if(wfc.isSupportBigFilesUpload() && e.dataTransfer.files[i].size > 100 * 1024 * 1024){
+                  this.$toast("大文件上传中，上传成功之后，将自动发送!");
+              }
             store.sendFile(this.sharedConversationState.currentConversationInfo.conversation, e.dataTransfer.files[i]);
           }
         } else {

@@ -822,7 +822,7 @@ let store = {
             info._timeStr = '';
         }
 
-        if (info.lastMessage && patchLastMessage) {
+        if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
             this._patchMessage(info.lastMessage, 0)
         }
 
