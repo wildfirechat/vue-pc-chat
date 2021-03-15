@@ -66,6 +66,10 @@ const i18n = new VueI18n({
     }
 })
 
+import Notifications from 'vue-notification'
+Vue.use(Notifications)
+
+
 const router = new VueRouter({
     mode: 'hash',
     routes: routers,

@@ -190,7 +190,8 @@ export default {
           } else {
             file = fileFromDataUri(src, new Date().getTime() + '.png');
           }
-          store.sendFile(this.conversationInfo.conversation, file)
+            this.$eventBus.$emit('uploadFile', file)
+            store.sendFile(this.conversationInfo.conversation, file)
           // 会影响 input.getElementsByTagName 返回的数组，所以上面拷贝了一下
           img.parentNode.removeChild(img);
         });
@@ -358,8 +359,8 @@ export default {
       //   showMessage('Send file not allowed to exceed 100M.');
       //   return false;
       // }
-
-      store.sendFile(this.conversationInfo.conversation, file);
+        this.$eventBus.$emit('uploadFile', file)
+        store.sendFile(this.conversationInfo.conversation, file);
     },
 
     initEmojiPicker() {

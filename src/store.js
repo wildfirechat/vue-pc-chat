@@ -1,3 +1,5 @@
+import Vue from 'vue'
+
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import wfc from "@/wfc/client/wfc";
 import EventType from "@/wfc/client/wfcEvent";
@@ -642,13 +644,7 @@ let store = {
 
     sendBigFile(conversation, file) {
         console.log('upload and then send big file')
-        this.uploadBigFile(file, 4, null, (remoteUrl) => {
-                let msgContent = new FileMessageContent(null, remoteUrl, file.name, file.size)
-                wfc.sendConversationMessage(conversation, msgContent,)
-            },
-            (error) => {
-                console.log('sendBigFile error', error);
-            })
+        this.uploadBigFile(file, 4 )
     },
 
     /**
