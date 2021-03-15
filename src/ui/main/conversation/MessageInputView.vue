@@ -359,10 +359,7 @@ export default {
       //   return false;
       // }
 
-        if(wfc.isSupportBigFilesUpload() && file.size > 100 * 1024 * 1024){
-            this.$toast("大文件上传中，上传成功之后，将自动发送!");
-        }
-        store.sendFile(this.conversationInfo.conversation, file);
+      store.sendFile(this.conversationInfo.conversation, file);
     },
 
     initEmojiPicker() {
