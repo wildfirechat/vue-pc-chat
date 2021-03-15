@@ -50,7 +50,7 @@ export default {
       let firstMsg = this.messages[0];
       switch (this.forwardType) {
         case ForwardType.NORMAL:
-          str = firstMsg._from._displayName + ':';
+          str = !firstMsg._from ? '' : firstMsg._from._displayName + ':';
           if ([MessageContentType.Image, MessageContentType.Video].indexOf(firstMsg.messageContent.type) < 0) {
             str += firstMsg.messageContent.digest(this.quotedMessage);
           }

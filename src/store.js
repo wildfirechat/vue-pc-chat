@@ -110,6 +110,7 @@ let store = {
             // isElectronWindowsOrLinux: true,
             isMainWindow: false,
             isCommercialServer: wfc.isCommercialServer(),
+            uploadBigFiles: [],
         },
     },
 
@@ -558,6 +559,17 @@ let store = {
         }
     },
 
+    cancelUploadBigFile(remoteUrl) {
+        miscState.uploadBigFiles.forEach(upload => {
+            if (upload.remoteUrl === remoteUrl) {
+                let worker = upload.worker;
+                upload.status = 3;
+                upload.worker = null;
+                worker && worker.terminate();
+            }
+        })
+    },
+
     uploadBigFile(file, mediaType, progressCB, successCB, failCB) {
         let worker = new Worker();
         wfc.getUploadMediaUrl(file.name, mediaType, (uploadUrl, remoteUrl, backUploadUrl, serverType) => {
@@ -569,11 +581,23 @@ let store = {
                         let progress = data.progress;
                         let total = data.total;
                         console.log('upload big file progress', fileName, Math.ceil(progress / total * 100))
+                        miscState.uploadBigFiles.forEach(upload => {
+                            if (upload.remoteUrl === remoteUrl) {
+                                upload.progress = Math.ceil(progress / total * 100)
+                            }
+                        })
                         progressCB && progressCB(progress, total);
                         break;
                     case 'done':
                         console.log('upload big file success', fileName, remoteUrl)
                         successCB && successCB(fileName, remoteUrl);
+                        miscState.uploadBigFiles.forEach(upload => {
+                            if (upload.remoteUrl === remoteUrl) {
+                                upload.progress = 100;
+                                upload.status = 2;
+                                upload.worker = null;
+                            }
+                        })
                         worker.terminate();
                         break;
                     default:
@@ -581,10 +605,15 @@ let store = {
                 }
             }
             worker.onerror = (e) => {
-                // TODO error code
+                miscState.uploadBigFiles.forEach(upload => {
+                    if (upload.remoteUrl === remoteUrl) {
+                        // status:1 上传中，2 上传成功 3 上传失败
+                        upload.status = 3;
+                        upload.worker = null;
+                    }
+                })
                 failCB && failCB(e);
                 worker.terminate();
-                console.log('worker onError', e)
             }
             worker.postMessage({
                 type: 'upload',
@@ -594,6 +623,16 @@ let store = {
                 backUploadUrl: backUploadUrl,
                 serverType: serverType
             })
+            miscState.uploadBigFiles.push({
+                remoteUrl: remoteUrl,
+                name: file.name,
+                size: file.size,
+                _sizeStr: helper.humanSize(file.size),
+                _fileIconName : helper.getFiletypeIcon(file.name.substring(file.name.lastIndexOf('.'))),
+                status: 1,
+                progress: 0,
+                worker: worker,
+            });
         }, (e) => {
             console.log('getUploadMediaUrl e', e)
         })

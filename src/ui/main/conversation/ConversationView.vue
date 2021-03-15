@@ -135,6 +135,7 @@ import {fs, isElectron, shell} from "@/platform";
 import FileMessageContent from "@/wfc/messages/fileMessageContent";
 import ImageMessageContent from "@/wfc/messages/imageMessageContent";
 import {copyImg, copyText} from "@/ui/util/clipboard";
+import Message from "../../../wfc/messages/message";
 
 export default {
   components: {
@@ -438,12 +439,18 @@ export default {
     this.$on('openMessageContextMenu', function (event, message) {
       this.$refs.menu.open(event, message);
     });
+
+    this.$eventBus.$on('send-file', args => {
+        let fileMessageContent = new FileMessageContent(null, args.remoteUrl, args.name, args.size);
+       let message = new Message(null, fileMessageContent);
+       this.forward(message)
+    })
   },
 
   unmounted() {
     document.removeEventListener('mouseup', this.dragEnd);
     document.removeEventListener('mousemove', this.drag);
-
+    this.$eventBus.$off('send-file')
   },
 
   updated() {

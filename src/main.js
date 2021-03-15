@@ -15,6 +15,7 @@ import store from "@/store";
 import visibility from 'vue-visibility-change';
 import {isElectron, remote} from "@/platform";
 import {getItem} from "./ui/util/storageHelper";
+import VueI18n from 'vue-i18n'
 
 Vue.config.productionTip = false
 
@@ -53,7 +54,6 @@ Vue.use(VModal);
 
 Vue.use(visibility);
 
-import VueI18n from 'vue-i18n'
 Vue.use(VueI18n)
 
 const i18n = new VueI18n({
@@ -70,6 +70,8 @@ const router = new VueRouter({
     mode: 'hash',
     routes: routers,
 })
+
+Vue.prototype.$eventBus = new Vue();
 
 var vm = new Vue({
     el: '#app',
