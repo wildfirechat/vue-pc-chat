@@ -69,8 +69,7 @@
     "native-ext-loader": "^2.3.0",
     "shelljs": "^0.8.4",
     "vue-cli-plugin-electron-builder": "~2.0.0-rc.5",
-    "vue-template-compiler": "^2.6.11",
-    "worker-loader": "^3.0.8"
+    "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
     "root": false,
