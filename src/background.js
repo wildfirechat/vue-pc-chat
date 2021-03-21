@@ -46,6 +46,7 @@ global.sharedObj = {proto: proto};
 let forceQuit = false;
 let downloading = false;
 let mainWindow;
+let fileWindow;
 let winBadge;
 let screenshots;
 let tray;
@@ -440,6 +441,48 @@ function regShortcut() {
     // }
 }
 
+const downloadHandler =  (event, item, webContents) => {
+    // 设置保存路径,使Electron不提示保存对话框。
+    // item.setSavePath('/tmp/save.pdf')
+    let fileName = downloadFileMap.get(item.getURL()).fileName;
+    item.setSaveDialogOptions({defaultPath: fileName})
+
+    item.on('updated', (event, state) => {
+        if (state === 'interrupted') {
+            console.log('Download is interrupted but can be resumed')
+        } else if (state === 'progressing') {
+            if (item.isPaused()) {
+                console.log('Download is paused')
+            } else {
+                // console.log(`Received bytes: ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
+                let downloadFile = downloadFileMap.get(item.getURL());
+                let messageId = downloadFile.messageId
+                webContents.send('file-download-progress', {
+                        messageId: messageId,
+                        receivedBytes: item.getReceivedBytes(),
+                        totalBytes: item.getTotalBytes()
+                    }
+                );
+            }
+        }
+    })
+    item.once('done', (event, state) => {
+        let downloadFile = downloadFileMap.get(item.getURL());
+        if(!downloadFile){
+            return;
+        }
+        let messageId = downloadFile.messageId
+        if (state === 'completed') {
+            console.log('Download successfully')
+            webContents.send('file-downloaded', {messageId: messageId, filePath: item.getSavePath()});
+        } else {
+            webContents.send('file-download-failed', {messageId: messageId});
+            console.log(`Download failed: ${state}`)
+        }
+        downloadFileMap.delete(item.getURL());
+    })
+}
+
 const createMainWindow = async () => {
     let mainWindowState = windowStateKeeper({
         defaultWidth: 1080,
@@ -481,7 +524,7 @@ const createMainWindow = async () => {
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
-    mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
             mainWindow.focus();
@@ -513,42 +556,7 @@ const createMainWindow = async () => {
         }
     });
 
-    mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
-        // 设置保存路径,使Electron不提示保存对话框。
-        // item.setSavePath('/tmp/save.pdf')
-        let fileName = downloadFileMap.get(item.getURL()).fileName;
-        item.setSaveDialogOptions({defaultPath: fileName})
-
-        item.on('updated', (event, state) => {
-            if (state === 'interrupted') {
-                console.log('Download is interrupted but can be resumed')
-            } else if (state === 'progressing') {
-                if (item.isPaused()) {
-                    console.log('Download is paused')
-                } else {
-                    console.log(`Received bytes: ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
-                    let messageId = downloadFileMap.get(item.getURL()).messageId
-                    mainWindow.webContents.send('file-download-progress', {
-                            messageId: messageId,
-                            receivedBytes: item.getReceivedBytes(),
-                            totalBytes: item.getTotalBytes()
-                        }
-                    );
-                }
-            }
-        })
-        item.once('done', (event, state) => {
-            let messageId = downloadFileMap.get(item.getURL()).messageId
-            if (state === 'completed') {
-                console.log('Download successfully')
-                mainWindow.webContents.send('file-downloaded', {messageId: messageId, filePath: item.getSavePath()});
-            } else {
-                mainWindow.webContents.send('file-download-failed', {messageId: messageId});
-                console.log(`Download failed: ${state}`)
-            }
-            downloadFileMap.delete(item.getURL());
-        })
-    })
+    mainWindow.webContents.session.on('will-download', downloadHandler);
 
     ipcMain.on('screenshots-start', (event, args) => {
         // console.log('main voip-message event', args);
@@ -611,12 +619,54 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('file-download', async (event, args) => {
-        var filename = args.remotePath;
-        var messageId = args.messageId;
-        filename = filename.replace(':80', '');
-        downloadFileMap.set(encodeURI(filename), {messageId: messageId, fileName: args.fileName});
+        let remotePath = args.remotePath;
+        let messageId = args.messageId;
+        let source = args.source;
+        remotePath = remotePath.replace(':80', '');
+        downloadFileMap.set(encodeURI(remotePath), {messageId: messageId, fileName: args.fileName, source: source});
 
-        mainWindow.webContents.loadURL(filename)
+        if(source === 'file'){
+            console.log('file-download file')
+            fileWindow.webContents.loadURL(remotePath)
+        }else {
+            console.log('file-download main')
+            mainWindow.webContents.loadURL(remotePath)
+        }
+    });
+
+    ipcMain.on('show-file-window', async (event, args) => {
+        console.log('on show-file-window', fileWindow, args)
+        if(!fileWindow){
+            let win = new BrowserWindow(
+                {
+                    width: 800,
+                    height: 730,
+                    minWidth: 640,
+                    minHeight: 400,
+                    resizable: true,
+                    maximizable: true,
+                    webPreferences: {
+                        scrollBounce: false,
+                        nativeWindowOpen: true,
+                        nodeIntegration: true,
+                    },
+                }
+            );
+            fileWindow = win;
+
+            // win.webContents.openDevTools();
+            win.on('close', () => {
+                fileWindow = null;
+            });
+            win.webContents.session.on('will-download', downloadHandler);
+
+            win.loadURL(args.url);
+            console.log('files windows url', args.url)
+            win.show();
+        }else {
+            fileWindow.show();
+            fileWindow.focus();
+        }
     });
 
     // 直接在ui层处理了
