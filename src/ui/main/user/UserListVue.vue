@@ -1,15 +1,15 @@
 <template>
   <section>
     <ul>
-      <li v-for="(groupUser) in groupedUsers" :key="groupUser.category">
+      <li v-for="(groupedUser) in groupedUsers" :key="groupedUser.category">
         <div ref="contactItem" class="contact-item">
           <div v-if="showCategoryLabel" class="label"
                :style="paddingStyle"
                v-bind:class="{sticky:enableCategoryLabelSticky}">
-            <p>{{ groupUser.category.toUpperCase() }}</p>
+            <p>{{ groupedUser.category.toUpperCase() }}</p>
           </div>
           <ul>
-            <li v-for="(user) in groupUser.users" :key="user.uid">
+            <li v-for="(user) in groupedUser.users" :key="user.uid">
               <tippy
                   v-if="!clickUserItemFunc"
                   :to="'user-' + user.uid"
@@ -128,22 +128,29 @@ export default {
 
   computed: {
     groupedUsers() {
-      let groupedUsers = [];
-      let current = {};
-      let lastCategory = null;
-      this.users.forEach((user) => {
-        if (!lastCategory || lastCategory !== user._category) {
-          lastCategory = user._category;
-          current = {
-            category: user._category,
-            users: [user],
-          };
-          groupedUsers.push(current);
-        } else {
-          current.users.push(user);
+        let groupedUsers = [];
+        if(!this.showCategoryLabel){
+            groupedUsers.push({
+                category: 'not-show-category',
+                users:this.users,
+            })
+        }else {
+            let current = {};
+            let lastCategory = null;
+            this.users.forEach((user) => {
+                if (!lastCategory || lastCategory !== user._category) {
+                    lastCategory = user._category;
+                    current = {
+                        category: user._category,
+                        users: [user],
+                    };
+                    groupedUsers.push(current);
+                } else {
+                    current.users.push(user);
+                }
+            });
         }
-      });
-      return groupedUsers;
+        return groupedUsers;
     },
     paddingStyle() {
       return {
