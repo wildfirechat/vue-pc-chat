@@ -17,6 +17,10 @@
             <input type="text" :value="sharedStateContact.currentFriend.alias" placeholder="备注名"/>
           </div>
         </li>
+          <li>
+              <label>{{$t('common.wfc_id')}}</label>
+              <p>{{user.name}}</p>
+          </li>
         <li>
           <label>{{$t('common.area')}}</label>
           <p>{{$t('common.unknown')}}</p>
@@ -123,6 +127,9 @@ export default {
 
 .content ul li label {
   margin-right: 20px;
+  width: 50px;
+  text-align: justify;
+  text-align-last: justify;
 }
 
 .content ul li .alias > input {

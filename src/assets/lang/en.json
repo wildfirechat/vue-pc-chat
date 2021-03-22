@@ -152,7 +152,8 @@
         "month_9": "September",
         "month_10": "October",
         "month_11": "November",
-        "month_12": "December"
+        "month_12": "December",
+        "wfc_id": "ID"
     },
     "misc":{
         "beijing": "Beijing",
