@@ -448,38 +448,48 @@ const downloadHandler =  (event, item, webContents) => {
     item.setSaveDialogOptions({defaultPath: fileName})
 
     item.on('updated', (event, state) => {
-        if (state === 'interrupted') {
-            console.log('Download is interrupted but can be resumed')
-        } else if (state === 'progressing') {
-            if (item.isPaused()) {
-                console.log('Download is paused')
-            } else {
-                // console.log(`Received bytes: ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
-                let downloadFile = downloadFileMap.get(item.getURL());
-                let messageId = downloadFile.messageId
-                webContents.send('file-download-progress', {
-                        messageId: messageId,
-                        receivedBytes: item.getReceivedBytes(),
-                        totalBytes: item.getTotalBytes()
-                    }
-                );
+        try {
+            if (state === 'interrupted') {
+                console.log('Download is interrupted but can be resumed')
+            } else if (state === 'progressing') {
+                if (item.isPaused()) {
+                    console.log('Download is paused')
+                } else {
+                    console.log(`Received bytes: ${fileName} ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
+                    let downloadFile = downloadFileMap.get(item.getURL());
+                    let messageId = downloadFile.messageId
+                    webContents.send('file-download-progress', {
+                            messageId: messageId,
+                            receivedBytes: item.getReceivedBytes(),
+                            totalBytes: item.getTotalBytes()
+                        }
+                    );
+                }
             }
+
+        }catch (e) {
+            console.log('downloadHandler updated error', e)
         }
     })
     item.once('done', (event, state) => {
-        let downloadFile = downloadFileMap.get(item.getURL());
-        if(!downloadFile){
-            return;
+        try {
+            let downloadFile = downloadFileMap.get(item.getURL());
+            if(!downloadFile){
+                return;
+            }
+            let messageId = downloadFile.messageId
+            if (state === 'completed') {
+                console.log('Download successfully')
+                webContents.send('file-downloaded', {messageId: messageId, filePath: item.getSavePath()});
+            } else {
+                webContents.send('file-download-failed', {messageId: messageId});
+                console.log(`Download failed: ${state}`)
+            }
+            downloadFileMap.delete(item.getURL());
+
+        }catch (e) {
+            console.log('downloadHandler done error', e)
         }
-        let messageId = downloadFile.messageId
-        if (state === 'completed') {
-            console.log('Download successfully')
-            webContents.send('file-downloaded', {messageId: messageId, filePath: item.getSavePath()});
-        } else {
-            webContents.send('file-download-failed', {messageId: messageId});
-            console.log(`Download failed: ${state}`)
-        }
-        downloadFileMap.delete(item.getURL());
     })
 }
 
@@ -627,10 +637,10 @@ const createMainWindow = async () => {
 
         if(source === 'file'){
             console.log('file-download file')
-            fileWindow.webContents.loadURL(remotePath)
+            fileWindow.webContents.downloadURL(remotePath)
         }else {
             console.log('file-download main')
-            mainWindow.webContents.loadURL(remotePath)
+            mainWindow.webContents.downloadURL(remotePath)
         }
     });
 
