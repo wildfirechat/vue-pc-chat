@@ -12,7 +12,7 @@
     <div class="content">
       <ul>
         <li>
-          <label>{{$t('common.alis')}}</label>
+          <label>{{$t('common.alias')}}</label>
           <div class="alias">
             <input type="text" :value="sharedStateContact.currentFriend.alias" placeholder="备注名"/>
           </div>
