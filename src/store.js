@@ -506,14 +506,15 @@ let store = {
     /**
      *
      * @param src {String} 媒体url
+     * @param thumbUrl {String} 缩略图url
      * @param thumb {String} base64格式的缩略图，但不包含'data:image/png;base64,'
      * @param autoplay
      */
-    previewMedia(src, thumb, autoplay = true) {
+    previewMedia(src, thumbUrl, thumb, autoplay = true) {
         conversationState.previewMediaItems.length = 0;
         conversationState.previewMediaItems.push({
             src: src,
-            thumb: 'data:image/png;base64,' + thumb,
+            thumb: thumbUrl ? thumbUrl : 'data:image/png;base64,' + thumb,
             autoplay: autoplay,
         });
         conversationState.previewMediaIndex = 0;

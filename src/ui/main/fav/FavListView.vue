@@ -90,6 +90,7 @@ export default {
   data() {
     return {
       favItems: [],
+      imagePlaceHolder:'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==',
     }
   },
   methods: {
@@ -172,7 +173,7 @@ export default {
       switch (favItem.type) {
         case MessageContentType.Image:
         case MessageContentType.Video:
-          store.previewMedia(favItem.url, favItem.data.thumb)
+          store.previewMedia(favItem.url, favItem.thumbUrl,  favItem.data && favItem.data.thumb ? favItem.data.thumb : 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==')
           break;
         case MessageContentType.File:
           ipcRenderer.send('file-download', {
@@ -192,10 +193,12 @@ export default {
     },
     handleClickMedia(index, favItems) {
       let mediaItems = [];
+      favItems = favItems.filter(favItem => (favItem.url || favItem.thumbUrl  || (favItem.data && favItem.data.thumb) ))
       favItems.forEach(favItem => {
+        let thumb = favItem.thumbUrl ? favItem.thumbUrl : (favItem.data && favItem.data.thumb ? favItem.data.thumb : 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==')
         mediaItems.push({
           src: favItem.url,
-          thumb: 'data:image/png;base64,' + favItem.data.thumb,
+          thumb: thumb,
           autoplay: true,
         })
       })
