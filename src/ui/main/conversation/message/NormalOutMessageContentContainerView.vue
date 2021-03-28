@@ -40,7 +40,7 @@
                :name="'infoTrigger' + this.message.messageId"
                class="avatar"
                draggable="false"
-               src="@/assets/images/user-fallback.png">
+               :src="message._from.portrait">
         </div>
       </div>
       <p v-if="shouldShowMessageReceipt" class="receipt" @click="showMessageReceiptDetail">
