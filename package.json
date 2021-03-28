@@ -15,7 +15,8 @@
     "cross-package-win32": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 ia32 && vue-cli-service electron:build --win --ia32 -p never",
     "cross-package-linux": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux x64 && vue-cli-service electron:build --linux --x64 -p never",
     "cross-package-linux-arm64": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
-    "cross-package-mac": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin x64 && vue-cli-service electron:build --mac --x64 -p never"
+    "cross-package-mac": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin x64 && vue-cli-service electron:build --mac --x64 -p never",
+    "cross-package-all": "node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64"
   },
   "main": "background.js",
   "dependencies": {
