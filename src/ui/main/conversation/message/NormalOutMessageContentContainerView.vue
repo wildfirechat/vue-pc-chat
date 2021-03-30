@@ -116,7 +116,6 @@ export default {
           let receivedUserIds = [];
           let readUserIds = [];
           let unReceiveUserIds = [];
-          let groupMemberUserInfos = store.getGroupMemberUserInfos(conversation.target, false)
           groupMembers.forEach(memberId => {
             let recvDt = deliveries ? deliveries.get(memberId) : 0;
             let readDt = readEntries ? readEntries.get(memberId) : 0;

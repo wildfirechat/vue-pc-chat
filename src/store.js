@@ -1214,7 +1214,7 @@ let store = {
     },
 
     // clone一下，别影响到好友列表
-    getGroupMemberUserInfos(groupId, includeSelf = true) {
+    getGroupMemberUserInfos(groupId, includeSelf = true, sortByPinyin = false) {
 
         let memberIds = wfc.getGroupMemberIds(groupId);
         let userInfos = wfc.getUserInfos(memberIds, groupId);
@@ -1222,12 +1222,16 @@ let store = {
             userInfos = userInfos.filter(u => u.uid !== wfc.getUserId())
         }
         let userInfosCloneCopy = userInfos.map(u => Object.assign({}, u));
-        let compareFn = (u1, u2) => {
-            let index1 = memberIds.findIndex(id => id === u1.uid)
-            let index2 = memberIds.findIndex(id => id === u2.uid)
-            return index1 - index2;
+        if(sortByPinyin){
+            return this._patchAndSortUserInfos(userInfosCloneCopy, groupId);
+        } else {
+            let compareFn = (u1, u2) => {
+                let index1 = memberIds.findIndex(id => id === u1.uid)
+                let index2 = memberIds.findIndex(id => id === u2.uid)
+                return index1 - index2;
+            }
+            return this._patchAndSortUserInfos(userInfosCloneCopy, groupId, compareFn);
         }
-        return this._patchAndSortUserInfos(userInfosCloneCopy, groupId, compareFn);
     },
 
     // clone一下，别影响到好友列表
