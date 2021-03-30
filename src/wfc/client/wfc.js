@@ -43,6 +43,9 @@ export class WfcManager {
         impl.disconnect();
     }
 
+    setPackageName(packageName) {
+        impl.setPackageName(packageName);
+    }
     /**
      * 获取host
      */
