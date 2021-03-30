@@ -6,7 +6,7 @@ import {eq, gt, numberValue} from "@/wfc/util/longUtil";
 import helper from "@/ui/util/helper";
 import convert from '@/vendor/pinyin'
 import GroupType from "@/wfc/model/groupType";
-import {imageThumbnail, mergeImages, videoThumbnail} from "@/ui/util/imageUtil";
+import {imageThumbnail, mergeImages, videoThumbnail, videoDuration} from "@/ui/util/imageUtil";
 import MessageContentMediaType from "@/wfc/messages/messageContentMediaType";
 import Conversation from "@/wfc/model/conversation";
 import MessageContentType from "@/wfc/messages/messageContentType";
@@ -722,6 +722,8 @@ let store = {
                 break;
             case MessageContentMediaType.Video:
                 let vThumbnail = await videoThumbnail(file);
+                let duration = await videoDuration(file)
+                duration = Math.ceil(duration * 1000);
                 if (vThumbnail === null) {
                     return false;
                 }
