@@ -10,7 +10,7 @@ export default class Config {
     // 打开voip调试模式时，voip window不会自动关闭，方便分析控制台日志，需要手动关闭。
     static ENABLE_VOIP_DEBUG_MODE = false;
 
-    static DEFAULT_PORTRAIT_URL = 'https://static.wildfirechat.cn/user-fallback.png';
+    static DEFAULT_PORTRAIT_URL = 'https://static.wildfirechat.net/user-fallback.png';
     // 如果需要支持音视频通话功能，必须全站使用https(包括app server和im server) + wss，
     // WebSockets over SSL/TLS，启用https时，一定要配置为true；不启用https，一定要为false
     // 置为true时，请确保 IM SERVER 支持https访问。IM SERVER本身不能处理https请求，一般是通过在IM SERVER前面加上nginx之类的负载均衡器来实现https支持
@@ -24,14 +24,14 @@ export default class Config {
     static ROUTE_PORT = 443;
 
     // IM SERVER的HOST，是域名或者ip，没有http等前缀!
-    static IM_SERVER_HOST = 'wildfirechat.cn';
+    static IM_SERVER_HOST = 'wildfirechat.net';
 
     // APP SERVER的地址，启用https时，APP SERVER也需要支持https
     // 默认的app server使用端口是8888
-    static APP_SERVER = 'https://app.wildfirechat.cn';
+    static APP_SERVER = 'https://app.wildfirechat.net';
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
-    static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.cn:3478', userName: 'wfchat', password: 'wfchat'}];
+    static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.net:3478', userName: 'wfchat', password: 'wfchat'}];
     static LANGUAGE = 'zh_CN';
 
     // appId和appKey和专业版im server是绑定的，一定要做对应修改
