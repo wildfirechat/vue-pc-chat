@@ -387,19 +387,39 @@ function videoThumbnail(file) {
             video.onerror = () => {
                 resolve(null);
             };
-            if (file.path) {
-                if (file.path.startsWith('/')) {
-                    video.src = 'local-resource://' + (file.path.indexOf(file.name) > -1 ? file.path : file.path + file.name); // local video url
-                } else {
-                    video.src = file.path;
-                }
-            } else {
-                let reader = new FileReader();
-                reader.onload = function (event) {
-                    video.src = event.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
+            _loadVideo(file)
+            console.log('----------', video);
+        });
+}
+
+function _loadVideo(file){
+    let video = document.getElementById('bgvid');
+    if (file.path) {
+        if (file.path.startsWith('/')) {
+            video.src = 'local-resource://' + (file.path.indexOf(file.name) > -1 ? file.path : file.path + file.name); // local video url
+        } else {
+            video.src = file.path;
+        }
+    } else {
+        let reader = new FileReader();
+        reader.onload = function (event) {
+            video.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function videoDuration(file) {
+    return new Promise(
+        (resolve, reject) => {
+            let video = document.getElementById('bgvid');
+            video.onplay = () => {
+                resolve(video.duration);
+            };
+            video.onerror = () => {
+                resolve(0);
+            };
+            _loadVideo(file)
             console.log('----------', video);
         });
 }
@@ -428,4 +448,4 @@ function fileFromDataUri(dataUri, fileName) {
 }
 
 
-export {mergeImages, getConversationPortrait, videoThumbnail, imageThumbnail, fileFromDataUri};
+export {mergeImages, getConversationPortrait, videoThumbnail, videoDuration, imageThumbnail, fileFromDataUri};
