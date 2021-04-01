@@ -157,6 +157,7 @@
     },
     "misc":{
         "beijing": "Beijing",
-        "test_user": "Test User"
+        "test_user": "Test User",
+        "gen_qr_code": "Generating QR code"
     }
 }

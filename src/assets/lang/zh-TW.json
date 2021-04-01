@@ -157,6 +157,7 @@
     },
     "misc":{
         "beijing": "北京",
-        "test_user": "測試用戶"
+        "test_user": "測試用戶",
+        "gen_qr_code": "二維碼生成中"
     }
 }
