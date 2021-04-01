@@ -102,6 +102,7 @@ export default {
 
     setLang(lang){
         setItem('lang', lang.lang)
+        // this.$router.go();
     }
   },
     computed:{
