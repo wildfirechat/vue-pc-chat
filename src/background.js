@@ -522,6 +522,7 @@ const createMainWindow = async () => {
         frame: !isWin,
         icon
     });
+    mainWindow.center();
     const badgeOptions = {}
     winBadge = new Badge(mainWindow, badgeOptions);
 
@@ -703,6 +704,7 @@ const createMainWindow = async () => {
         mainWindow.maximizable = true;
         mainWindow.setMinimumSize(800, 600);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
+        mainWindow.center();
         mainWindowState.manage(mainWindow);
     });
 
