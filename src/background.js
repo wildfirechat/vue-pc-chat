@@ -714,6 +714,7 @@ const createMainWindow = async () => {
         mainWindow.maximizable = false;
         mainWindow.setMinimumSize(400, 480);
         mainWindow.setSize(400, 480);
+        mainWindow.center();
     });
 
     ipcMain.on('enable-close-window-to-exit', (event, enable) => {
