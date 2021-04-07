@@ -938,7 +938,7 @@ export class WfcManager {
      * @param {[number]} lines 从哪些会话线路进行搜索，默认传[0]即可
      * @returns {[ConversationInfo]}
      */
-    searchConversation(keyword, types = [0, 1, 2], lines = [0, 1]) {
+    searchConversation(keyword, types = [0, 1, 2], lines = [0, 1, 2]) {
         return impl.searchConversation(keyword, types, lines);
     }
 
@@ -1017,6 +1017,14 @@ export class WfcManager {
      */
     clearConversationUnreadStatus(conversation) {
         impl.clearConversationUnreadStatus(conversation);
+    }
+
+    /**
+     * 清除单条消息的未读状态
+     * @param messageId
+     */
+    clearMessageUnreadStatus(messageId){
+        impl.clearMessageUnreadStatus(messageId);
     }
 
     /**
@@ -1314,6 +1322,17 @@ export class WfcManager {
     }
 
     /**
+     * 清除远程会话消息
+     * @param {Conversation} conversation
+     * @param {function ()} successCB
+     * @param {function (error)} failCB
+     * @return {Promise<void>}
+     */
+    async clearRemoteConversationMessages(conversation, successCB, failCB){
+        impl.clearRemoteConversationMessages(conversation, successCB, failCB);
+    }
+
+    /**
      * 插入消息
      * @param {Conversation} conversation 目标会话
      * @param {MessageContent} messageContent 具体的消息内容，一定要求是{@link MessageContent} 的子类，不能是普通的object
@@ -1379,7 +1398,7 @@ export class WfcManager {
         return impl.getVersion();
     }
 
-  /*
+    /**
   * 获取经过认证的下载地址。
   */
     getAuthorizedMediaUrl(messageUid, mediaType, mediaPath, successCB, failCB){
