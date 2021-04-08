@@ -108,7 +108,7 @@ let store = {
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
             // isElectronWindowsOrLinux: true,
             isMainWindow: false,
-            isCommercialServer: wfc.isCommercialServer(),
+            isCommercialServer: wfc.isCommercialServer,
             uploadBigFiles: [],
         },
     },
