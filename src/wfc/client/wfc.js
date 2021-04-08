@@ -1362,7 +1362,7 @@ export class WfcManager {
     async updateMessageStatus(messageId, status) {
         impl.updateMessageStatus(messageId, status);
     }
-    
+
     /**
      * 上传媒体文件
      * @param {string} fileName
@@ -1443,8 +1443,20 @@ export class WfcManager {
         return impl.isUserReceiptEnabled();
     }
 
+    /**
+    * 判断是否是专业版IM服务
+    * @return {boolean}
+    */
     isCommercialServer() {
-        return true;
+        return impl.isCommercialServer();
+    }
+
+    /**
+    * 判断是否应用禁止草稿同步
+    * @return {boolean}
+    */
+    isGlobalDisableSyncDraft() {
+        return impl.isGlobalDisableSyncDraft();
     }
 
     /**
