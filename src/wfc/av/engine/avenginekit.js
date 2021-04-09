@@ -10,4 +10,6 @@ export class WfcAVEngineKit {
      */
     setup() {
     }
+    static MAX_AUDIO_PARTICIPANT_COUNT = 16;
+    static MAX_VIDEO_PARTICIPANT_COUNT = 9;
 }
