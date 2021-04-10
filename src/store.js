@@ -110,6 +110,7 @@ let store = {
             isMainWindow: false,
             isCommercialServer: wfc.isCommercialServer,
             uploadBigFiles: [],
+            wfc:wfc,
         },
     },
 
