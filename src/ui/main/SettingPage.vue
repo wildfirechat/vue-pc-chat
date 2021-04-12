@@ -25,7 +25,7 @@
         <input type="checkbox" :checked="sharedMiscState.enableAutoLogin"
                @change="enableAutoLogin($event.target.checked)">
       </label>
-        <label>
+        <label v-if="sharedMiscState.wfc.isCommercialServer()">
             {{$t('setting.sync_draft')}}
             <input type="checkbox" :checked="!sharedMiscState.wfc.isDisableSyncDraft()"
                    @change="sharedMiscState.wfc.setDisableSyncDraft(!$event.target.checked)">
