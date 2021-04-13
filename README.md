@@ -92,6 +92,14 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
     1. [av readme](src/js/wfc/av/internal/README.MD)
     2. [音视频常见问题](https://docs.wildfirechat.cn/faq/webrtc.html?h=webrtc)
 
+12. 纯内网环境，不能显示表情
+    1. 将```src/assets/twemoji```目录上传到一个内网能访问的服务器，比如部署```app server```的服务器
+    2. 确保通过```http(s)://base_twemoji_url/72x72/1f1e6.png```能访问到对应表情，此处```1f1e6.png```蓝底白字大写字母A
+    3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/```替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
+
+13. 想自己部署表情图片
+    请参数问题12
+
 
 ## 截图
 ![](./image/contact.png)
