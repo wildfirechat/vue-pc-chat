@@ -98,7 +98,7 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
     3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/```替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
 
 13. 想自己部署表情图片
-    请参数问题12
+    请常见问题12
 
 
 ## 截图
