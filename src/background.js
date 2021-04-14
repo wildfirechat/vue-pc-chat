@@ -663,6 +663,7 @@ const createMainWindow = async () => {
                     },
                 }
             );
+            win.removeMenu();
             fileWindow = win;
 
             // win.webContents.openDevTools();
