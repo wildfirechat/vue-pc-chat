@@ -319,7 +319,6 @@ export default {
     },
 
     isLocalFile(message) {
-      console.log('xxo')
       if (message && isElectron()) {
         let media = message.messageContent;
         let localPath = media.localPath;

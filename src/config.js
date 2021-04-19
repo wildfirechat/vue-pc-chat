@@ -28,7 +28,7 @@ export default class Config {
     // html5 audio 标签不能播放amr格式的音频，需要将amr格式转换为mp3格式
     // 本服务传入amr音频文件的地址，将音频文件转换为mp3格式，并以application/octet-stream的格式返回
     // 如果语音消息很多，建议使用cdn
-    static AMR_TO_MP3_SERVER_ADDRESS = 'https://app.wildfirechat.net/amr2mp3?path=';
+    static AMR_TO_MP3_SERVER_ADDRESS = Config.APP_SERVER + '/amr2mp3?path=';
 
     // 文件传输助手ID
     static FILE_HELPER_ID = 'wfc_file_transfer';

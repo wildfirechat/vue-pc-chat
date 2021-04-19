@@ -201,8 +201,8 @@ export default {
       }
       if (status === ConnectionStatus.ConnectionStatusConnected) {
         this.$router.replace({path: "/home"});
-        if (isElectron()) {
-          ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+        if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
+          isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
           if (this.enableAutoLogin) {
             store.setEnableAutoLogin(this.enableAutoLogin)
           }

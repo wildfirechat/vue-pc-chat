@@ -1,6 +1,7 @@
 <template>
   <TextMessageContentView :message="message"
                           v-if="message.messageContent.type === 1"
+                          :style="{'--out-arrow-color':'#98ea70', '--in-arrow-color':'white'}"
                           v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
   <AudioMessageContentView :message="message"
                            v-else-if="message.messageContent.type === 2"/>
@@ -19,6 +20,10 @@
                                v-else-if="message.messageContent.type === 11"/>
   <CallStartMessageContentView :message="message"
                                v-else-if="message.messageContent.type === 400"/>
+  <UserCardMessageContentView :message="message"
+                              v-else-if="message.messageContent.type === 10"
+                              :style="{'--out-arrow-color':'white', '--in-arrow-color':'white'}"
+                              v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
   <UnsupportMessageContentView :message="message"
                                v-else
                                v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
@@ -35,6 +40,7 @@ import StickerMessageContentView from "@/ui/main/conversation/message/content/St
 import CallStartMessageContentView from "@/ui/main/conversation/message/content/CallStartMessageContentView";
 import AudioMessageContentView from "@/ui/main/conversation/message/content/AudioMessageContentView";
 import CompositeMessageContentView from "@/ui/main/conversation/message/content/CompositeMessageContentView";
+import UserCardMessageContentView from "./content/UserCardMessageContentView";
 
 export default {
   name: "MessageContentContainerView",
@@ -54,12 +60,17 @@ export default {
     VideoMessageContentView,
     FileMessageContentView,
     StickerMessageContentView,
+      UserCardMessageContentView
   }
 }
 </script>
 
 <style lang="css">
 
+:root {
+    --in-arrow-color: white;
+    --out-arrow-color: #98ea70;
+}
 .leftarrow:before {
   /*right: -10px;*/
   left: -10px;
@@ -74,7 +85,7 @@ export default {
 
 .leftarrow:before {
   border-color: transparent;
-  border-right-color: white;
+  border-right-color: var(--in-arrow-color);
   border-width: 5px;
 }
 
@@ -93,7 +104,7 @@ export default {
 
 .rightarrow:before {
   border-color: transparent;
-  border-left-color: #98ea70;
+  border-left-color: var(--out-arrow-color);
   border-width: 5px;
 }
 </style>
