@@ -1067,6 +1067,21 @@ let store = {
         return result;
     },
 
+    searchFiles(keyword, beforeMessageUid, successCB, failCB){
+        if(!keyword){
+            return;
+        }
+        wfc.searchFiles(keyword, null, '', beforeMessageUid, 20,
+            (files) => {
+                this._patchFileRecords(files);
+                successCB && successCB(files);
+            },
+            (errorCode) => {
+                console.log('search file error', errorCode);
+                failCB && failCB(errorCode);
+            })
+    },
+
     filterUsers(users, filter) {
         if (!users || !filter || !filter.trim()) {
             return users;
