@@ -1285,6 +1285,9 @@ let store = {
             } else {
                 fileRecord._conversationDisplayName = conversationInfo.conversation._target._displayName;
             }
+            if(fileRecord.name.indexOf(FileMessageContent.FILE_NAME_PREFIX) === 0) {
+                fileRecord.name = fileRecord.name.substring(fileRecord.name.indexOf(FileMessageContent.FILE_NAME_PREFIX) + FileMessageContent.FILE_NAME_PREFIX.length);
+            }
             fileRecord._timeStr = helper.dateFormat(fileRecord.timestamp);
             fileRecord._sizeStr = helper.humanSize(fileRecord.size)
             fileRecord._fileIconName = helper.getFiletypeIcon(fileRecord.name.substring(fileRecord.name.lastIndexOf('.')))
