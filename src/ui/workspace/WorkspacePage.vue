@@ -9,10 +9,16 @@
         </div>
         <div v-if="shouldShowWorkspacePortal" class="workspace-portal">
             <div>
-                <button @click="showWFCHome">show wfc home</button>
+                <button @click="showWFCHome">点击打开野火IM官网</button>
             </div>
             <div>
-                <button @click="showDevDocs">show wfc dev</button>
+                <button @click="showDevDocs">点击打开野火开发者文档</button>
+            </div>
+            <div>
+                <button @click="openConversation">打开和机器人小火的会话界面</button>
+            </div>
+            <div>
+                <button @click="sendMessage">给机器人小火发送消息：嘿，你好，小火。</button>
             </div>
         </div>
     </section>
@@ -22,6 +28,12 @@
 // const TabGroup = require("electron-tabs");
 import ElectronTabs from 'electron-tabs'
 import '../../../node_modules/electron-tabs/electron-tabs.css'
+import {ipcRenderer} from "../../platform";
+import IPCEventType from "../../ipcEventType";
+import Conversation from "../../wfc/model/conversation";
+import Message from "../../wfc/messages/message";
+import TextMessageContent from "../../wfc/messages/textMessageContent";
+import wfc from "../../wfc/client/wfc";
 
 let tabGroup = null;
 
@@ -74,12 +86,18 @@ export default {
             });
         },
 
-        showWorkspacePortal() {
-            if (!tabGroup) {
-                return true;
-            }
-            let activeTab = tabGroup.getActiveTab();
-            return activeTab ? activeTab.getPosition() === 0 : true
+        openConversation() {
+            let conversation = new Conversation(0, 'FireRobot', 0)
+            ipcRenderer.send('wf-ipc-to-main', {type: IPCEventType.openConversation, value: conversation})
+        },
+
+        sendMessage() {
+            // TODO ipc时需要messagePayload，messageContent会丢失类型信息
+            // let conversation = new Conversation(0, 'FireRobot', 0)
+            // let textMessageContent = new TextMessageContent('hello world')
+            // let message = new Message(conversation, textMessageContent)
+            // let messagePayload = null;
+            // ipcRenderer.send(IPCEventType.sendMessage, messagePayload);
         },
 
         onTabActive() {
@@ -118,7 +136,6 @@ export default {
     position: absolute;
     left: 0;
     top: 32px;
-    background: #98ea70;
     width: 100%;
     height: calc(100% - 32px);
     display: flex;
@@ -126,6 +143,9 @@ export default {
 }
 
 .workspace-portal button {
+    padding: 10px;
+    margin: 20px;
+    border-radius: 3px;
 }
 
 >>> .etabs-tab {

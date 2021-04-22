@@ -720,6 +720,10 @@ const createMainWindow = async () => {
         }
     });
 
+    ipcMain.on('wf-ipc-to-main', (event, args) => {
+        mainWindow.webContents.send('wf-ipc-to-main', args);
+    });
+
     // 直接在ui层处理了
     // ipcMain.on('open-file', async (event, filename) => {
     //     shell.openItem(filename);

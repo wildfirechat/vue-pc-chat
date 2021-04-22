@@ -6,7 +6,7 @@ import {eq, gt, numberValue} from "@/wfc/util/longUtil";
 import helper from "@/ui/util/helper";
 import convert from '@/vendor/pinyin'
 import GroupType from "@/wfc/model/groupType";
-import {imageThumbnail, mergeImages, videoThumbnail, videoDuration} from "@/ui/util/imageUtil";
+import {imageThumbnail, mergeImages, videoDuration, videoThumbnail} from "@/ui/util/imageUtil";
 import MessageContentMediaType from "@/wfc/messages/messageContentMediaType";
 import Conversation from "@/wfc/model/conversation";
 import MessageContentType from "@/wfc/messages/messageContentType";
@@ -20,11 +20,12 @@ import MessageConfig from "@/wfc/client/messageConfig";
 import PersistFlag from "@/wfc/messages/persistFlag";
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
-import {ipcRenderer, isElectron} from "@/platform";
+import {ipcRenderer, isElectron, remote} from "@/platform";
 import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
+import IPCEventType from "./ipcEventType";
 
 /**
  * 一些说明
@@ -109,7 +110,7 @@ let store = {
             // isElectronWindowsOrLinux: true,
             isMainWindow: false,
             uploadBigFiles: [],
-            wfc:wfc,
+            wfc: wfc,
         },
     },
 
@@ -324,6 +325,20 @@ let store = {
                 let messageId = args.messageId;
                 // do nothing now
             });
+
+            ipcRenderer.on('wf-ipc-to-main', (events, args) => {
+                let type = args.type;
+                switch (type) {
+                    case IPCEventType.openConversation:
+                        let conversation = args.value;
+                        let win = remote.getCurrentWindow();
+                        win.focus();
+                        this.setCurrentConversation(conversation);
+                        break;
+                    default:
+                        break;
+                }
+            })
         }
 
         if (!isMainWindow && wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected) {
@@ -372,6 +387,9 @@ let store = {
     },
 
     setCurrentConversation(conversation) {
+        if (!conversation) {
+            return;
+        }
         if (conversationState.currentConversationInfo && conversation.equal(conversationState.currentConversationInfo.conversation)) {
             return;
         }
@@ -1067,8 +1085,8 @@ let store = {
         return result;
     },
 
-    searchFiles(keyword, beforeMessageUid, successCB, failCB){
-        if(!keyword){
+    searchFiles(keyword, beforeMessageUid, successCB, failCB) {
+        if (!keyword) {
             return;
         }
         wfc.searchFiles(keyword, null, '', beforeMessageUid, 20,
@@ -1239,7 +1257,7 @@ let store = {
             userInfos = userInfos.filter(u => u.uid !== wfc.getUserId())
         }
         let userInfosCloneCopy = userInfos.map(u => Object.assign({}, u));
-        if(sortByPinyin){
+        if (sortByPinyin) {
             return this._patchAndSortUserInfos(userInfosCloneCopy, groupId);
         } else {
             let compareFn = (u1, u2) => {
@@ -1300,7 +1318,7 @@ let store = {
             } else {
                 fileRecord._conversationDisplayName = conversationInfo.conversation._target._displayName;
             }
-            if(fileRecord.name.indexOf(FileMessageContent.FILE_NAME_PREFIX) === 0) {
+            if (fileRecord.name.indexOf(FileMessageContent.FILE_NAME_PREFIX) === 0) {
                 fileRecord.name = fileRecord.name.substring(fileRecord.name.indexOf(FileMessageContent.FILE_NAME_PREFIX) + FileMessageContent.FILE_NAME_PREFIX.length);
             }
             fileRecord._timeStr = helper.dateFormat(fileRecord.timestamp);
