@@ -333,7 +333,7 @@ let store = {
                         let conversation = args.value;
                         let win = remote.getCurrentWindow();
                         win.focus();
-                        this.setCurrentConversation(conversation);
+                        this.setCurrentConversation(Object.assign(new Conversation(), conversation));
                         break;
                     default:
                         break;
