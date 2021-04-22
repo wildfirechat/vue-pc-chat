@@ -47,6 +47,7 @@ let forceQuit = false;
 let downloading = false;
 let mainWindow;
 let fileWindow;
+let workspaceWindow;
 let winBadge;
 let screenshots;
 let tray;
@@ -441,7 +442,7 @@ function regShortcut() {
     // }
 }
 
-const downloadHandler =  (event, item, webContents) => {
+const downloadHandler = (event, item, webContents) => {
     // 设置保存路径,使Electron不提示保存对话框。
     // item.setSavePath('/tmp/save.pdf')
     let fileName = downloadFileMap.get(item.getURL()).fileName;
@@ -467,14 +468,14 @@ const downloadHandler =  (event, item, webContents) => {
                 }
             }
 
-        }catch (e) {
+        } catch (e) {
             console.log('downloadHandler updated error', e)
         }
     })
     item.once('done', (event, state) => {
         try {
             let downloadFile = downloadFileMap.get(item.getURL());
-            if(!downloadFile){
+            if (!downloadFile) {
                 return;
             }
             let messageId = downloadFile.messageId
@@ -487,7 +488,7 @@ const downloadHandler =  (event, item, webContents) => {
             }
             downloadFileMap.delete(item.getURL());
 
-        }catch (e) {
+        } catch (e) {
             console.log('downloadHandler done error', e)
         }
     })
@@ -636,10 +637,10 @@ const createMainWindow = async () => {
         remotePath = remotePath.replace(':80', '');
         downloadFileMap.set(encodeURI(remotePath), {messageId: messageId, fileName: args.fileName, source: source});
 
-        if(source === 'file'){
+        if (source === 'file') {
             console.log('file-download file')
             fileWindow.webContents.downloadURL(remotePath)
-        }else {
+        } else {
             console.log('file-download main')
             mainWindow.webContents.downloadURL(remotePath)
         }
@@ -647,7 +648,7 @@ const createMainWindow = async () => {
 
     ipcMain.on('show-file-window', async (event, args) => {
         console.log('on show-file-window', fileWindow, args)
-        if(!fileWindow){
+        if (!fileWindow) {
             let win = new BrowserWindow(
                 {
                     width: 800,
@@ -675,9 +676,47 @@ const createMainWindow = async () => {
             win.loadURL(args.url);
             console.log('files windows url', args.url)
             win.show();
-        }else {
+        } else {
             fileWindow.show();
             fileWindow.focus();
+        }
+    });
+
+    ipcMain.on('show-workspace-window', async (event, args) => {
+        console.log('on show-workspace-window', workspaceWindow, args)
+        if (!workspaceWindow) {
+            let win = new BrowserWindow(
+                {
+                    width: 1080,
+                    height: 720,
+                    minWidth: 800,
+                    minHeight: 600,
+                    resizable: true,
+                    maximizable: true,
+                    // titleBarStyle: 'customButtonsOnHover',
+                    webPreferences: {
+                        scrollBounce: false,
+                        nativeWindowOpen: true,
+                        nodeIntegration: true,
+                        webviewTag: true
+                    },
+                    // frame:false
+                }
+            );
+            win.removeMenu();
+            workspaceWindow = win;
+
+            // win.webContents.openDevTools();
+            win.on('close', () => {
+                workspaceWindow = null;
+            });
+
+            win.loadURL(args.url);
+            console.log('files windows url', args.url)
+            win.show();
+        } else {
+            workspaceWindow.show();
+            workspaceWindow.focus();
         }
     });
 
