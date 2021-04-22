@@ -5,7 +5,7 @@ import ContactPage from './ui/main/ContactPage'
 import SettingPage from './ui/main/SettingPage'
 import Single from "@/ui/voip/Single";
 import Multi from "@/ui/voip/Multi";
-import FileRecordPage from "@/ui/main/FileRecordPage";
+import FileRecordPage from "@/ui/fileRecord/FileRecordPage";
 import FavPage from "@/ui/main/fav/FavPage";
 
 const routers = [
