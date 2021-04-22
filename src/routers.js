@@ -8,7 +8,6 @@ import Multi from "@/ui/voip/Multi";
 import FileRecordPage from "@/ui/fileRecord/FileRecordPage";
 import FavPage from "@/ui/main/fav/FavPage";
 import WorkspacePage from "./ui/workspace/WorkspacePage";
-import WFCWorkspaceView from "./ui/workspace/WFCWorkspaceView";
 
 const routers = [
     {
@@ -60,13 +59,6 @@ const routers = [
         name: 'workspace',
         path: '/workspace',
         component: WorkspacePage,
-        children: [
-            {
-                name: 'wfc',
-                path: 'wfc',
-                component: WFCWorkspaceView
-            }
-        ]
     }
     // {
     //     name: 'voip-conference',

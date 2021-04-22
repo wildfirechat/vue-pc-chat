@@ -53,7 +53,7 @@
                  v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
                  @click="go2Files"></i>
             </li>
-              <li v-if="sharedMiscState.isElectron && sharedMiscState.wfc.isCommercialServer()">
+              <li v-if="sharedMiscState.isElectron">
                   <i class="icon-ion-code-working"
                      v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
                      @click="go2Workspace"></i>
