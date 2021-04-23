@@ -82,7 +82,8 @@ export default {
             tabGroup.addTab({
                 title: "野火IM工作空间",
                 // src: url,
-                visible: true
+                visible: true,
+                closable: false,
             });
         },
 
