@@ -392,7 +392,7 @@ function videoThumbnail(file) {
         });
 }
 
-function _loadVideo(file){
+function _loadVideo(file) {
     let video = document.getElementById('bgvid');
     if (file.path) {
         if (file.path.startsWith('/')) {

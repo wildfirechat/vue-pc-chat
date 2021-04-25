@@ -14,6 +14,7 @@ export default class TypingMessageContent extends MessageContent {
     static TYPING_FILE = 4;
 
     typingType = TypingMessageContent.TYPING_TEXT;
+
     constructor(type) {
         super(MessageContentType.Typing);
         this.typingType = type;
@@ -27,7 +28,7 @@ export default class TypingMessageContent extends MessageContent {
         let payload = super.encode();
         payload.content = this.typingType + '';
         return payload;
-    };
+    }
 
     decode(payload) {
         super.decode(payload);

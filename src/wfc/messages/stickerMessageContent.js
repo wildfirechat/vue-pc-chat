@@ -12,6 +12,7 @@ import wfc from "../client/wfc"
 export default class StickerMessageContent extends MediaMessageContent {
     width = 200;
     height = 200;
+
     constructor(filerOrLocalPath, remotePath, width, height) {
         super(MessageContentType.Sticker, MessageContentMediaType.Sticker, filerOrLocalPath, remotePath);
         this.width = width;
@@ -31,7 +32,7 @@ export default class StickerMessageContent extends MediaMessageContent {
         };
         payload.binaryContent = wfc.utf8_to_b64(JSON.stringify(obj));
         return payload;
-    };
+    }
 
     decode(payload) {
         super.decode(payload);

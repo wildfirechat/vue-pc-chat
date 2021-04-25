@@ -20,11 +20,11 @@ export default class AddGroupMemberNotification extends GroupNotificationContent
     formatNotification() {
         let notifyStr;
         if (this.invitees.length === 1 && this.invitees[0] === this.invitor) {
-          if (this.fromSelf) {
-              return '您加入了群组';
-          } else {
-              return wfc.getGroupMemberDisplayName(this.groupId, this.invitor) + ' 加入了群组';
-          }
+            if (this.fromSelf) {
+                return '您加入了群组';
+            } else {
+                return wfc.getGroupMemberDisplayName(this.groupId, this.invitor) + ' 加入了群组';
+            }
         }
 
         if (this.fromSelf) {
@@ -50,7 +50,7 @@ export default class AddGroupMemberNotification extends GroupNotificationContent
         };
         payload.binaryContent = wfc.utf8_to_b64(JSON.stringify(obj));
         return payload;
-    };
+    }
 
     decode(payload) {
         super.decode(payload);

@@ -5,6 +5,7 @@
 import MediaMessageContent from './mediaMessageContent'
 import MessageContentMediaType from './messageContentMediaType';
 import MessageContentType from './messageContentType';
+
 export default class SoundMessageContent extends MediaMessageContent {
     duration;
 
@@ -25,7 +26,7 @@ export default class SoundMessageContent extends MediaMessageContent {
         };
         payload.content = JSON.stringify(obj);
         return payload;
-    };
+    }
 
     decode(payload) {
         super.decode(payload);
