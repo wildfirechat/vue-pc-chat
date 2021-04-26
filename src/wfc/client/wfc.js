@@ -1338,9 +1338,11 @@ export class WfcManager {
      * @param {number} status 消息状态，可选值参考{@link MessageStatus}
      * @param {boolean} notify 是否触发onReceiveMessage
      * @param {Number} serverTime 服务器时间，精度到毫秒
+     *
+     * @return {Message} 插入的消息
      */
     insertMessage(conversation, messageContent, status, notify = false, serverTime = 0) {
-        impl.insertMessage(conversation, messageContent, status, notify, serverTime);
+        return impl.insertMessage(conversation, messageContent, status, notify, serverTime);
     }
 
     /**
