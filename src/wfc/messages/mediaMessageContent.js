@@ -6,8 +6,13 @@ import MessageContent from './messageContent'
 
 export default class MediaMessageContent extends MessageContent {
     file;
+
+    // 已废弃，请使用remoteMediaUrl
     remotePath = '';
+    // 已废弃，请使用localMediaPath
     localPath = '';
+    localMediaPath = '';
+    remoteMediaUrl = '';
     mediaType = 0;
 
     /**
@@ -35,14 +40,15 @@ export default class MediaMessageContent extends MessageContent {
                     this.localPath += fileOrLocalPath.name;
                 }
             }
-
         }
+        this.localMediaPath = this.localPath;
+        this.remoteMediaUrl = this.remotePath;
     }
 
     encode() {
         let payload = super.encode();
-        payload.localMediaPath = this.localPath;
-        payload.remoteMediaUrl = this.remotePath;
+        payload.localMediaPath = this.localMediaPath ? this.localMediaPath : this.localPath;
+        payload.remoteMediaUrl = this.remoteMediaUrl ? this.remoteMediaUrl : this.remotePath;
         payload.mediaType = this.mediaType;
         return payload;
     }
@@ -51,6 +57,8 @@ export default class MediaMessageContent extends MessageContent {
         super.decode(payload);
         this.localPath = payload.localMediaPath;
         this.remotePath = payload.remoteMediaUrl;
+        this.localMediaPath = this.localPath;
+        this.remoteMediaUrl = this.remotePath;
         this.mediaType = payload.mediaType;
     }
 }
