@@ -28,9 +28,9 @@
 // const TabGroup = require("electron-tabs");
 import ElectronTabs from 'electron-tabs'
 import '../../../node_modules/electron-tabs/electron-tabs.css'
-import {ipcRenderer} from "../../platform";
 import IPCEventType from "../../ipcEventType";
 import Conversation from "../../wfc/model/conversation";
+import localStorageEmitter from "../../ipc/localStorageEmitter";
 
 let tabGroup = null;
 
@@ -86,7 +86,7 @@ export default {
 
         openConversation() {
             let conversation = new Conversation(0, 'FireRobot', 0)
-            ipcRenderer.send('wf-ipc-to-main', {type: IPCEventType.openConversation, value: conversation})
+            localStorageEmitter.send('wf-ipc-to-main', {type: IPCEventType.openConversation, value: conversation})
         },
 
         sendMessage() {

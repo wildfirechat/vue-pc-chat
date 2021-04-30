@@ -2,6 +2,8 @@ import LocalStorageEvent from "./localStorageEvent";
 
 class LocalStorageEmitter {
 
+    namespace = 'wfc-'
+
     /**
      *
      * @type {Map<string, any>}
@@ -23,7 +25,7 @@ class LocalStorageEmitter {
     constructor() {
         window.addEventListener('storage', ev => {
             let key = ev.key;
-            if (!key.startsWith('$') || !key.endsWith('$')) {
+            if (!key.startsWith(this.namespace + '$') || !key.endsWith('$')) {
                 return;
             }
             let value;
@@ -42,6 +44,7 @@ class LocalStorageEmitter {
                     if (subscription.once) {
                         this.subscriptions.delete(k);
                     }
+                    localStorage.removeItem(k)
                 }
             });
 
@@ -101,16 +104,16 @@ class LocalStorageEmitter {
      * @param {function(LocalStorageEvent, args)} listener
      */
     on(channel, listener) {
-        this.handles.set('$' + channel + '$', {once: false, listener: listener});
+        this.subscriptions.set(this.namespace + '$' + channel + '$', {once: false, listener: listener});
     }
 
     once(channel, listener) {
-        this.handles.set('$' + channel + '$', {once: true, listener: listener});
+        this.subscriptions.set(this.namespace + '$' + channel + '$', {once: true, listener: listener});
     }
 
     send(channel, args) {
         let tmp = {args: args}
-        localStorage.setItem('$' + channel + '$', JSON.stringify(tmp))
+        localStorage.setItem(this.namespace + '$' + channel + '$', JSON.stringify(tmp))
     }
 
     //
@@ -119,21 +122,21 @@ class LocalStorageEmitter {
     // }
 
     handle(channel, listener) {
-        this.handles.set('$' + channel + '$', {once: false, listener: listener});
+        this.handles.set(this.namespace + '$' + channel + '$', {once: false, listener: listener});
     }
 
     handleOnce(channel, listener) {
-        this.handles.set('$' + channel + '$', {once: true, listener: listener});
+        this.handles.set(this.namespace + '$' + channel + '$', {once: true, listener: listener});
     }
 
     invoke(channel, args, callback) {
         let invokeId = new Date().getTime() + '-' + Math.ceil(Math.random() * 10000);
-        this.invokes.set('$' + channel + '$$' + invokeId + '$', {invokeId: invokeId, callback: callback});
+        this.invokes.set(this.namespace + '$' + channel + '$$' + invokeId + '$', {invokeId: invokeId, callback: callback});
         let tmp = {
             invokeId: invokeId,
             args: args
         }
-        localStorage.setItem('$' + channel + '$$' + invokeId + '$', JSON.stringify(tmp))
+        localStorage.setItem(this.namespace + '$' + channel + '$$' + invokeId + '$', JSON.stringify(tmp))
     }
 
     promiseInvoke(channel, args) {

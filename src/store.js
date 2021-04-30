@@ -26,6 +26,7 @@ import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 import IPCEventType from "./ipcEventType";
+import localStorageEmitter from "./ipc/localStorageEmitter";
 
 /**
  * 一些说明
@@ -326,7 +327,7 @@ let store = {
                 // do nothing now
             });
 
-            ipcRenderer.on('wf-ipc-to-main', (events, args) => {
+            localStorageEmitter.on('wf-ipc-to-main', (events, args) => {
                 let type = args.type;
                 switch (type) {
                     case IPCEventType.openConversation:
