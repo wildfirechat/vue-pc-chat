@@ -99,7 +99,7 @@ class LocalStorageEmitter {
     }
 
     /**
-     *
+     * 订阅通知
      * @param {string} channel
      * @param {function(LocalStorageEvent, args)} listener
      */
@@ -107,10 +107,20 @@ class LocalStorageEmitter {
         this.subscriptions.set(this.namespace + '$' + channel + '$', {once: false, listener: listener});
     }
 
+    /**
+     * 一次性订阅
+     * @param {string} channel
+     * @param {function(LocalStorageEvent, args)} listener
+     */
     once(channel, listener) {
         this.subscriptions.set(this.namespace + '$' + channel + '$', {once: true, listener: listener});
     }
 
+    /**
+     * 发布通知
+     * @param {string} channel
+     * @param {any} args
+     */
     send(channel, args) {
         let tmp = {args: args}
         localStorage.setItem(this.namespace + '$' + channel + '$', JSON.stringify(tmp))
@@ -121,17 +131,36 @@ class LocalStorageEmitter {
     //     this.send(channel, args);
     // }
 
+    /**
+     * 处理远程调用
+     * @param {string} channel
+     * @param {function (any)} listener
+     */
     handle(channel, listener) {
         this.handles.set(this.namespace + '$' + channel + '$', {once: false, listener: listener});
     }
 
+    /**
+     * 一次性处理远程调用
+     * @param {string} channel
+     * @param {function (any)} listener
+     */
     handleOnce(channel, listener) {
         this.handles.set(this.namespace + '$' + channel + '$', {once: true, listener: listener});
     }
 
+    /**
+     * 执行远程调用，调用结果通过callback回调
+     * @param {string} channel
+     * @param {any} args
+     * @param {function (any)} callback
+     */
     invoke(channel, args, callback) {
         let invokeId = new Date().getTime() + '-' + Math.ceil(Math.random() * 10000);
-        this.invokes.set(this.namespace + '$' + channel + '$$' + invokeId + '$', {invokeId: invokeId, callback: callback});
+        this.invokes.set(this.namespace + '$' + channel + '$$' + invokeId + '$', {
+            invokeId: invokeId,
+            callback: callback
+        });
         let tmp = {
             invokeId: invokeId,
             args: args
@@ -139,6 +168,12 @@ class LocalStorageEmitter {
         localStorage.setItem(this.namespace + '$' + channel + '$$' + invokeId + '$', JSON.stringify(tmp))
     }
 
+    /**
+     * 执行远程调用，调用结果通过promise返回
+     * @param channel
+     * @param args
+     * @return {Promise<any>}
+     */
     promiseInvoke(channel, args) {
         return new Promise(((resolve, reject) => {
             this.invoke(channel, args, v => {
