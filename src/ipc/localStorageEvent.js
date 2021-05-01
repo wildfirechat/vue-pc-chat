@@ -5,7 +5,7 @@ export default class LocalStorageEvent {
 
     sender;
 
-    returnValue;
+    // returnValue;
 
     reply(channel, args) {
         this.sender.send(channel, args);
