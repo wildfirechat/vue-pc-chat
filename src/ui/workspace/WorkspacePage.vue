@@ -31,6 +31,7 @@ import '../../../node_modules/electron-tabs/electron-tabs.css'
 import IPCEventType from "../../ipcEventType";
 import Conversation from "../../wfc/model/conversation";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
+import {remote} from "../../platform";
 
 let tabGroup = null;
 
@@ -82,6 +83,11 @@ export default {
                 visible: true,
                 closable: false,
             });
+
+            localStorageEmitter.on('pick-conversation-done', (ev, args) => {
+                console.log('pick-conversation-done')
+                remote.getCurrentWindow().focus();
+            })
         },
 
         openConversation() {
@@ -96,6 +102,19 @@ export default {
             // let message = new Message(conversation, textMessageContent)
             // let messagePayload = null;
             // ipcRenderer.send(IPCEventType.sendMessage, messagePayload);
+
+            // let total = 0;
+            // for (let i = 1; i <= 100; i++) {
+            //     localStorageEmitter.invoke('add', {a:1, b:1}, (v)=>{
+            //         total += v;
+            //         if(i % 10 === 0){
+            //             console.log('xxxx', i, v, total)
+            //         }
+            //     })
+            // }
+
+            // localStorageEmitter.send('once', 'hello world')
+            localStorageEmitter.send('pick-conversation', 'hello world')
         },
 
         onTabActive() {
