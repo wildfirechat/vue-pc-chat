@@ -1328,8 +1328,13 @@ let store = {
         });
     },
 
-    setPageVisibility(hidden) {
-        miscState.isPageHidden = hidden;
+    setPageVisibility(visible) {
+        miscState.isPageHidden = !visible;
+        if (visible) {
+            if (conversationState.currentConversationInfo) {
+                this.clearConversationUnreadStatus(conversationState.currentConversationInfo.conversation)
+            }
+        }
     },
 
     clearConversationUnreadStatus(conversation) {

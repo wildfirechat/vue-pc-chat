@@ -57,7 +57,13 @@ export default {
     },
     methods: {
         visibilityChange(event, hidden) {
-            store.setPageVisibility(hidden);
+            store.setPageVisibility(!hidden);
+        },
+        onblur() {
+            store.setPageVisibility(false);
+        },
+        onfocus() {
+            store.setPageVisibility(true);
         }
     },
 
@@ -74,6 +80,8 @@ export default {
             root.style.setProperty('--main-border-radius', '0px')
             root.style.setProperty('--home-menu-padding-top', '0px')
         }
+        window.addEventListener('blur', this.onblur);
+        window.addEventListener('focus', this.onfocus)
     },
 
     mounted() {
@@ -103,6 +111,8 @@ export default {
     },
     beforeDestroy() {
         this.$eventBus.$off('uploadFile');
+        window.removeEventListener('blur', this.onblur)
+        window.removeEventListener('focus', this.onfocus)
     },
 
     components: {
