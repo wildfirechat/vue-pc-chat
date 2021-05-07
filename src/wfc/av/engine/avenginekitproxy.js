@@ -71,7 +71,7 @@ export class AvEngineKitProxy {
     }
 
     sendConferenceRequestListener = (event, request) => {
-        wfc.sendConferenceRequest(request.sessionId ? request.sessionId : 0, request.roomId ? request.roomId : '', request.request, request.data, (errorCode, res) => {
+        wfc.sendConferenceRequestEx(request.sessionId ? request.sessionId : 0, request.roomId ? request.roomId : '', request.request, request.data, request.advance, (errorCode, res) => {
             this.emitToVoip('sendConferenceRequestResult', {
                 error: errorCode,
                 sendConferenceRequestId: request.sendConferenceRequestId,
@@ -339,7 +339,7 @@ export class AvEngineKitProxy {
         });
     }
 
-    startConference(callId, audioOnly, pin, host, title, desc, audience) {
+    startConference(callId, audioOnly, pin, host, title, desc, audience, advance) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             return;
@@ -363,28 +363,13 @@ export class AvEngineKitProxy {
             title: title,
             desc: desc,
             audience: audience,
+            advance: advance,
             selfUserInfo: selfUserInfo,
         });
     }
 
     showCallUI(conversation, isConference) {
-        let type = isConference ? 'conference' : (conversation.type === ConversationType.Single ? 'single' : 'multi');
-
-        let width = 360;
-        let height = 640;
-        switch (type) {
-            case 'single':
-                width = 360;
-                height = 640;
-                break;
-            case 'multi':
-            case 'conference':
-                width = 600
-                height = 820;
-                break;
-            default:
-                break;
-        }
+        let type = isConference ? 'voip-conference' : (conversation.type === ConversationType.Single ? 'voip-single' : 'voip-multi');
         if (isElectron()) {
             let win = new BrowserWindow(
                 {
