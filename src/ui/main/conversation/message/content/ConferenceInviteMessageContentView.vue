@@ -1,5 +1,6 @@
 <template>
     <div class="conference-invite-message-container"
+         @click="joinConference"
          v-bind:class="{out:message.direction === 0}">
         <p class="text" v-html="this.textContent"></p>
     </div>
@@ -7,7 +8,7 @@
 
 <script>
 import Message from "@/wfc/messages/message";
-import {parser as emojiParse} from "@/ui/util/emoji";
+import avenginekitproxy from "../../../../../wfc/av/engine/avenginekitproxy";
 
 export default {
     name: "ConferenceInviteMessageContentView",
@@ -20,10 +21,17 @@ export default {
     mounted() {
     },
 
+    methods: {
+        joinConference() {
+            let cmc = this.message.messageContent;
+            avenginekitproxy.joinConference(cmc.callId, cmc.audioOnly, cmc.pin, cmc.host, cmc.title, cmc.desc, cmc.audience, cmc.advance)
+        }
+    },
+
     computed: {
         textContent() {
             let conferenceInviteMessageContent = this.message.messageContent;
-            return emojiParse(this.message.messageContent.digest(this.message))
+            return '会议邀请' + ' ' + conferenceInviteMessageContent.title + ' ' + conferenceInviteMessageContent.desc;
         }
     }
 }

@@ -29,6 +29,7 @@ export default class ConferenceInviteMessageContent extends MessageContent {
 
     encode() {
         let payload = super.encode();
+        payload.content = this.callId;
         let obj = {
             h: this.host,
             s: this.startTime,
@@ -54,7 +55,8 @@ export default class ConferenceInviteMessageContent extends MessageContent {
             this.audience = obj.audience > 0;
             this.advanced = obj.advanced > 0;
             this.audioOnly = obj.a > 0;
-            this.pin = obj.pin;
+            this.pin = obj.p;
         }
+        this.callId = payload.content;
     }
 }

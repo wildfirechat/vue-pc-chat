@@ -15,7 +15,6 @@ import {longValue, numberValue} from '../../util/longUtil'
 import CallEndReason from './callEndReason'
 import Conversation from "../../../wfc/model/conversation";
 
-const path = require('path');
 
 // main window renderer process -> voip window renderer process
 // voip window renderer process -> main process -> main window renderer process
@@ -23,6 +22,7 @@ export class AvEngineKitProxy {
     queueEvents = [];
     callWin;
 
+    conference = false;
     conversation;
     callId;
     inviteMessageUid;
@@ -352,6 +352,8 @@ export class AvEngineKitProxy {
 
         callId = callId ? callId : wfc.getUserId() + Math.floor(Math.random() * 10000);
         this.callId = callId;
+        this.conversation = null;
+        this.conference = true;
 
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         this.showCallUI(null, true);
@@ -368,8 +370,54 @@ export class AvEngineKitProxy {
         });
     }
 
+    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance) {
+        if (this.callWin) {
+            console.log('voip call is ongoing');
+            return;
+        }
+        //if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || (!audioOnly && !this.hasWebcam)) {
+        if (!this.isSupportVoip) {
+            console.log('not support voip', this.isSupportVoip, this.hasSpeaker);
+            return;
+        }
+
+        this.conversation = null;
+        this.conference = true;
+        this.callId = callId;
+
+        let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
+        this.showCallUI(null, true);
+        this.emitToVoip('joinConference', {
+            audioOnly: audioOnly,
+            callId: callId,
+            pin: pin,
+            host: host,
+            title: title,
+            desc: desc,
+            audience: audience,
+            advance: advance,
+            selfUserInfo: selfUserInfo,
+        });
+    }
+
     showCallUI(conversation, isConference) {
-        let type = isConference ? 'voip-conference' : (conversation.type === ConversationType.Single ? 'voip-single' : 'voip-multi');
+        let type = isConference ? 'conference' : (conversation.type === ConversationType.Single ? 'single' : 'multi');
+
+        let width = 360;
+        let height = 640;
+        switch (type) {
+            case 'voip-single':
+                width = 360;
+                height = 640;
+                break;
+            case 'voip-multi':
+            case 'voip-conference':
+                width = 600
+                height = 820;
+                break;
+            default:
+                break;
+        }
         if (isElectron()) {
             let win = new BrowserWindow(
                 {
@@ -377,8 +425,8 @@ export class AvEngineKitProxy {
                     height: height,
                     minWidth: width,
                     minHeight: height,
-                    resizable: false,
-                    maximizable: false,
+                    resizable: true,
+                    maximizable: true,
                     webPreferences: {
                         scrollBounce: false,
                         nativeWindowOpen: true,
@@ -439,17 +487,17 @@ export class AvEngineKitProxy {
             // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
             return;
         }
-        if (this.conversation) {
+        if (this.conversation && !this.conference) {
             let byeMessage = new CallByeMessageContent();
             byeMessage.callId = this.callId;
             byeMessage.inviteMsgUid = this.inviteMessageUid;
             byeMessage.reason = CallEndReason.RemoteNetworkError;
             wfc.sendConversationMessage(this.conversation, byeMessage, this.participants);
-            this.conversation = null;
-            this.queueEvents = [];
-            this.callId = null;
-            this.participants = [];
         }
+        this.conversation = null;
+        this.queueEvents = [];
+        this.callId = null;
+        this.participants = [];
         this.callWin = null;
         this.voipEventRemoveAllListeners(['message']);
     }
@@ -464,7 +512,7 @@ export class AvEngineKitProxy {
         }
         if (this.queueEvents.length > 0) {
             this.queueEvents.forEach((eventArgs) => {
-                console.log('process queued event');
+                console.log('process queued event', eventArgs);
                 this.emitToVoip(eventArgs.event, eventArgs.args);
             })
         }
