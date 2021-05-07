@@ -2,8 +2,11 @@
   "name": "wf-pc-chat",
   "version": "0.2.0",
   "private": true,
+  "homepage": "https://wildfirechat.cn",
+  "maintainers": ["imndx"],
   "author": {
-    "email": "imndxx@gmail.com"
+    "email": "imndxx@wildirechat.cn",
+    "name": "imndx"
   },
   "scripts": {
     "package": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:build",
