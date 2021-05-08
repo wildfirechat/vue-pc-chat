@@ -7,6 +7,7 @@ import localStorageEmitter from "./localStorageEmitter";
 import ForwardMessageByPickConversationView
     from "../ui/main/conversation/message/forward/ForwardMessageByPickConversationView";
 import {remote} from "../platform";
+import wfc from "../wfc/client/wfc";
 
 export default {
     name: "ipcMain",
@@ -47,6 +48,15 @@ export default {
                 }, {
                     'before-close': beforeClose,
                 })
+        });
+
+        localStorageEmitter.handle('getUserInfos', (ev, args) => {
+            console.log('getUserInfos', ev, args)
+            let userIds = args.userIds;
+            let groupId = args.groupId ? args.groupId : '';
+            let userInfos = wfc.getUserInfos(userIds, groupId);
+            console.log('getUserInfos result', userInfos)
+            return userInfos;
         })
     }
 }

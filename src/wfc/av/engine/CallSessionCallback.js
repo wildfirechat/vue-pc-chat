@@ -2,6 +2,7 @@
  * Copyright (c) 2020 WildFireChat. All rights reserved.
  */
 
+// TODO 后续移除所有userInfo相关参数，采用ipc调用获取
 export default class CallSessionCallback {
 
     /**

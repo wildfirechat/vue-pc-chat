@@ -82,13 +82,6 @@ export class AvEngineKitProxy {
 
     // 发送消息时，返回的timestamp，已经过修正，后面使用时,不用考虑和服务器的时间差
     sendVoipListener = (event, msg) => {
-        // 电话结束后，关闭window时，不应当再出发callByeMessageContent
-        if (msg.callEnded) {
-            this.conversation = null;
-            this.queueEvents = [];
-            return;
-        }
-
         let contentClazz = MessageConfig.getMessageContentClazz(msg.content.type);
 
         let content = new contentClazz();
@@ -487,7 +480,9 @@ export class AvEngineKitProxy {
             // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
             return;
         }
-        if (this.conversation && !this.conference) {
+        if (this.conference) {
+
+        } else if (this.conversation) {
             let byeMessage = new CallByeMessageContent();
             byeMessage.callId = this.callId;
             byeMessage.inviteMsgUid = this.inviteMessageUid;

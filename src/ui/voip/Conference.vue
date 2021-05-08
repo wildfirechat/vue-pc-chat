@@ -14,7 +14,7 @@
                 <!--audio-->
                 <div class="content-container">
                     <!--self-->
-                    <div class="participant-container">
+                    <div v-if="!session.audience" class="participant-container">
                         <div v-if="audioOnly || status !== 4 || !selfUserInfo._stream"
                              class="flex-column flex-justify-center flex-align-center">
                             <img class="avatar" :src="selfUserInfo.portrait">
@@ -63,28 +63,7 @@
 
             <!--actions-->
             <footer>
-                <!--incoming-->
-                <div v-if="status === 2" class="action-container">
-                    <div class="action">
-                        <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
-                    </div>
-                    <div class="action">
-                        <img @click="answer" class="action-img" src='@/assets/images/av_video_answer.png'/>
-                    </div>
-                    <div v-if="!audioOnly" class="action">
-                        <img @click="down2voice" class="action-img" src='@/assets/images/av_float_audio.png'/>
-                        <p>切换到语音聊天</p>
-                    </div>
-                </div>
-                <!--outgoing-->
-                <div v-if="status === 1 || status === 3" class="action-container">
-                    <div class="action">
-                        <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
-                    </div>
-                </div>
-
-                <!--connected-->
-                <div v-if="status === 4" class="duration-action-container">
+                <div class="duration-action-container">
                     <p>{{ duration }}</p>
                     <div class="action-container">
 
@@ -112,7 +91,7 @@ import avenginekit from "../../wfc/av/internal/avenginekitImpl";
 import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
 import PickUserView from "@/ui/main/pick/PickUserView";
 import CallState from "@/wfc/av/engine/callState";
-import NullUserInfo from "../../wfc/model/nullUserInfo";
+import IpcSub from "../../ipc/ipcSub";
 
 export default {
     name: 'Conference',
@@ -185,15 +164,13 @@ export default {
                 }
             };
 
-            sessionCallback.didParticipantJoined = (userId, userInfo) => {
-                console.log('didParticipantJoined', userId, userInfo)
-                if (!userInfo) {
-                    // TODO 获取用户信息
-                    userInfo = new NullUserInfo(userId);
-                    userInfo.portrait = Config.DEFAULT_PORTRAIT_URL;
-                }
-                userInfo._stream = null;
+            sessionCallback.didParticipantJoined = (userId) => {
+                console.log('didParticipantJoined', userId)
+                IpcSub.getUserInfos([userId], null, (userInfos) => {
+                    let userInfo = userInfos[0];
+                    userInfo._stream = null;
                 this.participantUserInfos.push(userInfo);
+                })
             }
 
             sessionCallback.didParticipantLeft = (userId) => {
