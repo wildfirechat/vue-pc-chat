@@ -41,6 +41,7 @@ export default class ConferenceInviteMessageContent extends MessageContent {
             p: this.pin,
         };
         payload.binaryContent = wfc.utf8_to_b64(JSON.stringify(obj));
+        return payload;
     }
 
     decode(payload) {

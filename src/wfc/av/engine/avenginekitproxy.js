@@ -353,7 +353,7 @@ export class AvEngineKitProxy {
         this.emitToVoip('startConference', {
             audioOnly: audioOnly,
             callId: callId,
-            pin: pin,
+            pin: pin ? pin : Math.ceil(Math.random()* 1000000) + '',
             host: host,
             title: title,
             desc: desc,

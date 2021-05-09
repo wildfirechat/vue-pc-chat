@@ -23,7 +23,6 @@
             <ul>
                 <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
                 <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
-                <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
             </ul>
         </section>
         <div @keydown.enter="send($event)"

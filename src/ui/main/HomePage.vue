@@ -64,6 +64,10 @@
                                @click="showUploadDialog"></i>
                         </li>
                         <li>
+                            <i class="icon-ion-speakerphone"
+                               @click="startConference"></i>
+                        </li>
+                        <li>
                             <i class="icon-ion-android-settings"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/setting'}"
                                @click="go2Setting"></i>
@@ -90,6 +94,7 @@ import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControl
 import {removeItem} from "@/ui/util/storageHelper";
 import {ipcRenderer} from "@/platform";
 import UploadRecordView from "./bigFile/UploadRecordView";
+import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 
 export default {
     data() {
@@ -193,6 +198,10 @@ export default {
         closeUserCard() {
             console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
+        },
+        startConference(){
+            let userId = wfc.getUserId();
+            avenginekitproxy.startConference(null, false, '', userId, 'test conference', 'pc', false, false);
         },
 
         onConnectionStatusChange(status) {

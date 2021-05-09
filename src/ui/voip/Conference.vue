@@ -89,9 +89,11 @@
 <script>
 import avenginekit from "../../wfc/av/internal/avenginekitImpl";
 import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
-import PickUserView from "@/ui/main/pick/PickUserView";
 import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
+import Conversation from "../../wfc/model/conversation";
+import ConversationType from "../../wfc/model/conversationType";
+import ConferenceInviteMessageContent from "../../wfc/av/messages/conferenceInviteMessageContent";
 
 export default {
     name: 'Conference',
@@ -130,7 +132,7 @@ export default {
                 }
             };
 
-            sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo ) => {
+            sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo) => {
                 this.session = session;
 
 
@@ -169,7 +171,7 @@ export default {
                 IpcSub.getUserInfos([userId], null, (userInfos) => {
                     let userInfo = userInfos[0];
                     userInfo._stream = null;
-                this.participantUserInfos.push(userInfo);
+                    this.participantUserInfos.push(userInfo);
                 })
             }
 
@@ -211,29 +213,39 @@ export default {
         },
 
         invite() {
-            let beforeClose = (event) => {
-                let users = event.params.users;
-                let userIds = users.map(u => u.uid);
-                this.session.inviteNewParticipants(userIds);
-            };
-            this.$modal.show(
-                PickUserView,
-                {
-                    users: this.session.groupMemberUserInfos,
-                    initialCheckedUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
-                    uncheckableUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
-                    showCategoryLabel: false,
-                    confirmTitle: '确定',
-                }, {
-                    name: 'pick-user-modal',
-                    width: 600,
-                    height: 480,
-                    clickToClose: false,
-                }, {
-                    // 'before-open': this.beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': this.closed,
-                })
+            // for test
+            let conversation = new Conversation(ConversationType.Group, "SnxWUWVV", 0);
+            let messageContent = new ConferenceInviteMessageContent(this.session.callId, this.session.host,
+                this.session.title, this.session.desc, new Date().getTime(), this.session.audioOnly, this.session.audience, this.session.advance, this.session.pin)
+            IpcSub.sendMessage(conversation, messageContent);
+
+            // let participantIds = this.session.getParticipantIds();
+            // IpcSub.getUserInfos(participantIds, null, (userInfos) => {
+            //     console.log('participant userInfos', userInfos)
+            // })
+            // let beforeClose = (event) => {
+            //     let users = event.params.users;
+            //     let userIds = users.map(u => u.uid);
+            //     this.session.inviteNewParticipants(userIds);
+            // };
+            // this.$modal.show(
+            //     PickUserView,
+            //     {
+            //         users: this.session.groupMemberUserInfos,
+            //         initialCheckedUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+            //         uncheckableUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+            //         showCategoryLabel: false,
+            //         confirmTitle: '确定',
+            //     }, {
+            //         name: 'pick-user-modal',
+            //         width: 600,
+            //         height: 480,
+            //         clickToClose: false,
+            //     }, {
+            //         // 'before-open': this.beforeOpen,
+            //         'before-close': beforeClose,
+            //         'closed': this.closed,
+            //     })
         },
 
         userName(user) {
