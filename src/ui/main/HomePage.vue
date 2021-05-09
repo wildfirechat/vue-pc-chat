@@ -65,7 +65,7 @@
                         </li>
                         <li>
                             <i class="icon-ion-speakerphone"
-                               @click="startConference"></i>
+                               @click="createConference"></i>
                         </li>
                         <li>
                             <i class="icon-ion-android-settings"
@@ -94,7 +94,7 @@ import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControl
 import {removeItem} from "@/ui/util/storageHelper";
 import {ipcRenderer} from "@/platform";
 import UploadRecordView from "./bigFile/UploadRecordView";
-import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
+import CreateConferenceView from "../voip/CreateConferenceView";
 
 export default {
     data() {
@@ -199,9 +199,28 @@ export default {
             console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
         },
-        startConference(){
-            let userId = wfc.getUserId();
-            avenginekitproxy.startConference(null, false, '', userId, 'test conference', 'pc', false, false);
+        createConference() {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                CreateConferenceView,
+                {}, {
+                    name: 'create-conference-modal',
+                    width: 320,
+                    height: 400,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
         },
 
         onConnectionStatusChange(status) {
