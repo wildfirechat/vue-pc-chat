@@ -8,11 +8,9 @@ import ConversationType from "../../model/conversationType";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
 import MessageConfig from "../../client/messageConfig";
-import CallByeMessageContent from "../messages/callByeMessageContent";
 import DetectRTC from 'detectrtc';
 import Config from "../../../config";
 import {longValue, numberValue} from '../../util/longUtil'
-import CallEndReason from './callEndReason'
 import Conversation from "../../../wfc/model/conversation";
 
 
@@ -399,12 +397,12 @@ export class AvEngineKitProxy {
         let width = 360;
         let height = 640;
         switch (type) {
-            case 'voip-single':
+            case 'single':
                 width = 360;
                 height = 640;
                 break;
-            case 'voip-multi':
-            case 'voip-conference':
+            case 'multi':
+            case 'conference':
                 width = 600
                 height = 820;
                 break;
@@ -418,8 +416,8 @@ export class AvEngineKitProxy {
                     height: height,
                     minWidth: width,
                     minHeight: height,
-                    resizable: true,
-                    maximizable: true,
+                    resizable: false,
+                    maximizable: false,
                     webPreferences: {
                         scrollBounce: false,
                         nativeWindowOpen: true,
@@ -476,25 +474,19 @@ export class AvEngineKitProxy {
     }
 
     onVoipWindowClose(event) {
-        if (event && event.srcElement && event.srcElement.URL === 'about:blank') {
-            // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
-            return;
-        }
-        if (this.conference) {
-
-        } else if (this.conversation) {
-            let byeMessage = new CallByeMessageContent();
-            byeMessage.callId = this.callId;
-            byeMessage.inviteMsgUid = this.inviteMessageUid;
-            byeMessage.reason = CallEndReason.RemoteNetworkError;
-            wfc.sendConversationMessage(this.conversation, byeMessage, this.participants);
-        }
-        this.conversation = null;
-        this.queueEvents = [];
-        this.callId = null;
-        this.participants = [];
-        this.callWin = null;
-        this.voipEventRemoveAllListeners(['message']);
+        // 让voip内部先处理关闭事件，内部处理时，可能还需要发消息
+        setTimeout(() => {
+            if (event && event.srcElement && event.srcElement.URL === 'about:blank') {
+                // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
+                return;
+            }
+            this.conversation = null;
+            this.queueEvents = [];
+            this.callId = null;
+            this.participants = [];
+            this.callWin = null;
+            this.voipEventRemoveAllListeners(['message']);
+        }, 2000);
     }
 
     onVoipWindowReady(win) {
