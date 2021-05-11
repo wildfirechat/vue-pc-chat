@@ -52,12 +52,6 @@
                                playsInline
                                autoPlay/>
                     </div>
-                    <!--add more-->
-                    <!--通话建立成功之后，才允许邀请新参与者-->
-                    <div v-if="status === 4/*connect*/ && participantUserInfos.length < 8"
-                         class="participant-container">
-                        <img @click="invite" class="avatar" src="@/assets/images/add.png">
-                    </div>
                 </div>
             </section>
 
@@ -66,18 +60,27 @@
                 <div class="duration-action-container">
                     <p>{{ duration }}</p>
                     <div class="action-container">
-
                         <div class="action">
-                            <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
-                        </div>
-                        <div class="action">
-                            <img v-if="!session.muted" @click="mute" class="action-img"
-                                 src='@/assets/images/av_mute.png'/>
-                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
+                            <img v-if="!session.muted" @click="mute" class="action-img" src='@/assets/images/av_conference_audio.png'/>
+                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_conference_audio_mute.png'/>
                             <p>静音</p>
                         </div>
+                        <div class="action">
+                            <img v-if="!session.videoMuted" @click="mute" class="action-img" src='@/assets/images/av_conference_video.png'/>
+                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_conference_video_mute.png'/>
+                            <p>视频</p>
+                        </div>
                         <div v-if="!audioOnly" class="action">
-                            <img @click="screenShare" class="action-img" src='@/assets/images/av_share.png'/>
+                            <img @click="screenShare" class="action-img" src='@/assets/images/av_conference_screen_sharing.png'/>
+                            <p>共享屏幕</p>
+                        </div>
+                        <div class="action">
+                            <img @click="mute" class="action-img" src='@/assets/images/av_conference_members.png'/>
+                            <p>管理</p>
+                        </div>
+                        <div class="action">
+                            <img @click="hangup" class="action-img" src='@/assets/images/av_conference_end_call.png'/>
+                            <p>结束</p>
                         </div>
                     </div>
                 </div>
