@@ -75,7 +75,7 @@
                             <p>共享屏幕</p>
                         </div>
                         <div class="action">
-                            <img @click="mute" class="action-img" src='@/assets/images/av_conference_members.png'/>
+                            <img @click="members" class="action-img" src='@/assets/images/av_conference_members.png'/>
                             <p>管理</p>
                         </div>
                         <div class="action">
@@ -97,6 +97,8 @@ import IpcSub from "../../ipc/ipcSub";
 import Conversation from "../../wfc/model/conversation";
 import ConversationType from "../../wfc/model/conversationType";
 import ConferenceInviteMessageContent from "../../wfc/av/messages/conferenceInviteMessageContent";
+import Message from "../../wfc/messages/message";
+import wfc from "../../wfc/client/wfc";
 
 export default {
     name: 'Conference',
@@ -209,6 +211,10 @@ export default {
 
         down2voice() {
             this.session.downgrade2Voice();
+        },
+
+        members(){
+            IpcSub.inviteConferenceParticipant(this.session)
         },
 
         screenShare() {

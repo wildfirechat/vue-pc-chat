@@ -6,7 +6,7 @@
 import localStorageEmitter from "./localStorageEmitter";
 import ForwardMessageByPickConversationView
     from "../ui/main/conversation/message/forward/ForwardMessageByPickConversationView";
-import {remote} from "../platform";
+import {isElectron, remote} from "../platform";
 import wfc from "../wfc/client/wfc";
 import Message from "../wfc/messages/message";
 
@@ -69,6 +69,13 @@ export default {
             let payload = args.messagePayload;
             let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
             wfc.sendConversationMessage(conversation, messageContent);
+        })
+
+        localStorageEmitter.on('inviteConferenceParticipant', (ev, args) => {
+            if(isElectron()){
+                remote.getCurrentWindow().focus();
+            }
+            this.$eventBus.$emit('invite-conference-participant', args)
         })
     }
 }

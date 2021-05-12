@@ -469,7 +469,14 @@ export default {
             let fileMessageContent = new FileMessageContent(null, args.remoteUrl, args.name, args.size);
             let message = new Message(null, fileMessageContent);
             this.forward(message)
-        })
+        });
+
+        this.$eventBus.$on('invite-conference-participant', args => {
+            let payload = args.messagePayload;
+            let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
+            let message = new Message(null, messageContent);
+            this.forward(message);
+        });
     },
 
     beforeDestroy() {
