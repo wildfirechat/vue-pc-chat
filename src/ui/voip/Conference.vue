@@ -14,7 +14,7 @@
                 <!--audio-->
                 <div class="content-container">
                     <!--self-->
-                    <div v-if="!session.audience" class="participant-container">
+                    <div v-if="!session.audience" class="participant-item">
                         <div v-if="audioOnly || status !== 4 || !selfUserInfo._stream"
                              class="flex-column flex-justify-center flex-align-center">
                             <img class="avatar" :src="selfUserInfo.portrait">
@@ -36,7 +36,7 @@
 
                     <!--participants-->
                     <div v-for="(participant) in participantUserInfos" :key="participant.uid"
-                         class="participant-container">
+                         class="participant-item">
                         <div v-if="audioOnly || status !== 4 || !participant._stream"
                              class="flex-column flex-justify-center flex-align-center">
                             <img class="avatar" :src="participant.portrait" :alt="participant">
@@ -55,27 +55,60 @@
                 </div>
             </section>
 
+            <div class="participant-list-container"
+                 v-if="showParticipantList"
+                 v-bind:class="{ active: showParticipantList}"
+                 v-click-outside="hideParticipantList"
+            >
+                <div v-if="true" @click="invite"
+                     class="action-item">
+                    <div class="icon">+</div>
+                    <p>邀请新参与者</p>
+                </div>
+                <div v-if="false" @click="invite"
+                     class="action-item">
+                    <div class="icon">-</div>
+                    <p>移除参与者</p>
+                </div>
+                <ul>
+                    <li v-for="user in computedParticipants" :key="user.uid">
+                        <div class="participant-user">
+                            <img class="avatar" :src="user.portrait" alt="">
+                            <span class="single-line name"> {{ user.displayName }}</span>
+                            <span class="single-line type"
+                                  v-bind:class="{audience: user._audience}">互动成员</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
             <!--actions-->
             <footer>
                 <div class="duration-action-container">
                     <p>{{ duration }}</p>
                     <div class="action-container">
                         <div class="action">
-                            <img v-if="!session.muted" @click="mute" class="action-img" src='@/assets/images/av_conference_audio.png'/>
-                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_conference_audio_mute.png'/>
+                            <img v-if="!session.muted" @click="mute" class="action-img"
+                                 src='@/assets/images/av_conference_audio.png'/>
+                            <img v-else @click="mute" class="action-img"
+                                 src='@/assets/images/av_conference_audio_mute.png'/>
                             <p>静音</p>
                         </div>
                         <div class="action">
-                            <img v-if="!session.videoMuted" @click="mute" class="action-img" src='@/assets/images/av_conference_video.png'/>
-                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_conference_video_mute.png'/>
+                            <img v-if="!session.videoMuted" @click="mute" class="action-img"
+                                 src='@/assets/images/av_conference_video.png'/>
+                            <img v-else @click="mute" class="action-img"
+                                 src='@/assets/images/av_conference_video_mute.png'/>
                             <p>视频</p>
                         </div>
                         <div v-if="!audioOnly" class="action">
-                            <img @click="screenShare" class="action-img" src='@/assets/images/av_conference_screen_sharing.png'/>
+                            <img @click="screenShare" class="action-img"
+                                 src='@/assets/images/av_conference_screen_sharing.png'/>
                             <p>共享屏幕</p>
                         </div>
                         <div class="action">
-                            <img @click="members" class="action-img" src='@/assets/images/av_conference_members.png'/>
+                            <img @click.stop="members" class="action-img"
+                                 src='@/assets/images/av_conference_members.png'/>
                             <p>管理</p>
                         </div>
                         <div class="action">
@@ -94,11 +127,7 @@ import avenginekit from "../../wfc/av/internal/avenginekitImpl";
 import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
-import Conversation from "../../wfc/model/conversation";
-import ConversationType from "../../wfc/model/conversationType";
-import ConferenceInviteMessageContent from "../../wfc/av/messages/conferenceInviteMessageContent";
-import Message from "../../wfc/messages/message";
-import wfc from "../../wfc/client/wfc";
+import ClickOutside from 'vue-click-outside'
 
 export default {
     name: 'Conference',
@@ -111,12 +140,14 @@ export default {
             selfUserInfo: null,
             initiatorUserInfo: null,
             participantUserInfos: [],
-            groupMemberUserInfos: [],
 
             startTimestamp: 0,
             currentTimestamp: 0,
+
+            showParticipantList: false,
         }
     },
+    components: {},
     methods: {
         setupSessionCallback() {
             let sessionCallback = new CallSessionCallback();
@@ -143,6 +174,7 @@ export default {
 
                 this.audioOnly = session.audioOnly;
                 this.selfUserInfo = selfUserInfo;
+                this.selfUserInfo._audience = session.audience;
                 this.initiatorUserInfo = initiatorUserInfo;
                 this.participantUserInfos = [];
 
@@ -176,6 +208,7 @@ export default {
                 IpcSub.getUserInfos([userId], null, (userInfos) => {
                     let userInfo = userInfos[0];
                     userInfo._stream = null;
+                    userInfo._audience = this.session.getPeerConnectionClient(userId).audience;
                     this.participantUserInfos.push(userInfo);
                 })
             }
@@ -213,48 +246,20 @@ export default {
             this.session.downgrade2Voice();
         },
 
-        members(){
+        members() {
+            this.showParticipantList = !this.showParticipantList;
+        },
+
+        hideParticipantList() {
+            this.showParticipantList && (this.showParticipantList = false);
+        },
+
+        invite() {
             IpcSub.inviteConferenceParticipant(this.session)
         },
 
         screenShare() {
             this.session.isScreenSharing() ? this.session.stopScreenShare() : this.session.startScreenShare();
-        },
-
-        invite() {
-            // for test
-            let conversation = new Conversation(ConversationType.Group, "SnxWUWVV", 0);
-            let messageContent = new ConferenceInviteMessageContent(this.session.callId, this.session.host,
-                this.session.title, this.session.desc, new Date().getTime(), this.session.audioOnly, this.session.audience, this.session.advance, this.session.pin)
-            IpcSub.sendMessage(conversation, messageContent);
-
-            // let participantIds = this.session.getParticipantIds();
-            // IpcSub.getUserInfos(participantIds, null, (userInfos) => {
-            //     console.log('participant userInfos', userInfos)
-            // })
-            // let beforeClose = (event) => {
-            //     let users = event.params.users;
-            //     let userIds = users.map(u => u.uid);
-            //     this.session.inviteNewParticipants(userIds);
-            // };
-            // this.$modal.show(
-            //     PickUserView,
-            //     {
-            //         users: this.session.groupMemberUserInfos,
-            //         initialCheckedUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
-            //         uncheckableUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
-            //         showCategoryLabel: false,
-            //         confirmTitle: '确定',
-            //     }, {
-            //         name: 'pick-user-modal',
-            //         width: 600,
-            //         height: 480,
-            //         clickToClose: false,
-            //     }, {
-            //         // 'before-open': this.beforeOpen,
-            //         'before-close': beforeClose,
-            //         'closed': this.closed,
-            //     })
         },
 
         userName(user) {
@@ -290,7 +295,15 @@ export default {
             }
             let escapeMillis = this.currentTimestamp - this.startTimestamp;
             return this.timestampFormat(escapeMillis)
-        }
+        },
+
+        computedParticipants() {
+            return [...this.participantUserInfos, this.selfUserInfo];
+        },
+    },
+
+    directives: {
+        ClickOutside
     },
 
     mounted() {
@@ -301,7 +314,7 @@ export default {
     destroyed() {
         // reset
         this.$set(this.selfUserInfo, '_stream', null)
-        groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
+        this.participantUserInfos.forEach(m => this.$set(m, "_stream", null))
     }
 }
 </script>
@@ -325,7 +338,7 @@ export default {
     align-items: center;
 }
 
-.participant-container {
+.participant-item {
     display: flex;
     width: 200px;
     height: 220px;
@@ -336,7 +349,7 @@ export default {
     align-items: center;
 }
 
-.participant-container > video {
+.participant-item > video {
     max-width: 100%;
     max-height: 100%;
     width: 100%;
@@ -348,7 +361,7 @@ export default {
     height: 0;
 }
 
-.participant-container p {
+.participant-item p {
     max-height: 20px;
     color: white;
 }
@@ -395,5 +408,70 @@ footer {
 .action-img {
     width: 60px;
     height: 60px;
+}
+
+.participant-list-container {
+    display: none;
+    width: 250px;
+    height: 100%;
+    top: 0;
+    right: 0;
+    position: absolute;
+    background-color: #ffffffe5;
+    backdrop-filter: blur(6px);
+    border-left: 1px solid #e6e6e6;
+}
+
+.participant-list-container.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.participant-list-container .action-item {
+    height: 50px;
+    display: flex;
+    padding: 5px 0 0 10px;
+    align-items: center;
+}
+
+.participant-list-container .action-item .icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 3px;
+    border: 1px dashed #d6d6d6;
+}
+
+.participant-user {
+    display: flex;
+    align-items: center;
+    padding: 5px 0 0 10px;
+}
+
+.participant-user .name {
+    flex: 1;
+}
+
+.participant-user .type {
+    color: green;
+    font-size: 12px;
+    border: 1px solid green;
+    border-radius: 2px;
+    margin-right: 10px;
+}
+
+.participant-user .audience {
+    color: gray;
+    border: 1px solid gray;
+}
+
+
+.participant-user .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 3px;
+    margin-right: 10px;
 }
 </style>
