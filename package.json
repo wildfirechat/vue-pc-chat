@@ -3,7 +3,9 @@
   "version": "0.2.0",
   "private": true,
   "homepage": "https://wildfirechat.cn",
-  "maintainers": ["imndx"],
+  "maintainers": [
+    "imndx"
+  ],
   "author": {
     "email": "imndxx@wildirechat.cn",
     "name": "imndx"
