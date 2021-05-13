@@ -72,11 +72,27 @@
                 </div>
                 <ul>
                     <li v-for="user in computedParticipants" :key="user.uid">
-                        <div class="participant-user">
+                        <tippy
+                            :to="'user-' + user.uid"
+                            interactive
+                            theme="light"
+                            :animate-fill="false"
+                            placement="left"
+                            distant="7"
+                            animation="fade"
+                            trigger="click"
+                        >
+                            <UserCardView :user-info="user" v-on:close="closeUserCard(user)"/>
+                        </tippy>
+                        <div class="participant-user"
+                             :ref="'userCardTippy-'+user.uid"
+                             :name="'user-'+user.uid">
                             <img class="avatar" :src="user.portrait" alt="">
                             <span class="single-line name"> {{ user.displayName }}</span>
-                            <span class="single-line type"
-                                  v-bind:class="{audience: user._audience}">互动成员</span>
+                            <span class="single-line label host"
+                                  v-if="user._isHost">主持人</span>
+                            <span v-else class="single-line label"
+                                  v-bind:class="{audience: user._isAudience}">互动成员</span>
                         </div>
                     </li>
                 </ul>
@@ -128,6 +144,7 @@ import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
 import ClickOutside from 'vue-click-outside'
+import UserCardView from "../main/user/UserCardView";
 
 export default {
     name: 'Conference',
@@ -147,7 +164,7 @@ export default {
             showParticipantList: false,
         }
     },
-    components: {},
+    components: {UserCardView},
     methods: {
         setupSessionCallback() {
             let sessionCallback = new CallSessionCallback();
@@ -174,6 +191,7 @@ export default {
 
                 this.audioOnly = session.audioOnly;
                 this.selfUserInfo = selfUserInfo;
+                this.selfUserInfo._isHost = session.host === selfUserInfo.uid;
                 this.selfUserInfo._audience = session.audience;
                 this.initiatorUserInfo = initiatorUserInfo;
                 this.participantUserInfos = [];
@@ -208,7 +226,8 @@ export default {
                 IpcSub.getUserInfos([userId], null, (userInfos) => {
                     let userInfo = userInfos[0];
                     userInfo._stream = null;
-                    userInfo._audience = this.session.getPeerConnectionClient(userId).audience;
+                    userInfo._isAudience = this.session.getPeerConnectionClient(userId).audience;
+                    userInfo._isHost = this.session.host === userId;
                     this.participantUserInfos.push(userInfo);
                 })
             }
@@ -454,17 +473,23 @@ footer {
     flex: 1;
 }
 
-.participant-user .type {
+.participant-user .label {
     color: green;
     font-size: 12px;
     border: 1px solid green;
     border-radius: 2px;
+    padding: 2px 5px;
     margin-right: 10px;
 }
 
 .participant-user .audience {
     color: gray;
     border: 1px solid gray;
+}
+
+.participant-user .host {
+    color: #4168e0;
+    border: 1px solid #4168e0;
 }
 
 
