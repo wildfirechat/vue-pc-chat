@@ -161,6 +161,8 @@ export class AvEngineKitProxy {
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT_T
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO
+                || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER
+                || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE
             ) {
                 console.log("receive voip message", msg.messageContent.type, msg.messageUid.toString(), msg);
                 if (msg.direction === 0
@@ -416,7 +418,7 @@ export class AvEngineKitProxy {
                     height: height,
                     minWidth: width,
                     minHeight: height,
-                    resizable: false,
+                    resizable: true,
                     maximizable: false,
                     webPreferences: {
                         scrollBounce: false,

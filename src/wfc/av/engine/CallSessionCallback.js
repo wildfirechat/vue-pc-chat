@@ -78,4 +78,24 @@ export default class CallSessionCallback {
     didChangeInitiator(initiator) {
 
     }
+
+    /**
+     * 会议时有效
+     * 听众或互动者角色变更回调
+     * @param {string} userId
+     * @param {boolean} audience
+     */
+    didChangeType(userId, audience) {
+
+    }
+
+    /**
+     * 会议时有效
+     * 听众和互动者角色切换回调
+     * @param {string} userId 用户id
+     * @param {boolean} audience 是否是切换为听众
+     */
+    onRequestChangeMode(userId, audience) {
+
+    }
 }

@@ -92,6 +92,7 @@
                             <span class="single-line label host"
                                   v-if="user._isHost">主持人</span>
                             <span v-else class="single-line label"
+                                  @click.stop="changeMode(user)"
                                   v-bind:class="{audience: user._isAudience}">互动成员</span>
                         </div>
                     </li>
@@ -246,6 +247,19 @@ export default {
                 this.muted = muted;
             };
 
+            sessionCallback.onRequestChangeMode = (userId, audience) => {
+                // TODO 弹窗确认
+                // switchAudience
+            };
+
+            sessionCallback.didChangeType = (userId, audience) => {
+                this.participantUserInfos.forEach(u => {
+                    if (u.uid === userId) {
+                        u._isAudience = audience;
+                    }
+                })
+            }
+
             avenginekit.sessionCallback = sessionCallback;
         },
 
@@ -275,6 +289,14 @@ export default {
 
         invite() {
             IpcSub.inviteConferenceParticipant(this.session)
+        },
+
+        changeMode(user) {
+            this.session.requestChangeMode(user.uid, !user._isAudience);
+        },
+
+        kickoff(user) {
+            this.session.kickoff(user.uid)
         },
 
         screenShare() {
