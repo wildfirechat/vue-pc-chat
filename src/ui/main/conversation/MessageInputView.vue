@@ -585,8 +585,11 @@ export default {
 
         if (isElectron()) {
             ipcRenderer.on('screenshots-ok', (event, args) => {
+                console.log('screenshots-ok jxojoj', args)
                 if (args.filePath) {
-                    document.execCommand('insertImage', false, 'local-resource://' + args.filePath);
+                    setTimeout(()=> {
+                        document.execCommand('insertImage', false, 'local-resource://' + args.filePath);
+                    }, 100)
                 }
             });
         }
