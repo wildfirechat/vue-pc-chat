@@ -1,9 +1,6 @@
 # vue-pc-chat
 野火IM VUE Demo，演示如何将野火IM的能力集成到VUE Electron项目。
 
-## 重要提示
-项目在活跃开发中，更完整项目，请参考 [pc-chat](https://github.com/wildfirechat/pc-chat) 。
-
 ## 环境依赖
 #### mac系统
 1. 最新版本的Xcode
