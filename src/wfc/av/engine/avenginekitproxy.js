@@ -353,7 +353,7 @@ export class AvEngineKitProxy {
         this.emitToVoip('startConference', {
             audioOnly: audioOnly,
             callId: callId,
-            pin: pin ? pin : Math.ceil(Math.random()* 1000000) + '',
+            pin: pin ? pin : Math.ceil(Math.random() * 1000000) + '',
             host: host,
             title: title,
             desc: desc,
@@ -483,7 +483,9 @@ export class AvEngineKitProxy {
         if (!this.callWin) {
             return;
         }
-        this.callWin.removeEventListener('beforeunload', this.onVoipWindowClose)
+        if (!isElectron()) {
+            this.callWin.removeEventListener('beforeunload', this.onVoipWindowClose)
+        }
         setTimeout(() => {
             if (event && event.srcElement && event.srcElement.URL === 'about:blank') {
                 // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方

@@ -15,7 +15,7 @@ export default class IpcSub {
     }
 
     static inviteConferenceParticipant(callSession) {
-        let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, callSession.host, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.audience, callSession.advance, callSession.pin)
+        let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, callSession.host, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.defaultAudience, callSession.advance, callSession.pin)
         console.log('sss', callSession, inviteMessageContent)
         localStorageEmitter.send('inviteConferenceParticipant', {messagePayload: inviteMessageContent.encode()})
     }

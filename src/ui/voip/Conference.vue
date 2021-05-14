@@ -35,7 +35,8 @@
                     </div>
 
                     <!--participants-->
-                    <div v-for="(participant) in participantUserInfos" :key="participant.uid"
+                    <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
+                         :key="participant.uid"
                          class="participant-item">
                         <div v-if="audioOnly || status !== 4 || !participant._stream"
                              class="flex-column flex-justify-center flex-align-center">
@@ -87,12 +88,18 @@
                         <div class="participant-user"
                              :ref="'userCardTippy-'+user.uid"
                              :name="'user-'+user.uid">
-                            <img class="avatar" :src="user.portrait" alt="">
-                            <span class="single-line name"> {{ user.displayName }}</span>
+                            <div class="avatar-container">
+                                <img class="avatar" :src="user.portrait" alt="">
+                                <div v-if=" selfUserInfo._isHost && !user._isHost" @click.stop="kickoff(user)"
+                                     class="icon">
+                                    -
+                                </div>
+                            </div>
+                            <span class="single-line name"> {{ userName(user) }}</span>
                             <span class="single-line label host"
                                   v-if="user._isHost">主持人</span>
                             <span v-else class="single-line label"
-                                  @click.stop="changeMode(user)"
+                                  @click.stop="requestChangeMode(user)"
                                   v-bind:class="{audience: user._isAudience}">互动成员</span>
                         </div>
                     </li>
@@ -248,8 +255,20 @@ export default {
             };
 
             sessionCallback.onRequestChangeMode = (userId, audience) => {
-                // TODO 弹窗确认
-                // switchAudience
+                console.log('onRequestChangeMode', userId + ' ' + audience)
+                if (audience) {
+                    this.session.switchAudience(true)
+                    return;
+                }
+                this.$alert({
+                    content: '主持人邀请你参与互动',
+                    cancelCallback: () => {
+                        // do nothing
+                    },
+                    confirmCallback: () => {
+                        this.session.switchAudience(false)
+                    }
+                })
             };
 
             sessionCallback.didChangeType = (userId, audience) => {
@@ -291,12 +310,28 @@ export default {
             IpcSub.inviteConferenceParticipant(this.session)
         },
 
-        changeMode(user) {
-            this.session.requestChangeMode(user.uid, !user._isAudience);
+        requestChangeMode(user) {
+            this.$alert({
+                content: user._isAudience ? `邀请${this.userName(user)}参与互动?` : `取消${this.userName(user)}参与互动?`,
+                cancelCallback: () => {
+                    // do nothing
+                },
+                confirmCallback: () => {
+                    this.session.requestChangeMode(user.uid, !user._isAudience);
+                }
+            })
         },
 
         kickoff(user) {
-            this.session.kickoff(user.uid)
+            this.$alert({
+                content: `确认将${this.userName(user)}移除会议?`,
+                cancelCallback: () => {
+                    // do nothing
+                },
+                confirmCallback: () => {
+                    this.session.kickoff(user.uid)
+                }
+            })
         },
 
         screenShare() {
@@ -304,6 +339,7 @@ export default {
         },
 
         userName(user) {
+            let name = '';
             if (user.groupAlias) {
                 name = user.groupAlias;
             } else if (user.friendAlias) {
@@ -483,6 +519,7 @@ footer {
     align-items: center;
     border-radius: 3px;
     border: 1px dashed #d6d6d6;
+    margin-right: 10px;
 }
 
 .participant-user {
@@ -520,5 +557,29 @@ footer {
     height: 40px;
     border-radius: 3px;
     margin-right: 10px;
+}
+
+.avatar-container {
+    position: relative;
+}
+
+.avatar-container .icon {
+    width: 40px;
+    height: 40px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    border-radius: 3px;
+    border: 1px dashed #d6d6d6;
+    margin-right: 10px;
+}
+
+.avatar-container:hover .icon {
+    display: flex;
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: white;
+    background: #e0d6d6d6;
 }
 </style>
