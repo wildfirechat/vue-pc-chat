@@ -1,22 +1,16 @@
 import localStorageEmitter from "./localStorageEmitter";
-import ConferenceInviteMessageContent from "../wfc/av/messages/conferenceInviteMessageContent";
 
+// 里面是一些通用的ipc方法，可以在不同的地方复用
 export default class IpcSub {
     static getUserInfos(userIds, groupId = '', callback) {
         localStorageEmitter.invoke('getUserInfos', {userIds: userIds, groupId: groupId}, callback)
     }
 
-    static getUserId(callbak) {
-        localStorageEmitter.invoke('getUserId', {}, callbak)
+    static getUserId(callback) {
+        localStorageEmitter.invoke('getUserId', {}, callback)
     }
 
     static sendMessage(conversation, messageContent) {
         localStorageEmitter.send('sendMessage', {conversation: conversation, messagePayload: messageContent.encode()});
-    }
-
-    static inviteConferenceParticipant(callSession) {
-        let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, callSession.host, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.defaultAudience, callSession.advance, callSession.pin)
-        console.log('sss', callSession, inviteMessageContent)
-        localStorageEmitter.send('inviteConferenceParticipant', {messagePayload: inviteMessageContent.encode()})
     }
 }

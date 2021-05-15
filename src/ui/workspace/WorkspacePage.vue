@@ -114,7 +114,7 @@ export default {
             // }
 
             // localStorageEmitter.send('once', 'hello world')
-            localStorageEmitter.send('pick-conversation', 'hello world')
+            // localStorageEmitter.send('pick-conversation', 'hello world')
         },
 
         onTabActive() {

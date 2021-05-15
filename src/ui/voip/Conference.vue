@@ -153,6 +153,9 @@ import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
 import ClickOutside from 'vue-click-outside'
 import UserCardView from "../main/user/UserCardView";
+import ConferenceInviteMessageContent from "../../wfc/av/messages/conferenceInviteMessageContent";
+import localStorageEmitter from "../../ipc/localStorageEmitter";
+import {isElectron, remote} from "../../platform";
 
 export default {
     name: 'Conference',
@@ -307,7 +310,11 @@ export default {
         },
 
         invite() {
-            IpcSub.inviteConferenceParticipant(this.session)
+            //IpcSub.inviteConferenceParticipant(this.session)
+            let callSession = this.session;
+            let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, callSession.host, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.defaultAudience, callSession.advance, callSession.pin)
+            localStorageEmitter.send('inviteConferenceParticipant', {messagePayload: inviteMessageContent.encode()})
+            this.showParticipantList = false;
         },
 
         requestChangeMode(user) {
@@ -386,6 +393,17 @@ export default {
     mounted() {
         avenginekit.setup();
         this.setupSessionCallback();
+
+        localStorageEmitter.on('inviteConferenceParticipantDone', (ev, args) => {
+            if (isElectron()) {
+                remote.getCurrentWindow().focus();
+            }
+        })
+        localStorageEmitter.on('inviteConferenceParticipantCancel', (ev, args) => {
+            if (isElectron()) {
+                remote.getCurrentWindow().focus();
+            }
+        })
     },
 
     destroyed() {
