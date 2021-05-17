@@ -388,6 +388,14 @@ export class WfcManager {
     }
 
     /**
+     * 好友列表
+     * @returns {[Friend]}
+     */
+    getFriendList(fresh = false) {
+        return impl.getFriendList(fresh);
+    }
+
+    /**
      * 获取好友别名
      * @param {string} userId
      * @returns {string}
@@ -419,15 +427,17 @@ export class WfcManager {
      * @param {number} groupType 群类型，可参考 {@link GroupType }
      * @param {string} name 群名称
      * @param {string} portrait 群头像的链接
+     * @param {string} groupExtra 群组扩展信息
      * @param {[string]} memberIds 群成员id
+     * @param {string} memberExtra 群组成员扩展信息
      * @param {[number]} lines 会话线路，默认传[0]即可
      * @param {CreateGroupNotification} notifyContent 通知信息，默认传null，服务端会生成默认通知
      * @param {function (string)} successCB 回调通知群id
      * @param {function (number)} failCB
      * @returns {Promise<void>}
      */
-    async createGroup(groupId, groupType, name, portrait, memberIds = [], lines = [0], notifyContent, successCB, failCB) {
-        impl.createGroup(groupId, groupType, name, portrait, memberIds, lines, notifyContent, successCB, failCB);
+    async createGroup(groupId, groupType, name, portrait, groupExtra, memberIds = [], memberExtra = '', lines = [0], notifyContent, successCB, failCB) {
+        impl.createGroup(groupId, groupType, name, portrait, groupExtra, memberIds, memberExtra, lines, notifyContent, successCB, failCB);
     }
 
     /**
@@ -470,13 +480,14 @@ export class WfcManager {
      * 添加群成员
      * @param  {string} groupId 群组id
      * @param {[string]} memberIds 新添加的群成员id
+     * @param  {string} extra 群成员扩展信息
      * @param {[number]} notifyLines
      * @param {AddGroupMemberNotification} notifyMessageContent
      * @param successCB
      * @param failCB
      */
-    addGroupMembers(groupId, memberIds, notifyLines, notifyMessageContent, successCB, failCB) {
-        impl.addGroupMembers(groupId, memberIds, notifyLines, notifyMessageContent, successCB, failCB);
+    addGroupMembers(groupId, memberIds, extra, notifyLines, notifyMessageContent, successCB, failCB) {
+        impl.addGroupMembers(groupId, memberIds, extra, notifyLines, notifyMessageContent, successCB, failCB);
     }
 
     /**
@@ -1082,12 +1093,13 @@ export class WfcManager {
      * 发送好友请求
      * @param {string} userId 目标用户id
      * @param {string} reason 发送好友请求的原因
+     * @param {string} extra 请求的扩展信息
      * @param {function ()} successCB
      * @param {function (number)} failCB
      * @returns {Promise<void>}
      */
-    async sendFriendRequest(userId, reason, successCB, failCB) {
-        impl.sendFriendRequest(userId, reason, successCB, failCB);
+    async sendFriendRequest(userId, reason, extra, successCB, failCB) {
+        impl.sendFriendRequest(userId, reason, extra, successCB, failCB);
     }
 
     /**
