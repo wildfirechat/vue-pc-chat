@@ -1193,7 +1193,7 @@ let store = {
                 wfc.uploadMedia('', groupPortrait, MessageContentMediaType.Portrait,
                     (remoteUrl) => {
                         console.log('upload media success', remoteUrl);
-                        wfc.createGroup(null, GroupType.Restricted, groupName, remoteUrl, groupMemberIds, [0], null,
+                        wfc.createGroup(null, GroupType.Restricted, groupName, remoteUrl, null, groupMemberIds, null, [0], null,
                             (groupId) => {
                                 this._loadDefaultConversationList();
                                 let conversation = new Conversation(ConversationType.Group, groupId, 0)
