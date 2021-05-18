@@ -112,6 +112,7 @@ let store = {
             isMainWindow: false,
             uploadBigFiles: [],
             wfc: wfc,
+            config: Config,
         },
     },
 
