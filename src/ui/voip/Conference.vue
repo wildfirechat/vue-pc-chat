@@ -9,52 +9,131 @@
     <div class="flex-column flex-align-center flex-justify-center">
         <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
 
-        <div v-if="session" class="container">
-            <section>
-                <!--audio-->
-                <div class="content-container">
-                    <!--self-->
-                    <div v-if="!session.audience" class="participant-item">
-                        <div v-if="audioOnly || status !== 4 || !selfUserInfo._stream"
-                             class="flex-column flex-justify-center flex-align-center">
-                            <img class="avatar" :src="selfUserInfo.portrait">
-                            <video v-if="audioOnly && selfUserInfo._stream"
-                                   class="hidden-video"
+        <div v-if="session" class="conference-container">
+            <div class="conference-main-content-container">
+                <!--main-->
+                <div v-if="!audioOnly" style="width: 100%; height: 100%">
+                    <section class="content-container" ref="contentContainer">
+                        <!--self-->
+                        <div v-if="!session.audience" class="participant-item">
+                            <div v-if="status !== 4 || !selfUserInfo._stream"
+                                 class="flex-column flex-justify-center flex-align-center">
+                                <img class="avatar" :src="selfUserInfo.portrait">
+                            </div>
+                            <video v-else
+                                   class="video"
+                                   ref="localVideo"
                                    :srcObject.prop="selfUserInfo._stream"
+                                   playsInline
                                    muted
-                                   playsInline autoPlay/>
-                            <p>我</p>
+                                   autoPlay/>
+                            <div class="info-container">
+                                <i class="icon-ion-person"></i>
+                                <i class="icon-ion-android-microphone"></i>
+                                <p>wfc</p>
+                            </div>
                         </div>
-                        <video v-else
-                               class="video"
-                               ref="localVideo"
-                               :srcObject.prop="selfUserInfo._stream"
-                               playsInline
-                               muted
-                               autoPlay/>
-                    </div>
 
-                    <!--participants-->
-                    <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
-                         :key="participant.uid"
-                         class="participant-item">
-                        <div v-if="audioOnly || status !== 4 || !participant._stream"
-                             class="flex-column flex-justify-center flex-align-center">
-                            <img class="avatar" :src="participant.portrait" :alt="participant">
-                            <video v-if="audioOnly && participant._stream"
-                                   class="hidden-video"
+                        <!--participants-->
+                        <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
+                             :key="participant.uid"
+                             class="participant-item">
+                            <div v-if="status !== 4 || !participant._stream"
+                                 class="flex-column flex-justify-center flex-align-center">
+                                <img class="avatar" :src="participant.portrait" :alt="participant">
+                            </div>
+                            <video v-else
+                                   class="video"
                                    :srcObject.prop="participant._stream"
-                                   playsInline autoPlay/>
-                            <p class="single-line">{{ userName(participant) }}</p>
+                                   playsInline
+                                   autoPlay/>
+                            <div class="info-container">
+                                <i class="icon-ion-person"></i>
+                                <i class="icon-ion-android-microphone"></i>
+                                <p>wfc</p>
+                            </div>
                         </div>
-                        <video v-else
-                               class="video"
-                               :srcObject.prop="participant._stream"
-                               playsInline
-                               autoPlay/>
-                    </div>
+                    </section>
                 </div>
-            </section>
+                <div v-else>
+                    <section class="content-container">
+                        <!--self-->
+                        <div v-if="!session.audience" class="participant-item">
+                            <div v-if="status !== 4 || !selfUserInfo._stream"
+                                 class="flex-column flex-justify-center flex-align-center">
+                                <img class="avatar" :src="selfUserInfo.portrait">
+                                <video v-if="audioOnly && selfUserInfo._stream"
+                                       class="hidden-video"
+                                       :srcObject.prop="selfUserInfo._stream"
+                                       muted
+                                       playsInline autoPlay/>
+                                <p>我</p>
+                            </div>
+                            <div class="info-container">
+                                <i class="icon-ion-person"></i>
+                                <i class="icon-ion-android-microphone"></i>
+                                <p>wfc</p>
+                            </div>
+                        </div>
+                        <!--participants-->
+                        <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
+                             :key="participant.uid"
+                             class="participant-item">
+                            <div v-if="audioOnly || status !== 4 || !participant._stream"
+                                 class="flex-column flex-justify-center flex-align-center">
+                                <img class="avatar" :src="participant.portrait" :alt="participant">
+                                <video v-if="audioOnly && participant._stream"
+                                       class="hidden-video"
+                                       :srcObject.prop="participant._stream"
+                                       playsInline autoPlay/>
+                                <p class="single-line">{{ userName(participant) }}</p>
+                            </div>
+                            <div class="info-container">
+                                <i class="icon-ion-person"></i>
+                                <i class="icon-ion-android-microphone"></i>
+                                <p>wfc</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                <!--actions-->
+                <footer>
+                    <div class="duration-action-container">
+                        <p>{{ duration }}</p>
+                        <div class="action-container">
+                            <div class="action">
+                                <img v-if="!session.muted" @click="mute" class="action-img"
+                                     src='@/assets/images/av_conference_audio.png'/>
+                                <img v-else @click="mute" class="action-img"
+                                     src='@/assets/images/av_conference_audio_mute.png'/>
+                                <p>静音</p>
+                            </div>
+                            <div class="action">
+                                <img v-if="!session.videoMuted" @click="mute" class="action-img"
+                                     src='@/assets/images/av_conference_video.png'/>
+                                <img v-else @click="mute" class="action-img"
+                                     src='@/assets/images/av_conference_video_mute.png'/>
+                                <p>视频</p>
+                            </div>
+                            <div v-if="!audioOnly" class="action">
+                                <img @click="screenShare" class="action-img"
+                                     src='@/assets/images/av_conference_screen_sharing.png'/>
+                                <p>共享屏幕</p>
+                            </div>
+                            <div class="action">
+                                <img @click.stop="members" class="action-img"
+                                     src='@/assets/images/av_conference_members.png'/>
+                                <p>管理</p>
+                            </div>
+                            <div class="action">
+                                <img @click="hangup" class="action-img"
+                                     src='@/assets/images/av_conference_end_call.png'/>
+                                <p>结束</p>
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            </div>
 
             <div class="participant-list-container"
                  v-if="showParticipantList"
@@ -105,43 +184,6 @@
                     </li>
                 </ul>
             </div>
-
-            <!--actions-->
-            <footer>
-                <div class="duration-action-container">
-                    <p>{{ duration }}</p>
-                    <div class="action-container">
-                        <div class="action">
-                            <img v-if="!session.muted" @click="mute" class="action-img"
-                                 src='@/assets/images/av_conference_audio.png'/>
-                            <img v-else @click="mute" class="action-img"
-                                 src='@/assets/images/av_conference_audio_mute.png'/>
-                            <p>静音</p>
-                        </div>
-                        <div class="action">
-                            <img v-if="!session.videoMuted" @click="mute" class="action-img"
-                                 src='@/assets/images/av_conference_video.png'/>
-                            <img v-else @click="mute" class="action-img"
-                                 src='@/assets/images/av_conference_video_mute.png'/>
-                            <p>视频</p>
-                        </div>
-                        <div v-if="!audioOnly" class="action">
-                            <img @click="screenShare" class="action-img"
-                                 src='@/assets/images/av_conference_screen_sharing.png'/>
-                            <p>共享屏幕</p>
-                        </div>
-                        <div class="action">
-                            <img @click.stop="members" class="action-img"
-                                 src='@/assets/images/av_conference_members.png'/>
-                            <p>管理</p>
-                        </div>
-                        <div class="action">
-                            <img @click="hangup" class="action-img" src='@/assets/images/av_conference_end_call.png'/>
-                            <p>结束</p>
-                        </div>
-                    </div>
-                </div>
-            </footer>
         </div>
     </div>
 </template>
@@ -386,8 +428,38 @@ export default {
         },
     },
 
+    watch: {
+        participantUserInfos(infos) {
+            console.log('jojojojjjj')
+            let count = infos.length + 1;
+            let width = '100%';
+            let height = '100%';
+            if (!this.audioOnly) {
+                if (count <= 1) {
+                    width = '100%';
+                    height = '100%';
+                } else if (count <= 4) {
+                    width = '50%';
+                    height = '45%';
+                } else if (count <= 9) {
+                    width = '33%';
+                    height = '33%'
+                }
+            } else {
+
+            }
+            let root = document.documentElement;
+            this.$refs.contentContainer.style.setProperty('--participant-item-width', width);
+            this.$refs.contentContainer.style.setProperty('--participant-item-height', height);
+        }
+    },
+
     directives: {
         ClickOutside
+    },
+
+    created() {
+        document.title = '在线会议';
     },
 
     mounted() {
@@ -416,32 +488,53 @@ export default {
 
 <style lang="css" scoped>
 
-.container {
+.conference-container {
     width: 100vw;
     height: 100vh;
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
+}
+
+.conference-main-content-container {
+    width: 100%;
+    height: 100%;
+    /*flex: 1;*/
+    /*flex-direction: column;*/
+    /*justify-content: space-between;*/
+    /*align-items: center;*/
 }
 
 .content-container {
     width: 100%;
+    height: 100%;
     position: relative;
     display: flex;
+    flex: 1;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+
+    --participant-item-width: 100%;
+    --participant-item-height: 100%;
 }
 
 .participant-item {
     display: flex;
-    width: 200px;
-    height: 220px;
+    width: var(--participant-item-width);
+    height: var(--participant-item-height);
     /*background-color: rebeccapurple;*/
 
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.participant-item .info-container {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    display: flex;
+    background: red;
+    padding: 10px;
 }
 
 .participant-item > video {
@@ -461,8 +554,19 @@ export default {
     color: white;
 }
 
+.conference-main-content-container:hover footer {
+    width: 100%;
+    display: flex;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    justify-content: center;
+    align-items: center;
+}
+
 footer {
     height: 160px;
+    display: none;
 }
 
 .duration-action-container {
@@ -493,6 +597,7 @@ footer {
     align-items: center;
     font-size: 12px;
     color: white;
+    padding: 10px 25px;
 }
 
 .avatar {
@@ -509,9 +614,6 @@ footer {
     display: none;
     width: 250px;
     height: 100%;
-    top: 0;
-    right: 0;
-    position: absolute;
     background-color: #ffffffe5;
     backdrop-filter: blur(6px);
     border-left: 1px solid #e6e6e6;
