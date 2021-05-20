@@ -498,6 +498,7 @@ export default {
     width: 100vw;
     height: 100vh;
     display: flex;
+    background: black;
 }
 
 .conference-main-content-container {
@@ -536,6 +537,7 @@ export default {
     justify-content: center;
     align-items: center;
     border: 1px solid black;
+    background: #2d3033;
 }
 
 .participant-item .info-container {
@@ -621,8 +623,9 @@ footer {
 }
 
 .avatar {
-    width: 200px;
-    height: 200px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50px;
 }
 
 .action-img {
