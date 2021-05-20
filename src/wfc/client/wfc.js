@@ -1052,6 +1052,14 @@ export class WfcManager {
     }
 
     /**
+     * 设置消息本地扩展信息
+     * @param {number} messageId 消息id，不是消息uid!
+     */
+    setMessageLocalExtra(messageId) {
+        impl.setMessageLocalExtra(messageId);
+    }
+
+    /**
      * 判断是否是好友
      * @param {string} userId 用户id
      * @returns {boolean}
