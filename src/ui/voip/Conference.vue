@@ -16,7 +16,7 @@
                     <section class="content-container" ref="contentContainer">
                         <!--self-->
                         <div v-if="!session.audience" class="participant-item">
-                            <div v-if="status !== 4 || !selfUserInfo._stream"
+                            <div v-if="status !== 4 || !selfUserInfo._stream || selfUserInfo._isVideoMuted"
                                  class="flex-column flex-justify-center flex-align-center">
                                 <img class="avatar" :src="selfUserInfo.portrait">
                             </div>
@@ -29,7 +29,6 @@
                                    autoPlay/>
                             <div class="info-container">
                                 <i v-if="selfUserInfo._isHost" class="icon-ion-person"></i>
-                                <i v-if="!selfUserInfo._isVideoMuted" class="icon-ion-ios-videocam"></i>
                                 <div>{{ userName(selfUserInfo) }}</div>
                             </div>
                         </div>
@@ -38,7 +37,7 @@
                         <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
                              :key="participant.uid"
                              class="participant-item">
-                            <div v-if="status !== 4 || !participant._stream"
+                            <div v-if="status !== 4 || !participant._stream || participant._isVideoMuted"
                                  class="flex-column flex-justify-center flex-align-center">
                                 <img class="avatar" :src="participant.portrait" :alt="participant">
                             </div>
@@ -109,9 +108,9 @@
                                 <p>静音</p>
                             </div>
                             <div class="action">
-                                <img v-if="!session.videoMuted" @click="mute" class="action-img"
+                                <img v-if="!session.videoMuted" @click="muteVideo" class="action-img"
                                      src='@/assets/images/av_conference_video.png'/>
-                                <img v-else @click="mute" class="action-img"
+                                <img v-else @click="muteVideo" class="action-img"
                                      src='@/assets/images/av_conference_video_mute.png'/>
                                 <p>视频</p>
                             </div>
@@ -246,6 +245,7 @@ export default {
                 this.selfUserInfo = selfUserInfo;
                 this.selfUserInfo._isHost = session.host === selfUserInfo.uid;
                 this.selfUserInfo._audience = session.audience;
+                this.selfUserInfo._isVideoMuted = session.videoMuted;
                 this.initiatorUserInfo = initiatorUserInfo;
                 this.participantUserInfos = [];
 
@@ -343,6 +343,12 @@ export default {
 
         mute() {
             this.session.triggerMicrophone();
+        },
+
+        muteVideo() {
+            let enable = this.session.videoMuted ? true : false;
+            this.selfUserInfo._isVideoMuted = !enable;
+            this.session.setVideoEnabled(enable)
         },
 
         down2voice() {
