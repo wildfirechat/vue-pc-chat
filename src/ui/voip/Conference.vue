@@ -28,9 +28,9 @@
                                    muted
                                    autoPlay/>
                             <div class="info-container">
-                                <i class="icon-ion-person"></i>
-                                <i class="icon-ion-android-microphone"></i>
-                                <p>wfc</p>
+                                <i v-if="selfUserInfo._isHost" class="icon-ion-person"></i>
+                                <i v-if="!selfUserInfo._isVideoMuted" class="icon-ion-ios-videocam"></i>
+                                <div>{{ userName(selfUserInfo) }}</div>
                             </div>
                         </div>
 
@@ -48,9 +48,9 @@
                                    playsInline
                                    autoPlay/>
                             <div class="info-container">
-                                <i class="icon-ion-person"></i>
-                                <i class="icon-ion-android-microphone"></i>
-                                <p>wfc</p>
+                                <i v-if="participant._isHost" class="icon-ion-person"></i>
+                                <i v-if="!participant._isVideoMuted" class="icon-ion-ios-videocam"></i>
+                                <div>{{ userName(participant) }}</div>
                             </div>
                         </div>
                     </section>
@@ -72,7 +72,7 @@
                             <div class="info-container">
                                 <i class="icon-ion-person"></i>
                                 <i class="icon-ion-android-microphone"></i>
-                                <p>wfc</p>
+                                <div>wfc</div>
                             </div>
                         </div>
                         <!--participants-->
@@ -89,9 +89,9 @@
                                 <p class="single-line">{{ userName(participant) }}</p>
                             </div>
                             <div class="info-container">
-                                <i class="icon-ion-person"></i>
-                                <i class="icon-ion-android-microphone"></i>
-                                <p>wfc</p>
+                                <i v-if="participant._isHost" class="icon-ion-person"></i>
+                                <i class="icon-ion-camera"></i>
+                                <div class="name">wfc</div>
                             </div>
                         </div>
                     </section>
@@ -118,7 +118,7 @@
                             <div v-if="!audioOnly" class="action">
                                 <img @click="screenShare" class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing.png'/>
-                                <p>共享屏幕</p>
+                                <p class="single-line">共享屏幕</p>
                             </div>
                             <div class="action">
                                 <img @click.stop="members" class="action-img"
@@ -281,6 +281,7 @@ export default {
                     userInfo._stream = null;
                     userInfo._isAudience = this.session.getPeerConnectionClient(userId).audience;
                     userInfo._isHost = this.session.host === userId;
+                    userInfo._isVideoMuted = this.session.getPeerConnectionClient(userId).videoMuted;
                     this.participantUserInfos.push(userInfo);
                 })
             }
@@ -296,7 +297,12 @@ export default {
             }
 
             sessionCallback.didVideoMuted = (userId, muted) => {
-                this.muted = muted;
+                console.log('did VideoMuted', userId, muted)
+                this.participantUserInfos.forEach(u => {
+                    if (u.uid === userId) {
+                        u._isVideoMuted = muted;
+                    }
+                })
             };
 
             sessionCallback.onRequestChangeMode = (userId, audience) => {
@@ -497,6 +503,7 @@ export default {
 .conference-main-content-container {
     width: 100%;
     height: 100%;
+    position: relative;
     /*flex: 1;*/
     /*flex-direction: column;*/
     /*justify-content: space-between;*/
@@ -512,6 +519,7 @@ export default {
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    align-content: center;
 
     --participant-item-width: 100%;
     --participant-item-height: 100%;
@@ -519,6 +527,7 @@ export default {
 
 .participant-item {
     display: flex;
+    position: relative;
     width: var(--participant-item-width);
     height: var(--participant-item-height);
     /*background-color: rebeccapurple;*/
@@ -526,6 +535,7 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    border: 1px solid black;
 }
 
 .participant-item .info-container {
@@ -533,8 +543,22 @@ export default {
     left: 0;
     bottom: 0;
     display: flex;
-    background: red;
-    padding: 10px;
+    background: gray;
+    border-radius: 1px;
+    padding: 5px 10px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.info-container * {
+    margin: 0 5px;
+}
+
+.info-container .name {
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
 }
 
 .participant-item > video {
@@ -556,16 +580,15 @@ export default {
 
 .conference-main-content-container:hover footer {
     width: 100%;
-    display: flex;
+    display: block;
     position: absolute;
     left: 0;
     bottom: 0;
-    justify-content: center;
-    align-items: center;
+    background: gray;
 }
 
 footer {
-    height: 160px;
+    /*height: 100px;*/
     display: none;
 }
 
@@ -578,16 +601,13 @@ footer {
 
 .duration-action-container p {
     color: white;
-    padding: 10px 0;
+    padding: 5px 0;
 }
 
 .action-container {
-    width: 100%;
-    bottom: 0;
-    left: 0;
+    /*width: 100%;*/
     display: flex;
-    justify-content: space-around;
-    padding-bottom: 20px;
+    justify-content: center;
 }
 
 .action-container .action {
@@ -597,7 +617,7 @@ footer {
     align-items: center;
     font-size: 12px;
     color: white;
-    padding: 10px 25px;
+    padding: 0 25px 0 25px;
 }
 
 .avatar {
@@ -606,8 +626,8 @@ footer {
 }
 
 .action-img {
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
 }
 
 .participant-list-container {
