@@ -12,10 +12,11 @@
         <div v-if="session" class="conference-container">
             <div class="conference-main-content-container">
                 <!--main-->
+                <!--video-->
                 <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                    <section class="content-container" ref="contentContainer">
+                    <section class="content-container video" ref="contentContainer">
                         <!--self-->
-                        <div v-if="!session.audience" class="participant-item"
+                        <div v-if="!session.audience" class="participant-video-item"
                              v-bind:class="{highlight: selfUserInfo._volume > 0}">
                             <div v-if="status !== 4 || !selfUserInfo._stream || selfUserInfo._isVideoMuted"
                                  class="flex-column flex-justify-center flex-align-center">
@@ -37,7 +38,7 @@
                         <!--participants-->
                         <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
                              :key="participant.uid"
-                             class="participant-item"
+                             class="participant-video-item"
                              v-bind:class="{highlight: participant._volume > 0}"
                         >
                             <div v-if="status !== 4 || !participant._stream || participant._isVideoMuted"
@@ -57,44 +58,46 @@
                         </div>
                     </section>
                 </div>
-                <div v-else>
-                    <section class="content-container">
+                <!--audio-->
+                <div v-else style="width: 100%; height: 100%">
+                    <div
+                        style="background: white; height: 50px; display: flex; justify-content: center; align-items: center">
+                        <div
+                            style="background: #daeafe; width: 300px; height: 40px; padding: 0 5px; border-radius: 3px; display: flex; flex-direction: column; justify-content: center">
+                            <p class="single-line"> {{ '正在讲话: ' + speakingUserName }}</p>
+                        </div>
+                    </div>
+                    <section class="content-container audio">
                         <!--self-->
-                        <div v-if="!session.audience" class="participant-item">
-                            <div v-if="status !== 4 || !selfUserInfo._stream"
-                                 class="flex-column flex-justify-center flex-align-center">
-                                <img class="avatar" :src="selfUserInfo.portrait">
-                                <video v-if="audioOnly && selfUserInfo._stream"
-                                       class="hidden-video"
-                                       :srcObject.prop="selfUserInfo._stream"
-                                       muted
-                                       playsInline autoPlay/>
-                                <p>我</p>
+                        <div v-if="!session.audience" class="participant-audio-item">
+                            <video v-if="audioOnly && selfUserInfo._stream"
+                                   class="hidden-video"
+                                   :srcObject.prop="selfUserInfo._stream"
+                                   muted
+                                   playsInline autoPlay/>
+                            <div style="position: relative">
+                                <img class="avatar"
+                                     v-bind:class="{highlight:selfUserInfo._volume > 0}"
+                                     :src="selfUserInfo.portrait">
+                                <i v-if="selfUserInfo._isHost" class="host-indicator icon-ion-person"></i>
                             </div>
-                            <div class="info-container">
-                                <i class="icon-ion-person"></i>
-                                <i class="icon-ion-android-microphone"></i>
-                                <div>wfc</div>
-                            </div>
+                            <p class="single-line">{{ userName(selfUserInfo) }}</p>
                         </div>
                         <!--participants-->
                         <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
                              :key="participant.uid"
-                             class="participant-item">
-                            <div v-if="audioOnly || status !== 4 || !participant._stream"
-                                 class="flex-column flex-justify-center flex-align-center">
-                                <img class="avatar" :src="participant.portrait" :alt="participant">
-                                <video v-if="audioOnly && participant._stream"
-                                       class="hidden-video"
-                                       :srcObject.prop="participant._stream"
-                                       playsInline autoPlay/>
-                                <p class="single-line">{{ userName(participant) }}</p>
+                             class="participant-audio-item">
+                            <video v-if="audioOnly && participant._stream"
+                                   class="hidden-video"
+                                   :srcObject.prop="participant._stream"
+                                   playsInline autoPlay/>
+                            <div style="position: relative">
+                                <img class="avatar"
+                                     v-bind:class="{highlight:participant._volume > 0}"
+                                     :src="participant.portrait" :alt="participant">
+                                <i v-if="participant._isHost" class="host-indicator icon-ion-person"></i>
                             </div>
-                            <div class="info-container">
-                                <i v-if="participant._isHost" class="icon-ion-person"></i>
-                                <i class="icon-ion-camera"></i>
-                                <div class="name">wfc</div>
-                            </div>
+                            <p class="single-line">{{ userName(participant) }}</p>
                         </div>
                     </section>
                 </div>
@@ -456,11 +459,26 @@ export default {
         computedParticipants() {
             return [...this.participantUserInfos, this.selfUserInfo];
         },
+
+        speakingUserName() {
+            let maxVolume = this.selfUserInfo._volume;
+            let speakingUserInfo = this.selfUserInfo;
+            this.participantUserInfos.forEach(u => {
+                if (u._volume > maxVolume) {
+                    speakingUserInfo = u;
+                    maxVolume = u._volume;
+                }
+            })
+            if (!maxVolume) {
+                return '';
+            }
+
+            return this.userName(speakingUserInfo);
+        }
     },
 
     watch: {
         participantUserInfos(infos) {
-            console.log('jojojojjjj')
             let count = infos.length + 1;
             let width = '100%';
             let height = '100%';
@@ -474,13 +492,18 @@ export default {
                 } else if (count <= 9) {
                     width = '33%';
                     height = '33%'
+                } else {
+                    // max 16
+                    width = '25%';
+                    height = '25%'
                 }
             } else {
 
             }
-            let root = document.documentElement;
-            this.$refs.contentContainer.style.setProperty('--participant-item-width', width);
-            this.$refs.contentContainer.style.setProperty('--participant-item-height', height);
+            if (!this.audioOnly) {
+                this.$refs.contentContainer.style.setProperty('--participant-video-item-width', width);
+                this.$refs.contentContainer.style.setProperty('--participant-video-item-height', height);
+            }
         }
     },
 
@@ -522,7 +545,6 @@ export default {
     width: 100vw;
     height: 100vh;
     display: flex;
-    background: black;
 }
 
 .conference-main-content-container {
@@ -546,15 +568,24 @@ export default {
     align-items: center;
     align-content: center;
 
-    --participant-item-width: 100%;
-    --participant-item-height: 100%;
+    --participant-video-item-width: 100%;
+    --participant-video-item-height: 100%;
 }
 
-.participant-item {
+.content-container.video {
+    background: black;
+}
+
+.content-container.audio {
+    background: white;
+    height: calc(100% - 50px);
+}
+
+.participant-video-item {
     display: flex;
     position: relative;
-    width: var(--participant-item-width);
-    height: var(--participant-item-height);
+    width: var(--participant-video-item-width);
+    height: var(--participant-video-item-height);
     /*background-color: rebeccapurple;*/
 
     flex-direction: column;
@@ -564,11 +595,11 @@ export default {
     background: #2d3033;
 }
 
-.participant-item.highlight {
+.participant-video-item.highlight {
     border: 2px solid #1FCA6A;
 }
 
-.participant-item .info-container {
+.participant-video-item .info-container {
     position: absolute;
     left: 0;
     bottom: 0;
@@ -591,7 +622,7 @@ export default {
     text-align: center;
 }
 
-.participant-item > video {
+.participant-video-item > video {
     max-width: 100%;
     max-height: 100%;
     width: 100%;
@@ -603,9 +634,35 @@ export default {
     height: 0;
 }
 
-.participant-item p {
+.participant-video-item p {
     max-height: 20px;
     color: white;
+}
+
+.participant-audio-item {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 40px;
+    justify-content: center;
+    align-items: center;
+}
+
+.participant-audio-item .host-indicator {
+    width: 18px;
+    height: 18px;
+    position: absolute;
+    left: 50%;
+    color: white;
+    text-align: center;
+    vertical-align: center;
+    border-radius: 9px;
+    bottom: 0;
+    background: #FD802E;
+    transform: translateX(-50%) translateY(25%);
+}
+
+.participant-audio-item p {
+    padding-top: 8px;
 }
 
 .conference-main-content-container:hover footer {
@@ -651,9 +708,13 @@ footer {
 }
 
 .avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50px;
+    width: 90px;
+    height: 90px;
+    border-radius: 45px;
+}
+
+.avatar.highlight{
+    border: 2px solid #1FCA6A;
 }
 
 .action-img {
