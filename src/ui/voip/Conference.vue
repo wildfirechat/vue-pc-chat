@@ -15,7 +15,8 @@
                 <div v-if="!audioOnly" style="width: 100%; height: 100%">
                     <section class="content-container" ref="contentContainer">
                         <!--self-->
-                        <div v-if="!session.audience" class="participant-item">
+                        <div v-if="!session.audience" class="participant-item"
+                             v-bind:class="{highlight: selfUserInfo._volume > 0}">
                             <div v-if="status !== 4 || !selfUserInfo._stream || selfUserInfo._isVideoMuted"
                                  class="flex-column flex-justify-center flex-align-center">
                                 <img class="avatar" :src="selfUserInfo.portrait">
@@ -36,7 +37,9 @@
                         <!--participants-->
                         <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
                              :key="participant.uid"
-                             class="participant-item">
+                             class="participant-item"
+                             v-bind:class="{highlight: participant._volume > 0}"
+                        >
                             <div v-if="status !== 4 || !participant._stream || participant._isVideoMuted"
                                  class="flex-column flex-justify-center flex-align-center">
                                 <img class="avatar" :src="participant.portrait" :alt="participant">
@@ -246,6 +249,7 @@ export default {
                 this.selfUserInfo._isHost = session.host === selfUserInfo.uid;
                 this.selfUserInfo._audience = session.audience;
                 this.selfUserInfo._isVideoMuted = session.videoMuted;
+                this.selfUserInfo._volume = 0;
                 this.initiatorUserInfo = initiatorUserInfo;
                 this.participantUserInfos = [];
 
@@ -282,6 +286,7 @@ export default {
                     userInfo._isAudience = this.session.getPeerConnectionClient(userId).audience;
                     userInfo._isHost = this.session.host === userId;
                     userInfo._isVideoMuted = this.session.getPeerConnectionClient(userId).videoMuted;
+                    userInfo._volume = 0;
                     this.participantUserInfos.push(userInfo);
                 })
             }
@@ -328,6 +333,18 @@ export default {
                         u._isAudience = audience;
                     }
                 })
+            };
+
+            sessionCallback.didReportAudioVolume = (userId, volume) => {
+                if (userId === this.selfUserInfo.uid) {
+                    this.selfUserInfo._volume = volume;
+                } else {
+                    this.participantUserInfos.forEach(u => {
+                        if (u.uid === userId) {
+                            u._volume = volume;
+                        }
+                    })
+                }
             }
 
             avenginekit.sessionCallback = sessionCallback;
@@ -544,6 +561,10 @@ export default {
     align-items: center;
     border: 1px solid black;
     background: #2d3033;
+}
+
+.participant-item.highlight {
+    border: 2px solid #1FCA6A;
 }
 
 .participant-item .info-container {

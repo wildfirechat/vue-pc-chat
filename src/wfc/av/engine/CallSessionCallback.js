@@ -68,6 +68,11 @@ export default class CallSessionCallback {
 
     }
 
+    /**
+     * 音量通知
+     * @param {string} userId
+     * @param {number} volume 0 -1
+     */
     didReportAudioVolume(userId, volume) {
 
     }
