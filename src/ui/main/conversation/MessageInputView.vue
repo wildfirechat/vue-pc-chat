@@ -340,6 +340,10 @@ export default {
             }
         },
 
+        startConference(){
+            // TODO
+        },
+
         startGroupVoip(isAudioOnly) {
             let beforeOpen = (event) => {
                 console.log('Opening...')

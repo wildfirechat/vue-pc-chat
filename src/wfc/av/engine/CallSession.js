@@ -15,6 +15,7 @@ export default class CallSession {
     defaultAudience = false;
     audience = false;
     conference = false;
+    advance = false;
     host;
     title;
     desc;
@@ -107,6 +108,35 @@ export default class CallSession {
      * @return {PeerConnectionClient}
      */
     getPeerConnectionClient(userId) {
+
+    }
+
+
+    /**
+     * 仅会议时有效
+     * 请求参与者切换听众或互动者角色
+     * @param {string} userId
+     * @param {boolean} audience 切换为听众
+     */
+    requestChangeMode(userId, audience) {
+
+    }
+
+    /**
+     * 仅会议时有效
+     * 切换听众或互动者角色
+     * @param {boolean} audience 是否为听众
+     */
+    switchAudience(audience) {
+
+    }
+
+    /**
+     * 仅会议时有效
+     * 会议踢人
+     * @param {string} userId
+     */
+    kickoff(userId) {
 
     }
 }

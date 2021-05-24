@@ -8,14 +8,11 @@ import ConversationType from "../../model/conversationType";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
 import MessageConfig from "../../client/messageConfig";
-import CallByeMessageContent from "../messages/callByeMessageContent";
 import DetectRTC from 'detectrtc';
 import Config from "../../../config";
 import {longValue, numberValue} from '../../util/longUtil'
-import CallEndReason from './callEndReason'
 import Conversation from "../../../wfc/model/conversation";
 
-const path = require('path');
 
 // main window renderer process -> voip window renderer process
 // voip window renderer process -> main process -> main window renderer process
@@ -23,6 +20,7 @@ export class AvEngineKitProxy {
     queueEvents = [];
     callWin;
 
+    conference = false;
     conversation;
     callId;
     inviteMessageUid;
@@ -71,7 +69,7 @@ export class AvEngineKitProxy {
     }
 
     sendConferenceRequestListener = (event, request) => {
-        wfc.sendConferenceRequest(request.sessionId ? request.sessionId : 0, request.roomId ? request.roomId : '', request.request, request.data, (errorCode, res) => {
+        wfc.sendConferenceRequestEx(request.sessionId ? request.sessionId : 0, request.roomId ? request.roomId : '', request.request, request.data, request.advance, (errorCode, res) => {
             this.emitToVoip('sendConferenceRequestResult', {
                 error: errorCode,
                 sendConferenceRequestId: request.sendConferenceRequestId,
@@ -82,13 +80,6 @@ export class AvEngineKitProxy {
 
     // 发送消息时，返回的timestamp，已经过修正，后面使用时,不用考虑和服务器的时间差
     sendVoipListener = (event, msg) => {
-        // 电话结束后，关闭window时，不应当再出发callByeMessageContent
-        if (msg.callEnded) {
-            this.conversation = null;
-            this.queueEvents = [];
-            return;
-        }
-
         let contentClazz = MessageConfig.getMessageContentClazz(msg.content.type);
 
         let content = new contentClazz();
@@ -170,6 +161,8 @@ export class AvEngineKitProxy {
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT_T
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO
+                || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER
+                || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE
             ) {
                 console.log("receive voip message", msg.messageContent.type, msg.messageUid.toString(), msg);
                 if (msg.direction === 0
@@ -339,7 +332,7 @@ export class AvEngineKitProxy {
         });
     }
 
-    startConference(callId, audioOnly, pin, host, title, desc, audience) {
+    startConference(callId, audioOnly, pin, host, title, desc, audience, advance) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             return;
@@ -352,10 +345,42 @@ export class AvEngineKitProxy {
 
         callId = callId ? callId : wfc.getUserId() + Math.floor(Math.random() * 10000);
         this.callId = callId;
+        this.conversation = null;
+        this.conference = true;
 
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         this.showCallUI(null, true);
         this.emitToVoip('startConference', {
+            audioOnly: audioOnly,
+            callId: callId,
+            pin: pin ? pin : Math.ceil(Math.random() * 1000000) + '',
+            host: host,
+            title: title,
+            desc: desc,
+            audience: audience,
+            advance: advance,
+            selfUserInfo: selfUserInfo,
+        });
+    }
+
+    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance) {
+        if (this.callWin) {
+            console.log('voip call is ongoing');
+            return;
+        }
+        //if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || (!audioOnly && !this.hasWebcam)) {
+        if (!this.isSupportVoip) {
+            console.log('not support voip', this.isSupportVoip, this.hasSpeaker);
+            return;
+        }
+
+        this.conversation = null;
+        this.conference = true;
+        this.callId = callId;
+
+        let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
+        this.showCallUI(null, true);
+        this.emitToVoip('joinConference', {
             audioOnly: audioOnly,
             callId: callId,
             pin: pin,
@@ -363,6 +388,7 @@ export class AvEngineKitProxy {
             title: title,
             desc: desc,
             audience: audience,
+            advance: advance,
             selfUserInfo: selfUserInfo,
         });
     }
@@ -379,8 +405,8 @@ export class AvEngineKitProxy {
                 break;
             case 'multi':
             case 'conference':
-                width = 600
-                height = 820;
+                width = 1024;
+                height = 800;
                 break;
             default:
                 break;
@@ -392,7 +418,7 @@ export class AvEngineKitProxy {
                     height: height,
                     minWidth: width,
                     minHeight: height,
-                    resizable: false,
+                    resizable: true,
                     maximizable: false,
                     webPreferences: {
                         scrollBounce: false,
@@ -443,30 +469,35 @@ export class AvEngineKitProxy {
                 this.onVoipWindowReady(win);
             }, true);
 
-            win.addEventListener('beforeunload', (event) => {
-                this.onVoipWindowClose(event);
-            });
+            // pls refer to https://stackoverflow.com/questions/52448909/onbeforeunload-not-working-inside-react-component
+            // In react, if you need to handle DOM events not already provided by React you have to add DOM listeners after the component is mounted
+            // 所以这儿延时一下
+            setTimeout(() => {
+                win.addEventListener('beforeunload', this.onVoipWindowClose);
+            }, 600)
         }
     }
 
-    onVoipWindowClose(event) {
-        if (event && event.srcElement && event.srcElement.URL === 'about:blank') {
-            // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
+    onVoipWindowClose = (event) => {
+        // 让voip内部先处理关闭事件，内部处理时，可能还需要发消息
+        if (!this.callWin) {
             return;
         }
-        if (this.conversation) {
-            let byeMessage = new CallByeMessageContent();
-            byeMessage.callId = this.callId;
-            byeMessage.inviteMsgUid = this.inviteMessageUid;
-            byeMessage.reason = CallEndReason.RemoteNetworkError;
-            wfc.sendConversationMessage(this.conversation, byeMessage, this.participants);
+        if (!isElectron()) {
+            this.callWin.removeEventListener('beforeunload', this.onVoipWindowClose)
+        }
+        setTimeout(() => {
+            if (event && event.srcElement && event.srcElement.URL === 'about:blank') {
+                // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
+                return;
+            }
             this.conversation = null;
             this.queueEvents = [];
             this.callId = null;
             this.participants = [];
-        }
-        this.callWin = null;
-        this.voipEventRemoveAllListeners(['message']);
+            this.callWin = null;
+            this.voipEventRemoveAllListeners(['message']);
+        }, 2000);
     }
 
     onVoipWindowReady(win) {
@@ -479,7 +510,7 @@ export class AvEngineKitProxy {
         }
         if (this.queueEvents.length > 0) {
             this.queueEvents.forEach((eventArgs) => {
-                console.log('process queued event');
+                console.log('process queued event', eventArgs);
                 this.emitToVoip(eventArgs.event, eventArgs.args);
             })
         }

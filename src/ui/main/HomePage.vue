@@ -63,6 +63,10 @@
                             <i class="icon-ion-android-upload"
                                @click="showUploadDialog"></i>
                         </li>
+                        <li v-if="supportConference">
+                            <i class="icon-ion-speakerphone"
+                               @click="createConference"></i>
+                        </li>
                         <li>
                             <i class="icon-ion-android-settings"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/setting'}"
@@ -90,6 +94,8 @@ import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControl
 import {removeItem} from "@/ui/util/storageHelper";
 import {ipcRenderer} from "@/platform";
 import UploadRecordView from "./bigFile/UploadRecordView";
+import CreateConferenceView from "../voip/CreateConferenceView";
+import avenginekit from "../../wfc/av/internal/engine.min";
 
 export default {
     data() {
@@ -97,6 +103,7 @@ export default {
             sharedContactState: store.state.contact,
             sharedMiscState: store.state.misc,
             shareConversationState: store.state.conversation,
+            supportConference : avenginekit.startConference !== undefined,
             isSetting: false,
             fileWindow: null,
         };
@@ -193,6 +200,29 @@ export default {
         closeUserCard() {
             console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
+        },
+        createConference() {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                CreateConferenceView,
+                {}, {
+                    name: 'create-conference-modal',
+                    width: 320,
+                    height: 400,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
         },
 
         onConnectionStatusChange(status) {

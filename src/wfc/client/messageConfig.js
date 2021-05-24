@@ -46,6 +46,9 @@ import MuteGroupMemberNotification from '../messages/notification/muteGroupMembe
 import AllowGroupMemberNotification from '../messages/notification/allowGroupMemberNotification'
 import CardMessageContent from '../messages/cardMessageContent'
 import CompositeMessageContent from "../messages/compositeMessageContent";
+import ConferenceInviteMessageContent from "../av/messages/conferenceInviteMessageContent";
+import ConferenceChangeModeContent from "../av/messages/conferenceChangeModeContent";
+import ConferenceKickoffMemberMessageContent from "../av/messages/conferenceKickoffMemberMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -339,5 +342,23 @@ export default class MessageConfig {
             type: MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO,
             contentClazz: MuteVideoMessageContent,
         },
+        {
+            name: 'conferenceInvite',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE,
+            contentClazz: ConferenceInviteMessageContent,
+        },
+        {
+            name: 'conferenceChangeMode',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE,
+            contentClazz: ConferenceChangeModeContent,
+        },
+        {
+            name: 'conferenceKickoffMember',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER,
+            contentClazz:ConferenceKickoffMemberMessageContent,
+        }
     ];
 }
