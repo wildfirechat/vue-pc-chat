@@ -63,7 +63,7 @@
                             <i class="icon-ion-android-upload"
                                @click="showUploadDialog"></i>
                         </li>
-                        <li>
+                        <li v-if="supportConference">
                             <i class="icon-ion-speakerphone"
                                @click="createConference"></i>
                         </li>
@@ -95,6 +95,7 @@ import {removeItem} from "@/ui/util/storageHelper";
 import {ipcRenderer} from "@/platform";
 import UploadRecordView from "./bigFile/UploadRecordView";
 import CreateConferenceView from "../voip/CreateConferenceView";
+import avenginekit from "../../wfc/av/internal/engine.min";
 
 export default {
     data() {
@@ -102,6 +103,7 @@ export default {
             sharedContactState: store.state.contact,
             sharedMiscState: store.state.misc,
             shareConversationState: store.state.conversation,
+            supportConference : avenginekit.startConference !== undefined,
             isSetting: false,
             fileWindow: null,
         };

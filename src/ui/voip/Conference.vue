@@ -194,8 +194,7 @@
 </template>
 
 <script>
-import avenginekit from "../../wfc/av/internal/avenginekitImpl";
-// import avenginekit from "../../wfc/av/internal/engine-conference.min";
+import avenginekit from "../../wfc/av/internal/engine.min";
 import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
