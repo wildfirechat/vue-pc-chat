@@ -27,6 +27,11 @@ export default class ConferenceInviteMessageContent extends MessageContent {
         this.pin = pin;
     }
 
+    digest(message) {
+        let str = '[会议邀请]'
+        return str;
+    }
+
     encode() {
         let payload = super.encode();
         payload.content = this.callId;
