@@ -1054,9 +1054,10 @@ export class WfcManager {
     /**
      * 设置消息本地扩展信息
      * @param {number} messageId 消息id，不是消息uid!
+     * @param {string} extra 扩展信息
      */
-    setMessageLocalExtra(messageId) {
-        impl.setMessageLocalExtra(messageId);
+    setMessageLocalExtra(messageId, extra) {
+        impl.setMessageLocalExtra(messageId, extra);
     }
 
     /**
