@@ -96,6 +96,9 @@ import {ipcRenderer} from "@/platform";
 import UploadRecordView from "./bigFile/UploadRecordView";
 import CreateConferenceView from "../voip/CreateConferenceView";
 import avenginekit from "../../wfc/av/internal/engine.min";
+import localStorageEmitter from "../../ipc/localStorageEmitter";
+import CallEndReason from "../../wfc/av/engine/callEndReason";
+import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 
 export default {
     data() {
@@ -103,7 +106,7 @@ export default {
             sharedContactState: store.state.contact,
             sharedMiscState: store.state.misc,
             shareConversationState: store.state.conversation,
-            supportConference : avenginekit.startConference !== undefined,
+            supportConference: avenginekit.startConference !== undefined,
             isSetting: false,
             fileWindow: null,
         };
@@ -278,6 +281,36 @@ export default {
     created() {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
         this.onConnectionStatusChange(wfc.getConnectionStatus())
+
+        localStorageEmitter.on('join-conference-failed', (args) => {
+            let reason = args.reason;
+            let session = args.session;
+            if (reason === CallEndReason.RoomNotExist) {
+                if (session.host === wfc.getUserId()) {
+                    this.$alert({
+                        content: '会议已结束，是否重新开启会议？',
+                        cancelCallback: () => {
+                            // do nothing
+                        },
+                        confirmCallback: () => {
+                            avenginekitproxy.startConference(session.callId, session.audioOnly, session.pin, session.host, session.title, session.desc, session.audience, session.advance)
+                        }
+                    })
+                } else {
+                    this.$notify({
+                        title: '会议已结束',
+                        text: '请联系主持人开启会议',
+                        type: 'warn'
+                    });
+                }
+            } else if (reason === CallEndReason.RoomParticipantsFull) {
+                this.$notify({
+                    title: '加入会议失败',
+                    text: '参与者已满，请重试',
+                    type: 'warn'
+                });
+            }
+        })
     },
     destroyed() {
         wfc.eventEmitter.removeListener(EventType.ConnectionStatusChanged, this.onConnectionStatusChange);

@@ -101,6 +101,7 @@ export default {
                 return;
             }
             if (file.size > 100 * 1024 * 1024) {
+
                 this.$notify({
                     title: '大文件提示',
                     text: file.name + '上传中，请到上传页面查看或发送!',
