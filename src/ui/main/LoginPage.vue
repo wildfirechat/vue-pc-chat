@@ -104,7 +104,7 @@ export default {
         async createPCLoginSession(userId) {
             let response = await axios.post('/pc_session', {
                 flag: 1,
-                device_name: 'web',
+                device_name: 'pc',
                 userId: userId,
                 clientId: wfc.getClientId(),
                 platform: Config.getWFCPlatform()
@@ -186,6 +186,8 @@ export default {
 
             this.loginStatus = 0;
             this.qrCode = null;
+            // 切换用户时，先进行disconnect
+            wfc.disconnect();
             clear();
 
             this.createPCLoginSession(null);
