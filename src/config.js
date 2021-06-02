@@ -14,6 +14,7 @@ export default class Config {
 
     // APP SERVER的地址，启用https时，APP SERVER也需要支持https
     // 默认的app server使用端口是8888
+    // 不能省略http(s)前缀
     static APP_SERVER = 'https://app.wildfirechat.net';
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
