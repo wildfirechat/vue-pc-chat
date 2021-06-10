@@ -12,10 +12,12 @@ export default class Config {
 
     static DEFAULT_PORTRAIT_URL = 'https://static.wildfirechat.net/user-fallback.png';
 
-    // APP SERVER的地址，启用https时，APP SERVER也需要支持https
-    // 默认的app server使用端口是8888
-    // 不能省略http(s)前缀
+    // APP SERVER的地址，不能省略http(s)前缀。
+    // 默认的app server使用端口是8888，注意端口号别忘记了。
+    // 上线建议使用https，使用https更安全。
+    //static APP_SERVER = 'http://app.wildfirechat.net:8888';
     static APP_SERVER = 'https://app.wildfirechat.net';
+    
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
     static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.net:3478', userName: 'wfchat', password: 'wfchat'}];
