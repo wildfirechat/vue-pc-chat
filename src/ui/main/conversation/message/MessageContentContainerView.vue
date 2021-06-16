@@ -1,4 +1,4 @@
-<template>
+<template xmlns:UnknowntMessageContentView="http://www.w3.org/1999/XSL/Transform">
     <TextMessageContentView :message="message"
                             v-if="message.messageContent.type === 1"
                             :style="{'--out-arrow-color':'#98ea70', '--in-arrow-color':'white'}"
@@ -27,8 +27,10 @@
                                 :style="{'--out-arrow-color':'white', '--in-arrow-color':'white'}"
                                 v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
     <UnsupportMessageContentView :message="message"
-                                 v-else
-                                 v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+                                 v-else-if="[/* todo un support message types */].indexOf(message.messageContent.type) >= 0"/>
+    <UnknowntMessageContentView :message="message"
+                                v-else
+                                v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
 </template>
 
 <script>
@@ -44,6 +46,7 @@ import AudioMessageContentView from "@/ui/main/conversation/message/content/Audi
 import CompositeMessageContentView from "@/ui/main/conversation/message/content/CompositeMessageContentView";
 import UserCardMessageContentView from "./content/UserCardMessageContentView";
 import ConferenceInviteMessageContentView from "./content/ConferenceInviteMessageContentView";
+import UnknowntMessageContentView from "./content/UnknownMessageContentView";
 
 export default {
     name: "MessageContentContainerView",
@@ -54,6 +57,7 @@ export default {
         }
     },
     components: {
+        UnknowntMessageContentView,
         ConferenceInviteMessageContentView,
         CompositeMessageContentView,
         AudioMessageContentView,

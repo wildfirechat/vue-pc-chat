@@ -43,13 +43,11 @@
                                                          v-else-if="message.messageContent.type === 400"/>
                             <ConferenceInviteMessageContentView :message="message"
                                                                 v-else-if="message.messageContent.type === 408"/>
-                            <UserCardMessageContentView :message="message"
-                                                        v-else-if="message.messageContent.type === 10"
-                                                        :style="{'--out-arrow-color':'white', '--in-arrow-color':'white'}"
-                                                        v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
                             <UnsupportMessageContentView :message="message"
-                                                         v-else
-                                                         v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+                                                         v-else-if="[10].indexOf(message.messageContent.type) >= 0"/>
+                            <UnknowntMessageContentView :message="message"
+                                                        v-else
+                                                        v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
                         </div>
                     </div>
                 </div>
@@ -65,7 +63,6 @@ import UnsupportMessageContentView from "../ui/main/conversation/message/content
 import store from "../store";
 import ConferenceInviteMessageContentView
     from "../ui/main/conversation/message/content/ConferenceInviteMessageContentView";
-import UserCardMessageContentView from "../ui/main/conversation/message/content/UserCardMessageContentView";
 import CompositeMessageContentView from "../ui/main/conversation/message/content/CompositeMessageContentView";
 import AudioMessageContentView from "../ui/main/conversation/message/content/AudioMessageContentView";
 import CallStartMessageContentView from "../ui/main/conversation/message/content/CallStartMessageContentView";
@@ -73,6 +70,7 @@ import ImageMessageContentView from "../ui/main/conversation/message/content/Ima
 import VideoMessageContentView from "../ui/main/conversation/message/content/VideoMessageContentView";
 import FileMessageContentView from "../ui/main/conversation/message/content/FileMessageContentView";
 import StickerMessageContentView from "../ui/main/conversation/message/content/StickerMessageContentView";
+import UnknowntMessageContentView from "../ui/main/conversation/message/content/UnknownMessageContentView";
 
 export default {
     name: "CompositeMessagePage",
@@ -84,12 +82,13 @@ export default {
 
     mounted() {
         let hash = window.location.hash;
-        let messageId = hash.substring(hash.indexOf('=') + 1);
-        this.compositeMessage = store.getMessageById(Number(messageId));
-        console.log('xxx', messageId, this.compositeMessage)
-        document.title = this.compositeMessage.messageContent.title + '的聊天记录';
+        let messageUid = hash.substring(hash.indexOf('=') + 1);
+        this.compositeMessage = store.getMessageByUid(messageUid);
+        console.log('xxx', hash, messageUid, this.compositeMessage)
+        document.title = this.compositeMessage.messageContent.title;
     },
     components: {
+        UnknowntMessageContentView,
         ConferenceInviteMessageContentView,
         CompositeMessageContentView,
         AudioMessageContentView,
@@ -100,7 +99,6 @@ export default {
         VideoMessageContentView,
         FileMessageContentView,
         StickerMessageContentView,
-        UserCardMessageContentView
     }
 }
 </script>
@@ -158,6 +156,7 @@ export default {
 
 .name-time-content-container .content {
     display: inline-block;
+    margin-left: -10px;
 }
 
 .portrait-container {
@@ -171,6 +170,24 @@ export default {
     width: 100%;
     height: 100%;
     border-radius: 3px;
+}
+
+>>> .text-message-container.out {
+    background-color: #f7f7f7;
+}
+
+>>> .text-message-container {
+    background-color: #f7f7f7;
+    padding-left: 0;
+    padding-top: 0;
+}
+
+>>> .rightarrow::before {
+    display: none;
+}
+
+>>> .leftarrow::before {
+    display: none;
 }
 
 </style>

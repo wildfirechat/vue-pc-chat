@@ -14,6 +14,7 @@ import {parser as emojiParse} from "@/ui/util/emoji";
 import wfc from "@/wfc/client/wfc";
 import ConversationType from "@/wfc/model/conversationType";
 import {ipcRenderer, isElectron} from "../../../../../platform";
+import {stringValue} from "../../../../../wfc/util/longUtil";
 
 export default {
     name: "CompositeMessageContentView",
@@ -54,7 +55,7 @@ export default {
                     url += "/composite"
                 }
                 ipcRenderer.send('show-composite-message-window', {
-                    messageId: this.message.messageId,
+                    messageUid: stringValue(this.message.messageUid),
                     url: url,
                 });
             }

@@ -684,8 +684,8 @@ const createMainWindow = async () => {
     });
     ipcMain.on('show-composite-message-window', async (event, args) => {
         console.log('on show-composite-message-window', args)
-        let messageId = args.messageId;
-        let compositeMessageWin = compositeMessageWindows.get(messageId);
+        let messageUid = args.messageUid;
+        let compositeMessageWin = compositeMessageWindows.get(messageUid);
         if (!compositeMessageWin) {
             let win = new BrowserWindow(
                 {
@@ -703,15 +703,14 @@ const createMainWindow = async () => {
                 }
             );
             win.removeMenu();
-            compositeMessageWindows.set(messageId, win)
+            compositeMessageWindows.set(messageUid, win)
 
             // win.webContents.openDevTools();
             win.on('close', () => {
-                fileWindow = null;
-                compositeMessageWindows.delete(messageId);
+                compositeMessageWindows.delete(messageUid);
             });
 
-            win.loadURL(args.url + ('?messageId=' + messageId));
+            win.loadURL(args.url + ('?messageUid=' + messageUid));
             console.log('composite message windows url', args.url)
             win.show();
         } else {

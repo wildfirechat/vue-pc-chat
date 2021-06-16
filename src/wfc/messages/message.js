@@ -56,7 +56,6 @@ export default class Message {
     messageId = 0;
     direction = 0;
     status = 0;
-    forceRerender = 0;
     messageUid = 0;
     timestamp = 0;
     to = '';
@@ -194,8 +193,6 @@ export default class Message {
     }
 
     static toMessagePayload(message) {
-
-        // TODO
-        return null;
+        return message.messageContent.encode();
     }
 }
