@@ -47,6 +47,7 @@ let forceQuit = false;
 let downloading = false;
 let mainWindow;
 let fileWindow;
+let compositeMessageWindows = new Map();
 let workspaceWindow;
 let winBadge;
 let screenshots;
@@ -679,6 +680,43 @@ const createMainWindow = async () => {
         } else {
             fileWindow.show();
             fileWindow.focus();
+        }
+    });
+    ipcMain.on('show-composite-message-window', async (event, args) => {
+        console.log('on show-composite-message-window', args)
+        let messageId = args.messageId;
+        let compositeMessageWin = compositeMessageWindows.get(messageId);
+        if (!compositeMessageWin) {
+            let win = new BrowserWindow(
+                {
+                    width: 700,
+                    height: 850,
+                    minWidth: 700,
+                    minHeight: 850,
+                    resizable: false,
+                    maximizable: false,
+                    webPreferences: {
+                        scrollBounce: false,
+                        nativeWindowOpen: true,
+                        nodeIntegration: true,
+                    },
+                }
+            );
+            win.removeMenu();
+            compositeMessageWindows.set(messageId, win)
+
+            // win.webContents.openDevTools();
+            win.on('close', () => {
+                fileWindow = null;
+                compositeMessageWindows.delete(messageId);
+            });
+
+            win.loadURL(args.url + ('?messageId=' + messageId));
+            console.log('composite message windows url', args.url)
+            win.show();
+        } else {
+            compositeMessageWin.show();
+            compositeMessageWin.focus();
         }
     });
 

@@ -1,5 +1,6 @@
 <template>
     <div class="text-message-container"
+         @click="showCompositePage"
          v-bind:class="{out:message.direction === 0}">
         <p class="title">{{ title }}</p>
         <p class="content" v-html="this.content"></p>
@@ -12,6 +13,7 @@ import Message from "@/wfc/messages/message";
 import {parser as emojiParse} from "@/ui/util/emoji";
 import wfc from "@/wfc/client/wfc";
 import ConversationType from "@/wfc/model/conversationType";
+import {ipcRenderer, isElectron} from "../../../../../platform";
 
 export default {
     name: "CompositeMessageContentView",
@@ -38,6 +40,24 @@ export default {
                 str += '\n';
             }
             return str;
+        }
+    },
+
+    methods: {
+        showCompositePage() {
+            if (isElectron()) {
+                let hash = window.location.hash;
+                let url = window.location.origin;
+                if (hash) {
+                    url = window.location.href.replace(hash, '#/composite');
+                } else {
+                    url += "/composite"
+                }
+                ipcRenderer.send('show-composite-message-window', {
+                    messageId: this.message.messageId,
+                    url: url,
+                });
+            }
         }
     }
 }

@@ -879,10 +879,21 @@ let store = {
         }
         if (numberValue(lastTimestamp) > 0 && numberValue(m.timestamp) - numberValue(lastTimestamp) > 5 * 60 * 1000) {
             m._showTime = true;
-            m._timeStr = helper.timeFormat(m.timestamp)
+        }
+        m._timeStr = helper.timeFormat(m.timestamp)
+
+        if (m.messageContent instanceof CompositeMessageContent) {
+            this._patchCompositeMessageContent(m.messageContent);
         }
 
         return m;
+    },
+
+    _patchCompositeMessageContent(compositeMessageContent) {
+        let messages = compositeMessageContent.messages;
+        messages.forEach(m => {
+            this._patchMessage(m, 0)
+        })
     },
 
     _patchConversationInfo(info, patchLastMessage = true) {
