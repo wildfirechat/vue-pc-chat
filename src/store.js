@@ -489,9 +489,9 @@ let store = {
                 // 合并转发
                 let compositeMessageContent = new CompositeMessageContent();
                 let title = '';
-                let conversation = messages[0].conversation;
-                if (conversation.type === ConversationType.Single) {
-                    let users = store.getUserInfos([wfc.getUserId(), conversation.target], '');
+                let msgConversation = messages[0].conversation;
+                if (msgConversation.type === ConversationType.Single) {
+                    let users = store.getUserInfos([wfc.getUserId(), msgConversation.target], '');
                     title = users[0]._displayName + '和' + users[1]._displayName;
                 } else {
                     title = '群的聊天记录';
