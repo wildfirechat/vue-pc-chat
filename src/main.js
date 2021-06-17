@@ -24,7 +24,7 @@ Vue.config.productionTip = false
 // init
 {
     let href = window.location.href;
-    if (href.indexOf('voip') < 0 && href.indexOf('files') < 0) {
+    if (href.indexOf('home') >= 0) {
         console.log('init wfc')
         if (isElectron()) {
             let sharedObj = remote.getGlobal('sharedObj');
@@ -34,7 +34,7 @@ Vue.config.productionTip = false
         }
         store.init(true);
     } else {
-        console.log('voip/files window, not init wfc')
+        console.log('not home window, not init wfc')
         if (isElectron()) {
             let sharedObj = remote.getGlobal('sharedObj');
             wfc.attach(sharedObj.proto)

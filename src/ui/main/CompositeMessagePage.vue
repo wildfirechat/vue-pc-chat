@@ -1,6 +1,6 @@
 <template>
     <section class="composite-page">
-        <div v-if="sharedMiscState.isElectron" class="close-button-container" @click="hideCompositeMessagePage">
+        <div v-if="!sharedMiscState.isElectron" class="close-button-container" @click="hideCompositeMessagePage">
             <i class="icon-ion-close"></i>
         </div>
         <div v-if="!compositeMessage">
