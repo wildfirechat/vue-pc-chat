@@ -1,5 +1,5 @@
 <template>
-    <div class="home-container">
+    <div class="home-container" ref="home-container">
         <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
                                           v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <div class="home">
@@ -80,6 +80,21 @@
             </keep-alive>
             <div class="drag-area" :style="dragAreaLeft"></div>
             <div v-if="sharedMiscState.connectionStatus === -1" class="unconnected">网络连接断开</div>
+            <div v-if="!sharedMiscState.isElectron"
+                 v-show="voipProxy.useIframe && voipProxy.callId"
+                 class="voip-iframe-container"
+                 v-draggable="draggableValue"
+                 v-bind:class="{single:voipProxy.type === 'single', multi:voipProxy.type === 'multi', conference: voipProxy.type === 'conference'}"
+            >
+                <div ref="voip-dragger" class="title">
+                    <i class="icon-ion-arrow-move"></i>
+                    <p> 音视频通话</p>
+                </div>
+                <iframe ref="voip-iframe" class="content"
+                        allow="geolocation; microphone; camera; midi; encrypted-media;">
+                    <!--voip iframe-->
+                </iframe>
+            </div>
         </div>
     </div>
 </template>
@@ -99,6 +114,7 @@ import avenginekit from "../../wfc/av/internal/engine.min";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
+import {Draggable} from 'draggable-vue-directive'
 
 export default {
     data() {
@@ -109,6 +125,12 @@ export default {
             supportConference: avenginekit.startConference !== undefined,
             isSetting: false,
             fileWindow: null,
+            voipProxy: avenginekitproxy,
+            draggableValue: {
+                handle: undefined,
+                boundingElement: undefined,
+                resetInitialPos: true,
+            },
         };
     },
 
@@ -310,7 +332,16 @@ export default {
                     type: 'warn'
                 });
             }
-        })
+        });
+    },
+
+    mounted() {
+        if (avenginekitproxy.useIframe) {
+            let voipIframe = this.$refs["voip-iframe"];
+            avenginekitproxy.setVoipIframe(voipIframe)
+            this.draggableValue.handle = this.$refs['voip-dragger'];
+            this.draggableValue.boundingElement = this.$refs['home-container']
+        }
     },
     destroyed() {
         wfc.eventEmitter.removeListener(EventType.ConnectionStatusChanged, this.onConnectionStatusChange);
@@ -321,6 +352,9 @@ export default {
         UserCardView,
         ElectronWindowsControlButtonView
     },
+    directives: {
+        Draggable,
+    }
 };
 </script>
 
@@ -434,5 +468,54 @@ i.active {
     text-align: center;
     background: #f2f2f280;
     box-shadow: 0 0 1px #000;
+}
+.voip-iframe-container {
+    background: #292929;
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.voip-iframe-container.single {
+    width: 360px;
+    height: 640px;
+}
+
+.voip-iframe-container.multi {
+    width: 1024px;
+    height: 800px;
+}
+
+.voip-iframe-container.conference {
+    width: 1024px;
+    height: 800px;
+}
+
+.voip-iframe-container .title {
+    text-align: center;
+    padding: 5px 0;
+    background: #b6b6b6;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+.voip-iframe-container .title i {
+    pointer-events: none;
+}
+
+.voip-iframe-container .title i:hover {
+    color: #868686;
+}
+
+.voip-iframe-container .title i:active {
+    color: #868686;
+}
+
+.voip-iframe-container .content {
+    flex: 1;
+    border: none;
 }
 </style>

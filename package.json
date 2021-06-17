@@ -34,6 +34,7 @@
     "btoa": "^1.2.1",
     "core-js": "^3.6.5",
     "detectrtc": "^1.4.1",
+    "draggable-vue-directive": "^2.1.0",
     "electron-screenshots": "0.0.13",
     "electron-tabs": "^0.15.0",
     "electron-window-state": "^5.0.3",

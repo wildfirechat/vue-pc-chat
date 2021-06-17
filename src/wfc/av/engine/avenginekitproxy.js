@@ -21,6 +21,8 @@ export class AvEngineKitProxy {
     callWin;
     // 默认音视频窗口是在新窗口打开，当需要在同一个窗口，通过iframe处理时，请置为true
     useIframe = false;
+    iframe;
+    type;
 
     conference = false;
     conversation;
@@ -57,6 +59,15 @@ export class AvEngineKitProxy {
         }
     }
 
+    /**
+     * 设置渲染音视频通话界面的iframe
+     *
+     * 仅当 {@link useIframe}配置为 true时生效
+     * @param iframe
+     */
+    setVoipIframe(iframe) {
+        this.iframe = iframe;
+    }
     updateCallStartMessageContentListener = (event, message) => {
         let messageUid = message.messageUid;
         let content = message.content;
@@ -227,6 +238,9 @@ export class AvEngineKitProxy {
                         }, 200)
                     }
                 } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_END) {
+                    if(content.callId !== this.callId){
+                        return;
+                    }
                     this.conversation = null;
                     this.queueEvents = [];
                     this.callId = null;
@@ -300,7 +314,7 @@ export class AvEngineKitProxy {
         }
     };
 
-    startCall(conversation, audioOnly, participants, iframe) {
+    startCall(conversation, audioOnly, participants) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             return;
@@ -323,7 +337,7 @@ export class AvEngineKitProxy {
             let memberIds = wfc.getGroupMemberIds(conversation.target);
             groupMemberUserInfos = wfc.getUserInfos(memberIds, conversation.target);
         }
-        this.showCallUI(conversation, false, this.useIframe ? iframe : null);
+        this.showCallUI(conversation, false);
         this.emitToVoip('startCall', {
             conversation: conversation,
             audioOnly: audioOnly,
@@ -396,8 +410,9 @@ export class AvEngineKitProxy {
         });
     }
 
-    showCallUI(conversation, isConference, iframe) {
+    showCallUI(conversation, isConference) {
         let type = isConference ? 'conference' : (conversation.type === ConversationType.Single ? 'single' : 'multi');
+        this.type = type;
 
         let width = 360;
         let height = 640;
@@ -447,7 +462,7 @@ export class AvEngineKitProxy {
             } else {
                 url += "/voip"
             }
-            url += '/' + type
+            url += '/' + type + '?t=' + new Date().getTime()
             win.loadURL(url);
             console.log('voip windows url', url)
             win.show();
@@ -461,10 +476,15 @@ export class AvEngineKitProxy {
             } else {
                 url += "/voip"
             }
-            url += '/' + type
+            url += '/' + type + '?t=' + new Date().getTime()
 
             let win;
+            let iframe = this.iframe;
             if (iframe) {
+                if (iframe.src) {
+                    iframe.src = url;
+                    iframe.contentWindow.location.reload();
+                }
             iframe.src = url;
                 win = iframe.contentWindow;
             } else {
@@ -496,6 +516,7 @@ export class AvEngineKitProxy {
 
     onVoipWindowClose = (event) => {
         // 让voip内部先处理关闭事件，内部处理时，可能还需要发消息
+        console.log('onVoipWindowClose')
         if (!this.callWin) {
             return;
         }
@@ -523,6 +544,9 @@ export class AvEngineKitProxy {
             this.events.on('voip-message', this.sendVoipListener)
             this.events.on('conference-request', this.sendConferenceRequestListener);
             this.events.on('update-call-start-message', this.updateCallStartMessageContentListener)
+            if (this.useIframe) {
+                this.events.on('close-iframe-window', this.onVoipWindowClose)
+            }
         }
         if (this.queueEvents.length > 0) {
             this.queueEvents.forEach((eventArgs) => {
