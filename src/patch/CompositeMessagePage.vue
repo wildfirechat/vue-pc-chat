@@ -24,8 +24,8 @@
                                                     v-if="message.messageContent.type === 1"
                                                     :style="{'--out-arrow-color':'#98ea70', '--in-arrow-color':'white'}"
                                                     v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
-                            <AudioMessageContentView :message="message"
-                                                     v-else-if="message.messageContent.type === 2"/>
+                            <!--                            <AudioMessageContentView :message="message"-->
+                            <!--                                                     v-else-if="message.messageContent.type === 2"/>-->
                             <ImageMessageContentView :message="message"
                                                      v-else-if="message.messageContent.type === 3"/>
                             <!--                           v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>-->
@@ -39,12 +39,12 @@
                                                        v-else-if="message.messageContent.type === 7"/>
                             <CompositeMessageContentView :message="message"
                                                          v-else-if="message.messageContent.type === 11"/>
-                            <CallStartMessageContentView :message="message"
-                                                         v-else-if="message.messageContent.type === 400"/>
-                            <ConferenceInviteMessageContentView :message="message"
-                                                                v-else-if="message.messageContent.type === 408"/>
+                            <!--                            <CallStartMessageContentView :message="message"-->
+                            <!--                                                         v-else-if="message.messageContent.type === 400"/>-->
+                            <!--                            <ConferenceInviteMessageContentView :message="message"-->
+                            <!--                                                                v-else-if="message.messageContent.type === 408"/>-->
                             <UnsupportMessageContentView :message="message"
-                                                         v-else-if="[10].indexOf(message.messageContent.type) >= 0"/>
+                                                         v-else-if="[2, 10, 400, 408].indexOf(message.messageContent.type) >= 0"/>
                             <UnknowntMessageContentView :message="message"
                                                         v-else
                                                         v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
