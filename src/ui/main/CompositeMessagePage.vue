@@ -58,19 +58,15 @@
 </template>
 
 <script>
-import TextMessageContentView from "../ui/main/conversation/message/content/TextMessageContentView";
-import UnsupportMessageContentView from "../ui/main/conversation/message/content/UnsupportMessageContentView";
-import store from "../store";
-import ConferenceInviteMessageContentView
-    from "../ui/main/conversation/message/content/ConferenceInviteMessageContentView";
-import CompositeMessageContentView from "../ui/main/conversation/message/content/CompositeMessageContentView";
-import AudioMessageContentView from "../ui/main/conversation/message/content/AudioMessageContentView";
-import CallStartMessageContentView from "../ui/main/conversation/message/content/CallStartMessageContentView";
-import ImageMessageContentView from "../ui/main/conversation/message/content/ImageMessageContentView";
-import VideoMessageContentView from "../ui/main/conversation/message/content/VideoMessageContentView";
-import FileMessageContentView from "../ui/main/conversation/message/content/FileMessageContentView";
-import StickerMessageContentView from "../ui/main/conversation/message/content/StickerMessageContentView";
-import UnknowntMessageContentView from "../ui/main/conversation/message/content/UnknownMessageContentView";
+import TextMessageContentView from "./conversation/message/content/TextMessageContentView";
+import UnsupportMessageContentView from "./conversation/message/content/UnsupportMessageContentView";
+import store from "../../store";
+import CompositeMessageContentView from "./conversation/message/content/CompositeMessageContentView";
+import ImageMessageContentView from "./conversation/message/content/ImageMessageContentView";
+import VideoMessageContentView from "./conversation/message/content/VideoMessageContentView";
+import FileMessageContentView from "./conversation/message/content/FileMessageContentView";
+import StickerMessageContentView from "./conversation/message/content/StickerMessageContentView";
+import UnknowntMessageContentView from "./conversation/message/content/UnknownMessageContentView";
 
 export default {
     name: "CompositeMessagePage",
@@ -89,10 +85,10 @@ export default {
     },
     components: {
         UnknowntMessageContentView,
-        ConferenceInviteMessageContentView,
+        // ConferenceInviteMessageContentView,
         CompositeMessageContentView,
-        AudioMessageContentView,
-        CallStartMessageContentView,
+        // AudioMessageContentView,
+        // CallStartMessageContentView,
         UnsupportMessageContentView,
         TextMessageContentView,
         ImageMessageContentView,
