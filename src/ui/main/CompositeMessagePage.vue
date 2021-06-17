@@ -1,5 +1,8 @@
 <template>
     <section class="composite-page">
+        <div v-if="sharedMiscState.isElectron" class="close-button-container" @click="hideCompositeMessagePage">
+            <i class="icon-ion-close"></i>
+        </div>
         <div v-if="!compositeMessage">
             {{ 'Null CompositeMessagePage' }}
         </div>
@@ -67,22 +70,43 @@ import VideoMessageContentView from "./conversation/message/content/VideoMessage
 import FileMessageContentView from "./conversation/message/content/FileMessageContentView";
 import StickerMessageContentView from "./conversation/message/content/StickerMessageContentView";
 import UnknowntMessageContentView from "./conversation/message/content/UnknownMessageContentView";
+import Message from "../../wfc/messages/message";
+import {stringValue} from "../../wfc/util/longUtil";
 
 export default {
     name: "CompositeMessagePage",
+    props: {
+        message: {
+            required: false,
+            type: Message,
+            default: null,
+        }
+    },
     data() {
         return {
             compositeMessage: null,
+            sharedMiscState: store.state.misc,
         }
     },
 
     mounted() {
+        if (this.message) {
+            this.compositeMessage = this.message;
+            return;
+        }
         let hash = window.location.hash;
         let messageUid = hash.substring(hash.indexOf('=') + 1);
         this.compositeMessage = store.getMessageByUid(messageUid);
         console.log('xxx', hash, messageUid, this.compositeMessage)
         document.title = this.compositeMessage.messageContent.title;
     },
+
+    methods: {
+        hideCompositeMessagePage() {
+            this.$modal.hide('show-composite-message-modal' + '-' + stringValue(this.message.messageUid))
+        }
+    },
+
     components: {
         UnknowntMessageContentView,
         // ConferenceInviteMessageContentView,
@@ -102,10 +126,21 @@ export default {
 <style scoped>
 
 .composite-page {
-    width: 100vw;
-    height: 100vh;
+    width: var(--composite-message-page-width);
+    height: var(--composite-message-page-height);
     background: #f7f7f7;
     overflow: scroll;
+}
+
+.close-button-container {
+    position: absolute;
+    padding: 5px 10px 10px 5px;
+    top: 0;
+    right: 0;
+}
+
+.close-button-container:active {
+    background: lightgrey;
 }
 
 .composite-page ul {

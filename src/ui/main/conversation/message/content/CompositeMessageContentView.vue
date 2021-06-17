@@ -59,7 +59,22 @@ export default {
                     url: url,
                 });
             } else {
-                // TODO
+                let CompositeMessagePage = require('../../../CompositeMessagePage').default;
+                let beforeClose = () => {
+                    // todo
+                };
+                this.$modal.show(
+                    CompositeMessagePage,
+                    {
+                        message: this.message,
+                    }, {
+                        name: 'show-composite-message-modal' + '-' + stringValue(this.message.messageUid),
+                        width: 800,
+                        height: 600,
+                        clickToClose: true,
+                    }, {
+                        'before-close': beforeClose,
+                    });
 
             }
         }
