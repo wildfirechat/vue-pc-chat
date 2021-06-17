@@ -1,5 +1,5 @@
 <template>
-    <div class="text-message-container"
+    <div class="composite-message-container"
          @click="showCompositePage"
          v-bind:class="{out:message.direction === 0}">
         <p class="title">{{ title }}</p>
@@ -58,6 +58,9 @@ export default {
                     messageUid: stringValue(this.message.messageUid),
                     url: url,
                 });
+            } else {
+                // TODO
+
             }
         }
     }
@@ -65,7 +68,7 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.text-message-container {
+.composite-message-container {
     margin: 0 10px;
     padding: 10px;
     background-color: white;
@@ -73,23 +76,23 @@ export default {
     border-radius: 5px;
 }
 
-.text-message-container p {
+.composite-message-container p {
     user-select: text;
     white-space: pre-line;
 }
 
-.text-message-container .title {
+.composite-message-container .title {
     color: #050505;
     font-size: 15px;
 }
 
-.text-message-container .content, .desc {
+.composite-message-container .content, .desc {
     padding: 5px 0;
     font-size: 14px;
     color: #b2b2b2;
 }
 
-.text-message-container .desc {
+.composite-message-container .desc {
     border-top: 1px solid #f2f2f2;
     padding: 5px 0 0 0;
 }
