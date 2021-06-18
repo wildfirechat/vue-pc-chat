@@ -1,4 +1,4 @@
-<template xmlns:UnknowntMessageContentView="http://www.w3.org/1999/XSL/Transform">
+<template>
     <TextMessageContentView :message="message"
                             v-if="message.messageContent.type === 1"
                             :style="{'--out-arrow-color':'#98ea70', '--in-arrow-color':'white'}"
