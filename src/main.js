@@ -25,7 +25,8 @@ Vue.config.productionTip = false
 {
     let href = window.location.href;
     let path = href.substring(href.indexOf('#') + 1)
-    if (path === '/'/*login*/ || path === '/home') {
+    console.log('init', href, path)
+    if (path === '/'/*login*/ || path === '/home' || href.indexOf('#') === -1) {
         console.log('init wfc')
         if (isElectron()) {
             let sharedObj = remote.getGlobal('sharedObj');
