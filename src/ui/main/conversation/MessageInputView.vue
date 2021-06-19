@@ -151,7 +151,7 @@ export default {
         },
         copy() {
             let text = this.$refs['input'].innerText;
-            if(text){
+            if (text) {
                 copyText(text)
             }
         },
@@ -310,7 +310,6 @@ export default {
                 range.collapse(true);
                 sel.removeAllRanges();
                 sel.addRange(range);
-                console.log('in 10')
             } else if (document.selection && document.selection.createRange) {
                 document.selection.createRange().text = html;
             }
@@ -588,7 +587,7 @@ export default {
             ipcRenderer.on('screenshots-ok', (event, args) => {
                 console.log('screenshots-ok jxojoj', args)
                 if (args.filePath) {
-                    setTimeout(()=> {
+                    setTimeout(() => {
                         document.execCommand('insertImage', false, 'local-resource://' + args.filePath);
                     }, 100)
                 }
@@ -608,9 +607,11 @@ export default {
                 this.storeDraft(this.lastConversationInfo, lastQuotedMessage);
             }
 
+            if (this.conversationInfo && (!this.lastConversationInfo || !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation))) {
+                this.restoreDraft();
+                this.initMention(this.conversationInfo.conversation)
+            }
             this.lastConversationInfo = this.conversationInfo;
-            this.initMention(this.conversationInfo.conversation)
-            this.restoreDraft();
             this.focusInput();
         },
     },
