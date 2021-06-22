@@ -21,7 +21,8 @@
     "cross-package-linux": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux x64 && vue-cli-service electron:build --linux --x64 -p never",
     "cross-package-linux-arm64": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-mac": "node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin x64 && vue-cli-service electron:build --mac --x64 -p never",
-    "cross-package-all": "node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64"
+    "cross-package-all": "node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
+    "preinstall": "npx npm-force-resolutions"
   },
   "main": "background.js",
   "dependencies": {
@@ -75,6 +76,7 @@
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
     "native-ext-loader": "^2.3.0",
+    "npm-force-resolutions": "0.0.10",
     "shelljs": "^0.8.4",
     "vue-cli-plugin-electron-builder": "~2.0.0-rc.5",
     "vue-template-compiler": "^2.6.11"
@@ -88,5 +90,8 @@
       "plugin:vue/essential"
     ],
     "rules": {}
+  },
+  "resolutions": {
+    "vue-cli-plugin-electron-builder/electron-builder": "22.9.1"
   }
 }
