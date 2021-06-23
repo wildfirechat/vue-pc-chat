@@ -86,7 +86,7 @@ npm run cross-package-mac
    // mac/linux
    ~/.electron-gyp
     ```
-3. 打包时，如果下载electron版本超时，可以使用我们下载好的[electron](./electron)放到缓存目录。
+3. 打包时，如果下载electron版本超时，可以点[这里](./electron)手动下载electron版本并放到缓存目录。
 
 4. windows上需要严格按照环境进行安装，mac上环境比较简单一些，安装node和node-gyp就可以了
     另外如果还有问题，请试试命令```npm cache clean --force ```，然后删掉node_modules，再重新在非管理员权限下```npm install```
