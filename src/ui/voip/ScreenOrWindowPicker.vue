@@ -18,7 +18,7 @@
                  class="source"
                  v-bind:class="{active:selectedSource && selectedSource.id === source.id}"
                  @click="selectSource(source)"
-                 @dblclick="share(source)"
+                 @dblclick="share($event, source)"
             >
                 <div class="thumbnail">
                     <img :src="source.thumbnail.toDataURL()" alt="">
@@ -80,7 +80,7 @@ export default {
             this.$modal.hide('screen-window-picker-modal');
         },
 
-        share(source) {
+        share(ev, source) {
             if (source) {
                 this.selectedSource = source;
             }
