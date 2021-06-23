@@ -143,6 +143,10 @@ let store = {
             this._loadFavContactList();
             this._loadFavGroupList();
             this.updateTray();
+            // 清除远程消息时，WEB SDK会同时触发ConversationInfoUpdate 和 setting更新，但PC SDK不会，只会触发setting更新
+            if (isElectron()) {
+                this._loadCurrentConversationMessages();
+            }
         });
 
         wfc.eventEmitter.on(EventType.FriendRequestUpdate, (newFrs) => {
@@ -164,6 +168,9 @@ let store = {
 
         wfc.eventEmitter.on(EventType.ConversationInfoUpdate, (conversationInfo) => {
             this._loadDefaultConversationList();
+            if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation)) {
+                this._loadCurrentConversationMessages();
+            }
         });
 
         wfc.eventEmitter.on(EventType.ReceiveMessage, (msg, hasMore) => {
@@ -804,11 +811,18 @@ let store = {
             (msgs) => {
                 if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
                     let lastTimestamp = 0;
+                    let newMsgs = [];
                     msgs.forEach(m => {
-                        this._patchMessage(m, lastTimestamp);
-                        lastTimestamp = m.timestamp;
+                        let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid))
+                        if (index === -1) {
+                            this._patchMessage(m, lastTimestamp);
+                            lastTimestamp = m.timestamp;
+                            newMsgs.push(m);
+                        }
                     });
-                    conversationState.currentConversationMessageList = msgs.concat(conversationState.currentConversationMessageList);
+                    if (newMsgs.length > 0) {
+                        conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
+                    }
                 }
                 if (msgs.length === 0) {
                     completeCB();
