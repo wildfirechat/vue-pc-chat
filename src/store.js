@@ -792,7 +792,7 @@ let store = {
             return;
         }
         let conversation = conversationState.currentConversationInfo.conversation;
-        let msgs = wfc.getMessages(conversation);
+        let msgs = wfc.getMessages(conversation, 0, true, 20);
         let lastTimestamp = 0;
         msgs.forEach(m => {
             this._patchMessage(m, lastTimestamp);
@@ -801,39 +801,48 @@ let store = {
         conversationState.currentConversationMessageList = msgs;
     },
 
+    _onloadConversationMessages(conversation, messages) {
+        if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
+            let lastTimestamp = 0;
+            let newMsgs = [];
+            messages.forEach(m => {
+                let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid))
+                if (index === -1) {
+                    this._patchMessage(m, lastTimestamp);
+                    lastTimestamp = m.timestamp;
+                    newMsgs.push(m);
+                }
+            });
+            conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
+        }
+    },
+
     loadConversationHistoryMessages(loadedCB, completeCB) {
         if (!conversationState.currentConversationInfo) {
             return;
         }
         let conversation = conversationState.currentConversationInfo.conversation;
         let firstMsgUid = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0].messageUid : 0;
-        wfc.loadRemoteConversationMessages(conversation, firstMsgUid, 20,
-            (msgs) => {
-                if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
-                    let lastTimestamp = 0;
-                    let newMsgs = [];
-                    msgs.forEach(m => {
-                        let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid))
-                        if (index === -1) {
-                            this._patchMessage(m, lastTimestamp);
-                            lastTimestamp = m.timestamp;
-                            newMsgs.push(m);
-                        }
-                    });
-                    if (newMsgs.length > 0) {
-                        conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
+        let firstMsgId = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0].messageId : 0;
+        let lmsgs = wfc.getMessages(conversation, firstMsgId, true, 20);
+        if (lmsgs.length > 0) {
+            this._onloadConversationMessages(conversation, lmsgs);
+            setTimeout(() => loadedCB(), 200)
+        } else {
+            wfc.loadRemoteConversationMessages(conversation, firstMsgUid, 20,
+                (msgs) => {
+                    this._onloadConversationMessages(conversation, msgs)
+                    if (msgs.length === 0) {
+                        completeCB();
+                    } else {
+                        this._loadDefaultConversationList();
+                        loadedCB();
                     }
-                }
-                if (msgs.length === 0) {
+                },
+                (error) => {
                     completeCB();
-                } else {
-                    this._loadDefaultConversationList();
-                    loadedCB();
-                }
-            },
-            (error) => {
-                completeCB();
-            });
+                });
+        }
     },
 
     setConversationTop(conversation, top) {
