@@ -15,7 +15,7 @@ function validate() {
 
     console.log('')
     console.log('')
-    console.log('-----------前置检查，请仔细阅读--------------')
+    console.log('-----------请进行前置检查!--------------')
     console.warn('请确保下面输出的md5值和对应邮件中 marswrapper.xx.node.md5 文件内容一致，否则无法连接成功');
     console.log('')
     let nodePath = './proto_addon/marswrapper.linux.node';
@@ -47,9 +47,9 @@ function validate() {
 
     console.log('')
     console.log('')
-    console.log('-----------前置检查提示，请等待30秒--------------')
+    console.log('-----------请进行前置检查，1分钟之后，继续...--------------')
     console.log('')
-    sleep.sleep(30);
+    sleep.sleep(60);
 }
 
 validate();
