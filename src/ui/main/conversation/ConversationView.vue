@@ -499,7 +499,6 @@ export default {
             amr.onEnded(() => {
                 message._isPlaying = false;
                 store.playVoice(null)
-                this.amr = null;
             })
         },
     },
@@ -583,7 +582,6 @@ export default {
             } else {
                 if (amr) {
                     amr.stop();
-                    amr = null;
                 }
             }
             return null;
