@@ -19,6 +19,7 @@
                  @dragleave="dragEvent($event, 'dragleave')"
                  @dragenter="dragEvent($event,'dragenter')"
                  @drop="dragEvent($event, 'drop')"
+                 :dummy_just_for_reactive="currentVoiceMessage"
             >
                 <div v-show="dragAndDropEnterCount > 0" class="drag-drop-container">
                     <div class="drag-drop">
@@ -146,7 +147,9 @@ import localStorageEmitter from "../../../ipc/localStorageEmitter";
 import {remote} from "../../../platform";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import MessageContentType from "../../../wfc/messages/messageContentType";
+import BenzAMRRecorder from "benz-amr-recorder";
 
+var amr;
 export default {
     components: {
         MultiSelectActionView,
@@ -338,7 +341,7 @@ export default {
         },
 
         isQuotable(message) {
-            if(!message){
+            if (!message) {
                 return false;
             }
             return [MessageContentType.VOIP_CONTENT_TYPE_START,
@@ -483,6 +486,22 @@ export default {
                     });
             }));
         },
+        playVoice(message) {
+            if (amr) {
+                amr.stop();
+            }
+            amr = new BenzAMRRecorder();
+            let voice = message.messageContent;
+            amr.initWithUrl(voice.remotePath).then(() => {
+                message._isPlaying = true;
+                amr.play();
+            });
+            amr.onEnded(() => {
+                message._isPlaying = false;
+                store.playVoice(null)
+                this.amr = null;
+            })
+        },
     },
 
     mounted() {
@@ -556,6 +575,18 @@ export default {
         loadingIdentifier() {
             let conversation = this.sharedConversationState.currentConversationInfo.conversation;
             return conversation.type + '-' + conversation.target + '-' + conversation.line;
+        },
+        currentVoiceMessage() {
+            let voice = this.sharedConversationState.currentVoiceMessage;
+            if (voice) {
+                this.playVoice(voice);
+            } else {
+                if (amr) {
+                    amr.stop();
+                    amr = null;
+                }
+            }
+            return null;
         }
     },
 
