@@ -5,10 +5,10 @@ function validate() {
     // const config = require('./src/config')
 
     //     static APP_SERVER = 'https://app.wildfirechat.net';
-    let regex = / .?static .*?APP_SERVER.*=.*'(.*)'/gm
+    let regex = /\s+static\s+APP_SERVER\s*=.*/gm
     const data = fs.readFileSync('./src/config.js', 'utf8')
     let results = data.match(regex);
-    console.log(results[0])
+    console.log(results)
     if(results[0].indexOf('wildfirechat') > -1){
         return;
     }
