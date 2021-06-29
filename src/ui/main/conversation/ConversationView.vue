@@ -90,10 +90,10 @@
                     <li v-if="isForwardable(message)">
                         <a @click.prevent="forward(message)">{{ $t('common.forward') }}</a>
                     </li>
-                    <li v-if="isFavable">
+                    <li v-if="isFavable(message)">
                         <a @click.prevent="">{{ $t('common.fav') }}</a>
                     </li>
-                    <li>
+                    <li v-if="isQuotable(message)">
                         <a @click.prevent="quoteMessage(message)">{{ $t('common.quote') }}</a>
                     </li>
                     <li>
@@ -145,6 +145,7 @@ import VideoMessageContent from "../../../wfc/messages/videoMessageContent";
 import localStorageEmitter from "../../../ipc/localStorageEmitter";
 import {remote} from "../../../platform";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
+import MessageContentType from "../../../wfc/messages/messageContentType";
 
 export default {
     components: {
@@ -334,6 +335,16 @@ export default {
                 }
             }
             return false;
+        },
+
+        isQuotable(message) {
+            if(!message){
+                return false;
+            }
+            return [MessageContentType.VOIP_CONTENT_TYPE_START,
+                MessageContentType.Voice,
+                MessageContentType.Video,
+                MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE].indexOf(message.messageContent.type) <= -1;
         },
 
         copy(message) {
