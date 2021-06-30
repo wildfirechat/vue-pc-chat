@@ -154,7 +154,9 @@ export default {
             if (response.data && response.data.result) {
                 this.groupAnnouncement = response.data.result.text;
             } else {
-                this.groupAnnouncement = this.$t('conversation.click_to_edit_group_announcement');
+                if(this.enableEditGroupNameOrAnnouncement){
+                    this.groupAnnouncement = this.$t('conversation.click_to_edit_group_announcement');
+                }
             }
         },
 
