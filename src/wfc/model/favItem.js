@@ -135,6 +135,7 @@ export default class FavItem {
                 if(this.data){
                     let payload = new MessagePayload();
                     //let payloadBytes = wfc.b64_to_utf8(this.data)
+                    payload.type = this.favType;
                     payload.content = this.title;
                     payload.binaryContent = this.data;
                     content.decode(payload)

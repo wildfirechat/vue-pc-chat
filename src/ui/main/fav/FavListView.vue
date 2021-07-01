@@ -44,10 +44,10 @@
                                 <video preload="metadata" :src="favItem.url"/>
                                 <i class="icon-ion-play"></i>
                             </div>
-<!--                            组合消息-->
+                            <!--                            组合消息-->
                             <div v-else-if="favItem.type === 11" class="fav-item-other">
                                 <p>
-                                    {{ favItem.title }}
+                                    {{ favItem._content }}
                                 </p>
                             </div>
                             <!--            其他-->
@@ -64,7 +64,7 @@
                     </div>
                 </li>
             </ul>
-            <infinite-loading :identifier="'fav'" force-use-infinite-wrapper direction="bottom"
+            <infinite-loading :identifier="infiniteId" force-use-infinite-wrapper direction="bottom"
                               @infinite="infiniteHandler">
                 <!--            <template slot="spinner">加载中...</template>-->
                 <template slot="no-more">{{ $t('fav.no_more') }}</template>
@@ -83,6 +83,9 @@ import wfc from "@/wfc/client/wfc";
 import InfiniteLoading from "vue-infinite-loading";
 import store from "@/store";
 import {ipcRenderer} from "@/platform";
+import FavItem from "../../../wfc/model/favItem";
+import {isElectron} from "../../../platform";
+import {stringValue} from "../../../wfc/util/longUtil";
 
 export default {
     name: "FavListView",
@@ -97,6 +100,7 @@ export default {
         return {
             favItems: [],
             imagePlaceHolder: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==',
+            infiniteId: +new Date(),
         }
     },
     methods: {
@@ -151,7 +155,18 @@ export default {
             favItems.forEach(fi => {
                 if (fi.data) {
                     if (fi.type === MessageContentType.Composite_Message) {
-                        // TODO
+                        let favItem = Object.assign(new FavItem(), fi);
+                        favItem.favType = fi.type;
+                        let message = favItem.toMessage();
+                        let compositeContent = message.messageContent;
+                        fi._content = fi.title;
+                        for (let i = 0; i < compositeContent.messages.length && i < 2; i++) {
+                            fi._content += '\n';
+                            fi._content += compositeContent.messages[i].messageContent.digest(compositeContent.messages[i]);
+                        }
+                        message.messageContent = compositeContent;
+
+                        fi._message = message;
                     } else {
                         fi.data = JSON.parse(fi.data);
                     }
@@ -190,7 +205,23 @@ export default {
                     });
                     break;
                 case MessageContentType.Composite_Message:
-                    // TODO
+                    if (isElectron()) {
+                        if (!favItem._message.messageUid) {
+                            console.log('messageUid is empty')
+                            return;
+                        }
+                        let hash = window.location.hash;
+                        let url = window.location.origin;
+                        if (hash) {
+                            url = window.location.href.replace(hash, '#/composite');
+                        } else {
+                            url += "/composite"
+                        }
+                        ipcRenderer.send('show-composite-message-window', {
+                            messageUid: stringValue(favItem._message.messageUid),
+                            url: url,
+                        });
+                    }
                     break;
                 default:
                     console.log('todo click', favItem)
@@ -281,6 +312,12 @@ export default {
     mounted() {
         // this.loadFavList('all');
     },
+    deactivated() {
+        this.favItems = [];
+    },
+    activated() {
+        this.infiniteId += 1;
+    },
     components: {
         InfiniteLoading,
     }
@@ -347,6 +384,7 @@ export default {
 .fav-item-other p {
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    white-space: pre-line;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
