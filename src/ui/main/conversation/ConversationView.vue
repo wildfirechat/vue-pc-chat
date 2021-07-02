@@ -92,7 +92,7 @@
                         <a @click.prevent="forward(message)">{{ $t('common.forward') }}</a>
                     </li>
                     <li v-if="isFavable(message)">
-                        <a @click.prevent="">{{ $t('common.fav') }}</a>
+                        <a @click.prevent="favMessage(message)">{{ $t('common.fav') }}</a>
                     </li>
                     <li v-if="isQuotable(message)">
                         <a @click.prevent="quoteMessage(message)">{{ $t('common.quote') }}</a>
@@ -148,6 +148,8 @@ import {remote} from "../../../platform";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import MessageContentType from "../../../wfc/messages/messageContentType";
 import BenzAMRRecorder from "benz-amr-recorder";
+import axios from "axios";
+import FavItem from "../../../wfc/model/favItem";
 
 var amr;
 export default {
@@ -322,7 +324,11 @@ export default {
         },
 
         isFavable(message) {
-            return true;
+            if (!message) {
+                return false;
+            }
+            return [MessageContentType.VOIP_CONTENT_TYPE_START,
+                MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE].indexOf(message.messageContent.type) <= -1;
         },
 
         isRecallable(message) {
@@ -396,6 +402,23 @@ export default {
 
         quoteMessage(message) {
             store.quoteMessage(message);
+        },
+
+        favMessage(message) {
+            let favItem = FavItem.fromMessage(message);
+            axios.post('/fav/add', {
+                messageUid: favItem.messageUid,
+                type: favItem.favType,
+                convType: favItem.conversation.type,
+                convTarget: favItem.conversation.target,
+                convLine: favItem.conversation.line,
+                origin: favItem.origin,
+                sender: favItem.sender,
+                title: favItem.title,
+                url: favItem.url,
+                thumbUrl: favItem.thumbUrl,
+                data: favItem.data,
+            }, {withCredentials: true})
         },
 
         multiSelect(message) {
@@ -516,6 +539,12 @@ export default {
             let fileMessageContent = new FileMessageContent(null, args.remoteUrl, args.name, args.size);
             let message = new Message(null, fileMessageContent);
             this.forward(message)
+        });
+
+        this.$eventBus.$on('forward-fav', args => {
+            let favItem = args.favItem;
+            let message = favItem.toMessage();
+            this.forward(message);
         });
 
         localStorageEmitter.on('inviteConferenceParticipant', (ev, args) => {

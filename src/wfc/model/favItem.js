@@ -9,9 +9,11 @@ import FileMessageContent from "../messages/fileMessageContent";
 import CompositeMessageContent from "../messages/compositeMessageContent";
 import MessagePayload from "../messages/messagePayload";
 import SoundMessageContent from "../messages/soundMessageContent";
+import Long from "long";
 
 export default class FavItem {
     id;
+    messageUid;
     // 和消息类型对应
     favType;
     timestamp;
@@ -25,6 +27,7 @@ export default class FavItem {
 
     static fromMessage(message) {
         let favItem = new FavItem();
+        favItem.messageUid = message.messageUid;
         favItem.conversation = message.conversation;
         favItem.favType = message.messageContent.type;
         favItem.sender = message.from;
@@ -96,7 +99,7 @@ export default class FavItem {
                 }
                 favItem.data = JSON.stringify(data);
                 break;
-                // TODO
+            // TODO
             // case MessageContentType.Link:
             //     break
             default:
@@ -107,32 +110,32 @@ export default class FavItem {
 
     toMessage() {
         let content;
-        switch (this.favType){
+        switch (this.favType) {
             case MessageContentType.Text:
                 content = new TextMessageContent(this.title);
                 break;
             case MessageContentType.Image:
                 content = new ImageMessageContent(null, this.url);
-                if(this.data){
-                    content.thumbnail = JSON.parse(this.data).thumb;
+                if (this.data) {
+                    content.thumbnail = this.data.thumb;
                 }
                 break;
             case MessageContentType.Video:
                 content = new VideoMessageContent(null, this.url);
-                if(this.data){
-                    content.thumbnail = JSON.parse(this.data).thumb;
+                if (this.data) {
+                    content.thumbnail = this.data.thumb;
                 }
                 break;
             case MessageContentType.File:
                 content = new FileMessageContent(null, this.url, this.title);
-                if(this.data){
-                    content.size = JSON.parse(this.data).size;
+                if (this.data) {
+                    content.size = this.data.size;
                 }
                 break;
             case MessageContentType.Composite_Message:
                 content = new CompositeMessageContent();
                 content.title = this.title;
-                if(this.data){
+                if (this.data) {
                     let payload = new MessagePayload();
                     //let payloadBytes = wfc.b64_to_utf8(this.data)
                     payload.type = this.favType;
@@ -143,8 +146,8 @@ export default class FavItem {
                 break;
             case MessageContentType.Voice:
                 content = new SoundMessageContent(null, this.url)
-                if(this.data){
-                    content.duration = JSON.parse(this.data).duration;
+                if (this.data) {
+                    content.duration = this.data.duration;
                 }
                 break;
             // TODO
@@ -153,6 +156,11 @@ export default class FavItem {
             default:
                 break;
         }
-        return new Message(this.conversation, content);
+        let msg = new Message(this.conversation, content);
+        if (this.messageUid) {
+            msg.messageUid = Long.fromValue(this.messageUid);
+        }
+
+        return msg;
     }
 }

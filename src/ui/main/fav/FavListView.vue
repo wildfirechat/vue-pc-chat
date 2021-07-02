@@ -1,7 +1,7 @@
 <template>
     <section class="fav-list-container">
         <h2>{{ title }}</h2>
-        <div infinite-wrapper>
+        <div infinite-wrapper v-on:scroll="onScroll">
             <div v-if="category === 'media'">
                 <div v-for="group in groupedMediaItems"
                      :key="group.category"
@@ -9,6 +9,7 @@
                     <p>{{ group.category }}</p>
                     <ul class="media-category-items">
                         <li v-for="(favItem, index ) in group.items"
+                            @contextmenu="openFavContextMenu($event, favItem)"
                             @click="handleClickMedia(index, group.items)"
                             :key="favItem.id">
                             <div v-if="favItem.type === 3" class="media-item-image">
@@ -24,6 +25,7 @@
             </div>
             <ul v-else>
                 <li v-for="(favItem, index) in (filteredFavItems)"
+                    @contextmenu="openFavContextMenu($event, favItem)"
                     :key="index">
                     <div class="fav-item-container" @click="handleClick(favItem)">
                         <div class="fav-item-content">
@@ -58,8 +60,8 @@
                             </div>
                         </div>
                         <div class="fav-item-sender-time">
-                            <p class="time">2021/01/30</p>
-                            <p class="sender">{{ $t('fav.from') + ': ' + favItem._senderName }}</p>
+                            <p class="time">{{ favItem._timeStr }}</p>
+                            <p class="sender">{{ $t('fav.from') + ': ' + favItem.origin }}</p>
                         </div>
                     </div>
                 </li>
@@ -70,6 +72,15 @@
                 <template slot="no-more">{{ $t('fav.no_more') }}</template>
                 <template slot="no-results">{{ $t('fav.all_fav_load') }}</template>
             </infinite-loading>
+            <vue-context ref="menu" v-slot="{data:favItem}" :close-on-scroll="true" v-on:close="onMenuClose">
+                <!--          更多menu item-->
+                <li>
+                    <a @click.prevent="deleteFav(favItem)">{{ $t('common.delete') }}</a>
+                </li>
+                <li>
+                    <a @click.prevent="forward(favItem)">{{ $t('misc.send_to_friend') }}</a>
+                </li>
+            </vue-context>
         </div>
     </section>
 
@@ -240,6 +251,36 @@ export default {
                 })
             })
             store.previewMedias(mediaItems, index)
+        },
+        openFavContextMenu(event, favItem) {
+            if (!favItem) {
+                return;
+            }
+            this.$refs.menu.open(event, favItem);
+        },
+        onMenuClose() {
+            // do nothing
+        },
+
+        deleteFav(favItem) {
+            axios.post('/fav/del/' + favItem.id, {}, {withCredentials: true})
+                .then(response => {
+                    if (response.data.code === 0) {
+                        this.favItems = this.favItems.filter(fi => fi.id !== favItem.id);
+                    }
+                })
+        },
+
+        forward(favItem) {
+            favItem = Object.assign(new FavItem(), favItem);
+            favItem.favType = favItem.type;
+            this.$eventBus.$emit('forward-fav', {
+                favItem: favItem,
+            })
+        },
+        onScroll() {
+            // hide message context menu
+            this.$refs.menu && this.$refs.menu.close();
         }
     },
 
