@@ -34,7 +34,7 @@
                         <template slot="no-more">{{ $t('conversation.no_more_message') }}</template>
                         <template slot="no-results">{{ $t('conversation.all_message_load') }}</template>
                     </infinite-loading>
-                    <ul>
+                    <ul v-if="fixTippy">
                         <!--todo item.messageId or messageUid as key-->
                         <li v-for="(message) in sharedConversationState.currentConversationMessageList"
                             :key="message.messageId">
@@ -179,7 +179,17 @@ export default {
             saveMessageListViewFlexGrow: -1,
 
             dragAndDropEnterCount: 0,
+            // FIXME 选中一个会话，然后切换到其他page，比如联系人，这时该会话收到新消息或发送消息，会导致新收到/发送的消息的界面错乱，尚不知道原因，但这么做能解决。
+            fixTippy: false,
         };
+    },
+
+    activated() {
+        this.fixTippy = true;
+    },
+
+    deactivated() {
+        this.fixTippy = false;
     },
 
     methods: {
@@ -568,6 +578,7 @@ export default {
         document.removeEventListener('mouseup', this.dragEnd);
         document.removeEventListener('mousemove', this.drag);
         this.$eventBus.$off('send-file')
+        this.$eventBus.$off('forward-fav')
     },
 
     updated() {
