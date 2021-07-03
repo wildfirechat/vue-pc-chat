@@ -330,7 +330,7 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
+    right: 150px;
     height: 60px;
     z-index: -1;
     -webkit-app-region: drag;
