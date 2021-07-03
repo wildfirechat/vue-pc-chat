@@ -6,15 +6,16 @@
                 v-for="conversationInfo in sharedConversationState.conversationInfoList"
                 :key="conversationInfoKey(conversationInfo)"
                 v-bind:class="{active: sharedConversationState.currentConversationInfo && sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation),
-                          top:conversationInfo.isTop}"
-                @contextmenu.prevent="$refs.menu.open($event,conversationInfo)"
+                          top:conversationInfo.isTop,
+                          highlight:contextMenuConversationInfo && contextMenuConversationInfo.conversation.equal(conversationInfo.conversation) }"
+                @contextmenu.prevent="showConversationItemContextMenu($event, conversationInfo)"
             >
                 <ConversationItemView :conversation-info="conversationInfo"/>
             </li>
         </ul>
 
 
-        <vue-context ref="menu" v-slot="{data:conversationInfo}">
+        <vue-context ref="menu" v-slot="{data:conversationInfo}" v-on:close="onConversationItemContextMenuClose">
             <li>
                 <a @click.prevent="setConversationTop(conversationInfo)">{{
                         conversationInfo && conversationInfo.isTop ? $t('conversation.cancel_sticky_top') : $t('conversation.sticky_top')
@@ -42,6 +43,7 @@ export default {
     data() {
         return {
             sharedConversationState: store.state.conversation,
+            contextMenuConversationInfo: null,
         };
     },
 
@@ -70,6 +72,16 @@ export default {
             let el = this.$el.getElementsByClassName("active")[0];
             el && el.scrollIntoView({behavior: "instant", block: "center"});
         },
+
+        showConversationItemContextMenu(event, conversationInfo) {
+            this.contextMenuConversationInfo = conversationInfo;
+            console.log('xxx', this.contextMenuConversationInfo)
+            this.$refs.menu.open(event, conversationInfo)
+        },
+
+        onConversationItemContextMenuClose() {
+            this.contextMenuConversationInfo = null;
+        }
     },
     activated() {
         this.scrollActiveElementCenter();
@@ -102,6 +114,10 @@ export default {
 
 .conversation-list ul:first-of-type li.top {
     background-color: #f1f1f1;
+}
+
+.conversation-list li.highlight {
+    border: 1px solid #4168e0 !important;
 }
 
 .conversation-list ul:first-of-type li.active.top {
