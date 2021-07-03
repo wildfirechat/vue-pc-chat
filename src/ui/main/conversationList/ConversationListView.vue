@@ -117,7 +117,8 @@ export default {
 }
 
 .conversation-list li.highlight {
-    border: 1px solid #4168e0 !important;
+    box-shadow: 0 0 0 2px #4168e0 inset;
+    z-index: 100;
 }
 
 .conversation-list ul:first-of-type li.active.top {
