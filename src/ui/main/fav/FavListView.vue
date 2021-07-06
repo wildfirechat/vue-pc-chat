@@ -96,7 +96,7 @@ import store from "@/store";
 import {ipcRenderer} from "@/platform";
 import FavItem from "../../../wfc/model/favItem";
 import {isElectron} from "../../../platform";
-import {stringValue} from "../../../wfc/util/longUtil";
+import {_reverseToJsLongString, stringValue} from "../../../wfc/util/longUtil";
 
 export default {
     name: "FavListView",
@@ -126,9 +126,11 @@ export default {
             let response = await axios.post('/fav/list', {
                 id: startId,
                 count: 20,
-            }, {withCredentials: true});
-            if (response.data && response.data.result) {
-                let obj = response.data.result;
+            }, {withCredentials: true, transformResponse: [data => data]});
+            let data = _reverseToJsLongString(response.data, 'messageUid');
+            data = JSON.parse(data);
+            if (data && data.result) {
+                let obj = data.result;
                 let items = obj.items;
                 let found = false;
                 for (let i = 0; i < items.length; i++) {
@@ -229,7 +231,7 @@ export default {
                             url += "/composite"
                         }
                         ipcRenderer.send('show-composite-message-window', {
-                            messageUid: stringValue(favItem._message.messageUid),
+                            messageUid: favItem.messageUid,
                             url: url,
                         });
                     }

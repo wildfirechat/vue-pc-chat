@@ -150,6 +150,7 @@ import MessageContentType from "../../../wfc/messages/messageContentType";
 import BenzAMRRecorder from "benz-amr-recorder";
 import axios from "axios";
 import FavItem from "../../../wfc/model/favItem";
+import {stringValue} from "../../../wfc/util/longUtil";
 
 var amr;
 export default {
@@ -417,7 +418,7 @@ export default {
         favMessage(message) {
             let favItem = FavItem.fromMessage(message);
             axios.post('/fav/add', {
-                messageUid: favItem.messageUid,
+                messageUid: stringValue(favItem.messageUid),
                 type: favItem.favType,
                 convType: favItem.conversation.type,
                 convTarget: favItem.conversation.target,
