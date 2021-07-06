@@ -78,6 +78,8 @@ export default {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
         axios.defaults.baseURL = Config.APP_SERVER;
 
+        axios.defaults.headers.common['authToken'] = getItem('authToken');
+
         let userId = getItem('userId');
         let token = getItem('token');
         if (userId) {
@@ -150,6 +152,15 @@ export default {
                             wfc.connect(userId, imToken);
                             setItem('userId', userId);
                             setItem('token', imToken);
+                            let appAuthToken = response.headers['authtoken'];
+                            if (!appAuthToken) {
+                                appAuthToken = response.headers['authToken'];
+                            }
+
+                            if(appAuthToken){
+                                setItem('authToken', appAuthToken);
+                                axios.defaults.headers.common['authToken'] = appAuthToken;
+                            }
                         }
                         break;
                     case 9:
