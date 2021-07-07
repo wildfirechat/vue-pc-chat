@@ -164,7 +164,11 @@ export default {
                         }
                         break;
                     case 9:
-                        this.qrCode = response.data.result.portrait;
+                        if(response.data.result.portrait){
+                            this.qrCode = response.data.result.portrait;
+                        }else {
+                            this.qrCode = Config.DEFAULT_PORTRAIT_URL;
+                        }
                         setItem("userName", response.data.result.userName);
                         setItem("userPortrait", response.data.result.portrait);
 
