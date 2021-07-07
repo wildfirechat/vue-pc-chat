@@ -430,6 +430,29 @@ export default {
                 thumbUrl: favItem.thumbUrl,
                 data: favItem.data,
             }, {withCredentials: true})
+                .then(response => {
+                    if (response && response.data && response.data.code === 0) {
+                        this.$notify({
+                            // title: '收藏成功',
+                            text: '收藏成功',
+                            type: 'info'
+                        });
+                    } else {
+                        this.$notify({
+                            // title: '收藏成功',
+                            text: '收藏失败',
+                            type: 'error'
+                        });
+                    }
+                })
+                .catch(err => {
+                    this.$notify({
+                        // title: '收藏失败',
+                        text: '收藏失败',
+                        type: 'error'
+                    });
+
+                })
         },
 
         multiSelect(message) {
