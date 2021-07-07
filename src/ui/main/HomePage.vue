@@ -27,6 +27,7 @@
                         name="infoTrigger"
                         class="avatar"
                         draggable="false"
+                        @click="onClickPortrait()"
                         :src="sharedContactState.selfUserInfo.portrait"
                         alt=""
                     /></a>
@@ -135,6 +136,9 @@ export default {
     },
 
     methods: {
+        onClickPortrait() {
+            wfc.getUserInfo(this.sharedContactState.selfUserInfo.uid, true);
+        },
         go2Conversation() {
             if (this.$router.currentRoute.path === '/home') {
                 return
@@ -469,6 +473,7 @@ i.active {
     background: #f2f2f280;
     box-shadow: 0 0 1px #000;
 }
+
 .voip-iframe-container {
     background: #292929;
     position: absolute;
