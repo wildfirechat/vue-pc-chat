@@ -107,6 +107,7 @@ export default {
             emojiCategories: categoriesDefault,
             emojis: emojisDefault,
             lastConversationInfo: null,
+            storeDraftIntervalId: 0
         }
     },
     methods: {
@@ -566,6 +567,7 @@ export default {
     },
 
     activated() {
+        this.restoreDraft();
         this.focusInput();
     },
 
@@ -585,7 +587,7 @@ export default {
 
         if (isElectron()) {
             ipcRenderer.on('screenshots-ok', (event, args) => {
-                console.log('screenshots-ok jxojoj', args)
+                console.log('screenshots-ok', args)
                 if (args.filePath) {
                     setTimeout(() => {
                         document.execCommand('insertImage', false, 'local-resource://' + args.filePath);
@@ -593,11 +595,17 @@ export default {
                 }
             });
         }
+        this.storeDraftIntervalId = setInterval(() => {
+            this.storeDraft(this.conversationInfo, this.quotedMessage);
+        }, 5 * 1000)
     },
 
     destroyed() {
         if (isElectron()) {
             ipcRenderer.removeAllListeners('screenshots-ok');
+        }
+        if (this.storeDraftIntervalId) {
+            clearInterval(this.storeDraftIntervalId)
         }
     },
 
