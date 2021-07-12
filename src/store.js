@@ -723,7 +723,7 @@ let store = {
         let fileOrLocalPath = null;
         let remotePath = null;
         if (typeof file === 'string') {
-            if (file.startsWith('/')) {
+            if (!file.startsWith('http')) {
                 fileOrLocalPath = file;
             } else {
                 remotePath = file;
