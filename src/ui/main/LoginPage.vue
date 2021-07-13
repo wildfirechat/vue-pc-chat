@@ -6,6 +6,7 @@
         <div class="qr-container">
             <img v-if="qrCode" v-bind:src="qrCode" alt="">
             <p v-else>{{ $t('misc.gen_qr_code') }}</p>
+            <ClipLoader v-if="loginStatus === 4" class="loading" :color="'white'"  :height="'80px'" :width="'80px'"/>
         </div>
         <div class="drag-area"/>
 
@@ -40,8 +41,8 @@
             </div>
 
             <!--      开发调试时，自动登录-->
-            <div v-else-if="loginStatus === 4">
-                <p>{{ $t('login.auto_login_tip') }}</p>
+            <div v-else-if="loginStatus === 4" >
+                <p>数据同步中...</p>
             </div>
         </div>
     </div>
@@ -53,6 +54,7 @@ import Config from "@/config";
 import wfc from '../../wfc/client/wfc'
 import PCSession from "@/wfc/model/pcsession";
 import jrQRCode from 'jr-qrcode'
+import ClipLoader from 'vue-spinner/src/ClipLoader'
 import ConnectionStatus from "@/wfc/client/connectionStatus";
 import EventType from "@/wfc/client/wfcEvent";
 import {clear, getItem, setItem} from "@/ui/util/storageHelper";
@@ -150,6 +152,7 @@ export default {
                             let userId = response.data.result.userId;
                             let imToken = response.data.result.token;
                             wfc.connect(userId, imToken);
+                            this.loginStatus = 4;
                             setItem('userId', userId);
                             setItem('token', imToken);
                             let appAuthToken = response.headers['authtoken'];
@@ -157,16 +160,16 @@ export default {
                                 appAuthToken = response.headers['authToken'];
                             }
 
-                            if(appAuthToken){
+                            if (appAuthToken) {
                                 setItem('authToken', appAuthToken);
                                 axios.defaults.headers.common['authToken'] = appAuthToken;
                             }
                         }
                         break;
                     case 9:
-                        if(response.data.result.portrait){
+                        if (response.data.result.portrait) {
                             this.qrCode = response.data.result.portrait;
-                        }else {
+                        } else {
                             this.qrCode = Config.DEFAULT_PORTRAIT_URL;
                         }
                         setItem("userName", response.data.result.userName);
@@ -251,6 +254,7 @@ export default {
 
     components: {
         ElectronWindowsControlButtonView,
+        ClipLoader,
     }
 
 }
@@ -280,6 +284,11 @@ export default {
     height: 250px;
     border-radius: 3px;
     object-fit: contain;
+}
+
+.qr-container .loading {
+    position: absolute;
+    border-width: 4px;
 }
 
 .pending-scan,
