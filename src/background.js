@@ -829,6 +829,18 @@ const createMainWindow = async () => {
     regShortcut();
 };
 
+// deep link
+const PROTOCOL = 'wfc';
+function onDeepLink(url){
+    console.log('onOpenDeepLink', url)
+    mainWindow.webContents.send('deep-link', url);
+}
+
+app.setAsDefaultProtocolClient(PROTOCOL);
+app.on('open-url', (event, url) => {
+    onDeepLink(url);
+})
+
 app.setName(pkg.name);
 app.dock && app.dock.setIcon(icon);
 
@@ -837,11 +849,15 @@ if (!app.requestSingleInstanceLock()) {
     app.quit()
 }
 
-app.on('second-instance', () => {
+app.on('second-instance', (event, argv) => {
     if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore()
         mainWindow.focus()
         mainWindow.show()
+    }
+    let url = argv.find((arg) => arg.startsWith(PROTOCOL));
+    if(url){
+        onDeepLink(url)
     }
 })
 

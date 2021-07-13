@@ -56,6 +56,10 @@ module.exports = {
               appId: 'cn.wildfire.chat',
               compression: 'normal',
               artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
+              protocols: {
+                  name: "wf-deep-linking",
+                  schemes: ["wfc"]
+              },
               mac: {
                 extendInfo: {
                   NSCameraUsageDescription: "This app requires camera access to record video.",

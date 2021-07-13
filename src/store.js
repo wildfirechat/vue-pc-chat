@@ -307,6 +307,10 @@ let store = {
         });
 
         if (isElectron()) {
+            ipcRenderer.on('deep-link', (event, args) => {
+                // TODO
+                console.log('deep-link', args)
+            })
             ipcRenderer.on('file-downloaded', (event, args) => {
                 let messageId = args.messageId;
                 let localPath = args.filePath;
