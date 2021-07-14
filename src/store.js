@@ -1132,11 +1132,8 @@ let store = {
 
     // TODO 到底是什么匹配了
     searchContact(query) {
-        let queryPinyin = convert(query, {style: 0}).join('').trim().toLowerCase();
         let result = contactState.friendList.filter(u => {
-            return u._displayName.indexOf(query) > -1 || u._displayName.indexOf(queryPinyin) > -1
-                || u._pinyin.indexOf(query) > -1 || u._pinyin.indexOf(queryPinyin) > -1
-                || u._firstLetters.indexOf(query) > -1 || u._firstLetters.indexOf(queryPinyin) > -1
+            return u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query) > -1 || u._pinyin.indexOf(query) > -1
         });
 
         console.log('friend searchResult', result)
@@ -1188,8 +1185,16 @@ let store = {
 
     // TODO
     searchConversation(query) {
+        return conversationState.conversationInfoList.filter(info => {
+            let displayNamePinyin = convert(info.conversation._target._displayName, {style: 0}).join('').trim().toLowerCase();
+            return info.conversation._target._displayName.indexOf(query) > -1 || displayNamePinyin.indexOf(query.toLowerCase()) > -1
 
-        return [];
+            // let result = contactState.friendList.filter(u => {
+            //     return u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query) > -1 || u._pinyin.indexOf(query) > -1
+            // });
+            //
+            // console.log('friend searchResult', result)
+        })
     },
 
     // TODO

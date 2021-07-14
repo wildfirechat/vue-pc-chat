@@ -89,7 +89,7 @@
                         <a @click.prevent="delMessage(message)">{{ $t('common.delete') }}</a>
                     </li>
                     <li v-if="isForwardable(message)">
-                        <a @click.prevent="forward(message)">{{ $t('common.forward') }}</a>
+                        <a @click.prevent="_forward(message)">{{ $t('common.forward') }}</a>
                     </li>
                     <li v-if="isFavable(message)">
                         <a @click.prevent="favMessage(message)">{{ $t('common.fav') }}</a>
@@ -409,6 +409,12 @@ export default {
 
         forward(message) {
             return this.pickConversationAndForwardMessage(ForwardType.NORMAL, [message]);
+        },
+
+        _forward(message){
+            this.forward(message).catch(()=>{
+               // do nothing
+            });
         },
 
         quoteMessage(message) {
