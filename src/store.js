@@ -27,6 +27,7 @@ import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 import IPCEventType from "./ipcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
+import MediaMessageContent from "./wfc/messages/mediaMessageContent";
 
 /**
  * 一些说明
@@ -922,6 +923,13 @@ let store = {
         if (m.messageContent instanceof CompositeMessageContent) {
             this._patchCompositeMessageContent(m.messageContent);
         }
+
+        // TODO 如果Im server支持备选网络，需要根据当前的网络情况，判断当前是处于主网络，还是备选网络，并动态修改媒体类消息的remotePath，不然可能会出现不能正常加载的情况
+        // 如何判断是主网络，还是备选网络，这儿提供一种思路：分别通过主网络和备选网络测试访问im server的/api/version接口
+        // 判断是主网络，还是备选网络，一般启动的时候，检测到网络网络变化的时候，在判断一次。
+        // if(m.messageContent instanceof MediaMessageContent){
+        // TODO 动态修改remotePath
+        // }
 
         return m;
     },
