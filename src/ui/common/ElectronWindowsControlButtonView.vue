@@ -33,6 +33,8 @@
 
 <script>
 import {remote} from "@/platform";
+import wfc from "../../wfc/client/wfc";
+import {app} from "../../platform";
 
 export default {
     name: "ElectronWindowsControlButtonView",
@@ -70,6 +72,9 @@ export default {
         close() {
             const win = remote.getCurrentWindow();
             win.close();
+            if(!wfc.isLogin()){
+                app.exit(0)
+            }
         },
         toggleMaxRestoreButtons() {
             const win = remote.getCurrentWindow();
