@@ -1100,7 +1100,7 @@ let store = {
         if (query) {
             console.log('search', query)
             searchState.contactSearchResult = this.searchContact(query);
-            searchState.groupSearchResult = this.searchFavGroup(query);
+            searchState.groupSearchResult = this.searchGroupConversation(query);
             searchState.conversationSearchResult = this.searchConversation(query);
             searchState.messageSearchResult = this.searchMessage(query);
             // 默认不搜索新用户
@@ -1188,12 +1188,16 @@ let store = {
         return conversationState.conversationInfoList.filter(info => {
             let displayNamePinyin = convert(info.conversation._target._displayName, {style: 0}).join('').trim().toLowerCase();
             return info.conversation._target._displayName.indexOf(query) > -1 || displayNamePinyin.indexOf(query.toLowerCase()) > -1
+        })
+    },
 
-            // let result = contactState.friendList.filter(u => {
-            //     return u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query) > -1 || u._pinyin.indexOf(query) > -1
-            // });
-            //
-            // console.log('friend searchResult', result)
+    searchGroupConversation(query){
+        query = query.toLowerCase();
+        let groups = conversationState.conversationInfoList.filter(info => info.conversation.type === ConversationType.Group).map(info => info.conversation._target);
+        return groups.filter(groupInfo => {
+            let namePinyin = convert(groupInfo.name, {style: 0}).join('').trim().toLowerCase();
+            let firstLetters = convert(groupInfo.name, {style: 4}).join('').trim().toLowerCase();
+            return groupInfo.name.indexOf(query) > -1 || namePinyin.indexOf(query) > -1 || firstLetters.indexOf(query) > -1
         })
     },
 
