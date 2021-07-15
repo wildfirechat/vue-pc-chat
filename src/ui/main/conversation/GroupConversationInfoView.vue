@@ -130,6 +130,7 @@ export default {
                 {
                     users: groupMemberUserInfos,
                     confirmTitle: this.$t('common.remove'),
+                    showCategoryLabel: false,
                 }, {
                     name: 'pick-user-modal',
                     width: 600,
@@ -154,7 +155,7 @@ export default {
             if (response.data && response.data.result) {
                 this.groupAnnouncement = response.data.result.text;
             } else {
-                if(this.enableEditGroupNameOrAnnouncement){
+                if (this.enableEditGroupNameOrAnnouncement) {
                     this.groupAnnouncement = this.$t('conversation.click_to_edit_group_announcement');
                 }
             }
