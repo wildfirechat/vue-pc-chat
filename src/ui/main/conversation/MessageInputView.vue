@@ -82,6 +82,7 @@ import {config as emojiConfig} from "@/ui/main/conversation/EmojiAndStickerConfi
 import PickUserView from "@/ui/main/pick/PickUserView";
 import {ipcRenderer, isElectron} from "@/platform";
 import {copyText} from "../../util/clipboard";
+import EventType from "../../../wfc/client/wfcEvent";
 
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
@@ -564,6 +565,14 @@ export default {
             }
         },
 
+        onGroupMembersUpdate(groupId) {
+            console.log('messageInput onGroupMembersUpdate', groupId)
+            if (this.conversationInfo
+                && this.conversationInfo.conversation.type === ConversationType.Group
+                && this.conversationInfo.conversation.target === groupId) {
+                this.initMention(this.conversationInfo.conversation);
+            }
+        }
     },
 
     activated() {
@@ -600,6 +609,10 @@ export default {
         }, 5 * 1000)
     },
 
+    created() {
+        wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
+    },
+
     destroyed() {
         if (isElectron()) {
             ipcRenderer.removeAllListeners('screenshots-ok');
@@ -607,6 +620,7 @@ export default {
         if (this.storeDraftIntervalId) {
             clearInterval(this.storeDraftIntervalId)
         }
+        wfc.eventEmitter.removeListener(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
     },
 
     watch: {
