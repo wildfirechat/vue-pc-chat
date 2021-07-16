@@ -27,7 +27,6 @@ import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 import IPCEventType from "./ipcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
-import MediaMessageContent from "./wfc/messages/mediaMessageContent";
 
 /**
  * 一些说明
@@ -563,7 +562,7 @@ let store = {
     },
 
     playVoice(message) {
-        if(conversationState.currentVoiceMessage){
+        if (conversationState.currentVoiceMessage) {
             conversationState.currentVoiceMessage._isPlaying = false;
         }
         conversationState.currentVoiceMessage = message;
@@ -994,8 +993,19 @@ let store = {
     },
 
     _loadFriendRequest() {
-        let requests = wfc.getIncommingFriendRequest()
-        requests = requests.concat(wfc.getOutgoingFriendRequest());
+        let incomingRequests = wfc.getIncommingFriendRequest()
+        let requests = incomingRequests;
+        let outgoingRequests = wfc.getOutgoingFriendRequest();
+        // 当针对同一个人，有邀请(out)和被邀请（in)，过滤掉邀请
+        outgoingRequests.forEach(or => {
+            let index = incomingRequests.findIndex(ir => {
+                return or.target === ir.target;
+            })
+            if (index === -1) {
+                requests.push(or);
+            }
+        })
+
         requests.sort((a, b) => numberValue(b.timestamp) - numberValue(a.timestamp))
         requests = requests.length >= 20 ? requests.slice(0, 20) : requests;
         let uids = [];
@@ -1191,7 +1201,7 @@ let store = {
         })
     },
 
-    searchGroupConversation(query){
+    searchGroupConversation(query) {
         query = query.toLowerCase();
         let groups = conversationState.conversationInfoList.filter(info => info.conversation.type === ConversationType.Group).map(info => info.conversation._target);
         return groups.filter(groupInfo => {
