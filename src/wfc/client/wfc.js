@@ -23,6 +23,18 @@ export class WfcManager {
         impl.eventEmitter = this.eventEmitter;
     }
 
+
+    /**
+     * 初始化，请参考本demo的用法
+     * 只可以在主窗口调用，其他窗口调用之后，会导致主窗口通知失效。
+     * 如果其他窗口想调用wfc里面的非通知方法，可以参考{@link attach}
+     * @param {[]} args，当采用script标签的方式引入，可传入Config配置对象，配置项，请参考{@link Config}
+     */
+    init(args = []) {
+        impl.init(args);
+        avenginekit.setup(self);
+    }
+
     /**
      * 注册新的自定义消息
      *
@@ -35,21 +47,6 @@ export class WfcManager {
         impl.registerMessageContent(name, flag, type, clazz);
     }
 
-    disconnect() {
-        impl.disconnect();
-    }
-
-    setPackageName(packageName) {
-        impl.setPackageName(packageName);
-    }
-
-    /**
-     * 获取host
-     */
-    getHost() {
-        return impl.getHost();
-    }
-
     /**
      * 获取clientId，获取用户token时，一定要通过调用此方法获取clientId，否则会连接失败。
      * @returns {string} clientId
@@ -58,27 +55,40 @@ export class WfcManager {
         return impl.getClientId();
     }
 
-    getEncodedClientId() {
-        return impl.getEncodedClientId();
+    /*
+     * 启用国密加密。注意需要服务器端同步开启国密配置
+     */
+    useSM4() {
+      impl.useSM4();
+    }
+    
+    /**
+     * 连接服务器
+     * @param {string} userId 用户id
+     * @param {string} token 用户token，生成token时，所使用的clientId，一定要通过{@link getClientId}获取
+     */
+    connect(userId, token) {
+        impl.connect(userId, token);
     }
 
     /**
-     *
-     * @param {string} data 将要编码的数据
-     * @returns {string} 编码结果，base64格式
+     * 设置第三方推送设备token
+     * @param {number} pushType 推送类型，0-5 移动端已经使用了。
+     * @param {String} token 设备token
      */
-    encodeData(data) {
-        return impl.encodeData(data);
+    setDeviceToken(pushType, token) {
+        impl.setDeviceToken(pushType, token);
     }
 
-    /**
-     *
-     * @param {string} encodedData 将要解码的数据，base64格式
-     * @returns {null | string} 解码之后的数据
-     */
-    decodeData(encodedData) {
-        return impl.decodeData(encodedData);
+
+    disconnect() {
+        impl.disconnect();
     }
+
+    setPackageName(packageName) {
+        impl.setPackageName(packageName);
+    }
+
 
     /**
      * 获取当前用户的id
@@ -1429,24 +1439,6 @@ export class WfcManager {
         impl.uploadMedia(fileName, fileOrData, mediaType, successCB, failCB, progressCB);
     }
 
-    /**
-     * 连接服务器
-     * @param {string} userId 用户id
-     * @param {string} token 用户token，生成token时，所使用的clientId，一定要通过{@link getClientId}获取
-     */
-    connect(userId, token) {
-        impl.connect(userId, token);
-    }
-
-    /**
-     * 设置第三方推送设备token
-     * @param {number} pushType 推送类型，0-5 移动端已经使用了。
-     * @param {String} token 设备token
-     */
-    setDeviceToken(pushType, token) {
-        impl.setDeviceToken(pushType, token);
-    }
-
     getVersion() {
         return impl.getVersion();
     }
@@ -1617,6 +1609,36 @@ export class WfcManager {
     }
 
     /**
+     * 获取host
+     */
+    getHost() {
+        return impl.getHost();
+    }
+
+
+    getEncodedClientId() {
+        return impl.getEncodedClientId();
+    }
+
+    /**
+     *
+     * @param {string} data 将要编码的数据
+     * @returns {string} 编码结果，base64格式
+     */
+    encodeData(data) {
+        return impl.encodeData(data);
+    }
+
+    /**
+     *
+     * @param {string} encodedData 将要解码的数据，base64格式
+     * @returns {null | string} 解码之后的数据
+     */
+    decodeData(encodedData) {
+        return impl.decodeData(encodedData);
+    }
+
+    /**
      * 发送会议相关请求
      * @param sessionId
      * @param roomId
@@ -1634,17 +1656,6 @@ export class WfcManager {
 
     _getStore() {
         return impl._getStore();
-    }
-
-    /**
-     * 初始化，请参考本demo的用法
-     * 只可以在主窗口调用，其他窗口调用之后，会导致主窗口通知失效。
-     * 如果其他窗口想调用wfc里面的非通知方法，可以参考{@link attach}
-     * @param {[]} args，当采用script标签的方式引入，可传入Config配置对象，配置项，请参考{@link Config}
-     */
-    init(args = []) {
-        impl.init(args);
-        avenginekit.setup(self);
     }
 
     /**
