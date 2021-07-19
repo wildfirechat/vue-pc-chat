@@ -86,7 +86,7 @@ export default {
         let token = getItem('token');
         if (userId) {
             let portrait = getItem("userPortrait");
-            this.qrCode = portrait;
+            this.qrCode = portrait ? portrait : Config.DEFAULT_PORTRAIT_URL;
 
             let autoLogin = getItem(userId + '-' + 'autoLogin') === '1'
             if (autoLogin && token) {
