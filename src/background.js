@@ -861,6 +861,11 @@ app.on('second-instance', (event, argv) => {
     }
 })
 
+// windows上，需要正确设置appUserModelId，才能正常显示通知，不然通知的应用标识会显示为：electron.app.xxx
+app.on('will-finish-launching', () => {
+    app.setAppUserModelId("cn.wildfire.chat")
+})
+
 function registerLocalResourceProtocol() {
     protocol.registerFileProtocol('local-resource', (request, callback) => {
         const url = request.url.replace(/^local-resource:\/\//, '')

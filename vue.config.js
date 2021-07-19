@@ -52,7 +52,9 @@ module.exports = {
             // mainProcessArgs: ['--arg-name', 'arg-value']
             // outputDir: 'release',
             builderOptions: {
+              // 产品名称
               productName: 'wildfirechat',
+              // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
               appId: 'cn.wildfire.chat',
               compression: 'normal',
               artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
