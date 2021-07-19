@@ -29,9 +29,10 @@
              ref="input" class="input"
              @paste="handlePaste"
              draggable="false"
+             title="Enter发送，Ctrl+Enter换行"
              autofocus
              @contextmenu.prevent="$refs.menu.open($event)"
-             placeholder="hello" contenteditable="true">
+             contenteditable="true">
         </div>
         <vue-context ref="menu" :lazy="true">
             <li>
@@ -695,6 +696,12 @@ export default {
     overflow: auto;
     user-select: text;
     -webkit-user-select: text;
+}
+
+.input:empty:before{
+    content: attr(title);
+    color: gray;
+    font-size: 13px;
 }
 
 .input-action-container ul li {

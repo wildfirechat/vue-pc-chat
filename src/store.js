@@ -27,6 +27,7 @@ import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 import IPCEventType from "./ipcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
+import {stringValue} from "./wfc/util/longUtil";
 
 /**
  * 一些说明
@@ -816,6 +817,7 @@ let store = {
     },
 
     _onloadConversationMessages(conversation, messages) {
+        let loadNewMsg = false;
         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
             let lastTimestamp = 0;
             let newMsgs = [];
@@ -825,10 +827,12 @@ let store = {
                     this._patchMessage(m, lastTimestamp);
                     lastTimestamp = m.timestamp;
                     newMsgs.push(m);
+                    loadNewMsg = true;
                 }
             });
             conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
         }
+        return loadNewMsg;
     },
 
     loadConversationHistoryMessages(loadedCB, completeCB) {
@@ -836,8 +840,10 @@ let store = {
             return;
         }
         let conversation = conversationState.currentConversationInfo.conversation;
+        let firstMsg = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0] : null;
         let firstMsgUid = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0].messageUid : 0;
         let firstMsgId = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0].messageId : 0;
+        console.log('loadConversationHistoryMessage', conversation, firstMsgId, stringValue(firstMsgUid), firstMsg);
         let lmsgs = wfc.getMessages(conversation, firstMsgId, true, 20);
         if (lmsgs.length > 0) {
             this._onloadConversationMessages(conversation, lmsgs);
@@ -845,8 +851,8 @@ let store = {
         } else {
             wfc.loadRemoteConversationMessages(conversation, firstMsgUid, 20,
                 (msgs) => {
-                    this._onloadConversationMessages(conversation, msgs)
-                    if (msgs.length === 0) {
+                    let loadNewMsg = this._onloadConversationMessages(conversation, msgs)
+                    if (!loadNewMsg) {
                         completeCB();
                     } else {
                         this._loadDefaultConversationList();
