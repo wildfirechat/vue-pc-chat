@@ -506,8 +506,9 @@ const createMainWindow = async () => {
         y: mainWindowState.y,
         width: 400,
         height: 480,
-        minWidth: 800,
+        minWidth: 400,
         minHeight: 480,
+        opacity: 0,
         titleBarStyle: 'hidden',
         maximizable: false,
         resizable: false,
@@ -541,6 +542,7 @@ const createMainWindow = async () => {
         try {
             mainWindow.show();
             mainWindow.focus();
+            setTimeout(() => mainWindow.setOpacity(1), 1000 / 60);
         } catch (ex) {
             // do nothing
         }
