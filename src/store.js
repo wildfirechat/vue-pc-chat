@@ -1203,7 +1203,8 @@ let store = {
     searchConversation(query) {
         return conversationState.conversationInfoList.filter(info => {
             let displayNamePinyin = convert(info.conversation._target._displayName, {style: 0}).join('').trim().toLowerCase();
-            return info.conversation._target._displayName.indexOf(query) > -1 || displayNamePinyin.indexOf(query.toLowerCase()) > -1
+            let firstLetters = convert(info.conversation._target._displayName, {style: 4}).join('').trim().toLowerCase();
+            return info.conversation._target._displayName.indexOf(query) > -1 || displayNamePinyin.indexOf(query.toLowerCase()) > -1 || firstLetters.indexOf(query) > -1
         })
     },
 
