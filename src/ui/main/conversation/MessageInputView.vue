@@ -32,6 +32,8 @@
              title="Enter发送，Ctrl+Enter换行"
              autofocus
              @contextmenu.prevent="$refs.menu.open($event)"
+             onmouseover="this.setAttribute('org_title', this.title); this.title='';"
+             onmouseout="this.title = this.getAttribute('org_title');"
              contenteditable="true">
         </div>
         <vue-context ref="menu" :lazy="true">
