@@ -802,14 +802,9 @@ let store = {
         conversationState.quotedMessage = message;
     },
 
-    getConversationMessages(conversation) {
-        let msgs = wfc.getMessages(conversation, 0, true, 20);
-        // let lastTimestamp = 0;
-        // msgs.forEach(m => {
-        //     this._patchMessage(m, lastTimestamp);
-        //     lastTimestamp = m.timestamp;
-        // });
-        return msgs.map(m => this._patchMessage(m, 0));
+    getConversationInfo(conversation){
+        let info = wfc.getConversationInfo(conversation);
+        return this._patchConversationInfo(info, false);
     },
 
     getMessages(conversation, fromUid = 0, before = true, withUser = '', callback) {
@@ -1247,10 +1242,9 @@ let store = {
         })
     },
 
-    // TODO
-    searchMessage(query) {
-
-        return [];
+    searchMessage(conversation, query) {
+        let msgs = wfc.searchMessage(conversation, query)
+        return msgs.map(m => this._patchMessage(m, 0));
     },
 
     // pick actions

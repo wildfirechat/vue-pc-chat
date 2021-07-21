@@ -814,6 +814,11 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
+    win.webContents.on('new-window', (event, url) => {
+        event.preventDefault();
+        console.log('new-windows', url)
+        shell.openExternal(url);
+    });
     return win;
 }
 
