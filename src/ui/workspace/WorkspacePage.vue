@@ -28,7 +28,7 @@
 // const TabGroup = require("electron-tabs");
 import ElectronTabs from 'electron-tabs'
 import '../../../node_modules/electron-tabs/electron-tabs.css'
-import IPCEventType from "../../ipcEventType";
+import IPCEventType from "../../ipc/ipcEventType";
 import Conversation from "../../wfc/model/conversation";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import {remote} from "../../platform";
