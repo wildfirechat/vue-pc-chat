@@ -40,6 +40,8 @@ export default {
     background-color: white;
     position: relative;
     border-radius: 5px;
+    display: flex;
+    align-items: center;
 }
 
 .text-message-container p {

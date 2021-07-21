@@ -802,6 +802,16 @@ let store = {
         conversationState.quotedMessage = message;
     },
 
+    getConversationMessages(conversation){
+        let msgs = wfc.getMessages(conversation, 0, true, 20);
+        let lastTimestamp = 0;
+        msgs.forEach(m => {
+            this._patchMessage(m, lastTimestamp);
+            lastTimestamp = m.timestamp;
+        });
+        return msgs;
+    },
+
     _loadCurrentConversationMessages() {
         if (!conversationState.currentConversationInfo) {
             return;
