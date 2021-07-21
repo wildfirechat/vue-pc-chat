@@ -57,8 +57,8 @@ export default {
 .text-message-container .text {
     color: #050505;
     font-size: 16px;
-    line-height: 16px;
-    max-height: 960px;
+    line-height: 25px;
+    max-height: 1000px;
     word-break: break-word;
     overflow: hidden;
     display: inline-block;
