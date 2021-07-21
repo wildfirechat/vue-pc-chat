@@ -21,7 +21,13 @@
                 <div class="category-item">图片与视频</div>
                 <div class="category-item">链接</div>
             </div>
-            <div class="message-list-container">
+            <div ref="conversationMessageList" class="message-list-container" infinite-wrapper>
+                <infinite-loading identifier="historyMessageLoader" force-use-infinite-wrapper direction="top"
+                                  @infinite="infiniteHandler">
+                    <!--            <template slot="spinner">加载中...</template>-->
+                    <template slot="no-more">{{ $t('fav.no_more') }}</template>
+                    <template slot="no-results">{{ $t('fav.all_fav_load') }}</template>
+                </infinite-loading>
                 <ul>
                     <li v-for="(message, index) in messages"
                         :key="message.uid">
@@ -54,6 +60,8 @@
 import MessageContentContainerView from "./conversation/message/MessageContentContainerView";
 import Conversation from "../../wfc/model/conversation";
 import store from "../../store";
+import InfiniteLoading from "vue-infinite-loading";
+import {stringValue} from "../../wfc/util/longUtil";
 
 export default {
     name: "ConversationMessageHistoryPage",
@@ -62,20 +70,43 @@ export default {
         return {
             query: '',
             messages: [],
+            conversation: null,
+            autoScrollToBottom: true,
         }
     },
 
     mounted() {
         let hash = window.location.hash;
-        document.title = ''
-        console.log('xxx', hash)
-        let conversation = new Conversation(0, 'GNMtGtZZ', 0);
-        this.messages = store.getConversationMessages(conversation);
-        console.log('xxxmsg', this.messages)
+        console.log('hash', hash)
+        this.conversation = new Conversation(0, 'GNMtGtZZ', 0);
+    },
+
+    updated() {
+        if (this.autoScrollToBottom) {
+            this.autoScrollToBottom = false;
+            let messageListElement = this.$refs['conversationMessageList'];
+            messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
+        }
+    },
+
+    methods: {
+        infiniteHandler($state) {
+            let firstMessageUid = this.messages.length > 0 ? this.messages[0].messageUid : 0;
+            console.log('to load', stringValue(firstMessageUid))
+            store.getMessages(this.conversation, firstMessageUid, true, '', (msgs) => {
+                if (msgs && msgs.length > 0) {
+                    this.messages = msgs.concat(this.messages);
+                    $state.loaded();
+                } else {
+                    $state.complete();
+                }
+            })
+        },
     },
 
     components: {
         MessageContentContainerView,
+        InfiniteLoading,
     }
 }
 </script>

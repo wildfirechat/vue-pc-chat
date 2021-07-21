@@ -802,14 +802,33 @@ let store = {
         conversationState.quotedMessage = message;
     },
 
-    getConversationMessages(conversation){
+    getConversationMessages(conversation) {
         let msgs = wfc.getMessages(conversation, 0, true, 20);
-        let lastTimestamp = 0;
-        msgs.forEach(m => {
-            this._patchMessage(m, lastTimestamp);
-            lastTimestamp = m.timestamp;
-        });
-        return msgs;
+        // let lastTimestamp = 0;
+        // msgs.forEach(m => {
+        //     this._patchMessage(m, lastTimestamp);
+        //     lastTimestamp = m.timestamp;
+        // });
+        return msgs.map(m => this._patchMessage(m, 0));
+    },
+
+    getMessages(conversation, fromUid = 0, before = true, withUser = '', callback) {
+        let msg = wfc.getMessageByUid(fromUid);
+        let fromIndex = 0;
+        fromIndex = msg ? msg.messageId : 0;
+        let lmsgs = wfc.getMessages(conversation, fromIndex, before, 20);
+        if (lmsgs.length > 0) {
+            lmsgs = lmsgs.map(m => this._patchMessage(m, 0));
+            setTimeout(() => callback(lmsgs), 200)
+        } else {
+            wfc.loadRemoteConversationMessages(conversation, fromUid, 20,
+                (msgs) => {
+                    callback(msgs.map(m => this._patchMessage(m, 0)))
+                },
+                (error) => {
+                    callback([])
+                });
+        }
     },
 
     _loadCurrentConversationMessages() {
