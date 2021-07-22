@@ -31,7 +31,8 @@
                 </div>
             </div>
             <div ref="conversationMessageList" class="message-list-container" infinite-wrapper>
-                <infinite-loading v-if="category==='all' && !this.query" identifier="historyMessageLoader" force-use-infinite-wrapper
+                <infinite-loading v-if="category==='all' && !this.query" identifier="historyMessageLoader"
+                                  force-use-infinite-wrapper
                                   direction="top"
                                   @infinite="infiniteHandler">
                     <!--            <template slot="spinner">加载中...</template>-->
@@ -124,6 +125,9 @@ export default {
         cancel() {
             this.query = '';
         },
+        openMessageContextMenu(event, msg) {
+            // TODO
+        }
     },
 
     computed: {
@@ -289,7 +293,8 @@ export default {
 
 .name-time-content-container .content {
     display: inline-block;
-    margin-left: -10px;
+    margin-left: -20px;
+    margin-right: 60px;
 }
 
 .portrait-container {
@@ -307,10 +312,12 @@ export default {
 
 >>> .text-message-container.out {
     background-color: #f3f3f3;
+    padding-top: 0 !important;
 }
 
 >>> .text-message-container {
     background-color: #f3f3f3;
+    padding-top: 0 !important;
 }
 
 >>> .rightarrow::before {

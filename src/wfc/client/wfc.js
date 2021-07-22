@@ -61,7 +61,7 @@ export class WfcManager {
     useSM4() {
       impl.useSM4();
     }
-    
+
     /**
      * 连接服务器
      * @param {string} userId 用户id
@@ -985,7 +985,7 @@ export class WfcManager {
      * @param {string} keyword 关键字
      * @param {[number]} types 从哪些类型的会话中进行搜索，可选值可参考{@link ConversationType}
      * @param {[number]} lines 从哪些会话线路进行搜索，默认传[0]即可
-     * @returns {[ConversationInfo]}
+     * @returns {[ConversationSearchResult]}
      */
     searchConversation(keyword, types = [0, 1, 2], lines = [0, 1, 2]) {
         return impl.searchConversation(keyword, types, lines);

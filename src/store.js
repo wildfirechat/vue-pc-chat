@@ -1210,7 +1210,7 @@ let store = {
 
     // TODO 匹配类型，是群名称匹配上了，还是群成员的名称匹配上了？
     // 目前只搜索群名称
-    searchFavGroup(query) {
+    filterFavGroup(query) {
         console.log('to search group', contactState.favGroupList)
         let queryPinyin = convert(query, {style: 0}).join('').trim().toLowerCase();
         let result = contactState.favGroupList.filter(g => {
@@ -1245,6 +1245,15 @@ let store = {
     searchMessage(conversation, query) {
         let msgs = wfc.searchMessage(conversation, query)
         return msgs.map(m => this._patchMessage(m, 0));
+    },
+
+    searchConversation(query, types = [0, 1, 2], lines = [0, 1, 2]) {
+        let results = wfc.searchConversation(query, types, lines);
+        return results.map(r => {
+            let info = wfc.getConversationInfo(r.conversation);
+            r._conversationInfo = this._patchConversationInfo(info, false);
+            return r;
+        })
     },
 
     // pick actions

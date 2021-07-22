@@ -58,7 +58,7 @@
                         <li v-if="sharedMiscState.isElectron">
                             <i class="icon-ion-code-working"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
-                               @click="go2Workspace"></i>
+                               @click="go2ConversationMessageHistoryPage"></i>
                         </li>
                         <li>
                             <i class="icon-ion-android-upload"
@@ -116,6 +116,7 @@ import localStorageEmitter from "../../ipc/localStorageEmitter";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import {Draggable} from 'draggable-vue-directive'
+import IPCRendererEventType from "../../ipcRendererEventType";
 
 export default {
     data() {
@@ -186,6 +187,19 @@ export default {
                 url: url,
             });
             console.log('show-workspace-window', url)
+        },
+        go2ConversationMessageHistoryPage() {
+            let hash = window.location.hash;
+            let url = window.location.origin;
+            if (hash) {
+                url = window.location.href.replace(hash, '#/message-history');
+            } else {
+                url += "/message-history"
+            }
+            ipcRenderer.send(IPCRendererEventType.showMessageHistoryPage, {
+                url: url,
+            });
+            console.log(IPCRendererEventType.showMessageHistoryPage, url)
         },
         go2Setting() {
             if (this.$router.currentRoute.path === '/home/setting') {

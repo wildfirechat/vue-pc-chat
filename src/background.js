@@ -51,6 +51,7 @@ let fileWindow;
 let compositeMessageWindows = new Map();
 let workspaceWindow;
 let conversationMessageHistoryMessageWindow;
+let messageHistoryMessageWindow;
 let winBadge;
 let screenshots;
 let tray;
@@ -714,6 +715,20 @@ const createMainWindow = async () => {
         } else {
             conversationMessageHistoryMessageWindow.show();
             conversationMessageHistoryMessageWindow.focus();
+        }
+    });
+
+    ipcMain.on(IPCRendererEventType.showMessageHistoryPage, async (event, args) => {
+        console.log(`on ${IPCRendererEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
+        if (!messageHistoryMessageWindow) {
+            messageHistoryMessageWindow = createWindow(args.url, 700, 850, 700, 850, true, true, true);
+            messageHistoryMessageWindow.on('close', () => {
+                messageHistoryMessageWindow = null;
+            });
+            messageHistoryMessageWindow.show();
+        } else {
+            messageHistoryMessageWindow.show();
+            messageHistoryMessageWindow.focus();
         }
     });
 
