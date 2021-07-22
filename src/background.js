@@ -707,7 +707,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 700, 850, 700, 850, true, true, false);
+            conversationMessageHistoryMessageWindow = createWindow(url, 850, 850, 850, 850, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
@@ -721,7 +721,7 @@ const createMainWindow = async () => {
     ipcMain.on(IPCRendererEventType.showMessageHistoryPage, async (event, args) => {
         console.log(`on ${IPCRendererEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
         if (!messageHistoryMessageWindow) {
-            messageHistoryMessageWindow = createWindow(args.url, 700, 850, 700, 850, true, true, true);
+            messageHistoryMessageWindow = createWindow(args.url, 850, 850, 0, 850, false, false, true);
             messageHistoryMessageWindow.on('close', () => {
                 messageHistoryMessageWindow = null;
             });

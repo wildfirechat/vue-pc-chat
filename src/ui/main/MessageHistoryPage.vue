@@ -40,17 +40,28 @@
                     </ul>
                 </div>
                 <div class="conversation-message-list" v-if="currentConversationSearchResult">
-                    <div class="desc-action-container">
+                    <div class="desc-action-container" v-if="!currentMessage">
                         <p class="single-line desc">
                             {{ `${currentConversationSearchResult.matchCount}条与${this.query}相关的搜索结果` }}</p>
-                        <div class="action">
+                        <div class="action" @click="openConversation">
                             <i class="icon-ion-android-chat"></i>
                             <p>进入聊天</p>
                         </div>
                     </div>
-                    <div class="message-list-container">
+                    <div v-else class="desc-action-container">
+                        <i class="icon-ion-ios-arrow-back" @click="currentMessage = null">&nbsp;返回</i>
+                    </div>
+                    <div class="message-list-container" infinite-wrapper>
+                        <infinite-loading v-if="currentMessage" identifier="oldMessageLoader"
+                                          force-use-infinite-wrapper
+                                          direction="top"
+                                          @infinite="infiniteHandlerTop">
+                            <!--            <template slot="spinner">加载中...</template>-->
+                            <template slot="no-more">{{ $t('fav.no_more') }}</template>
+                            <template slot="no-results">{{ $t('fav.all_fav_load') }}</template>
+                        </infinite-loading>
                         <ul>
-                            <li v-for="(message, index) in currentConversationMessages"
+                            <li v-for="(message, index) in messages"
                                 :key="message.uid">
                                 <div class="message-container">
                                     <div class="portrait-container">
@@ -66,13 +77,22 @@
                                         <div class="content">
                                             <MessageContentContainerView :message="message"
                                                                          @contextmenu.prevent.native="openMessageContextMenu($event, message)"/>
-                                            <a class="single-line action">查看上下文</a>
+                                            <a v-if="!currentMessage" class="single-line action"
+                                               @click="showContextMessages(message)">查看上下文</a>
                                         </div>
                                     </div>
 
                                 </div>
                             </li>
                         </ul>
+                        <infinite-loading v-if="currentMessage" identifier="newMessageLoader"
+                                          force-use-infinite-wrapper
+                                          direction="bottom"
+                                          @infinite="infiniteHandlerBottom">
+                            <!--            <template slot="spinner">加载中...</template>-->
+                            <template slot="no-more">{{ $t('fav.no_more') }}</template>
+                            <template slot="no-results">{{ $t('fav.all_fav_load') }}</template>
+                        </infinite-loading>
                     </div>
                 </div>
             </div>
@@ -87,6 +107,9 @@
 <script>
 import MessageContentContainerView from "./conversation/message/MessageContentContainerView";
 import store from "../../store";
+import localStorageEmitter from "../../ipc/localStorageEmitter";
+import IPCEventType from "../../ipc/ipcEventType";
+import InfiniteLoading from "vue-infinite-loading";
 
 export default {
     name: "MessageHistoryPage",
@@ -96,6 +119,8 @@ export default {
             conversationSearchResults: [],
             currentConversationSearchResult: null,
             currentConversationMessages: [],
+            currentMessage: null,
+            contextMessages: [],
         }
     },
     mounted() {
@@ -108,11 +133,48 @@ export default {
         },
         setCurrentConversationSearchResult(result) {
             this.currentConversationSearchResult = result;
+            this.currentMessage = null;
         },
 
         isConversationItemActive(result) {
             return this.currentConversationSearchResult && (this.currentConversationSearchResult.conversation.equal(result.conversation))
-        }
+        },
+
+        openConversation() {
+            let conversation = this.currentConversationSearchResult.conversation;
+            localStorageEmitter.send('wf-ipc-to-main', {type: IPCEventType.openConversation, value: conversation})
+        },
+
+        showContextMessages(message) {
+            this.currentMessage = message;
+            this.contextMessages = [message];
+        },
+
+        infiniteHandlerTop($state) {
+            let firstMsg = this.contextMessages[0];
+            let conversaiton = this.currentConversationSearchResult.conversation;
+            store.getMessages(conversaiton, firstMsg.messageUid, true, '', msgs => {
+                if (msgs.length > 0) {
+                    this.contextMessages = msgs.concat(this.contextMessages);
+                    $state.loaded();
+                } else {
+                    $state.complete();
+                }
+            });
+        },
+
+        infiniteHandlerBottom($state) {
+            let lastMsg = this.contextMessages[this.contextMessages.length - 1];
+            let conversation = this.currentConversationSearchResult.conversation;
+            store.getMessages(conversation, lastMsg.messageUid, false, '', msgs => {
+                if (msgs.length > 0) {
+                    this.contextMessages = this.contextMessages.concat(msgs);
+                    $state.loaded();
+                } else {
+                    $state.complete();
+                }
+            });
+        },
     },
     watch: {
         query() {
@@ -132,8 +194,14 @@ export default {
             }
         },
     },
+    computed: {
+        messages() {
+            return this.currentMessage ? this.contextMessages : this.currentConversationMessages;
+        }
+    },
     components: {
-        MessageContentContainerView
+        MessageContentContainerView,
+        InfiniteLoading,
     }
 }
 </script>
@@ -300,7 +368,8 @@ export default {
 
 .message-list-container {
     flex: 1;
-    padding: 0 40px 20px 40px;
+    padding-bottom: 20px;
+    margin-left: -10px;
     overflow: scroll;
 }
 
@@ -347,8 +416,8 @@ export default {
 
 .name-time-content-container .content {
     display: inline-block;
-    margin-left: -20px;
-    margin-right: 60px;
+    margin-left: -10px;
+    margin-right: 65px;
 }
 
 .name-time-content-container .content .action {
@@ -368,6 +437,8 @@ export default {
 .portrait-container {
     width: 40px;
     height: 40px;
+    min-width: 40px;
+    min-height: 40px;
     overflow: hidden;
     margin: 10px;
 }
@@ -381,11 +452,13 @@ export default {
 >>> .text-message-container.out {
     background-color: #f3f3f3;
     padding-top: 0 !important;
+    padding-left: 0 !important;
 }
 
 >>> .text-message-container {
     background-color: #f3f3f3;
     padding-top: 0 !important;
+    padding-left: 0 !important;
 }
 
 >>> .rightarrow::before {

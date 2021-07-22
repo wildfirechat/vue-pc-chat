@@ -300,6 +300,7 @@ export default {
 .portrait-container {
     width: 40px;
     height: 40px;
+    min-width: 40px;
     overflow: hidden;
     margin: 10px;
 }

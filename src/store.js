@@ -816,13 +816,15 @@ let store = {
             lmsgs = lmsgs.map(m => this._patchMessage(m, 0));
             setTimeout(() => callback(lmsgs), 200)
         } else {
-            wfc.loadRemoteConversationMessages(conversation, fromUid, 20,
-                (msgs) => {
-                    callback(msgs.map(m => this._patchMessage(m, 0)))
-                },
-                (error) => {
-                    callback([])
-                });
+            callback([]);
+            // 只获取本地的消息
+            // wfc.loadRemoteConversationMessages(conversation, fromUid, 20,
+            //     (msgs) => {
+            //         callback(msgs.map(m => this._patchMessage(m, 0)))
+            //     },
+            //     (error) => {
+            //         callback([])
+            //     });
         }
     },
 
@@ -1142,7 +1144,7 @@ let store = {
             searchState.contactSearchResult = this.filterContact(query);
             searchState.groupSearchResult = this.filterGroupConversation(query);
             searchState.conversationSearchResult = this.filterConversation(query);
-            searchState.messageSearchResult = this.searchMessage(query);
+            // searchState.messageSearchResult = this.searchMessage(query);
             // 默认不搜索新用户
             // this.searchUser(query);
 
