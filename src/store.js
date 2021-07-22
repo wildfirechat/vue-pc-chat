@@ -1139,9 +1139,9 @@ let store = {
         searchState.query = query;
         if (query) {
             console.log('search', query)
-            searchState.contactSearchResult = this.searchContact(query);
-            searchState.groupSearchResult = this.searchGroupConversation(query);
-            searchState.conversationSearchResult = this.searchConversation(query);
+            searchState.contactSearchResult = this.filterContact(query);
+            searchState.groupSearchResult = this.filterGroupConversation(query);
+            searchState.conversationSearchResult = this.filterConversation(query);
             searchState.messageSearchResult = this.searchMessage(query);
             // 默认不搜索新用户
             // this.searchUser(query);
@@ -1171,7 +1171,7 @@ let store = {
     },
 
     // TODO 到底是什么匹配了
-    searchContact(query) {
+    filterContact(query) {
         let result = contactState.friendList.filter(u => {
             return u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query) > -1 || u._pinyin.indexOf(query) > -1
         });
@@ -1224,7 +1224,7 @@ let store = {
     },
 
     // TODO
-    searchConversation(query) {
+    filterConversation(query) {
         return conversationState.conversationInfoList.filter(info => {
             let displayNamePinyin = convert(info.conversation._target._displayName, {style: 0}).join('').trim().toLowerCase();
             let firstLetters = convert(info.conversation._target._displayName, {style: 4}).join('').trim().toLowerCase();
@@ -1232,7 +1232,7 @@ let store = {
         })
     },
 
-    searchGroupConversation(query) {
+    filterGroupConversation(query) {
         query = query.toLowerCase();
         let groups = conversationState.conversationInfoList.filter(info => info.conversation.type === ConversationType.Group).map(info => info.conversation._target);
         return groups.filter(groupInfo => {
