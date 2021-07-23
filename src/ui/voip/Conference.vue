@@ -516,28 +516,31 @@ export default {
 
     watch: {
         participantUserInfos(infos) {
-            let count = infos.length + 1;
+            if (this.audioOnly) {
+                return;
+            }
+            let videoParticipants = infos.filter(u => !u.audience)
+            let count = videoParticipants.length;
+            if (!this.selfUserInfo._audience) {
+                count++;
+            }
             let width = '100%';
             let height = '100%';
-            if (!this.audioOnly) {
-                if (count <= 1) {
-                    width = '100%';
-                    height = '100%';
-                } else if (count <= 4) {
-                    width = '50%';
-                    height = '45%';
-                } else if (count <= 9) {
-                    width = '33%';
-                    height = '33%'
-                } else {
-                    // max 16
-                    width = '25%';
-                    height = '25%'
-                }
+            if (count <= 1) {
+                width = '100%';
+                height = '100%';
+            } else if (count <= 4) {
+                width = '50%';
+                height = '45%';
+            } else if (count <= 9) {
+                width = '33%';
+                height = '33%'
             } else {
-
+                // max 16
+                width = '25%';
+                height = '25%'
             }
-            if (!this.audioOnly) {
+            if (this.$refs.contentContainer) {
                 this.$refs.contentContainer.style.setProperty('--participant-video-item-width', width);
                 this.$refs.contentContainer.style.setProperty('--participant-video-item-height', height);
             }
@@ -750,7 +753,7 @@ footer {
     border-radius: 45px;
 }
 
-.avatar.highlight{
+.avatar.highlight {
     border: 2px solid #1FCA6A;
 }
 
