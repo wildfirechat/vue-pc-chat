@@ -10,6 +10,7 @@ import CompositeMessageContent from "../messages/compositeMessageContent";
 import MessagePayload from "../messages/messagePayload";
 import SoundMessageContent from "../messages/soundMessageContent";
 import Long from "long";
+import UnknownMessageContent from "../messages/unknownMessageContent";
 
 export default class FavItem {
     id;
@@ -110,6 +111,8 @@ export default class FavItem {
 
     toMessage() {
         let content;
+        try {
+
         switch (this.favType) {
             case MessageContentType.Text:
                 content = new TextMessageContent(this.title);
@@ -155,6 +158,10 @@ export default class FavItem {
             //     break
             default:
                 break;
+        }
+        }catch (e) {
+            console.log('toMessage Error', e)
+            content = new UnknownMessageContent();
         }
         let msg = new Message(this.conversation, content);
         if (this.messageUid) {
