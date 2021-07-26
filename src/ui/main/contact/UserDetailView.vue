@@ -3,7 +3,7 @@
         <div class="header">
             <div>
                 <h2>{{ name }}</h2>
-                <p>你好，野火</p>
+                <p>你好，九信</p>
             </div>
             <div>
                 <img class="avatar" :src="sharedStateContact.currentFriend.portrait">

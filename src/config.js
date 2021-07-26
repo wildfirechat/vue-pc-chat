@@ -16,11 +16,14 @@ export default class Config {
     // 默认的app server使用端口是8888，注意端口号别忘记了。
     // 上线建议使用https，使用https更安全。
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
-    static APP_SERVER = 'https://app.wildfirechat.net';
-    
+    static APP_SERVER = 'http://39.99.150.54';
+
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
-    static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.net:3478', userName: 'wfchat', password: 'wfchat'}];
+    static ICE_SERVERS = [
+        {uri: 'turn:39.99.150.54:3478', userName: 'im99', password: 'im99'},
+        {uri: 'turn:8.134.14.211:3478', userName: 'im99', password: 'im99'},
+    ];
     static LANGUAGE = 'zh_CN';
 
     static SDK_PLATFORM_WINDOWS = 3;

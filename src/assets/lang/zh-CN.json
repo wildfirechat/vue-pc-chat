@@ -1,7 +1,7 @@
 {
     "login": {
-        "desc": "扫码登录野火IM",
-        "tip": "野火IM Web端需要配合您的手机客户端登录使用",
+        "desc": "扫码登录九信",
+        "tip": "九信 Web端需要配合您的手机客户端登录使用",
         "warning": "不是使用微信扫码登录!!!",
         "scan_qr_success": "扫码成功",
         "confirm_login_tip": "请在手机上点击确认以登录",
@@ -157,7 +157,7 @@
         "month_10": "十月",
         "month_11": "十一月",
         "month_12": "十二月",
-        "wfc_id": "野火号"
+        "wfc_id": "九信号"
     },
     "misc":{
         "beijing": "北京",

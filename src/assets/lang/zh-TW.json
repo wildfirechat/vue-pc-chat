@@ -1,7 +1,7 @@
 {
     "login": {
-        "desc": "掃碼登錄野火IM",
-        "tip": "野火IM Web端需要配合您的手機客戶端登錄使用",
+        "desc": "掃碼登錄九信",
+        "tip": "九信 Web端需要配合您的手機客戶端登錄使用",
         "warning": "不是使用微信掃碼登錄!!!",
         "scan_qr_success": "掃碼成功",
         "confirm_login_tip": "請在手機上點擊確認以登錄",
@@ -157,7 +157,7 @@
         "month_10": "十月",
         "month_11": "十一月",
         "month_12": "十二月",
-        "wfc_id": "野火號"
+        "wfc_id": "九信號"
     },
     "misc":{
         "beijing": "北京",

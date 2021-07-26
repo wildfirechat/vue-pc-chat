@@ -9,10 +9,10 @@
         </div>
         <div v-if="shouldShowWorkspacePortal" class="workspace-portal">
             <div>
-                <button @click="showWFCHome">点击打开野火IM官网</button>
+                <button @click="showWFCHome">点击打开九信IM官网</button>
             </div>
             <div>
-                <button @click="showDevDocs">点击打开野火开发者文档</button>
+                <button @click="showDevDocs">点击打开九信开发者文档</button>
             </div>
             <div>
                 <button @click="openConversation">打开和机器人小火的会话界面</button>
@@ -47,12 +47,12 @@ export default {
             // window.open('www.baidu.com')
             // let tabGroup = new ElectronTabs();
             let tab = tabGroup.addTab({
-                title: "野火IM",
+                title: "九信",
                 src: "https://www.wildfirechat.cn",
                 visible: true
             });
             let tab2 = tabGroup.addTab({
-                title: "野火IM开发文档",
+                title: "九信开发文档",
                 src: "https://docs.wildfirechat.cn",
                 visible: true,
                 active: true
@@ -60,7 +60,7 @@ export default {
         },
         showWFCHome() {
             tabGroup.addTab({
-                title: "野火IM",
+                title: "九信",
                 src: "https://www.wildfirechat.cn",
                 visible: true,
                 active: true,
@@ -69,7 +69,7 @@ export default {
         },
         showDevDocs() {
             tabGroup.addTab({
-                title: "野火IM开发文档",
+                title: "九信开发文档",
                 src: "https://docs.wildfirechat.cn",
                 visible: true,
                 active: true
@@ -78,7 +78,7 @@ export default {
         },
         addInitialTab() {
             tabGroup.addTab({
-                title: "野火IM工作空间",
+                title: "九信工作空间",
                 // src: url,
                 visible: true,
                 closable: false,
