@@ -1246,6 +1246,7 @@ let store = {
 
     searchMessage(conversation, query) {
         let msgs = wfc.searchMessage(conversation, query)
+        msgs = msgs.reverse();
         return msgs.map(m => this._patchMessage(m, 0));
     },
 
