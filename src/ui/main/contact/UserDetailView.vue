@@ -12,12 +12,6 @@
         <div class="content">
             <ul>
                 <li>
-                    <label>{{ $t('common.alias') }}</label>
-                    <div class="alias">
-                        <input type="text" :value="sharedStateContact.currentFriend.alias" placeholder="备注名"/>
-                    </div>
-                </li>
-                <li>
                     <label>{{ $t('common.wfc_id') }}</label>
                     <p>{{ user.name }}</p>
                 </li>

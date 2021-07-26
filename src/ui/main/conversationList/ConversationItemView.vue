@@ -93,7 +93,7 @@ export default {
         conversationTitle() {
             let info = this.conversationInfo;
             if (info.conversation.type === ConversationType.Single) {
-                return info.conversation._target.displayName;
+                return info.conversation._target._displayName ? info.conversation._target._displayName : info.conversation._target.displayName;
             } else {
                 return info.conversation._target.name;
             }
@@ -163,7 +163,7 @@ export default {
     width: 100%;
     height: 70px;
     display: flex;
-    /*border-bottom: 1px solid #eeeeee;*/
+    border-bottom: 1px solid #eeeeee;
     align-items: center;
     justify-content: center;
 }

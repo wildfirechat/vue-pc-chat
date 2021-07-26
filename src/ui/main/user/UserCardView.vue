@@ -14,7 +14,7 @@
                 <li>
                     <label>{{ $t('common.alias') }}</label>
                     <div class="alias">
-                        <input @click.stop="" type="text" placeholder="备注名"/>
+                        <input @click.stop="" type="text" v-model="userInfo.alias" placeholder="备注名" @blur="this.changeAlias"/>
                     </div>
                 </li>
                 <li>
@@ -60,7 +60,24 @@ export default {
             store.setCurrentConversation(conversation)
             this.close();
         },
-
+        changeAlias(){
+            if(store.state.conversation.currentConversationInfo.conversation.type == ConversationType.Single) {
+                wfc.setFriendAlias(this.userInfo.uid, this.userInfo.alias, this.cb, this.cb)
+            }else{
+              //  wfc.modifyGroupAlias(store.state.conversation.currentConversationInfo.conversation.target,this.userInfo.alias,0,new GroupNotificationContent(),this.cb,this.cb)
+            }
+        },
+        cb(){
+            if(store.state.conversation.currentConversationInfo.conversation.type == ConversationType.Single){
+                store.state.conversation.currentConversationInfo.conversation._target._displayName = this.userInfo.alias;
+                this.userInfo._displayName = this.userInfo.alias;
+                store.state.conversation.conversationInfoList.forEach(item=>{
+                    if(item.conversation.target == this.userInfo.uid){
+                        item.conversation._target.displayName = this.userInfo.alias;
+                    }
+                });
+            }
+        },
         addFriend() {
             this.close();
             this.$modal.show(

@@ -974,7 +974,7 @@ let store = {
 
     _patchConversationInfo(info, patchLastMessage = true) {
         if (info.conversation.type === ConversationType.Single) {
-            info.conversation._target = wfc.getUserInfo(info.conversation.target, false);
+            info.conversation._target = wfc.getUserInfo(info.conversation.target, true);
             info.conversation._target._displayName = wfc.getUserDisplayNameEx(info.conversation._target);
         } else if (info.conversation.type === ConversationType.Group) {
             info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
