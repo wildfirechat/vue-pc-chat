@@ -19,6 +19,15 @@ import VueI18n from 'vue-i18n'
 import Notifications from 'vue-notification'
 import Alert from "./ui/common/Alert.js";
 
+import audio from './assets/music/notice.mp3'
+
+// 方法1：注册播放音频事件到Vue实例上
+Vue.prototype.playAudio = () => {
+    let buttonAudio = document.getElementById('eventAudio');
+    buttonAudio.setAttribute('src',audio)
+    buttonAudio.play()
+}
+
 Vue.config.productionTip = false
 
 // init

@@ -70,7 +70,6 @@ export default {
         cb(){
             if(store.state.conversation.currentConversationInfo.conversation.type == ConversationType.Single){
                 store.state.conversation.currentConversationInfo.conversation._target._displayName = this.userInfo.alias;
-                this.userInfo._displayName = this.userInfo.alias;
                 store.state.conversation.conversationInfoList.forEach(item=>{
                     if(item.conversation.target == this.userInfo.uid){
                         item.conversation._target.displayName = this.userInfo.alias;

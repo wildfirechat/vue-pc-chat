@@ -5,6 +5,8 @@
          @dragover="$event.preventDefault()"
          @drop="$event.preventDefault()"
          v-visibility-change="visibilityChange">
+        <!-- 全局音效 -->
+        <audio src="" id="eventAudio"></audio>
         <div v-if="!sharedMiscState.isElectron" id="blur-container" class="blur-container">
             <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" id="blurred_mkvvpnf50"
                  class="blured-img" viewBox="0 0 1920 875" preserveAspectRatio="none">
