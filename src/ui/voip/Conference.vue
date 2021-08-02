@@ -18,7 +18,7 @@
                         <!--self-->
                         <div v-if="!session.audience" class="participant-video-item"
                              v-bind:class="{highlight: selfUserInfo._volume > 0}">
-                            <div v-if="!selfUserInfo._stream || selfUserInfo._isVideoMuted"
+                            <div v-if="!selfUserInfo._stream || (selfUserInfo._isVideoMuted && !session.isScreenSharing())"
                                  class="flex-column flex-justify-center flex-align-center">
                                 <img class="avatar" :src="selfUserInfo.portrait">
                             </div>
@@ -46,6 +46,7 @@
                                 <img class="avatar" :src="participant.portrait" :alt="participant">
                             </div>
                             <video v-else
+                                   @click="setUseMainVideo(participant.uid)"
                                    class="video"
                                    :srcObject.prop="participant._stream"
                                    playsInline
@@ -113,7 +114,7 @@
                                      src='@/assets/images/av_conference_audio_mute.png'/>
                                 <p>静音</p>
                             </div>
-                            <div class="action">
+                            <div class="action" v-if="!session.isScreenSharing()">
                                 <img v-if="!session.videoMuted" @click="muteVideo" class="action-img"
                                      src='@/assets/images/av_conference_video.png'/>
                                 <img v-else @click="muteVideo" class="action-img"
@@ -194,7 +195,7 @@
 </template>
 
 <script>
-import avenginekit from "../../wfc/av/internal/engine.min";
+import avenginekit from "../../wfc/av/internal/avenginekitImpl";
 import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
@@ -225,6 +226,15 @@ export default {
     },
     components: {UserCardView},
     methods: {
+        setUseMainVideo(userId){
+          if (!this.session){
+              return
+          }
+          let client = this.session.getClient(userId);
+          if(client){
+              client.setUseMainVideo(!client.useMainVideo);
+          }
+        },
         setupSessionCallback() {
             let sessionCallback = new CallSessionCallback();
 
