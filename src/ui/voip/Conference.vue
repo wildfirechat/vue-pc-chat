@@ -18,8 +18,9 @@
                         <!--self-->
                         <div v-if="!session.audience" class="participant-video-item"
                              v-bind:class="{highlight: selfUserInfo._volume > 0}">
-                            <div v-if="!selfUserInfo._stream || (selfUserInfo._isVideoMuted && !session.isScreenSharing())"
-                                 class="flex-column flex-justify-center flex-align-center">
+                            <div
+                                v-if="!selfUserInfo._stream || (selfUserInfo._isVideoMuted && !session.isScreenSharing())"
+                                class="flex-column flex-justify-center flex-align-center">
                                 <img class="avatar" :src="selfUserInfo.portrait">
                             </div>
                             <video v-else
@@ -51,6 +52,9 @@
                                    :srcObject.prop="participant._stream"
                                    playsInline
                                    autoPlay/>
+                            <div class="video-stream-tip-container">
+                                <p>点击视频，切换清晰度</p>
+                            </div>
                             <div class="info-container">
                                 <i v-if="participant._isHost" class="icon-ion-person"></i>
                                 <i v-if="!participant._isVideoMuted" class="icon-ion-ios-videocam"></i>
@@ -226,14 +230,14 @@ export default {
     },
     components: {UserCardView},
     methods: {
-        setUseMainVideo(userId){
-          if (!this.session){
-              return
-          }
-          let client = this.session.getClient(userId);
-          if(client){
-              client.setUseMainVideo(!client.useMainVideo);
-          }
+        setUseMainVideo(userId) {
+            if (!this.session) {
+                return
+            }
+            let client = this.session.getClient(userId);
+            if (client) {
+                client.setUseMainVideo(!client.useMainVideo);
+            }
         },
         setupSessionCallback() {
             let sessionCallback = new CallSessionCallback();
@@ -647,6 +651,17 @@ export default {
 
 .participant-video-item.highlight {
     border: 2px solid #1FCA6A;
+}
+
+.participant-video-item .video-stream-tip-container {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.participant-video-item:hover .video-stream-tip-container {
+    display: inline-block;
 }
 
 .participant-video-item .info-container {
