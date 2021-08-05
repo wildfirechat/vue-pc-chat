@@ -68,7 +68,9 @@ module.exports = {
                   NSMicrophoneUsageDescription: "This app requires microphone access to record audio."
                 },
                 hardenedRuntime: true,
-                gatekeeperAssess: false
+                gatekeeperAssess: false,
+                entitlements: "build/mac/entitlements.mac.plist",
+                entitlementsInherit: "build/mac/entitlements.mac.plist"
               },
               linux: {
                 category: "Chat",
