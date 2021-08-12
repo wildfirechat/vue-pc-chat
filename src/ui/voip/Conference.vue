@@ -112,7 +112,7 @@
                         <p>{{ duration }}</p>
                         <div class="action-container">
                             <div class="action">
-                                <img v-if="!session.muted" @click="mute" class="action-img"
+                                <img v-if="!session.audioMuted" @click="mute" class="action-img"
                                      src='@/assets/images/av_conference_audio.png'/>
                                 <img v-else @click="mute" class="action-img"
                                      src='@/assets/images/av_conference_audio_mute.png'/>
@@ -199,7 +199,7 @@
 </template>
 
 <script>
-import avenginekit from "../../wfc/av/internal/engine.min";
+import avenginekit from "../../wfc/av/internal/avenginekitImpl";
 import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
@@ -320,15 +320,6 @@ export default {
                 this.session = null;
             }
 
-            sessionCallback.didVideoMuted = (userId, muted) => {
-                console.log('did VideoMuted', userId, muted)
-                this.participantUserInfos.forEach(u => {
-                    if (u.uid === userId) {
-                        u._isVideoMuted = muted;
-                    }
-                })
-            };
-
             sessionCallback.onRequestChangeMode = (userId, audience) => {
                 console.log('onRequestChangeMode', userId + ' ' + audience)
                 if (audience) {
@@ -364,6 +355,20 @@ export default {
                         }
                     })
                 }
+            };
+
+            sessionCallback.didMuteStateChanged = (participants) => {
+                console.log('conference', 'didMuteStateChanged', participants)
+                participants.forEach(p => {
+                    this.participantUserInfos.forEach(u => {
+                        if (u.uid === p) {
+                            let client = this.session.getClient(p);
+                            u._isVideoMuted = client.videoMuted;
+                            console.log('didMuteStateChanged', client.videoMuted, client.audioMuted)
+                        }
+                    })
+
+                })
             }
 
             avenginekit.sessionCallback = sessionCallback;
@@ -378,7 +383,9 @@ export default {
         },
 
         mute() {
-            this.session.triggerMicrophone();
+            let enable = this.session.audioMuted ? true : false;
+            this.selfUserInfo._isAudioMuted = !enable;
+            this.session.setAudioEnabled(enable)
         },
 
         muteVideo() {
