@@ -131,4 +131,3 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 ## License
 
 1. Under the Creative Commons Attribution-NoDerivs 3.0 Unported license. See the [LICENSE](https://github.com/wildfirechat/vue-chat/blob/master/LICENSE) file for details.
-2. Under the 996ICU License. See the [LICENSE](https://github.com/996icu/996.ICU/blob/master/LICENSE) file for details.
