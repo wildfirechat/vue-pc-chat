@@ -898,6 +898,13 @@ app.on('ready', () => {
             isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
             screenshots.startCapture()
         });
+        // 调试用，主要用于处理 windows 不能打开子窗口的控制台
+        // 打开所有窗口控制台
+        globalShortcut.register('ctrl+shift+i', () => {
+            let windows = BrowserWindow.getAllWindows();
+            windows.forEach(win => win.openDevTools())
+
+        });
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, data) => {
             if (isMainWindowFocusedWhenStartScreenshot) {
