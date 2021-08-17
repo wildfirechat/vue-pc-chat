@@ -6,6 +6,7 @@
 export default class CallSession {
     audioMuted = false
     videoMuted = false
+    screenSharing = false
     audioOnly = false
 
     startTime
