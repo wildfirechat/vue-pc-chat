@@ -42,8 +42,14 @@
                              class="participant-video-item"
                              v-bind:class="{highlight: participant._volume > 0}"
                         >
+                            <video
+                                @click="setUseMainVideo(participant.uid)"
+                                class="video"
+                                :srcObject.prop="participant._stream"
+                                playsInline
+                                autoPlay/>
                             <div v-if="status !== 4 || !participant._stream || participant._isVideoMuted"
-                                 class="flex-column flex-justify-center flex-align-center">
+                                 class="avatar-container">
                                 <img class="avatar" :src="participant.portrait" :alt="participant">
                             </div>
                             <video v-else
@@ -667,6 +673,20 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+.participant-video-item .avatar-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 99;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #2d3033;
 }
 
 .participant-video-item:hover .video-stream-tip-container {
