@@ -21,6 +21,7 @@ export default class CallSession {
     host;
     title;
     desc;
+    extra;
 
     /**
      * 播放来电响铃

@@ -380,7 +380,7 @@ export class AvEngineKitProxy {
         });
     }
 
-    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance) {
+    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance, extra) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             return;
@@ -407,6 +407,7 @@ export class AvEngineKitProxy {
             audience: audience,
             advance: advance,
             selfUserInfo: selfUserInfo,
+            extra: extra,
         });
     }
 
