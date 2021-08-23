@@ -65,16 +65,34 @@ export default class CallSession {
     /**
      * 打开或关闭摄像头
      * @param enable
+     * @deprecated 请使用{@link muteVideo}
      */
     setVideoEnabled(enable) {
 
     }
 
     /**
+     * 打开或关闭摄像头
+     * @param {boolean} mute true，关闭摄像头；false，打开摄像头
+     */
+    muteVideo(mute){
+
+    }
+
+    /**
      * 静音或取消静音
      * @param {boolean} enable
+     * @deprecated 请使用{@link muteAudio}
      */
     setAudioEnabled(enable){
+
+    }
+
+    /**
+     * 静音或取消静音
+     * @param {boolean} mute true，静音；false，取消静音
+     */
+    muteAudio(mute){
 
     }
 
