@@ -117,7 +117,10 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 
 13. 想自己部署表情图片
     请常见问题12
-
+ 
+14. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
+    1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
+    2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
 
 ## 截图
 ![](./image/contact.png)
