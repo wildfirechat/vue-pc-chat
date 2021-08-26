@@ -126,7 +126,7 @@
                                 <p>视频</p>
                             </div>
                             <div v-if="!audioOnly" class="action">
-                                <img v-if="!session.screenSharing" @click="screenShare" class="action-img"
+                                <img v-if="!session.screenSharing && !session.videoMuted" @click="screenShare" class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing.png'/>
                                 <img v-else @click="screenShare" class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing_hover.png'/>
@@ -441,6 +441,9 @@ export default {
         },
 
         screenShare() {
+            if(this.session.audioOnly || this.session.videoMuted){
+                return;
+            }
             if (this.session.isScreenSharing()) {
                 this.session.stopScreenShare();
             } else {
