@@ -52,12 +52,6 @@
                                  class="avatar-container">
                                 <img class="avatar" :src="participant.portrait" :alt="participant">
                             </div>
-                            <video v-else
-                                   @click="setUseMainVideo(participant.uid)"
-                                   class="video"
-                                   :srcObject.prop="participant._stream"
-                                   playsInline
-                                   autoPlay/>
                             <div class="video-stream-tip-container">
                                 <p>点击视频，切换清晰度</p>
                             </div>
