@@ -126,7 +126,8 @@
                                 <p>视频</p>
                             </div>
                             <div v-if="!audioOnly" class="action">
-                                <img v-if="!session.screenSharing && !session.videoMuted" @click="screenShare" class="action-img"
+                                <img v-if="!session.screenSharing && !session.videoMuted" @click="screenShare"
+                                     class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing.png'/>
                                 <img v-else @click="screenShare" class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing_hover.png'/>
@@ -319,6 +320,9 @@ export default {
 
             sessionCallback.didCallEndWithReason = (reason) => {
                 console.log('callEndWithReason', reason)
+                // 可以根据reason，进行一些提示
+                // alert('会议已结束');
+                this.session.closeVoipWindow();
                 this.session = null;
             }
 
@@ -371,10 +375,11 @@ export default {
                     })
 
                 })
-            }
+            };
 
             avenginekit.sessionCallback = sessionCallback;
         },
+
 
         answer() {
             this.session.call();
@@ -441,7 +446,7 @@ export default {
         },
 
         screenShare() {
-            if(this.session.audioOnly || this.session.videoMuted){
+            if (this.session.audioOnly || this.session.videoMuted) {
                 return;
             }
             if (this.session.isScreenSharing()) {

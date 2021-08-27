@@ -176,6 +176,7 @@ export default {
 
             sessionCallback.didCallEndWithReason = (reason) => {
                 console.log('callEndWithReason', reason)
+                this.session.closeVoipWindow();
                 this.session = null;
             }
             sessionCallback.didVideoMuted = (userId, muted) => {

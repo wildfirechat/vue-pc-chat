@@ -164,4 +164,11 @@ export default class CallSession {
     kickoffParticipant(userId, successCB, failCB) {
 
     }
+
+    /**
+     * 关闭音视频通话窗口
+     */
+    closeVoipWindow(){
+
+    }
 }
