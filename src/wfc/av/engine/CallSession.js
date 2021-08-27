@@ -75,7 +75,7 @@ export default class CallSession {
      * 打开或关闭摄像头
      * @param {boolean} mute true，关闭摄像头；false，打开摄像头
      */
-    muteVideo(mute){
+    muteVideo(mute) {
 
     }
 
@@ -84,7 +84,7 @@ export default class CallSession {
      * @param {boolean} enable
      * @deprecated 请使用{@link muteAudio}
      */
-    setAudioEnabled(enable){
+    setAudioEnabled(enable) {
 
     }
 
@@ -92,7 +92,7 @@ export default class CallSession {
      * 静音或取消静音
      * @param {boolean} mute true，静音；false，取消静音
      */
-    muteAudio(mute){
+    muteAudio(mute) {
 
     }
 
@@ -166,9 +166,17 @@ export default class CallSession {
     }
 
     /**
+     * 离开会议
+     * @param {boolean} destroyRoom 是否销毁会议室
+     */
+    leaveConference(destroyRoom) {
+
+    }
+
+    /**
      * 关闭音视频通话窗口
      */
-    closeVoipWindow(){
+    closeVoipWindow() {
 
     }
 }

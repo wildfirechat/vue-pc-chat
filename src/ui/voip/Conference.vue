@@ -202,7 +202,7 @@
 </template>
 
 <script>
-import avenginekit from "../../wfc/av/internal/engine.min";
+import avenginekit from "../../wfc/av/internal/avenginekitImpl";
 import CallSessionCallback from "../../wfc/av/engine/CallSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
 import IpcSub from "../../ipc/ipcSub";
@@ -212,6 +212,7 @@ import ConferenceInviteMessageContent from "../../wfc/av/messages/conferenceInvi
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import {isElectron, remote} from "../../platform";
 import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
+import CallEndReason from "../../wfc/av/engine/callEndReason";
 
 export default {
     name: 'Conference',
@@ -322,6 +323,11 @@ export default {
                 console.log('callEndWithReason', reason)
                 // 可以根据reason，进行一些提示
                 // alert('会议已结束');
+                if (reason === CallEndReason.RoomNotExist) {
+                    console.log('join conference failed', reason, this.session)
+                    let obj = {reason: reason, session: this.session};
+                    localStorageEmitter.send('join-conference-failed', obj);
+                }
                 this.session.closeVoipWindow();
                 this.session = null;
             }
@@ -386,7 +392,7 @@ export default {
         },
 
         hangup() {
-            this.session.hangup();
+            this.session.leaveConference(false);
         },
 
         mute() {

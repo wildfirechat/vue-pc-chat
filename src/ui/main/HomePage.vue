@@ -308,7 +308,7 @@ export default {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
         this.onConnectionStatusChange(wfc.getConnectionStatus())
 
-        localStorageEmitter.on('join-conference-failed', (args) => {
+        localStorageEmitter.on('join-conference-failed', (sender, args) => {
             let reason = args.reason;
             let session = args.session;
             if (reason === CallEndReason.RoomNotExist) {
@@ -319,7 +319,10 @@ export default {
                             // do nothing
                         },
                         confirmCallback: () => {
-                            avenginekitproxy.startConference(session.callId, session.audioOnly, session.pin, session.host, session.title, session.desc, session.audience, session.advance)
+                            // 等待之前的音视频通话窗口完全关闭
+                            setTimeout(() => {
+                                avenginekitproxy.startConference(session.callId, session.audioOnly, session.pin, session.host, session.title, session.desc, session.audience, session.advance)
+                            }, 1000);
                         }
                     })
                 } else {
