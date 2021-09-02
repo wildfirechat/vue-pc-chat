@@ -166,6 +166,7 @@ export default class CallSession {
     }
 
     /**
+     * 仅会议时有效
      * 离开会议
      * @param {boolean} destroyRoom 是否销毁会议室
      */

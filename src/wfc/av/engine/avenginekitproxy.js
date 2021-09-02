@@ -68,6 +68,7 @@ export class AvEngineKitProxy {
     setVoipIframe(iframe) {
         this.iframe = iframe;
     }
+
     updateCallStartMessageContentListener = (event, message) => {
         let messageUid = message.messageUid;
         let content = message.content;
@@ -238,7 +239,7 @@ export class AvEngineKitProxy {
                         }, 200)
                     }
                 } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_END) {
-                    if(content.callId !== this.callId){
+                    if (content.callId !== this.callId) {
                         return;
                     }
                     this.conversation = null;
@@ -404,9 +405,11 @@ export class AvEngineKitProxy {
      * @param {string} desc 会议描述
      * @param {string} audience 是否是以观众角色入会
      * @param {string} advance 是否是高级会议
+     * @param {boolean} muteAudio 是否是静音加入会议
+     * @param {boolean} muteVideo 是否是关闭摄像头加入会议
      * @param {Object} extra 一些额外信息，主要用于将信息传到音视频通话窗口
      */
-    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance, extra) {
+    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance, muteAudio, muteVideo, extra) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             return;
@@ -432,6 +435,8 @@ export class AvEngineKitProxy {
             desc: desc,
             audience: audience,
             advance: advance,
+            muteAudio: muteAudio,
+            muteVideo: muteVideo,
             selfUserInfo: selfUserInfo,
             extra: extra,
         });
@@ -512,7 +517,7 @@ export class AvEngineKitProxy {
                     iframe.src = url;
                     iframe.contentWindow.location.reload();
                 }
-            iframe.src = url;
+                iframe.src = url;
                 win = iframe.contentWindow;
             } else {
                 win = window.open(url, '_blank', `width=${width},height=${height},left=200,top=200,toolbar=no,menubar=no,resizable=no,location=no,maximizable=no,resizable=no,dialog=yes`);
@@ -527,9 +532,9 @@ export class AvEngineKitProxy {
                     this.onVoipWindowReady(win);
                 }
             } else {
-            win.addEventListener('load', () => {
-                this.onVoipWindowReady(win);
-            }, true);
+                win.addEventListener('load', () => {
+                    this.onVoipWindowReady(win);
+                }, true);
             }
 
             // pls refer to https://stackoverflow.com/questions/52448909/onbeforeunload-not-working-inside-react-component

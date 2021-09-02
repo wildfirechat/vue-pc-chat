@@ -126,7 +126,7 @@
                                 <p>视频</p>
                             </div>
                             <div v-if="!audioOnly" class="action">
-                                <img v-if="!session.screenSharing && !session.videoMuted" @click="screenShare"
+                                <img v-if="!session.screenSharing" @click="screenShare"
                                      class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing.png'/>
                                 <img v-else @click="screenShare" class="action-img"
@@ -264,7 +264,6 @@ export default {
 
             sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo) => {
                 this.session = session;
-
 
                 this.audioOnly = session.audioOnly;
                 this.selfUserInfo = selfUserInfo;
@@ -452,7 +451,7 @@ export default {
         },
 
         screenShare() {
-            if (this.session.audioOnly || this.session.videoMuted) {
+            if (this.session.audioOnly) {
                 return;
             }
             if (this.session.isScreenSharing()) {
@@ -651,6 +650,7 @@ export default {
 
 .content-container.video {
     background: black;
+    object-fit: contain;
 }
 
 .content-container.audio {

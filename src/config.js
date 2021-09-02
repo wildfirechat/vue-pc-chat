@@ -7,8 +7,6 @@ export default class Config {
     static ENABLE_MULTI_VOIP_CALL = true;
     // 是否支持1对1音视频通话
     static ENABLE_SINGLE_VOIP_CALL = true;
-    // 打开voip调试模式时，voip window不会自动关闭，方便分析控制台日志，需要手动关闭。
-    static ENABLE_VOIP_DEBUG_MODE = false;
 
     static DEFAULT_PORTRAIT_URL = 'https://static.wildfirechat.net/user-fallback.png';
 
@@ -17,7 +15,7 @@ export default class Config {
     // 上线建议使用https，使用https更安全。
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
     static APP_SERVER = 'https://app.wildfirechat.net';
-    
+
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
     static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.net:3478', userName: 'wfchat', password: 'wfchat'}];
