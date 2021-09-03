@@ -618,6 +618,12 @@ export class AvEngineKitProxy {
             }
         }
     }
+
+    forceCloseVoipWindow(){
+        if (this.callWin){
+            this.callWin.close();
+        }
+    }
 }
 
 const self = new AvEngineKitProxy();

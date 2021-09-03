@@ -272,6 +272,8 @@ export default {
                     || status === ConnectionStatus.ConnectionStatusRejected) {
                     removeItem("userId");
                     removeItem('token')
+
+                    avenginekitproxy.forceCloseVoipWindow();
                 }
             }
         },
