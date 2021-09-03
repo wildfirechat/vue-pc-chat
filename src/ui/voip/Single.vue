@@ -195,7 +195,7 @@ export default {
 
         mute() {
             let enable = this.session.audioMuted ? true : false;
-            this.selfUserInfo._isAudioMuted = !enable;
+            this.session.selfUserInfo._isAudioMuted = !enable;
             this.session.setAudioEnabled(enable)
         },
 
