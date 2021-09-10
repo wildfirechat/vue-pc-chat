@@ -24,7 +24,8 @@
                                 <img class="avatar" :src="selfUserInfo.portrait">
                             </div>
                             <video v-else
-                                   class="video me"
+                                   class="video"
+                                   v-bind:style="{transform:!session.isScreenSharing() ? 'scaleX(-1)' :'none','-webkit-transform': !session.isScreenSharing() ? 'scaleX(-1)' :'none'}"
                                    ref="localVideo"
                                    :srcObject.prop="selfUserInfo._stream"
                                    playsInline
@@ -42,17 +43,20 @@
                              class="participant-video-item"
                              v-bind:class="{highlight: participant._volume > 0}"
                         >
-                            <video
-                                @click="setUseMainVideo(participant.uid)"
-                                class="video"
-                                :srcObject.prop="participant._stream"
-                                playsInline
-                                autoPlay/>
+                            <video v-if="!participant._isVideoMuted"
+                                   @click="setUseMainVideo(participant.uid)"
+                                   class="video"
+                                   :srcObject.prop="participant._stream"
+                                   playsInline
+                                   autoPlay/>
+                            <audio v-else
+                                   :srcObject.prop="participant._stream"
+                                   autoPlay/>
                             <div v-if="status !== 4 || !participant._stream || participant._isVideoMuted"
                                  class="avatar-container">
                                 <img class="avatar" :src="participant.portrait" :alt="participant">
                             </div>
-                            <div class="video-stream-tip-container">
+                            <div v-if="!participant._isVideoMuted" class="video-stream-tip-container">
                                 <p>点击视频，切换清晰度</p>
                             </div>
                             <div class="info-container">
@@ -916,7 +920,7 @@ footer {
     background: #e0d6d6d6;
 }
 
-.video.me{
+.video.me {
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
 }
