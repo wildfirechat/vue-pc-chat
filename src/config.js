@@ -18,7 +18,7 @@ export default class Config {
     //prod
     //static APP_SERVER = 'http://137.220.228.165:8888';
     //dev
-    static APP_SERVER = 'http://39.99.150.54';
+    static APP_SERVER = 'http://137.220.228.175:8000';
 
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
