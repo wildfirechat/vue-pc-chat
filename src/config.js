@@ -16,9 +16,9 @@ export default class Config {
     // 默认的app server使用端口是8888，注意端口号别忘记了。
     // 上线建议使用https，使用https更安全。
     //prod
-    static APP_SERVER = 'http://137.220.228.165:8888';
+    //static APP_SERVER = 'http://137.220.228.165:8888';
     //dev
-    //static APP_SERVER = 'http://39.99.150.54';
+    static APP_SERVER = 'http://39.99.150.54';
 
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
     // turn server 配置，可以添加多个
