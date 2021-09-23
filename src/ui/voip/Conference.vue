@@ -294,6 +294,7 @@ export default {
 
             sessionCallback.didReceiveRemoteVideoTrack = (userId, stream) => {
                 let p;
+                console.log('didReceiveRemoteVideoTrack', userId)
                 for (let i = 0; i < this.participantUserInfos.length; i++) {
                     p = this.participantUserInfos[i];
                     if (p.uid === userId) {
@@ -307,10 +308,12 @@ export default {
                 console.log('didParticipantJoined', userId)
                 IpcSub.getUserInfos([userId], null, (userInfos) => {
                     let userInfo = userInfos[0];
-                    userInfo._stream = null;
-                    userInfo._isAudience = this.session.getPeerConnectionClient(userId).audience;
+                    console.log('didParticipantJoined & getUserInfos', userInfo.uid)
+                    let client = this.session.getPeerConnectionClient(userId);
+                    userInfo._stream = client.stream;
+                    userInfo._isAudience = client.audience;
                     userInfo._isHost = this.session.host === userId;
-                    userInfo._isVideoMuted = this.session.getPeerConnectionClient(userId).videoMuted;
+                    userInfo._isVideoMuted = client.videoMuted;
                     userInfo._volume = 0;
                     this.participantUserInfos.push(userInfo);
                 })
