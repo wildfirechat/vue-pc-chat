@@ -824,6 +824,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
                 scrollBounce: false,
                 nativeWindowOpen: true,
                 nodeIntegration: true,
+                contextIsolation: false,
                 webviewTag: true
             },
             // frame:false
@@ -833,6 +834,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
+    require("@electron/remote/main").enable(win.webContents);
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)
