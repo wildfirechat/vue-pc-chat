@@ -34,6 +34,8 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
+require('@electron/remote/main').initialize()
+
 let Locales = {};
 i18n.configure({
     locales: ['en', 'ch'],
@@ -522,6 +524,7 @@ const createMainWindow = async () => {
         webPreferences: {
             scrollBounce: false,
             nodeIntegration: true,
+            contextIsolation: false,
             nativeWindowOpen: true,
             webSecurity: false,
         },
@@ -541,6 +544,7 @@ const createMainWindow = async () => {
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
+    require("@electron/remote/main").enable(mainWindow.webContents);
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
