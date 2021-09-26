@@ -620,6 +620,10 @@ const createMainWindow = async () => {
         app.badgeCount = count;
         //}
     });
+    app.on('remote-require', (event, args) => {
+        // event.preventDefault();
+        event.returnValue = require('@electron/remote/main');
+    });
 
     ipcMain.on('file-paste', (event) => {
         var image = clipboard.readImage();

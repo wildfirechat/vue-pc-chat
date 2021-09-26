@@ -3,7 +3,7 @@
  */
 
 import EventType from "../../client/wfcEvent";
-import {BrowserWindow, ipcRenderer, isElectron, PostMessageEventEmitter} from "../../../platform";
+import {BrowserWindow, ipcRenderer, isElectron, PostMessageEventEmitter, remote} from "../../../platform";
 import ConversationType from "../../model/conversationType";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
@@ -280,6 +280,8 @@ export class AvEngineKitProxy {
         if (isElectron()) {
             // renderer/main to renderer
             if (this.callWin) {
+                // fix object of long.js can be send inter-process
+                args = JSON.stringify(args)
                 this.callWin.webContents.send(event, args);
             } else if (this.queueEvents) {
                 this.queueEvents.push({event, args});
@@ -493,9 +495,14 @@ export class AvEngineKitProxy {
                         scrollBounce: false,
                         nativeWindowOpen: true,
                         nodeIntegration: true,
+                        contextIsolation: false,
                     },
                 }
             );
+
+            // const remoteMain = require("@electron/remote").require("@electron/remote/main");
+            const remoteMain = remote.require("@electron/remote/main");
+            remoteMain.enable(win.webContents);
 
             win.webContents.on('did-finish-load', () => {
                 this.onVoipWindowReady(win);
@@ -619,8 +626,8 @@ export class AvEngineKitProxy {
         }
     }
 
-    forceCloseVoipWindow(){
-        if (this.callWin){
+    forceCloseVoipWindow() {
+        if (this.callWin) {
             this.callWin.close();
         }
     }
