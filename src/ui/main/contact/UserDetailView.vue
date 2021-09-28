@@ -14,7 +14,7 @@
                 <li>
                     <label>{{ $t('common.alias') }}</label>
                     <div class="alias">
-                        <input type="text" :value="sharedStateContact.currentFriend.alias" placeholder="备注名"/>
+                        <input type="text" :value="sharedStateContact.currentFriend.friendAlias" placeholder="备注名"/>
                     </div>
                 </li>
                 <li>
@@ -65,9 +65,7 @@ export default {
         name: function () {
             let name;
             let friend = this.sharedStateContact.currentFriend;
-            if (friend.friendAlias) {
-                name = friend.friendAlias;
-            } else if (friend.displayName) {
+            if (friend.displayName) {
                 name = friend.displayName;
             } else {
                 name = friend.name;
