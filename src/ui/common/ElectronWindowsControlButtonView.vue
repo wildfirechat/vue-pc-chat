@@ -2,7 +2,7 @@
 <template>
     <div id="window-controls" ref="content">
 
-        <div class="button" id="min-button" @click="minimize">
+        <div class="button" id="min-button" @click="minimize" v-if="sharedMiscState.enableMinimize">
             <img class="icon"
                  srcset="@/assets/windows_control_icons/min-k-10.png 1x, @/assets/windows_control_icons/min-k-12.png 1.25x, @/assets/windows_control_icons/min-k-15.png 1.5x, @/assets/windows_control_icons/min-k-15.png 1.75x, @/assets/windows_control_icons/min-k-20.png 2x, @/assets/windows_control_icons/min-k-20.png 2.25x, @/assets/windows_control_icons/min-k-24.png 2.5x, @/assets/windows_control_icons/min-k-30.png 3x, @/assets/windows_control_icons/min-k-30.png 3.5x"
                  draggable="false" alt=""/>
@@ -45,6 +45,11 @@ export default {
             default: true,
         }
     },
+    data() {
+        return {
+            sharedMiscState: store.state.misc,
+        }
+    },
 
     mounted() {
         if (!this.maximizable) {
@@ -72,7 +77,7 @@ export default {
         close() {
             const win = remote.getCurrentWindow();
             win.close();
-            if(!wfc.isLogin()){
+            if (!wfc.isLogin()) {
                 app.exit(0)
             }
         },

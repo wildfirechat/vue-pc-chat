@@ -20,7 +20,7 @@ import MessageConfig from "@/wfc/client/messageConfig";
 import PersistFlag from "@/wfc/messages/persistFlag";
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
-import {ipcRenderer, isElectron, remote} from "@/platform";
+import {ipcRenderer, isElectron, remote, currentWindow} from "@/platform";
 import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
@@ -106,6 +106,7 @@ let store = {
             connectionStatus: ConnectionStatus.ConnectionStatusUnconnected,
             isPageHidden: false,
             enableNotification: true,
+            enableMinimize: getItem('minimizable') === '1',
             enableNotificationMessageDetail: true,
             enableCloseWindowToExit: false,
             enableAutoLogin: false,
@@ -809,7 +810,7 @@ let store = {
         conversationState.quotedMessage = message;
     },
 
-    getConversationInfo(conversation){
+    getConversationInfo(conversation) {
         let info = wfc.getConversationInfo(conversation);
         return this._patchConversationInfo(info, false);
     },
@@ -1344,11 +1345,19 @@ let store = {
         miscState.enableNotificationMessageDetail = setting === null || setting === '1'
         miscState.enableCloseWindowToExit = getItem(userId + '-' + 'closeWindowToExit') === '1'
         miscState.enableAutoLogin = getItem(userId + '-' + 'autoLogin') === '1'
+        setting = getItem('minimizable')
+        miscState.enableMinimize = setting === null || setting === '1'
     },
 
     setEnableNotification(enable) {
         miscState.enableNotification = enable;
         setItem(contactState.selfUserInfo.uid + '-' + 'notification', enable ? '1' : '0')
+    },
+
+    setEnableMinimize(enable) {
+        miscState.enableMinimize = enable;
+        setItem('minimizable', enable ? '1' : '0')
+        currentWindow.minimizable = enable;
     },
 
     setEnableNotificationDetail(enable) {
