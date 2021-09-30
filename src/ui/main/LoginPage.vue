@@ -6,7 +6,7 @@
         <div class="qr-container">
             <img v-if="qrCode" v-bind:src="qrCode" alt="">
             <p v-else>{{ $t('misc.gen_qr_code') }}</p>
-            <ClipLoader v-if="loginStatus === 4" class="loading" :color="'white'"  :height="'80px'" :width="'80px'"/>
+            <ClipLoader v-if="loginStatus === 4" class="loading" :color="'white'" :height="'80px'" :width="'80px'"/>
         </div>
         <div class="drag-area"/>
 
@@ -16,6 +16,7 @@
                 <p>{{ $t('login.desc') }}</p>
                 <p>{{ $t('login.tip') }}</p>
                 <p>{{ $t('login.warning') }}</p>
+                <a  target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
             </div>
             <!--    已经扫码-->
             <div v-else-if="loginStatus === 1" class="scanned">
@@ -41,7 +42,7 @@
             </div>
 
             <!--      开发调试时，自动登录-->
-            <div v-else-if="loginStatus === 4" >
+            <div v-else-if="loginStatus === 4">
                 <p>数据同步中...</p>
             </div>
         </div>
@@ -296,6 +297,7 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    line-height: 25px;
 }
 
 .login-action-container {
