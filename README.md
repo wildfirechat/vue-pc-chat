@@ -25,23 +25,23 @@
 ## 环境依赖
 #### mac系统
 1. 最新版本的Xcode
-2. nodejs 10.16.X
-3. npm 6.9.0
+2. nodejs 12.x
+3. npm 6.14.x
 4. python 2.7.X
 5. git
 6. npm install -g node-gyp
 
 #### windows系统
-1. nodejs v10.16.x
+1. nodejs v12.x
 2. python 2.7.X
 3. git
-4. npm 6.9.0
+4. npm 6.14.0
 5. npm install --global --vs2015 windows-build-tools
 6. npm install -g node-gyp
 > 第5步安装windows开发环境的安装内容较多，如果网络情况不好可能需要等较长时间，选择早上网络较好时安装是个好的选择
 
 #### linux系统
-1. nodejs10.16.X
+1. nodejs 12.X
 2. python2.7X
 3. git
 
@@ -73,6 +73,9 @@ npm run cross-package-linux-arm64
 #打包mac系统amd64架构
 npm run cross-package-mac
 ```
+
+## Electron8版本
+目前master的使用的Electron版本是15.1.0。如果您使用的SDK是8.2.3的，请切换到分支[8.2.3](https://github.com/wildfirechat/vue-pc-chat/tree/8.2.3)。旧版本8.2.3已经不再更新，可以联系我们更新到最新SDK。
 
 ## 常见开发问题
 1. 如何调试？PC使用了Electron，内嵌Chrome浏览器，跟在浏览器上开发调试是一样的。快捷键Ctrl
@@ -117,7 +120,7 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 
 13. 想自己部署表情图片
     请常见问题12
- 
+
 14. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
     1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
     2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
