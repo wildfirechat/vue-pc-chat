@@ -25,14 +25,14 @@
 ## 环境依赖
 #### mac系统
 1. 最新版本的Xcode
-2. nodejs 12.x
-3. npm 6.14.x
+2. nodejs v14.18.0
+3. npm 6.14.15
 4. python 2.7.X
 5. git
 6. npm install -g node-gyp
 
 #### windows系统
-1. nodejs v14.18.x
+1. nodejs v14.18.0
 2. python 2.7.X
 3. git
 4. npm 6.14.15
