@@ -6,20 +6,20 @@
 <!--static STATUS_CONNECTED = 4;-->
 <!--}-->
 <template>
-    <div class="flex-column flex-align-center flex-justify-center">
+    <div class="flex-column flex-align-center flex-justify-center voip-container" ref="contentContainer">
         <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
-
-        <div v-if="session" class="conference-container">
+        <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
+        <div v-if="session && !session.isScreenSharing()" class="conference-container">
             <div class="conference-main-content-container">
                 <!--main-->
                 <!--video-->
                 <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                    <section class="content-container video" ref="contentContainer">
+                    <section class="content-container video">
                         <!--self-->
                         <div v-if="!session.audience" class="participant-video-item"
                              v-bind:class="{highlight: selfUserInfo._volume > 0}">
                             <div
-                                v-if="!selfUserInfo._stream || (selfUserInfo._isVideoMuted && !session.isScreenSharing())"
+                                v-if="!selfUserInfo._stream || (session.videoMuted && !session.isScreenSharing())"
                                 class="flex-column flex-justify-center flex-align-center">
                                 <img class="avatar" :src="selfUserInfo.portrait">
                             </div>
@@ -217,6 +217,8 @@ import localStorageEmitter from "../../ipc/localStorageEmitter";
 import {isElectron, remote} from "../../platform";
 import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
+import ScreenShareControlView from "./ScreenShareControlView";
+import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 
 export default {
     name: 'Conference',
@@ -236,7 +238,7 @@ export default {
             showParticipantList: false,
         }
     },
-    components: {UserCardView},
+    components: {ScreenShareControlView, UserCardView},
     methods: {
         setUseMainVideo(userId) {
             if (!this.session) {
@@ -479,7 +481,9 @@ export default {
                                 minHeight: 720,
                                 maxHeight: 720
                             }
+
                             this.session.startScreenShare(desktopShareOptions);
+                            avenginekitproxy.emitToMain('start-screen-share', {})
                         }
                     };
                     this.$modal.show(
@@ -612,6 +616,11 @@ export default {
                 remote.getCurrentWindow().focus();
             }
         })
+        //
+        // this.$on('stop-screen-share', () => {
+        //     this.session.stopScreenShare();
+        //     this.$forceUpdate();
+        // })
     },
 
     destroyed() {
@@ -623,6 +632,11 @@ export default {
 </script>
 
 <style lang="css" scoped>
+
+.voip-container {
+    --participant-video-item-width: 100%;
+    --participant-video-item-height: 100%;
+}
 
 .conference-container {
     width: 100vw;
@@ -650,9 +664,6 @@ export default {
     justify-content: center;
     align-items: center;
     align-content: center;
-
-    --participant-video-item-width: 100%;
-    --participant-video-item-height: 100%;
 }
 
 .content-container.video {
