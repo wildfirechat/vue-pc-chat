@@ -3,7 +3,7 @@
         <div class="action">
             <img v-if="!session.audioMuted" @click="audioMute" class="action-img" src='@/assets/images/av_mute.png'/>
             <img v-else @click="audioMute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
-            <p>{{ session.audioMuted ? '取消静音' : '静音' }}}</p>
+            <p>{{ session.audioMuted ? '取消静音' : '静音' }}</p>
         </div>
         <div class="action">
             <img @click="videoMute" class="action-img" src='@/assets/images/av_video_answer.png'/>

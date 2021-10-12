@@ -69,8 +69,8 @@ export class AvEngineKitProxy {
                     this.callWin.resizable = true;
                     this.callWin.closable = true;
                     this.callWin.maximizable = false;
-                    this.callWin.setMinimumSize(800, 100);
-                    this.callWin.setSize(800, 100);
+                    this.callWin.setMinimumSize(800, 120);
+                    this.callWin.setSize(800, 120);
                     // console.log('screen width', screen, screen.width);
                     this.callWin.setPosition((screenWidth - 800) / 2, 0, true);
                 }
