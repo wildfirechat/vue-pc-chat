@@ -69,4 +69,10 @@ export default {
     text-overflow: ellipsis;
 }
 
+/*style for v-html */
+.text-message-container .text >>> img {
+    max-width: 800px !important;
+    display: inline-block;
+}
+
 </style>
