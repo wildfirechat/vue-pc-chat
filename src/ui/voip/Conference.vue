@@ -7,8 +7,13 @@
 <!--}-->
 <template>
     <div class="flex-column flex-align-center flex-justify-center voip-container" ref="contentContainer">
-        <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
-        <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
+        <div ref="notClickThroughArea">
+            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px"
+                                              :title="'野火会议'"
+                                              :macos="!sharedMiscState.isElectronWindowsOrLinux"/>
+            <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
+            <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
+        </div>
         <div v-if="session && !session.isScreenSharing()" class="conference-container">
             <div class="conference-main-content-container">
                 <!--main-->
@@ -214,11 +219,13 @@ import ClickOutside from 'vue-click-outside'
 import UserCardView from "../main/user/UserCardView";
 import ConferenceInviteMessageContent from "../../wfc/av/messages/conferenceInviteMessageContent";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
-import {isElectron, remote} from "../../platform";
+import {currentWindow, isElectron, remote} from "../../platform";
 import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
 import ScreenShareControlView from "./ScreenShareControlView";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
+import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView";
+import store from "../../store";
 
 export default {
     name: 'Conference',
@@ -234,11 +241,13 @@ export default {
 
             startTimestamp: 0,
             currentTimestamp: 0,
+            ddd: '',
 
             showParticipantList: false,
+            sharedMiscState: store.state.misc,
         }
     },
-    components: {ScreenShareControlView, UserCardView},
+    components: {ScreenShareControlView, UserCardView, ElectronWindowsControlButtonView},
     methods: {
         setUseMainVideo(userId) {
             if (!this.session) {
@@ -459,12 +468,17 @@ export default {
             })
         },
 
+        test() {
+            alert('test alert')
+        },
+
         screenShare() {
             if (this.session.audioOnly) {
                 return;
             }
             if (this.session.isScreenSharing()) {
                 this.session.stopScreenShare();
+                // currentWindow.setIgnoreMouseEvents(false)
             } else {
                 if (isElectron()) {
                     let beforeClose = (event) => {
@@ -606,21 +620,32 @@ export default {
         avenginekit.setup();
         this.setupSessionCallback();
 
-        localStorageEmitter.on('inviteConferenceParticipantDone', (ev, args) => {
-            if (isElectron()) {
+        if (isElectron()) {
+            let listener = (ev, args) => {
                 remote.getCurrentWindow().focus();
             }
-        })
-        localStorageEmitter.on('inviteConferenceParticipantCancel', (ev, args) => {
-            if (isElectron()) {
-                remote.getCurrentWindow().focus();
-            }
-        })
-        //
-        // this.$on('stop-screen-share', () => {
-        //     this.session.stopScreenShare();
-        //     this.$forceUpdate();
-        // })
+            localStorageEmitter.on('inviteConferenceParticipantDone', listener)
+            localStorageEmitter.on('inviteConferenceParticipantCancel', listener)
+            //
+            // this.$on('stop-screen-share', () => {
+            //     this.session.stopScreenShare();
+            //     this.$forceUpdate();
+            // })
+            window.addEventListener("mousemove", (event) => {
+                if (!this.session.isScreenSharing()) {
+                    return;
+                }
+                this.ddd = event.target.id;
+                if (event.target.id === "main-content-container") {
+                    currentWindow.setIgnoreMouseEvents(true, {forward: true});
+                } else {
+                    currentWindow.setIgnoreMouseEvents(false);
+                }
+            });
+            window.addEventListener("mouseleave", (event) => {
+                currentWindow.setIgnoreMouseEvents(false);
+            })
+        }
     },
 
     destroyed() {
@@ -636,11 +661,13 @@ export default {
 .voip-container {
     --participant-video-item-width: 100%;
     --participant-video-item-height: 100%;
+    background: #00000000 !important;
 }
 
 .conference-container {
     width: 100vw;
-    height: 100vh;
+    margin-top: 30px;
+    height: calc(100vh - 30px);
     display: flex;
 }
 
