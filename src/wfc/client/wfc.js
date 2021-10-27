@@ -149,6 +149,14 @@ export class WfcManager {
     }
 
     /**
+     * 设置协议栈短连接UA
+     * @param {String} userAgent 备选网络主机地址
+     */
+    setProtoUserAgent(userAgent) {
+        impl.setProtoUserAgent(userAgent);
+    }
+
+    /**
      * 设备从睡眠中恢复
      */
     onAppResume() {
