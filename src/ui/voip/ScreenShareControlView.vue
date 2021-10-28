@@ -1,9 +1,18 @@
 <template>
     <div class="screen-share-action-container">
+        <video v-if="session"
+               class="video"
+               ref="screenShareVideo"
+               style="width: 100%; height: 100%; position: absolute; left: 0; top: 0; z-index: 0; display:none"
+               :srcObject.prop="session.screenShareStream"
+               playsInline
+               muted
+               autoPlay/>
         <div class="action">
-            <img v-if="!session.audioMuted" @click="audioMute" class="action-img" src='@/assets/images/av_mute.png'/>
+            <img v-if="session && !session.audioMuted" @click="audioMute" class="action-img"
+                 src='@/assets/images/av_mute.png'/>
             <img v-else @click="audioMute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
-            <p>{{ session.audioMuted ? '取消静音' : '静音' }}</p>
+            <p>{{ session && session.audioMuted ? '取消静音' : '静音' }}</p>
         </div>
         <div class="action">
             <img @click="videoMute" class="action-img" src='@/assets/images/av_video_answer.png'/>
@@ -32,13 +41,35 @@ export default {
     },
     data() {
         return {
-            session: avenginekit.getCurrentSession(),
+            session: null,
+            screenShareCheckIntervalId: 0,
+            screenShareActiveTime: -1,
+            isScreenSharePaused: false,
         }
     },
 
-    // mounted() {
-    //     this.session = avenginekit.getCurrentSession();
-    // },
+    mounted() {
+        this.session = avenginekit.getCurrentSession();
+        this.screenShareCheckIntervalId = setInterval(() => {
+            if (this.screenShareActiveTime !== -1) {
+                if (this.screenShareActiveTime === this.$refs.screenShareVideo.currentTime) {
+                    if (!this.isScreenSharePaused) {
+                        this.isScreenSharePaused = true;
+                        console.log('屏幕共享暂停');
+                    }
+                } else {
+                    if (this.isScreenSharePaused) {
+                        this.isScreenSharePaused = false;
+                        console.log('屏幕共享恢复');
+                    }
+                }
+            }
+            this.screenShareActiveTime = this.$refs.screenShareVideo.currentTime;
+        }, 1000)
+    },
+    beforeDestroy() {
+        clearInterval(this.screenShareCheckIntervalId);
+    },
 
     methods: {
         audioMute() {
@@ -46,9 +77,12 @@ export default {
         },
 
         videoMute() {
-            this.stopScreenShare();
-            this.session.muteVideo(false);
-            this.$parent.$forceUpdate();
+            // this.stopScreenShare();
+            // this.session.muteVideo(false);
+            // this.$parent.$forceUpdate();
+
+            this.$parent.test();
+
         },
 
         stopScreenShare() {
