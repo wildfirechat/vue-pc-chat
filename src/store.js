@@ -368,6 +368,7 @@ let store = {
         }
 
         miscState.isMainWindow = isMainWindow;
+        window.__wfc = wfc;
     },
 
     _loadDefaultData() {
