@@ -390,7 +390,12 @@ export default {
         copy(message) {
             let content = message.messageContent;
             if (content instanceof TextMessageContent) {
-                copyText(content.content)
+                let selectedText = window.getSelection().toString()
+                if (selectedText) {
+                    copyText(selectedText);
+                } else {
+                    copyText(content.content)
+                }
             } else {
                 copyImg(content.remotePath)
             }
