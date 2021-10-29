@@ -14,7 +14,7 @@
             <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
-        <div v-if="session && !session.isScreenSharing()" class="conference-container">
+        <div v-if="session" class="conference-container" v-bind:style="{display: session.isScreenSharing() ? 'none' : 'block'}">
             <div class="conference-main-content-container">
                 <!--main-->
                 <!--video-->
