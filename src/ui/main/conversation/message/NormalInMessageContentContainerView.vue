@@ -78,7 +78,16 @@ export default {
             console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
         },
+        clearSelection() {
+            if (document.selection && document.selection.empty) {
+                document.selection.empty();
+            } else if (window.getSelection) {
+                let sel = window.getSelection();
+                sel.removeAllRanges();
+            }
+        },
         openMessageContextMenu(event, message) {
+            this.clearSelection();
             this.$parent.$emit('openMessageContextMenu', event, message)
         }
     },
