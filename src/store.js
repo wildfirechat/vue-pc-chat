@@ -28,6 +28,7 @@ import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 import IPCEventType from "./ipc/ipcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
 import {stringValue} from "./wfc/util/longUtil";
+import {getConversationPortrait} from "./ui/util/imageUtil";
 
 /**
  * 一些说明
@@ -991,6 +992,11 @@ let store = {
         } else if (info.conversation.type === ConversationType.Group) {
             info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
             info.conversation._target._displayName = info.conversation._target.name;
+        }
+        if (!info.conversation._target.portrait) {
+            getConversationPortrait(info.conversation).then((portrait => {
+                info.conversation._target.portrait = portrait;
+            }))
         }
         if (gt(info.timestamp, 0)) {
             info._timeStr = helper.dateFormat(info.timestamp);
