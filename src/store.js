@@ -697,7 +697,7 @@ let store = {
                 xhr.open('PUT', uploadUrl);
                 xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
                 if (serverType === 1) { //aliyun
-                  xhr.setRequestHeader("content-type", `application/octet-stream`);
+                    xhr.setRequestHeader("content-type", `application/octet-stream`);
                 }
                 xhr.send(file);
             }
@@ -885,8 +885,12 @@ let store = {
         console.log('loadConversationHistoryMessage', conversation, firstMsgId, stringValue(firstMsgUid), firstMsg);
         let lmsgs = wfc.getMessages(conversation, firstMsgId, true, 20);
         if (lmsgs.length > 0) {
-            this._onloadConversationMessages(conversation, lmsgs);
-            setTimeout(() => loadedCB(), 200)
+            let loadNewMsg = this._onloadConversationMessages(conversation, lmsgs)
+            if (!loadNewMsg) {
+                setTimeout(() => completeCB(), 200)
+            } else {
+                setTimeout(() => loadedCB(), 200)
+            }
         } else {
             wfc.loadRemoteConversationMessages(conversation, firstMsgUid, 20,
                 (msgs) => {
