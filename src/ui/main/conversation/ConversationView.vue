@@ -258,13 +258,6 @@ export default {
             return message && message.messageContent instanceof NotificationMessageContent;
         },
 
-        openMessageContextMenu(event, message) {
-            if (!message || message.messageContent instanceof NotificationMessageContent) {
-                return;
-            }
-            this.$refs.menu.open(event, message);
-        },
-
         onScroll(e) {
             // hide tippy userCard
             for (const popper of document.querySelectorAll('.tippy-popper')) {
@@ -317,6 +310,7 @@ export default {
         },
 
         onMenuClose() {
+            this.$emit('contextMenuClosed')
         },
 
         // message context menu
