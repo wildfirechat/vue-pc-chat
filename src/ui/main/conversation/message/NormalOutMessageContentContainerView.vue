@@ -100,17 +100,7 @@ export default {
             wfc.deleteMessage(this.message.messageId);
             wfc.sendMessage(this.message);
         },
-        clearSelection() {
-            if (document.selection && document.selection.empty) {
-                document.selection.empty();
-            } else if (window.getSelection) {
-                let sel = window.getSelection();
-                sel.removeAllRanges();
-            }
-        },
-
         openMessageContextMenu(event, message) {
-            this.clearSelection();
             this.$parent.$emit('openMessageContextMenu', event, message)
         },
 
