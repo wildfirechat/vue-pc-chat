@@ -472,7 +472,7 @@ export class AvEngineKitProxy {
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
-        if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || !this.hasWebcam) {
+        if (!this.isSupportVoip) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;

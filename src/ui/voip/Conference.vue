@@ -14,7 +14,8 @@
             <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
-        <div v-if="session" class="conference-container" v-bind:style="{display: session.isScreenSharing() ? 'none' : 'block'}">
+        <div v-if="session" class="conference-container"
+             v-bind:style="{display: session.isScreenSharing() ? 'none' : 'block'}">
             <div class="conference-main-content-container">
                 <!--main-->
                 <!--video-->
@@ -301,6 +302,12 @@ export default {
 
             sessionCallback.didCreateLocalVideoTrack = (stream) => {
                 this.selfUserInfo._stream = stream;
+            };
+
+            sessionCallback.didCreateLocalVideoTrackError = () => {
+                // TODO
+                // 没有摄像头或者麦克风，加入会议时，会回调到此处，自己断会显示自己的头像，其他端会显示黑屏
+                // 可以进行相关提示
             };
 
             sessionCallback.didReceiveRemoteVideoTrack = (userId, stream) => {
