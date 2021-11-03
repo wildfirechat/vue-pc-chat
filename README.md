@@ -107,7 +107,7 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
     如果常见问题4解决不了，可以尝试```　 npm config set registry http://registry.npm.taobao.org/ ```，然后在按常见问题4的步骤进行
 
 11. 音视频相关问题，请参考以下文档
-    1. [av readme](src/js/wfc/av/internal/README.MD)
+    1. [av readme](src/wfc/av/internal/README.MD)
     2. [音视频常见问题](https://docs.wildfirechat.cn/faq/webrtc.html?h=webrtc)
 
 12. 纯内网环境，不能显示表情
