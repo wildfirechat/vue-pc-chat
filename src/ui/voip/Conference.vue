@@ -15,7 +15,7 @@
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
         <div v-if="session" class="conference-container"
-             v-bind:style="{display: session.isScreenSharing() ? 'none' : 'block'}">
+             v-bind:style="{display: session.isScreenSharing() ? 'none' : 'flex'}">
             <div class="conference-main-content-container">
                 <!--main-->
                 <!--video-->
@@ -121,21 +121,22 @@
                     <div class="duration-action-container">
                         <p>{{ duration }}</p>
                         <div class="action-container">
-                            <div class="action">
+                            <div class="action" v-if="!session.audience">
                                 <img v-if="!session.audioMuted" @click="mute" class="action-img"
                                      src='@/assets/images/av_conference_audio.png'/>
                                 <img v-else @click="mute" class="action-img"
                                      src='@/assets/images/av_conference_audio_mute.png'/>
                                 <p>静音</p>
                             </div>
-                            <div class="action" v-if="!session.audioOnly && !session.isScreenSharing()">
+                            <div class="action"
+                                 v-if="!session.audience && !session.audioOnly && !session.isScreenSharing()">
                                 <img v-if="!session.videoMuted" @click="muteVideo" class="action-img"
                                      src='@/assets/images/av_conference_video.png'/>
                                 <img v-else @click="muteVideo" class="action-img"
                                      src='@/assets/images/av_conference_video_mute.png'/>
                                 <p>视频</p>
                             </div>
-                            <div v-if="!audioOnly" class="action">
+                            <div v-if="!session.audience && !audioOnly" class="action">
                                 <img v-if="!session.screenSharing" @click="screenShare"
                                      class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing.png'/>
@@ -202,7 +203,7 @@
                                   v-if="user._isHost">主持人</span>
                             <span v-else class="single-line label"
                                   @click.stop="requestChangeMode(user)"
-                                  v-bind:class="{audience: user._isAudience}">互动成员</span>
+                                  v-bind:class="{audience: user._isAudience}">{{ user._isAudience ? '听众' : '互动成员' }}</span>
                         </div>
                     </li>
                 </ul>
@@ -284,7 +285,7 @@ export default {
                 this.audioOnly = session.audioOnly;
                 this.selfUserInfo = selfUserInfo;
                 this.selfUserInfo._isHost = session.host === selfUserInfo.uid;
-                this.selfUserInfo._audience = session.audience;
+                this.selfUserInfo._isAudience = session.audience;
                 this.selfUserInfo._isVideoMuted = session.videoMuted;
                 this.selfUserInfo._volume = 0;
                 this.initiatorUserInfo = initiatorUserInfo;
@@ -452,6 +453,11 @@ export default {
         },
 
         requestChangeMode(user) {
+            if (user.uid === this.selfUserInfo.uid) {
+                // TODO 需要根据实际产品定义处理，这儿直接禁止
+                //this.session.switchAudience(!user._isAudience);
+                return;
+            }
             this.$alert({
                 content: user._isAudience ? `邀请${this.userName(user)}参与互动?` : `取消${this.userName(user)}参与互动?`,
                 cancelCallback: () => {
@@ -589,7 +595,7 @@ export default {
             }
             let videoParticipants = infos.filter(u => !u.audience)
             let count = videoParticipants.length;
-            if (!this.selfUserInfo._audience) {
+            if (!this.selfUserInfo._isAudience) {
                 count++;
             }
             let width = '100%';
