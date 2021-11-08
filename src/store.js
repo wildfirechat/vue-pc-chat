@@ -6,7 +6,7 @@ import {eq, gt, numberValue} from "@/wfc/util/longUtil";
 import helper from "@/ui/util/helper";
 import convert from '@/vendor/pinyin'
 import GroupType from "@/wfc/model/groupType";
-import {imageThumbnail, mergeImages, videoDuration, videoThumbnail} from "@/ui/util/imageUtil";
+import {imageThumbnail, videoDuration, videoThumbnail} from "@/ui/util/imageUtil";
 import MessageContentMediaType from "@/wfc/messages/messageContentMediaType";
 import Conversation from "@/wfc/model/conversation";
 import MessageContentType from "@/wfc/messages/messageContentType";
@@ -20,7 +20,7 @@ import MessageConfig from "@/wfc/client/messageConfig";
 import PersistFlag from "@/wfc/messages/persistFlag";
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
-import {ipcRenderer, isElectron, remote, currentWindow} from "@/platform";
+import {currentWindow, ipcRenderer, isElectron, remote} from "@/platform";
 import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
@@ -1328,25 +1328,15 @@ let store = {
         }
         groupName = groupName.substr(0, groupName.length - 1);
 
-        mergeImages(groupMemberPortraits)
-            .then((groupPortrait) => {
-                wfc.uploadMedia('', groupPortrait, MessageContentMediaType.Portrait,
-                    (remoteUrl) => {
-                        console.log('upload media success', remoteUrl);
-                        wfc.createGroup(null, GroupType.Restricted, groupName, remoteUrl, null, groupMemberIds, null, [0], null,
-                            (groupId) => {
-                                this._loadDefaultConversationList();
-                                let conversation = new Conversation(ConversationType.Group, groupId, 0)
-                                this.setCurrentConversation(conversation);
-                                successCB && successCB(conversation);
-                            }, (error) => {
-                                console.log('create group error', error)
-                                failCB && failCB(error);
-                            });
-                    },
-                    (error) => {
-                        console.log('upload media error', error);
-                    });
+        wfc.createGroup(null, GroupType.Restricted, groupName, null, null, groupMemberIds, null, [0], null,
+            (groupId) => {
+                this._loadDefaultConversationList();
+                let conversation = new Conversation(ConversationType.Group, groupId, 0)
+                this.setCurrentConversation(conversation);
+                successCB && successCB(conversation);
+            }, (error) => {
+                console.log('create group error', error)
+                failCB && failCB(error);
             });
     },
 
