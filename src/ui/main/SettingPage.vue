@@ -20,7 +20,7 @@
                 <input type="checkbox" :checked="sharedMiscState.enableCloseWindowToExit"
                        @change="enableCloseWindowToExit($event.target.checked)">
             </label>
-            <label v-if="sharedMiscState.wfc.isCommercialServer()">
+            <label v-if="sharedMiscState.isElectron">
                 {{ $t('setting.enable_minimize') }}
                 <input type="checkbox" :checked="sharedMiscState.enableMinimize"
                        @change="enableMinimize($event.target.checked)">

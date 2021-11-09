@@ -7,7 +7,7 @@
 <!--}-->
 <template>
     <div class="flex-column flex-align-center flex-justify-center voip-container" ref="contentContainer">
-        <div ref="notClickThroughArea">
+        <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
             <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px"
                                               :title="'野火会议'"
                                               :macos="!sharedMiscState.isElectronWindowsOrLinux"/>
@@ -15,7 +15,7 @@
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
         <div v-if="session" class="conference-container"
-             v-bind:style="{display: session.isScreenSharing() ? 'none' : 'flex'}">
+             v-bind:style="{display: session.isScreenSharing() && sharedMiscState.isElectron ? 'none' : 'flex'}">
             <div class="conference-main-content-container">
                 <!--main-->
                 <!--video-->
@@ -658,6 +658,9 @@ export default {
             window.addEventListener("mouseleave", (event) => {
                 currentWindow.setIgnoreMouseEvents(false);
             })
+            this.$refs.contentContainer.style.setProperty('--conference-container-margin-top', '30px');
+        }else {
+            this.$refs.contentContainer.style.setProperty('--conference-container-margin-top', '0px');
         }
     },
 
@@ -674,13 +677,14 @@ export default {
 .voip-container {
     --participant-video-item-width: 100%;
     --participant-video-item-height: 100%;
+    --conference-container-margin-top: 30px;
     background: #00000000 !important;
 }
 
 .conference-container {
     width: 100vw;
-    margin-top: 30px;
-    height: calc(100vh - 30px);
+    margin-top: var(--conference-container-margin-top);
+    height: calc(100vh - var(--conference-container-margin-top));
     display: flex;
 }
 

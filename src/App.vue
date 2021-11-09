@@ -86,7 +86,9 @@ export default {
         window.addEventListener('blur', this.onblur);
         window.addEventListener('focus', this.onfocus)
 
-        currentWindow.minimizable = this.sharedMiscState.enableMinimize;
+        if (isElectron()){
+        		currentWindow.minimizable = this.sharedMiscState.enableMinimize;
+        }
     },
 
     mounted() {
