@@ -995,6 +995,7 @@ let store = {
             info.conversation._target._displayName = wfc.getUserDisplayNameEx(info.conversation._target);
         } else if (info.conversation.type === ConversationType.Group) {
             info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
+            info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
             info.conversation._target._displayName = info.conversation._target.name;
         }
         if (!info.conversation._target.portrait) {
@@ -1121,6 +1122,10 @@ let store = {
                 u._category = '☆ 星标朋友';
             })
         }
+    },
+
+    reloadFavGroupList(){
+        this._loadFavGroupList();
     },
 
     setCurrentFriendRequest(friendRequest) {

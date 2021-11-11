@@ -27,7 +27,8 @@
     },
     "group": {
         "name": "群名稱{0}",
-        "chat": "進入群聊"
+        "chat": "進入群聊",
+        "fav": "保存到通訊錄"
     },
     "message":{
         "send_message": "發消息",

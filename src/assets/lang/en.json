@@ -27,7 +27,8 @@
     },
     "group": {
         "name": "Group name {0}",
-        "chat": "Start group chat"
+        "chat": "Start group chat",
+        "fav": "Save to contact list"
     },
     "message":{
         "send_message": "Send Message",
