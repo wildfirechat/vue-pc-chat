@@ -55,7 +55,7 @@ export default class CallSessionCallback {
     /**
      * 创建本地音视频流失败，可能原因可能是没有摄像头、或者没有麦克风
      */
-    didCreateLocalVideoTrackError(){
+    didCreateLocalVideoTrackError() {
 
     }
 
@@ -97,6 +97,26 @@ export default class CallSessionCallback {
      * @param {[string]} participants
      */
     didMuteStateChanged(participants) {
+
+    }
+
+    /**
+     * 当前用户发送媒体丢包回调
+     * @param media 媒体类型，audio 或 video
+     * @param lostPacket 丢包数
+     */
+    didMediaLostPacket(media, lostPacket) {
+
+    }
+
+    /**
+     * 接收用户媒体丢包回调
+     * @param userId 用户id
+     * @param media 媒体类型，audio 或 video
+     * @param lostPacket 丢包数
+     * @param uplink 方向，true是对方丢的，false是己方丢的
+     */
+    didUserMediaLostPacket(userId, media, lostPacket, uplink) {
 
     }
 

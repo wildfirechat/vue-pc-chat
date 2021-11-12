@@ -203,7 +203,9 @@
                                   v-if="user._isHost">主持人</span>
                             <span v-else class="single-line label"
                                   @click.stop="requestChangeMode(user)"
-                                  v-bind:class="{audience: user._isAudience}">{{ user._isAudience ? '听众' : '互动成员' }}</span>
+                                  v-bind:class="{audience: user._isAudience}">{{
+                                    user._isAudience ? '听众' : '互动成员'
+                                }}</span>
                         </div>
                     </li>
                 </ul>
@@ -406,6 +408,27 @@ export default {
                     })
 
                 })
+            };
+
+            sessionCallback.didMediaLostPacket = (media, lostPacket) => {
+                if (lostPacket > 6) {
+                    console.log('您的网络不好');
+                }
+            };
+
+            sessionCallback.didUserMediaLostPacket = (userId, media, lostPacket, uplink) => {
+                //如果uplink ture对方网络不好，false您的网络不好
+                //接收方丢包超过10为网络不好
+                if (lostPacket > 10) {
+                    if (uplink) {
+                        let userInfos = this.participantUserInfos.filter(u => u.uid === userId);
+                        if (userInfos && userInfos.length > 0) {
+                            console.log(userInfos[0].displayName, "网络不好");
+                        }
+                    } else {
+                        console.log('您的网络不好');
+                    }
+                }
             };
 
             avenginekit.sessionCallback = sessionCallback;
@@ -659,7 +682,7 @@ export default {
                 currentWindow.setIgnoreMouseEvents(false);
             })
             this.$refs.contentContainer.style.setProperty('--conference-container-margin-top', '30px');
-        }else {
+        } else {
             this.$refs.contentContainer.style.setProperty('--conference-container-margin-top', '0px');
         }
     },
