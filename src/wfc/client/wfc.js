@@ -869,14 +869,13 @@ export class WfcManager {
      * 创建频道
      * @param {string} name 频道名称
      * @param {string} portrait 频道头像的链接地址
-     * @param {number} status 频道的状态，可选值参考{@link ChannelStatus}
      * @param {string} desc 描述
      * @param {string} extra 额外信息
      * @param {function (string)} successCB 创建成功，会回调通知channelId
      * @param {function (number)} failCB
      */
-    createChannel(name, portrait, status, desc, extra, successCB, failCB) {
-        impl.createChannel(name, portrait, status, desc, extra, successCB, failCB);
+    createChannel(name, portrait, desc, extra, successCB, failCB) {
+        impl.createChannel(name, portrait, desc, extra, successCB, failCB);
     }
 
     /**
