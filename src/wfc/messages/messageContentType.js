@@ -20,6 +20,8 @@ export default class MessageContentType {
     static UserCard = 10;
     static Composite_Message = 11;
 
+    static Mark_Unread_Sync = 31;
+
 
     // 提醒消息
     static RecallMessage_Notification = 80;

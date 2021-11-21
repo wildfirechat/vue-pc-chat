@@ -59,7 +59,7 @@ export class WfcManager {
      * 启用国密加密。注意需要服务器端同步开启国密配置
      */
     useSM4() {
-      impl.useSM4();
+        impl.useSM4();
     }
 
     /**
@@ -1064,7 +1064,18 @@ export class WfcManager {
      * @param {Conversation} conversation 目标会话
      */
     clearConversationUnreadStatus(conversation) {
+        console.log('xxx clu', conversation)
         impl.clearConversationUnreadStatus(conversation);
+    }
+
+    /**
+     * 将会话最后一条消息置为未读
+     * @param {Conversation} conversation 会话
+     * @param {boolean} syncToOtherClient 是否同步给其他端
+     * @return {boolean} 是否操作成功
+     */
+    markConversationAsUnread(conversation, syncToOtherClient) {
+        return impl.markConversationAsUnread(conversation, syncToOtherClient);
     }
 
     /**

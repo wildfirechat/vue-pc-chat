@@ -1013,6 +1013,10 @@ let store = {
             this._patchMessage(info.lastMessage, 0)
         }
 
+        if (info.unreadCount) {
+            info._unread = info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll;
+        }
+
         return info;
     },
 
@@ -1124,7 +1128,7 @@ let store = {
         }
     },
 
-    reloadFavGroupList(){
+    reloadFavGroupList() {
         this._loadFavGroupList();
     },
 

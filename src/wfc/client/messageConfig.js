@@ -53,6 +53,7 @@ import CompositeMessageContent from "../messages/compositeMessageContent";
 import ConferenceInviteMessageContent from "../av/messages/conferenceInviteMessageContent";
 import ConferenceChangeModeContent from "../av/messages/conferenceChangeModeContent";
 import ConferenceKickoffMemberMessageContent from "../av/messages/conferenceKickoffMemberMessageContent";
+import MarkUnreadMessageContent from "../messages/markUnreadMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -386,7 +387,13 @@ export default class MessageConfig {
             name: 'conferenceKickoffMember',
             flag: PersistFlag.Transparent,
             type: MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER,
-            contentClazz:ConferenceKickoffMemberMessageContent,
+            contentClazz: ConferenceKickoffMemberMessageContent,
+        },
+        {
+            name: 'markUnreadMessage',
+            flag: PersistFlag.No_Persist,
+            type: MessageContentType.Mark_Unread_Sync,
+            contentClazz: MarkUnreadMessageContent,
         }
     ];
 }
