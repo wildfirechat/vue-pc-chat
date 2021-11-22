@@ -112,7 +112,7 @@
     "exit_switch_user": "退出/切換賬號",
     "feedback": "發送反饋給我們",
     "lang": "語言(重啟生效)",
-    "zh_cn": "簡體中文",
+        "zh_cn": "简体中文",
     "zh_tw": "繁體中文",
     "en": "English",
     "sync_draft": "同步草稿"

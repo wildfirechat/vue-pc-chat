@@ -236,7 +236,7 @@ export default class MessageConfig {
         {
             name: 'kickoffGroupMemberVisiableNotification',
             flag: PersistFlag.Persist,
-            type: MessageContentType.KickOffGroupMember_Visiable_Notification,
+            type: MessageContentType.KickOffGroupMember_Visible_Notification,
             contentClazz: KickoffGroupMemberVisiableNotification,
         },
         {
@@ -266,7 +266,7 @@ export default class MessageConfig {
         {
             name: 'quitGroupVisiableNotification',
             flag: PersistFlag.Persist,
-            type: MessageContentType.QuitGroup_Visiable_Notification,
+            type: MessageContentType.QuitGroup_Visible_Notification,
             contentClazz: QuitGroupVisiableNotification,
         },
         {
