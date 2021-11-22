@@ -29,13 +29,17 @@
             <li>
                 <a @click.prevent="removeConversation(conversationInfo)">{{ $t('common.delete') }}</a>
             </li>
-            <li v-show="conversationInfo && conversationInfo._unread === 0"
+            <li v-show="conversationInfo
+                && (!sharedConversationState.currentConversationInfo || !sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation))
+                && conversationInfo._unread === 0"
                 @click.prevent="markConversationAsUnread(conversationInfo.conversation)">
-                <a>{{$t('conversation.mark_as_unread')}}</a>
+                <a>{{ $t('conversation.mark_as_unread') }}</a>
             </li>
-            <li v-show="conversationInfo && conversationInfo._unread > 0"
+            <li v-show="conversationInfo
+                && (!sharedConversationState.currentConversationInfo || !sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation))
+                && conversationInfo._unread > 0"
                 @click.prevent="clearConversationUnreadStatus(conversationInfo.conversation)">
-                <a>{{$t('conversation.mark_as_read')}}</a>
+                <a>{{ $t('conversation.mark_as_read') }}</a>
             </li>
         </vue-context>
     </section>
