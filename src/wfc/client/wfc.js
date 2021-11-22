@@ -149,6 +149,25 @@ export class WfcManager {
     }
 
     /**
+     * 设置协议栈短连接UA。
+     *
+     * @param {string} userAgent 协议栈短连接使用的UA
+     */
+    setProtoUserAgent(userAgent) {
+        impl.setProtoUserAgent(userAgent);
+    }
+
+    /**
+     * 添加协议栈短连接自定义Header
+     *
+     * @param {string} header 协议栈短连接使用的UA
+     * @param {string} value 协议栈短连接使用的UA
+     */
+    addHttpHeader(header, value) {
+        impl.addHttpHeader(header, value)
+    }
+
+    /**
      * 设备从睡眠中恢复
      */
     onAppResume() {
@@ -1064,7 +1083,6 @@ export class WfcManager {
      * @param {Conversation} conversation 目标会话
      */
     clearConversationUnreadStatus(conversation) {
-        console.log('xxx clu', conversation)
         impl.clearConversationUnreadStatus(conversation);
     }
 
