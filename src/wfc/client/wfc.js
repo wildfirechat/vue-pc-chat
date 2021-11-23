@@ -1266,10 +1266,11 @@ export class WfcManager {
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
      * @param {number} count
      * @param {function (Message)} successCB
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param failCB
      */
-    loadRemoteMessages(conversation, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB);
+    loadRemoteMessages(conversation, beforeUid, count, successCB, failCB, contentTypes = []) {
+        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB, contentTypes);
     }
 
     /**
@@ -1278,10 +1279,11 @@ export class WfcManager {
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
      * @param {number} count
      * @param {function ([Message])} successCB
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param failCB
      */
-    loadRemoteConversationMessages(conversation, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB);
+    loadRemoteConversationMessages(conversation, beforeUid, count, successCB, failCB, contentTypes = []) {
+        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB, contentTypes);
     }
 
     /**
