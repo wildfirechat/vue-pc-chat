@@ -1263,27 +1263,27 @@ export class WfcManager {
      * 已废弃，请使用{@link loadRemoteConversationMessages}
      * 获取会还的远程历史消息
      * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
      * @param {number} count
      * @param {function (Message)} successCB
-     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param failCB
      */
-    loadRemoteMessages(conversation, beforeUid, count, successCB, failCB, contentTypes = []) {
-        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB, contentTypes);
+    loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB) {
+        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB);
     }
 
     /**
      * 获取会话的远程历史消息
      * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
      * @param {number} count
      * @param {function ([Message])} successCB
-     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param failCB
      */
-    loadRemoteConversationMessages(conversation, beforeUid, count, successCB, failCB, contentTypes = []) {
-        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB, contentTypes);
+    loadRemoteConversationMessages(conversation, contentTypes, beforeUid, count, successCB, failCB) {
+        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB, contentTypes);
     }
 
     /**

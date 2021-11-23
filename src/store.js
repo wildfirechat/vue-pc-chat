@@ -892,7 +892,7 @@ let store = {
                 setTimeout(() => loadedCB(), 200)
             }
         } else {
-            wfc.loadRemoteConversationMessages(conversation, firstMsgUid, 20,
+            wfc.loadRemoteConversationMessages(conversation, [], firstMsgUid, 20,
                 (msgs) => {
                     let loadNewMsg = this._onloadConversationMessages(conversation, msgs)
                     if (!loadNewMsg) {
