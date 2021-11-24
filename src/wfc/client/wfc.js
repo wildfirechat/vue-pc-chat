@@ -1283,7 +1283,7 @@ export class WfcManager {
      * @param failCB
      */
     loadRemoteConversationMessages(conversation, contentTypes, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB, contentTypes);
+        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB);
     }
 
     /**
