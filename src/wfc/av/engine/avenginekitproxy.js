@@ -378,8 +378,8 @@ export class AvEngineKitProxy {
             return;
         }
         console.log(`speaker、microphone、webcam检测结果分别为：${this.hasSpeaker} , ${this.hasMicrophone}, ${this.hasWebcam}，如果不全为true，请检查硬件设备是否正常，否则通话可能存在异常`)
-        if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || !this.hasWebcam) {
-            console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone);
+        if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || (!audioOnly && !this.hasWebcam)) {
+            console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone, this.hasWebcam);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
         }
