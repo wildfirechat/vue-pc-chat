@@ -63,6 +63,45 @@ export class AvEngineKitProxy {
             ipcRenderer.on('voip-message', this.sendVoipListener);
             ipcRenderer.on('conference-request', this.sendConferenceRequestListener);
             ipcRenderer.on('update-call-start-message', this.updateCallStartMessageContentListener)
+            ipcRenderer.on('start-screen-share', (event, args) => {
+                if (this.callWin) {
+                    let screenWidth = args.width;
+                    this.callWin.resizable = true;
+                    this.callWin.closable = true;
+                    this.callWin.maximizable = false;
+                    this.callWin.transparent = true;
+                    this.callWin.setMinimumSize(800, 800);
+                    this.callWin.setSize(800, 800);
+                    // console.log('screen width', screen, screen.width);
+                    this.callWin.setPosition((screenWidth - 800) / 2, 0, true);
+                }
+            });
+            ipcRenderer.on('stop-screen-share', (event, args) => {
+                if (this.callWin) {
+                    let type = args.type;
+                    let width = 360;
+                    let height = 640;
+                    switch (type) {
+                        case 'single':
+                            width = 360;
+                            height = 640;
+                            break;
+                        case 'multi':
+                        case 'conference':
+                            width = 1024;
+                            height = 800;
+                            break;
+                        default:
+                            break;
+                    }
+                    this.callWin.resizable = true;
+                    this.callWin.closable = true;
+                    this.callWin.maximizable = true;
+                    this.callWin.setMinimumSize(width, height);
+                    this.callWin.setSize(width, height);
+                    this.callWin.center();
+                }
+            })
         }
     }
 
@@ -305,7 +344,7 @@ export class AvEngineKitProxy {
     }
 
     emitToMain(event, args) {
-        // console.log('emit to main', event, args);
+        console.log('emit to main', event, args);
         if (isElectron()) {
             // renderer to main
             ipcRenderer.send(event, args);
@@ -338,12 +377,12 @@ export class AvEngineKitProxy {
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
+        console.log(`speaker、microphone、webcam检测结果分别为：${this.hasSpeaker} , ${this.hasMicrophone}, ${this.hasWebcam}，如果不全为true，请检查硬件设备是否正常，否则通话可能存在异常`)
         if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || !this.hasWebcam) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
         }
-        console.log(`speaker、microphone、webcam检测结果分别为：${this.hasSpeaker} , ${this.hasMicrophone}, ${this.hasWebcam}，如果不全为true，请检查硬件设备是否正常，否则通话可能存在异常`)
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         participants = participants.filter(uid => uid !== selfUserInfo.uid);
         let callId = conversation.target + Math.floor(Math.random() * 10000);
@@ -435,7 +474,7 @@ export class AvEngineKitProxy {
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
-        if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone || !this.hasWebcam) {
+        if (!this.isSupportVoip) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
@@ -491,6 +530,8 @@ export class AvEngineKitProxy {
                     minHeight: height,
                     resizable: true,
                     maximizable: false,
+                    transparent: true,
+                    frame: false,
                     webPreferences: {
                         scrollBounce: false,
                         nativeWindowOpen: true,

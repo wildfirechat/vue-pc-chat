@@ -59,7 +59,7 @@ export class WfcManager {
      * 启用国密加密。注意需要服务器端同步开启国密配置
      */
     useSM4() {
-      impl.useSM4();
+        impl.useSM4();
     }
 
     /**
@@ -149,11 +149,22 @@ export class WfcManager {
     }
 
     /**
-     * 设置协议栈短连接UA
-     * @param {String} userAgent 备选网络主机地址
+     * 设置协议栈短连接UA。
+     *
+     * @param {string} userAgent 协议栈短连接使用的UA
      */
     setProtoUserAgent(userAgent) {
         impl.setProtoUserAgent(userAgent);
+    }
+
+    /**
+     * 添加协议栈短连接自定义Header
+     *
+     * @param {string} header 协议栈短连接使用的UA
+     * @param {string} value 协议栈短连接使用的UA
+     */
+    addHttpHeader(header, value) {
+        impl.addHttpHeader(header, value)
     }
 
     /**
@@ -455,7 +466,7 @@ export class WfcManager {
      * @returns {Promise<void>}
      */
     async createGroup(groupId, groupType, name, portrait, groupExtra, memberIds = [], memberExtra = '', lines = [0], notifyContent, successCB, failCB) {
-        impl.createGroup(groupId, groupType, name, portrait, groupExtra, memberIds, memberExtra, lines, notifyContent, successCB, failCB);
+        impl.createGroup(groupId, groupType, name, portrait == null ? "" : portrait, groupExtra, memberIds, memberExtra, lines, notifyContent, successCB, failCB);
     }
 
     /**
@@ -877,14 +888,13 @@ export class WfcManager {
      * 创建频道
      * @param {string} name 频道名称
      * @param {string} portrait 频道头像的链接地址
-     * @param {number} status 频道的状态，可选值参考{@link ChannelStatus}
      * @param {string} desc 描述
      * @param {string} extra 额外信息
      * @param {function (string)} successCB 创建成功，会回调通知channelId
      * @param {function (number)} failCB
      */
-    createChannel(name, portrait, status, desc, extra, successCB, failCB) {
-        impl.createChannel(name, portrait, status, desc, extra, successCB, failCB);
+    createChannel(name, portrait, desc, extra, successCB, failCB) {
+        impl.createChannel(name, portrait, desc, extra, successCB, failCB);
     }
 
     /**
@@ -1077,6 +1087,16 @@ export class WfcManager {
     }
 
     /**
+     * 将会话最后一条消息置为未读
+     * @param {Conversation} conversation 会话
+     * @param {boolean} syncToOtherClient 是否同步给其他端
+     * @return {boolean} 是否操作成功
+     */
+    markConversationAsUnread(conversation, syncToOtherClient) {
+        return impl.markConversationAsUnread(conversation, syncToOtherClient);
+    }
+
+    /**
      * 清除单条消息的未读状态
      * @param messageId
      */
@@ -1162,9 +1182,9 @@ export class WfcManager {
     /**
      * 获取会话消息
      * @param {Conversation} conversation 目标会话
-     * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
-     * @param {boolean} before 本参数暂时无效! true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
-     * @param {number} count 本参数暂时无效! 获取多少条消息
+     * @param {number} fromIndex messageId，表示从那一条消息开始获取
+     * @param {boolean} before true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 获取多少条消息
      * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
      * @return {[Message]} 会话消息列表，参考{@link Message}
      */
@@ -1243,25 +1263,27 @@ export class WfcManager {
      * 已废弃，请使用{@link loadRemoteConversationMessages}
      * 获取会还的远程历史消息
      * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
      * @param {number} count
      * @param {function (Message)} successCB
      * @param failCB
      */
-    loadRemoteMessages(conversation, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB);
+    loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB) {
+        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB);
     }
 
     /**
      * 获取会话的远程历史消息
      * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
      * @param {number} count
      * @param {function ([Message])} successCB
      * @param failCB
      */
-    loadRemoteConversationMessages(conversation, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteMessages(conversation, beforeUid, count, successCB, failCB);
+    loadRemoteConversationMessages(conversation, contentTypes, beforeUid, count, successCB, failCB) {
+        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB);
     }
 
     /**

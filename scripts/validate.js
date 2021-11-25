@@ -1,7 +1,6 @@
 function validate() {
     const md5File = require('md5-file')
     const fs = require('fs')
-    const sleep = require('sleep');
     // const config = require('./src/config')
 
     //     static APP_SERVER = 'https://app.wildfirechat.net';
@@ -49,7 +48,6 @@ function validate() {
     console.log('')
     console.log('-----------请进行前置检查，1分钟之后，继续...--------------')
     console.log('')
-    sleep.sleep(60);
 }
 
 validate();

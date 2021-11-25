@@ -13,6 +13,7 @@ import {
     protocol,
     session,
     shell,
+    screen,
     Tray,
 } from 'electron';
 import Screenshots from "electron-screenshots";
@@ -599,6 +600,16 @@ const createMainWindow = async () => {
     ipcMain.on('conference-request', (event, args) => {
         // console.log('main voip-message event', args);
         mainWindow.webContents.send('conference-request', args);
+    });
+
+    ipcMain.on('start-screen-share', (event, args) => {
+        let pointer = screen.getCursorScreenPoint();
+        let display = screen.getDisplayNearestPoint(pointer)
+        mainWindow.webContents.send('start-screen-share', {width: display.size.width});
+    });
+
+    ipcMain.on('stop-screen-share', (event, args) => {
+        mainWindow.webContents.send('stop-screen-share', args);
     });
 
     ipcMain.on('click-notification', (event, args) => {

@@ -151,6 +151,8 @@ import BenzAMRRecorder from "benz-amr-recorder";
 import axios from "axios";
 import FavItem from "../../../wfc/model/favItem";
 import {stringValue} from "../../../wfc/util/longUtil";
+import ConversationType from "../../../wfc/model/conversationType";
+import GroupMemberType from "../../../wfc/model/groupMemberType";
 
 var amr;
 export default {
@@ -201,6 +203,25 @@ export default {
                 this.dragAndDropEnterCount--;
             } else if (v === 'drop') {
                 this.dragAndDropEnterCount--;
+                let isFile;
+                if (e.dataTransfer.items) {
+                    if (typeof (e.dataTransfer.items[0].webkitGetAsEntry) == "function") {
+                        isFile = e.dataTransfer.items[0].webkitGetAsEntry().isFile;
+                    } else if (typeof (e.dataTransfer.items[0].getAsEntry) == "function") {
+                        isFile = e.dataTransfer.items[0].getAsEntry().isFile;
+                    }
+                } else {
+                    return true;
+                }
+                if (!isFile) {
+                    this.$notify({
+                        // title: '不支持',
+                        text: this.$t('conversation.not_support_send_folder'),
+                        type: 'warn'
+                    });
+                    return true;
+                }
+
                 let length = e.dataTransfer.files.length;
                 if (length > 0 && length < 5) {
                     for (let i = 0; i < length; i++) {
@@ -208,9 +229,11 @@ export default {
                         store.sendFile(this.sharedConversationState.currentConversationInfo.conversation, e.dataTransfer.files[i]);
                     }
                 } else {
-                    // TODO
-                    // toast
-                    console.log(this.$t('conversation.drag_to_send_limit_tip'));
+                    this.$notify({
+                        // title: '大文件提示',
+                        text: this.$t('conversation.drag_to_send_limit_tip'),
+                        type: 'warn'
+                    });
                 }
             } else if (v === 'dragover') {
                 // If not st as 'copy', electron will open the drop file
@@ -254,13 +277,6 @@ export default {
 
         isNotificationMessage(message) {
             return message && message.messageContent instanceof NotificationMessageContent;
-        },
-
-        openMessageContextMenu(event, message) {
-            if (!message || message.messageContent instanceof NotificationMessageContent) {
-                return;
-            }
-            this.$refs.menu.open(event, message);
         },
 
         onScroll(e) {
@@ -315,6 +331,7 @@ export default {
         },
 
         onMenuClose() {
+            this.$emit('contextMenuClosed')
         },
 
         // message context menu
@@ -343,7 +360,24 @@ export default {
         },
 
         isRecallable(message) {
-            return message && message.direction === 0 && new Date().getTime() - numberValue(message.timestamp) < 60 * 1000;
+            if (message) {
+                if (message.conversation.type === ConversationType.Group) {
+                    let groupInfo = wfc.getGroupInfo(message.conversation.target);
+                    let selfUserId = wfc.getUserId();
+                    if (groupInfo && groupInfo.owner === selfUserId) {
+                        return true;
+                    }
+
+                    let groupMember = wfc.getGroupMember(message.conversation.target, selfUserId);
+                    if (groupMember && [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) > -1) {
+                        return true;
+                    }
+                }
+                if (message.direction === 0 && new Date().getTime() - numberValue(message.timestamp) < 60 * 1000) {
+                    return true;
+                }
+            }
+            return false;
         },
 
         isLocalFile(message) {
@@ -371,7 +405,12 @@ export default {
         copy(message) {
             let content = message.messageContent;
             if (content instanceof TextMessageContent) {
-                copyText(content.content)
+                let selectedText = window.getSelection().toString()
+                if (selectedText) {
+                    copyText(selectedText);
+                } else {
+                    copyText(content.content)
+                }
             } else {
                 copyImg(content.remotePath)
             }
@@ -412,9 +451,9 @@ export default {
             return this.pickConversationAndForwardMessage(ForwardType.NORMAL, [message]);
         },
 
-        _forward(message){
-            this.forward(message).catch(()=>{
-               // do nothing
+        _forward(message) {
+            this.forward(message).catch(() => {
+                // do nothing
             });
         },
 

@@ -82,7 +82,6 @@
     "native-ext-loader": "^2.3.0",
     "npm-force-resolutions": "0.0.10",
     "shelljs": "^0.8.4",
-    "sleep": "^6.3.0",
     "vue-cli-plugin-electron-builder": "~2.0.0-rc.5",
     "vue-template-compiler": "^2.6.11"
   },

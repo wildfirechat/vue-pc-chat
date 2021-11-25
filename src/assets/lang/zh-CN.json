@@ -27,7 +27,8 @@
     },
     "group": {
         "name": "群名称{0}",
-        "chat": "进入群聊"
+        "chat": "进入群聊",
+        "fav": "保存到通讯录"
     },
     "message":{
         "send_message": "发消息",
@@ -57,6 +58,7 @@
         "no_more_message": "没有更多消息",
         "all_message_load": "已加载全部消息 :(",
         "drag_to_send_limit_tip": "一次最多发送5个文件",
+        "not_support_send_folder": "不支持发送文件夹",
         "group_name": "群名",
         "group_announcement": "群公告",
         "add_member": "添加成员",
@@ -67,7 +69,9 @@
         "sticky_top": "置顶",
         "cancel_sticky_top": "取消置顶",
         "enable_notification": "允许通知",
-        "disable_notification": "消息免打扰"
+        "disable_notification": "消息免打扰",
+        "mark_as_unread": "标记为未读",
+        "mark_as_read": "标记为已读"
     },
     "fav": {
         "fav": "收藏",
@@ -104,6 +108,7 @@
         "enable_notification": "开启通知",
         "enable_notification_detail": "通知显示消息内容",
         "close_window_to_exit": "关闭窗口时，直接退出",
+        "enable_minimize": "支持最小化",
         "auto_login": "记住登录",
         "exit_switch_user": "退出/切换账号",
         "feedback": "发送反馈给我们",

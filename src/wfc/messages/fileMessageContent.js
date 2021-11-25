@@ -9,7 +9,6 @@ import MessageContentType from "./messageContentType";
 export default class FileMessageContent extends MediaMessageContent {
     name = '';
     size = 0;
-    static FILE_NAME_PREFIX = '[文件] ';
 
     constructor(fileOrLocalPath, remotePath, name, size) {
         super(MessageContentType.File, MessageContentMediaType.File, fileOrLocalPath, remotePath);
@@ -23,12 +22,12 @@ export default class FileMessageContent extends MediaMessageContent {
     }
 
     digest() {
-        return '[文件]';
+        return '[文件]' + this.name;
     }
 
     encode() {
         let payload = super.encode();
-        payload.searchableContent = FileMessageContent.FILE_NAME_PREFIX + this.name;
+        payload.searchableContent = this.name;
         payload.content = this.size + '';
         return payload;
     }

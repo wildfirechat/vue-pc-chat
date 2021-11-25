@@ -45,6 +45,7 @@ import CoolLightBox from 'vue-cool-lightbox'
 import 'vue-cool-lightbox/dist/vue-cool-lightbox.min.css'
 import './twemoji'
 import IpcMain from "./ipc/ipcMain";
+import {currentWindow} from "./platform";
 
 export default {
     name: 'App',
@@ -84,6 +85,10 @@ export default {
         }
         window.addEventListener('blur', this.onblur);
         window.addEventListener('focus', this.onfocus)
+
+        if (isElectron()){
+        		currentWindow.minimizable = this.sharedMiscState.enableMinimize;
+        }
     },
 
     mounted() {

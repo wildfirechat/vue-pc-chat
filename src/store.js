@@ -6,7 +6,7 @@ import {eq, gt, numberValue} from "@/wfc/util/longUtil";
 import helper from "@/ui/util/helper";
 import convert from '@/vendor/pinyin'
 import GroupType from "@/wfc/model/groupType";
-import {imageThumbnail, mergeImages, videoDuration, videoThumbnail} from "@/ui/util/imageUtil";
+import {imageThumbnail, videoDuration, videoThumbnail} from "@/ui/util/imageUtil";
 import MessageContentMediaType from "@/wfc/messages/messageContentMediaType";
 import Conversation from "@/wfc/model/conversation";
 import MessageContentType from "@/wfc/messages/messageContentType";
@@ -20,7 +20,7 @@ import MessageConfig from "@/wfc/client/messageConfig";
 import PersistFlag from "@/wfc/messages/persistFlag";
 import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
-import {ipcRenderer, isElectron, remote} from "@/platform";
+import {currentWindow, ipcRenderer, isElectron, remote} from "@/platform";
 import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
@@ -28,6 +28,7 @@ import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 import IPCEventType from "./ipc/ipcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
 import {stringValue} from "./wfc/util/longUtil";
+import {getConversationPortrait} from "./ui/util/imageUtil";
 
 /**
  * 一些说明
@@ -106,6 +107,7 @@ let store = {
             connectionStatus: ConnectionStatus.ConnectionStatusUnconnected,
             isPageHidden: false,
             enableNotification: true,
+            enableMinimize: getItem('minimizable') === '1',
             enableNotificationMessageDetail: true,
             enableCloseWindowToExit: false,
             enableAutoLogin: false,
@@ -159,6 +161,8 @@ let store = {
         wfc.eventEmitter.on(EventType.FriendListUpdate, (updatedFriendIds) => {
             this._loadFriendList();
             this._loadFavContactList();
+            this._loadDefaultConversationList();
+            this._loadCurrentConversationMessages();
         });
 
         wfc.eventEmitter.on(EventType.GroupInfosUpdate, (groupInfos) => {
@@ -303,7 +307,10 @@ let store = {
         wfc.eventEmitter.on(EventType.MessageRead, (readEntries) => {
             // optimization
             if (conversationState.currentConversationInfo) {
-                conversationState.currentConversationRead = wfc.getConversationRead(conversationState.currentConversationInfo.conversation);
+                // wfc.getConversationRead 每次返回同一个对象，只是该对象的值不一样。
+                // 由于 VUE 不能检测到初始化时，不存在的属性的变更，故此处重新 new 一个新的对象，并赋值。
+                // FYI:https://vuejs.org/v2/guide/reactivity.html
+                conversationState.currentConversationRead = new Map(wfc.getConversationRead(conversationState.currentConversationInfo.conversation));
             }
         });
 
@@ -362,6 +369,7 @@ let store = {
         }
 
         miscState.isMainWindow = isMainWindow;
+        window.__wfc = wfc;
     },
 
     _loadDefaultData() {
@@ -684,10 +692,13 @@ let store = {
                 xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
                 xhr.send(formData);
             } else {
-                // 野火专业存储
+                // 野火专业存储或阿里云
                 xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
                 xhr.open('PUT', uploadUrl);
                 xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
+                if (serverType === 1) { //aliyun
+                    xhr.setRequestHeader("content-type", `application/octet-stream`);
+                }
                 xhr.send(file);
             }
 
@@ -725,7 +736,7 @@ let store = {
             } else {
                 console.log('file too big, and not support upload big file')
             }
-            return;
+            return true;
         }
         let fileOrLocalPath = null;
         let remotePath = null;
@@ -804,7 +815,7 @@ let store = {
         conversationState.quotedMessage = message;
     },
 
-    getConversationInfo(conversation){
+    getConversationInfo(conversation) {
         let info = wfc.getConversationInfo(conversation);
         return this._patchConversationInfo(info, false);
     },
@@ -874,10 +885,14 @@ let store = {
         console.log('loadConversationHistoryMessage', conversation, firstMsgId, stringValue(firstMsgUid), firstMsg);
         let lmsgs = wfc.getMessages(conversation, firstMsgId, true, 20);
         if (lmsgs.length > 0) {
-            this._onloadConversationMessages(conversation, lmsgs);
-            setTimeout(() => loadedCB(), 200)
+            let loadNewMsg = this._onloadConversationMessages(conversation, lmsgs)
+            if (!loadNewMsg) {
+                setTimeout(() => completeCB(), 200)
+            } else {
+                setTimeout(() => loadedCB(), 200)
+            }
         } else {
-            wfc.loadRemoteConversationMessages(conversation, firstMsgUid, 20,
+            wfc.loadRemoteConversationMessages(conversation, [], firstMsgUid, 20,
                 (msgs) => {
                     let loadNewMsg = this._onloadConversationMessages(conversation, msgs)
                     if (!loadNewMsg) {
@@ -980,7 +995,13 @@ let store = {
             info.conversation._target._displayName = wfc.getUserDisplayNameEx(info.conversation._target);
         } else if (info.conversation.type === ConversationType.Group) {
             info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
+            info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
             info.conversation._target._displayName = info.conversation._target.name;
+        }
+        if (!info.conversation._target.portrait) {
+            getConversationPortrait(info.conversation).then((portrait => {
+                info.conversation._target.portrait = portrait;
+            }))
         }
         if (gt(info.timestamp, 0)) {
             info._timeStr = helper.dateFormat(info.timestamp);
@@ -990,6 +1011,10 @@ let store = {
 
         if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
             this._patchMessage(info.lastMessage, 0)
+        }
+
+        if (info.unreadCount) {
+            info._unread = info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll;
         }
 
         return info;
@@ -1101,6 +1126,10 @@ let store = {
                 u._category = '☆ 星标朋友';
             })
         }
+    },
+
+    reloadFavGroupList() {
+        this._loadFavGroupList();
     },
 
     setCurrentFriendRequest(friendRequest) {
@@ -1308,25 +1337,15 @@ let store = {
         }
         groupName = groupName.substr(0, groupName.length - 1);
 
-        mergeImages(groupMemberPortraits)
-            .then((groupPortrait) => {
-                wfc.uploadMedia('', groupPortrait, MessageContentMediaType.Portrait,
-                    (remoteUrl) => {
-                        console.log('upload media success', remoteUrl);
-                        wfc.createGroup(null, GroupType.Restricted, groupName, remoteUrl, null, groupMemberIds, null, [0], null,
-                            (groupId) => {
-                                this._loadDefaultConversationList();
-                                let conversation = new Conversation(ConversationType.Group, groupId, 0)
-                                this.setCurrentConversation(conversation);
-                                successCB && successCB(conversation);
-                            }, (error) => {
-                                console.log('create group error', error)
-                                failCB && failCB(error);
-                            });
-                    },
-                    (error) => {
-                        console.log('upload media error', error);
-                    });
+        wfc.createGroup(null, GroupType.Restricted, groupName, null, null, groupMemberIds, null, [0], null,
+            (groupId) => {
+                this._loadDefaultConversationList();
+                let conversation = new Conversation(ConversationType.Group, groupId, 0)
+                this.setCurrentConversation(conversation);
+                successCB && successCB(conversation);
+            }, (error) => {
+                console.log('create group error', error)
+                failCB && failCB(error);
             });
     },
 
@@ -1339,11 +1358,19 @@ let store = {
         miscState.enableNotificationMessageDetail = setting === null || setting === '1'
         miscState.enableCloseWindowToExit = getItem(userId + '-' + 'closeWindowToExit') === '1'
         miscState.enableAutoLogin = getItem(userId + '-' + 'autoLogin') === '1'
+        setting = getItem('minimizable')
+        miscState.enableMinimize = setting === null || setting === '1'
     },
 
     setEnableNotification(enable) {
         miscState.enableNotification = enable;
         setItem(contactState.selfUserInfo.uid + '-' + 'notification', enable ? '1' : '0')
+    },
+
+    setEnableMinimize(enable) {
+        miscState.enableMinimize = enable;
+        setItem('minimizable', enable ? '1' : '0')
+        currentWindow.minimizable = enable;
     },
 
     setEnableNotificationDetail(enable) {

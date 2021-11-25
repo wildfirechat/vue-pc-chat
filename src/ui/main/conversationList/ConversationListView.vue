@@ -29,6 +29,18 @@
             <li>
                 <a @click.prevent="removeConversation(conversationInfo)">{{ $t('common.delete') }}</a>
             </li>
+            <li v-show="conversationInfo
+                && (!sharedConversationState.currentConversationInfo || !sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation))
+                && conversationInfo._unread === 0"
+                @click.prevent="markConversationAsUnread(conversationInfo.conversation)">
+                <a>{{ $t('conversation.mark_as_unread') }}</a>
+            </li>
+            <li v-show="conversationInfo
+                && (!sharedConversationState.currentConversationInfo || !sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation))
+                && conversationInfo._unread > 0"
+                @click.prevent="clearConversationUnreadStatus(conversationInfo.conversation)">
+                <a>{{ $t('conversation.mark_as_read') }}</a>
+            </li>
         </vue-context>
     </section>
 </template>
@@ -37,6 +49,7 @@
 
 import ConversationItemView from "@/ui/main/conversationList/ConversationItemView";
 import store from "@/store";
+import wfc from "../../../wfc/client/wfc";
 
 export default {
     name: 'ConversationListView',
@@ -75,12 +88,19 @@ export default {
 
         showConversationItemContextMenu(event, conversationInfo) {
             this.contextMenuConversationInfo = conversationInfo;
-            console.log('xxx', this.contextMenuConversationInfo)
             this.$refs.menu.open(event, conversationInfo)
         },
 
         onConversationItemContextMenuClose() {
             this.contextMenuConversationInfo = null;
+        },
+
+        clearConversationUnreadStatus(conversation) {
+            wfc.clearConversationUnreadStatus(conversation);
+        },
+
+        markConversationAsUnread(conversation) {
+            wfc.markConversationAsUnread(conversation, true);
         }
     },
     activated() {
