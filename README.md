@@ -46,7 +46,7 @@
 3. git
 
 ## 开发
-1. ```npm install```
+1. ```npm install```，推荐使用华为镜像```npm install --registry=https://mirrors.huaweicloud.com/repository/npm/```
 2. ```npm run dev```
 
 ## 打包
