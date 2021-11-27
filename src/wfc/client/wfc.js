@@ -1290,12 +1290,13 @@ export class WfcManager {
      * 根据会话线路，获取远程历史消息
      * @param {number} line 会话线路
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param {number} count
      * @param {function ([Message])} successCB
      * @param failCB
      */
-    loadRemoteLineMessages(line, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteLineMessages(line, beforeUid, count, successCB, failCB)
+    loadRemoteLineMessages(line,contentTypes, beforeUid, count, successCB, failCB){
+        impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB)
     }
 
     /**
