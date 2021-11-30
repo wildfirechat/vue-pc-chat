@@ -696,7 +696,7 @@ let store = {
                 xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
                 xhr.open('PUT', uploadUrl);
                 xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
-                if (serverType === 1) { //aliyun
+                if (serverType === 2) { //aliyun
                     xhr.setRequestHeader("content-type", `application/octet-stream`);
                 }
                 xhr.send(file);
