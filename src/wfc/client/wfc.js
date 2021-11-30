@@ -1487,11 +1487,17 @@ export class WfcManager {
         return impl.isSupportBigFilesUpload();
     }
 
-    /**
-     * 获取上传链接。一般用户大文件上传。
-     */
-    getUploadMediaUrl(fileName, mediaType, successCB, failCB) {
-        impl.getUploadMediaUrl(fileName, mediaType, successCB, failCB);
+   /**
+    * 获取上传链接。一般用户大文件上传。
+    * @param {string} fileName
+    * @param {number} mediaType 媒体类型，可选值参考{@link MessageContentMediaType}
+    * @param {string} contentType HTTP请求的ContentType header，为空时默认为"application/octet-stream"
+    * @param {function (string)} successCB 回调通知上传成功之后的url
+    * @param {function (number)} failCB
+    * @returns {Promise<void>}
+    */
+    getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
+        impl.getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB);
     }
 
     /**
