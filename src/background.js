@@ -536,7 +536,7 @@ const createMainWindow = async () => {
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
         await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-        if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
+        //if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
     } else {
         createProtocol('app')
         // Load the index.html when not in development
@@ -857,6 +857,9 @@ function onDeepLink(url) {
 }
 
 app.setAsDefaultProtocolClient(PROTOCOL);
+// pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
+// windows 7 下面，如果启动黑屏，请将下面注释打开
+//app.disableHardwareAcceleration();
 app.on('open-url', (event, url) => {
     onDeepLink(url);
 })
