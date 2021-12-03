@@ -457,7 +457,7 @@ export class WfcManager {
      * @param {string} name 群名称
      * @param {string} portrait 群头像的链接
      * @param {string} groupExtra 群组扩展信息
-     * @param {[string]} memberIds 群成员id
+     * @param {[string]} memberIds 群成员id列表
      * @param {string} memberExtra 群组成员扩展信息
      * @param {[number]} lines 会话线路，默认传[0]即可
      * @param {CreateGroupNotification} notifyContent 通知信息，默认传null，服务端会生成默认通知
@@ -1290,12 +1290,13 @@ export class WfcManager {
      * 根据会话线路，获取远程历史消息
      * @param {number} line 会话线路
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param {number} count
      * @param {function ([Message])} successCB
      * @param failCB
      */
-    loadRemoteLineMessages(line, beforeUid, count, successCB, failCB) {
-        impl.loadRemoteLineMessages(line, beforeUid, count, successCB, failCB)
+    loadRemoteLineMessages(line,contentTypes, beforeUid, count, successCB, failCB){
+        impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB)
     }
 
     /**
@@ -1494,7 +1495,6 @@ export class WfcManager {
     * @param {string} contentType HTTP请求的ContentType header，为空时默认为"application/octet-stream"
     * @param {function (string)} successCB 回调通知上传成功之后的url
     * @param {function (number)} failCB
-    * @returns {Promise<void>}
     */
     getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
         impl.getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB);
