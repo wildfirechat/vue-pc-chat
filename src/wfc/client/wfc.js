@@ -1295,7 +1295,7 @@ export class WfcManager {
      * @param {function ([Message])} successCB
      * @param failCB
      */
-    loadRemoteLineMessages(line,contentTypes, beforeUid, count, successCB, failCB){
+    loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB){
         impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB)
     }
 
@@ -1401,6 +1401,16 @@ export class WfcManager {
      */
     deleteMessage(messageId) {
         return impl.deleteMessageById(messageId);
+    }
+
+    /**
+     * 删除远程消息
+     * @param {Long | string} msgUid 消息uid
+     * @param {function ()} successCB
+     * @param {function (number)} failCB
+     */
+    deleteRemoteMessageByUid(msgUid, successCB, failCB){
+        impl.deleteRemoteMessage(msgUid, successCB, failCB);
     }
 
     /**
