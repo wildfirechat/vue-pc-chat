@@ -12,6 +12,7 @@ import SoundMessageContent from "../messages/soundMessageContent";
 import Long from "long";
 import UnknownMessageContent from "../messages/unknownMessageContent";
 
+import Config from '../../config'
 export default class FavItem {
     id;
     messageUid;
@@ -105,6 +106,9 @@ export default class FavItem {
             //     break
             default:
                 break;
+        }
+        if (Config.urlRedirect){
+            favItem.url = Config.urlRedirect(favItem.url);
         }
         return favItem;
     }
