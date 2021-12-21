@@ -46,7 +46,7 @@
 3. git
 
 ## 开发
-1. ```npm install```，推荐使用华为镜像```npm install --registry=https://mirrors.huaweicloud.com/repository/npm/```
+1. ```npm install```，建议使用华为镜像```npm install --registry=https://mirrors.huaweicloud.com/repository/npm/```
 2. ```npm run dev```
 
 ## 打包
@@ -124,6 +124,14 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 14. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
     1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
     2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
+
+15. windows 7 无法正常启动，显示黑屏
+    1. ```background.js``` 里面找到下面代码，并取消```//app.disableHardwareAcceleration();```前面的注释
+    ```
+       // pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
+       // windows 7 下面，如果启动黑屏，请将下面注释打开
+       //app.disableHardwareAcceleration();
+    ```
 
 ## 截图
 ![](./image/contact.png)

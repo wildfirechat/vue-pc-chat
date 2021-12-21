@@ -695,6 +695,7 @@ let store = {
                 // 野火专业存储或阿里云
                 xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
                 xhr.open('PUT', uploadUrl);
+          
                 xhr.setRequestHeader("content-type", `application/octet-stream`);
                 xhr.send(file);
             }
