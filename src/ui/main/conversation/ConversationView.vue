@@ -652,6 +652,9 @@ export default {
     },
 
     updated() {
+        if (!this.sharedConversationState.currentConversationInfo){
+            return;
+        }
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
         console.log('conversationView updated', this.sharedConversationState.shouldAutoScrollToBottom)

@@ -72,9 +72,6 @@ export default class Message {
             let msg = Object.assign(new Message(), obj);
             // big integer to number
             msg.messageId = Number(msg.messageId);
-            if (msg.messageId === -1) {
-                return null;
-            }
 
             msg.messageUid = Long.fromValue(msg.messageUid);
             msg.timestamp = Long.fromValue(msg.timestamp).toNumber();
