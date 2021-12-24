@@ -501,17 +501,17 @@ const downloadHandler = (event, item, webContents) => {
 
 const createMainWindow = async () => {
     let mainWindowState = windowStateKeeper({
-        defaultWidth: 1080,
-        defaultHeight: 720,
+        defaultWidth: 960,
+        defaultHeight: 600,
     });
 
     mainWindow = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
-        width: 400,
-        height: 480,
-        minWidth: 400,
-        minHeight: 480,
+        width: 960,
+        height: 600,
+        minWidth: 960,
+        minHeight: 600,
         opacity: 0,
         titleBarStyle: 'hidden',
         maximizable: false,
@@ -685,8 +685,8 @@ const createMainWindow = async () => {
         let messageUid = args.messageUid;
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
         if (!compositeMessageWin) {
-            let url = args.url + ('?messageUid=' + messageUid)
-            let win = createWindow(url, 700, 850, 700, 850, false, false);
+            // let url = args.url + ('?messageUid=' + messageUid)
+            let win = createWindow(args.url, 700, 850, 700, 850, false, false);
             compositeMessageWindows.set(messageUid, win)
 
             // win.webContents.openDevTools();
@@ -765,7 +765,7 @@ const createMainWindow = async () => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.resizable = true;
         mainWindow.maximizable = true;
-        mainWindow.setMinimumSize(800, 600);
+        mainWindow.setMinimumSize(960, 600);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.center();
         mainWindowState.manage(mainWindow);
