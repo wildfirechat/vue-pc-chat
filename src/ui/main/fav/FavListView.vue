@@ -240,6 +240,7 @@ export default {
                         } else {
                             url += "/composite"
                         }
+                        url += "?data=" + wfc.escape(wfc.utf8_to_b64(JSON.stringify(favItem)));
                         ipcRenderer.send('show-composite-message-window', {
                             messageUid: favItem.messageUid,
                             url: url,
