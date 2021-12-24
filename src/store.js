@@ -77,6 +77,7 @@ let store = {
             expandFriendList: true,
             expandGroup: false,
 
+            unreadFriendRequestCount: 0,
             friendList: [],
             friendRequestList: [],
             favGroupList: [],
@@ -160,6 +161,7 @@ let store = {
 
         wfc.eventEmitter.on(EventType.FriendListUpdate, (updatedFriendIds) => {
             this._loadFriendList();
+            this._loadFriendRequest();
             this._loadFavContactList();
             this._loadDefaultConversationList();
             this._loadCurrentConversationMessages();
@@ -695,7 +697,7 @@ let store = {
                 // 野火专业存储或阿里云
                 xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
                 xhr.open('PUT', uploadUrl);
-          
+
                 xhr.setRequestHeader("content-type", `application/octet-stream`);
                 xhr.send(file);
             }
@@ -1076,6 +1078,7 @@ let store = {
         });
 
         contactState.friendRequestList = requests;
+        contactState.unreadFriendRequestCount = wfc.getUnreadFriendRequestCount();
     },
 
     _patchAndSortUserInfos(userInfos, groupId = '', compareFn) {
