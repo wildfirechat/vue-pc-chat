@@ -479,7 +479,6 @@ export default {
 
             let message = new Message(msgConversation, compositeMessageContent);
             message.from = wfc.getUserId();
-            message.
             this.favMessage(message);
         },
 
