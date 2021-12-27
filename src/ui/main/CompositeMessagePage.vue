@@ -99,14 +99,17 @@ export default {
         }
         let hash = window.location.hash;
 
-        let faveItemData = hash.substring(hash.indexOf('=') + 1);
-        let favItemRaw = JSON.parse((wfc.b64_to_utf8(wfc.unescape(faveItemData))));
-
-        let favItem = Object.assign(new FavItem(), favItemRaw);
-        favItem.conversation = new Conversation(favItem.convType, favItem.convTarget, favItem.convLine);
-        favItem.favType = favItem.type;
-
-        this.compositeMessage = favItem.toMessage();
+        if(hash.indexOf('messageUid=') >= 0){
+            let messageUid = hash.substring(hash.indexOf('=') + 1);
+            this.compositeMessage = store.getMessageByUid(messageUid);
+        }else {
+            let faveItemData = hash.substring(hash.indexOf('=') + 1);
+            let favItemRaw = JSON.parse((wfc.b64_to_utf8(wfc.unescape(faveItemData))));
+            let favItem = Object.assign(new FavItem(), favItemRaw);
+            favItem.conversation = new Conversation(favItem.convType, favItem.convTarget, favItem.convLine);
+            favItem.favType = favItem.type;
+            this.compositeMessage = favItem.toMessage();
+        }
         store._patchMessage(this.compositeMessage, 0);
         document.title = this.compositeMessage.messageContent.title;
     },
