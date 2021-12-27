@@ -685,13 +685,22 @@ const createMainWindow = async () => {
         let messageUid = args.messageUid;
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
         if (!compositeMessageWin) {
-            // let url = args.url + ('?messageUid=' + messageUid)
-            let win = createWindow(args.url, 700, 850, 700, 850, false, false);
-            compositeMessageWindows.set(messageUid, win)
+            let url;
+            if(messageUid){
+                url = args.url + ('?messageUid=' + messageUid)
+            }else {
+                url = args.url;
+            }
+            let win = createWindow(url, 700, 850, 700, 850, false, false);
+            if (messageUid){
+                compositeMessageWindows.set(messageUid, win)
+            }
 
             // win.webContents.openDevTools();
             win.on('close', () => {
-                compositeMessageWindows.delete(messageUid);
+                if (messageUid){
+                    compositeMessageWindows.delete(messageUid);
+                }
             });
             win.show();
         } else {
