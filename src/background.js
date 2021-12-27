@@ -717,11 +717,15 @@ const createMainWindow = async () => {
                 url = args.url;
             }
             let win = createWindow(url, 700, 850, 700, 850, false, false);
-            compositeMessageWindows.set(messageUid, win)
+            if (messageUid){
+                compositeMessageWindows.set(messageUid, win)
+            }
 
             // win.webContents.openDevTools();
             win.on('close', () => {
-                compositeMessageWindows.delete(messageUid);
+                if (messageUid){
+                    compositeMessageWindows.delete(messageUid);
+                }
             });
             win.show();
         } else {
