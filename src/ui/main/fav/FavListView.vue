@@ -229,10 +229,6 @@ export default {
                     break;
                 case MessageContentType.Composite_Message:
                     if (isElectron()) {
-                        if (!favItem._message.messageUid) {
-                            console.log('messageUid is empty')
-                            return;
-                        }
                         let hash = window.location.hash;
                         let url = window.location.origin;
                         if (hash) {
