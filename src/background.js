@@ -710,8 +710,13 @@ const createMainWindow = async () => {
         let messageUid = args.messageUid;
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
         if (!compositeMessageWin) {
-            // let url = args.url + ('?messageUid=' + messageUid)
-            let win = createWindow(args.url, 700, 850, 700, 850, false, false);
+            let url;
+            if(messageUid){
+                url = args.url + ('?messageUid=' + messageUid)
+            }else {
+                url = args.url;
+            }
+            let win = createWindow(url, 700, 850, 700, 850, false, false);
             compositeMessageWindows.set(messageUid, win)
 
             // win.webContents.openDevTools();
