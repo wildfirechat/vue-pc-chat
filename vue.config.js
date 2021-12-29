@@ -75,7 +75,16 @@ module.exports = {
                 hardenedRuntime: true,
                 gatekeeperAssess: false,
                 entitlements: "build/mac/entitlements.mac.plist",
-                entitlementsInherit: "build/mac/entitlements.mac.plist"
+                entitlementsInherit: "build/mac/entitlements.mac.plist",
+                  target: [
+                      {
+                          target:'default',
+                          arch:[
+                            'arm64'
+                          ]
+                          
+                      }
+                  ]
               },
               linux: {
                 category: "Chat",
