@@ -7,17 +7,15 @@ let protoName = "marswrapper";
 platform = process.platform;
 arch = process.arch;
 
-if (argv.length === 4) {
+if (argv.length > 2) {
     platform = argv[2];
-    arch = argv[3];
+    if(argv.length === 4)
+      arch = argv[3];
 }
 
 switch (platform) {
     case "darwin":
         protoName += '.mac'
-        if (arch === 'arm64') {
-            protoName += '.arm64'
-        }
         break;
     case "linux":
         protoName += '.linux'

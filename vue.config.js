@@ -76,15 +76,15 @@ module.exports = {
                 gatekeeperAssess: false,
                 entitlements: "build/mac/entitlements.mac.plist",
                 entitlementsInherit: "build/mac/entitlements.mac.plist",
-                  target: [
-                      {
-                          target:'default',
-                          arch:[
-                            'arm64'
-                          ]
-                          
-                      }
-                  ]
+                target: [
+                    {
+                        target:'default',
+                        arch:[
+                          'universal'
+                        ]
+
+                    }
+                ]
               },
               linux: {
                 category: "Chat",
