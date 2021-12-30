@@ -516,39 +516,39 @@ export default {
             // if (true) {
             //     navigator.mediaDevices.enumerateDevices().then(deviceInfos => {
             //         // test input
-            //         // for (const deviceInfo of deviceInfos) {
-            //         //     if (this.ddd % 2 === 0) {
-            //                    // 仅仅是为测试了，生成不能这么写死
-            //         //         if (deviceInfo.label === "外置麦克风 (Built-in)") {
-            //         //             console.log('audioInput 外置');
-            //         //             this.session.setAudioInputDeviceId(deviceInfo.deviceId);
-            //         //             break;
-            //         //         }
-            //         //     } else {
-            //         //         if (deviceInfo.label === "MacBook Pro麦克风 (Built-in)") {
-            //         //             console.log('audioInput 内置');
-            //         //             this.session.setAudioInputDeviceId(deviceInfo.deviceId);
-            //         //             break;
-            //         //         }
-            //         //     }
-            //         // }
-            //
-            //         // test output
             //         for (const deviceInfo of deviceInfos) {
             //             if (this.testCount % 2 === 0) {
-            //                 if (deviceInfo.label === "外置耳机 (Built-in)") {
-            //                     console.log('audioOut 外置');
-            //                     this.setAudioOutputDeviceId(deviceInfo.deviceId)
+            //                    //仅仅是为测试了，生成不能这么写死
+            //                 if (deviceInfo.label === "外置麦克风 (Built-in)") {
+            //                     console.log('audioInput 外置');
+            //                     this.session.setAudioInputDeviceId(deviceInfo.deviceId);
             //                     break;
             //                 }
             //             } else {
-            //                 if (deviceInfo.label === "MacBook Pro扬声器 (Built-in)") {
-            //                     console.log('audioOutput 内置');
-            //                     this.setAudioOutputDeviceId(deviceInfo.deviceId)
+            //                 if (deviceInfo.label === "MacBook Pro麦克风 (Built-in)") {
+            //                     console.log('audioInput 内置');
+            //                     this.session.setAudioInputDeviceId(deviceInfo.deviceId);
             //                     break;
             //                 }
             //             }
             //         }
+            //
+            //         // test output
+            //         // for (const deviceInfo of deviceInfos) {
+            //         //     if (this.testCount % 2 === 0) {
+            //         //         if (deviceInfo.label === "外置耳机 (Built-in)") {
+            //         //             console.log('audioOut 外置');
+            //         //             this.setAudioOutputDeviceId(deviceInfo.deviceId)
+            //         //             break;
+            //         //         }
+            //         //     } else {
+            //         //         if (deviceInfo.label === "MacBook Pro扬声器 (Built-in)") {
+            //         //             console.log('audioOutput 内置');
+            //         //             this.setAudioOutputDeviceId(deviceInfo.deviceId)
+            //         //             break;
+            //         //         }
+            //         //     }
+            //         // }
             //
             //     }).catch(err => {
             //         console.log()
@@ -556,7 +556,7 @@ export default {
             //     this.testCount++;
             //     return;
             // }
-            //
+
 
             if (this.session.isScreenSharing()) {
                 this.session.stopScreenShare();
