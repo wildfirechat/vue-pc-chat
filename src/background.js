@@ -26,6 +26,8 @@ import pkg from '../package.json';
 import Badge from 'electron-windows-badge';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
+import clipboardEx from 'electron-clipboard-ex'
+import nodePath from 'path'
 
 
 console.log('start crash report', app.getPath('crashDumps'))
@@ -667,6 +669,21 @@ const createMainWindow = async () => {
             };
 
             fs.writeFileSync(filename, image.toPNG());
+        } else {
+            const filePaths = clipboardEx.readFilePaths();
+            if (filePaths){
+                args = {
+                    hasFile: true,
+                    files: [],
+                };
+                filePaths.forEach(path => {
+                    args.files.push({
+                        path: path,
+                        name: nodePath.basename(path),
+                        size: fs.statSync(path).size,
+                    })
+                })
+            }
         }
 
         event.returnValue = args;

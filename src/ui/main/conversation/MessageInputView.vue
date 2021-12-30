@@ -163,6 +163,11 @@ export default {
                 if (args.hasImage) {
                     e.preventDefault();
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
+                }else if (args.hasFile){
+                    e.preventDefault();
+                    args.files.forEach(file => {
+                        store.sendFile(this.conversationInfo.conversation, file)
+                    })
                 }
             }
         },
