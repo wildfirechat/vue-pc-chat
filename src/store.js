@@ -107,7 +107,6 @@ let store = {
         },
 
         misc: {
-            test: false,
             connectionStatus: ConnectionStatus.ConnectionStatusUnconnected,
             isPageHidden: false,
             enableNotification: true,
@@ -116,9 +115,10 @@ let store = {
             enableCloseWindowToExit: false,
             enableAutoLogin: false,
             isElectron: isElectron(),
-            isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
+            isElectronWindowsOrLinux: true,
             // isElectronWindowsOrLinux: true,
             isMainWindow: false,
+            linuxUpdateTitleInterval: 0,
             uploadBigFiles: [],
             wfc: wfc,
             config: Config,
@@ -190,10 +190,10 @@ let store = {
                 this._loadDefaultConversationList();
             }
             if (conversationState.currentConversationInfo && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
-                if(msg.messageContent instanceof DismissGroupNotification
+                if (msg.messageContent instanceof DismissGroupNotification
                     || (msg.messageContent instanceof KickoffGroupMemberNotification && msg.messageContent.kickedMembers.indexOf(wfc.getUserId()) >= 0)
                     || (msg.messageContent instanceof QuitGroupNotification && msg.messageContent.operator === wfc.getUserId())
-                ){
+                ) {
                     conversationState.currentConversationInfo = null;
                     conversationState.currentConversationMessageList = [];
                     return;
@@ -271,7 +271,7 @@ let store = {
         wfc.eventEmitter.on(EventType.MessageDeleted, (messageUid) => {
             this._loadDefaultConversationList();
             if (conversationState.currentConversationInfo) {
-               
+
                 if (conversationState.currentConversationMessageList) {
                     conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.filter(msg => !eq(msg.messageUid, messageUid))
                 }
@@ -333,7 +333,7 @@ let store = {
                 let url = new URL(args);
                 let pathname = url.pathname;
                 let searchParams = url.searchParams;
-                if ('//conversation' === pathname){
+                if ('//conversation' === pathname) {
                     let target = searchParams.get('target');
                     let line = Number(searchParams.get('line'));
                     let type = Number(searchParams.get('type'))
@@ -1565,7 +1565,27 @@ let store = {
             let unreadCount = info.unreadCount;
             count += unreadCount.unread;
         });
-        ipcRenderer.send('update-badge', count)
+        if (process.platform === 'linux') {
+            this.updateLinuxTitle(count);
+        } else {
+            ipcRenderer.send('update-badge', count)
+        }
+    },
+
+    updateLinuxTitle(unreadCount) {
+        this.updateLinuxTitle.title = '野火IM';
+        this.updateLinuxTitle.unreadCount = unreadCount;
+        this.updateLinuxTitle.showTitle = true;
+        if (!miscState.linuxUpdateTitleInterval) {
+            miscState.linuxUpdateTitleInterval = setInterval(() => {
+                if (this.updateLinuxTitle.showTitle) {
+                    document.title = this.updateLinuxTitle.title;
+                } else {
+                    document.title = this.updateLinuxTitle.title + ' ' + this.updateLinuxTitle.unreadCount;
+                }
+                this.updateLinuxTitle.showTitle = !this.updateLinuxTitle.showTitle;
+            }, 1000)
+        }
     }
 }
 

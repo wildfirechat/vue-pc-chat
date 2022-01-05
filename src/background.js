@@ -394,6 +394,10 @@ function checkForUpdates() {
 
 function updateTray(unread = 0) {
     settings.showOnTray = true;
+    // linux 系统不支持 tray
+    if (process.platform === 'linux') {
+        return;
+    }
 
     if (settings.showOnTray) {
         if (tray
