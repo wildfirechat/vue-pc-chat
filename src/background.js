@@ -673,7 +673,7 @@ const createMainWindow = async () => {
             // only support windows and mac
             if(clipboardEx){
                 const filePaths = clipboardEx.readFilePaths();
-                if (filePaths){
+                if (filePaths && filePaths.length > 0){
                     args = {
                         hasFile: true,
                         files: [],
