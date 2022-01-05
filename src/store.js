@@ -1578,7 +1578,7 @@ let store = {
         this.updateLinuxTitle.showTitle = true;
         if (!miscState.linuxUpdateTitleInterval) {
             miscState.linuxUpdateTitleInterval = setInterval(() => {
-                if (this.updateLinuxTitle.showTitle) {
+                if (this.updateLinuxTitle.showTitle || this.updateLinuxTitle.unreadCount < 1) {
                     document.title = this.updateLinuxTitle.title;
                 } else {
                     document.title = this.updateLinuxTitle.title + ' ' + this.updateLinuxTitle.unreadCount;
