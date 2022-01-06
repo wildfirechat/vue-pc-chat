@@ -29,7 +29,7 @@
 3. npm 6.14.15
 4. python 2.7.X
 5. git
-6. npm install -g node-gyp
+6. npm install -g node-gyp@8.3.0
 
 #### windows系统
 1. nodejs v14.18.X
@@ -37,7 +37,7 @@
 3. git
 4. npm 6.14.15
 5. npm install --global --vs2019 --production windows-build-tools
-6. npm install -g node-gyp
+6. npm install -g node-gyp@8.3.0
 > 第5步安装windows开发环境的安装内容较多，如果网络情况不好可能需要等较长时间，选择早上网络较好时安装是个好的选择
 
 #### linux系统
@@ -46,7 +46,7 @@
 3. git
 
 ## 开发
-1. ```npm install```，建议使用华为镜像```npm install --registry=https://mirrors.huaweicloud.com/repository/npm/```
+1. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
 2. ```npm run dev```
 
 ## 打包
