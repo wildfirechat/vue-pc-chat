@@ -1072,18 +1072,7 @@ let store = {
     },
 
     _loadFriendRequest() {
-        let incomingRequests = wfc.getIncommingFriendRequest()
-        let requests = incomingRequests;
-        let outgoingRequests = wfc.getOutgoingFriendRequest();
-        // 当针对同一个人，有邀请(out)和被邀请（in)，过滤掉邀请
-        outgoingRequests.forEach(or => {
-            let index = incomingRequests.findIndex(ir => {
-                return or.target === ir.target;
-            })
-            if (index === -1) {
-                requests.push(or);
-            }
-        })
+        let requests = wfc.getIncommingFriendRequest()
 
         requests.sort((a, b) => numberValue(b.timestamp) - numberValue(a.timestamp))
         requests = requests.length >= 20 ? requests.slice(0, 20) : requests;
