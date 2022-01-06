@@ -416,10 +416,10 @@ let store = {
     },
 
     _loadDefaultConversationList() {
-        this._loadConversationList([0, 1], [0])
+        this._loadConversationList([0, 1, 3], [0])
     },
 
-    _loadConversationList(conversationType = [0, 1], lines = [0]) {
+    _loadConversationList(conversationType = [0, 1, 3], lines = [0]) {
         let conversationList = wfc.getConversationList(conversationType, lines);
         conversationList.forEach(info => {
             this._patchConversationInfo(info);
@@ -1016,6 +1016,9 @@ let store = {
         } else if (info.conversation.type === ConversationType.Group) {
             info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
             info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
+            info.conversation._target._displayName = info.conversation._target.name;
+        }else if (info.conversation.type === ConversationType.Channel){
+            info.conversation._target = wfc.getChannelInfo(info.conversation.target, false);
             info.conversation._target._displayName = info.conversation._target.name;
         }
         if (!info.conversation._target.portrait) {
