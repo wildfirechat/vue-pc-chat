@@ -178,6 +178,10 @@ let store = {
 
         });
 
+        wfc.eventEmitter.on(EventType.ChannelInfosUpdate, (groupInfos) => {
+            this._loadDefaultConversationList();
+        });
+
         wfc.eventEmitter.on(EventType.ConversationInfoUpdate, (conversationInfo) => {
             this._loadDefaultConversationList();
             if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation)) {
