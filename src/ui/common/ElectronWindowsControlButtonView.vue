@@ -128,7 +128,7 @@ export default {
             } else {
                 const win = remote.getCurrentWindow();
                 win.close();
-                if (!wfc.isLogin()) {
+                if (!wfc.isLogin() && this.sharedMiscState.isMainWindow) {
                     app.exit(0)
                 }
             }
