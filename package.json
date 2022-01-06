@@ -77,7 +77,7 @@
     "babel-eslint": "^10.1.0",
     "cpy-cli": "^3.1.1",
     "del-cli": "^3.0.1",
-    "electron": "15.3.2",
+    "electron": "15.3.4",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
