@@ -8,7 +8,7 @@
 <template>
     <div class="flex-column flex-align-center flex-justify-center voip-container" ref="contentContainer">
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
-            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px"
+            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"
                                               :title="'野火会议'"
                                               :macos="!sharedMiscState.isElectronWindowsOrLinux"/>
             <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
@@ -604,7 +604,7 @@ export default {
         setAudioOutputDeviceId(deviceId) {
             let audioEls = this.$el.getElementsByTagName('audio');
             for (const audioEl of audioEls) {
-               audioEl.setSinkId(deviceId);
+                audioEl.setSinkId(deviceId);
             }
             let videoEls = this.$el.getElementsByTagName('video');
             for (const videoEl of videoEls) {

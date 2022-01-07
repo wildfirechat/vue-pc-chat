@@ -28,34 +28,37 @@
             </div>
         </div>
     </div>
-    <div v-else id="window-controls" ref="content">
-
-        <div class="button" id="min-button" @click="minimize" v-if="sharedMiscState.enableMinimize">
-            <img class="icon"
-                 srcset="@/assets/windows_control_icons/min-k-10.png 1x, @/assets/windows_control_icons/min-k-12.png 1.25x, @/assets/windows_control_icons/min-k-15.png 1.5x, @/assets/windows_control_icons/min-k-15.png 1.75x, @/assets/windows_control_icons/min-k-20.png 2x, @/assets/windows_control_icons/min-k-20.png 2.25x, @/assets/windows_control_icons/min-k-24.png 2.5x, @/assets/windows_control_icons/min-k-30.png 3x, @/assets/windows_control_icons/min-k-30.png 3.5x"
-                 draggable="false" alt=""/>
+    <div v-else class="titlebar webkit-draggable">
+        <div class="title">
+            <p class="single-line">{{ title }}</p>
         </div>
+        <div id="window-controls" ref="content">
+            <div class="button" id="min-button" @click="minimize" v-if="sharedMiscState.enableMinimize">
+                <img class="icon"
+                     srcset="@/assets/windows_control_icons/min-k-10.png 1x, @/assets/windows_control_icons/min-k-12.png 1.25x, @/assets/windows_control_icons/min-k-15.png 1.5x, @/assets/windows_control_icons/min-k-15.png 1.75x, @/assets/windows_control_icons/min-k-20.png 2x, @/assets/windows_control_icons/min-k-20.png 2.25x, @/assets/windows_control_icons/min-k-24.png 2.5x, @/assets/windows_control_icons/min-k-30.png 3x, @/assets/windows_control_icons/min-k-30.png 3.5x"
+                     draggable="false" alt=""/>
+            </div>
 
-        <div class="button" v-bind:class="{disabled: !maximizable}" v-if="maximizable" id="max-button"
-             @click="maximize">
-            <img class="icon"
-                 srcset="@/assets/windows_control_icons/max-k-10.png 1x, @/assets/windows_control_icons/max-k-12.png 1.25x, @/assets/windows_control_icons/max-k-15.png 1.5x, @/assets/windows_control_icons/max-k-15.png 1.75x, @/assets/windows_control_icons/max-k-20.png 2x, @/assets/windows_control_icons/max-k-20.png 2.25x, @/assets/windows_control_icons/max-k-24.png 2.5x, @/assets/windows_control_icons/max-k-30.png 3x, @/assets/windows_control_icons/max-k-30.png 3.5x"
-                 draggable="false" alt=""/>
+            <div class="button" v-bind:class="{disabled: !maximizable}" v-if="maximizable" id="max-button"
+                 @click="maximize">
+                <img class="icon"
+                     srcset="@/assets/windows_control_icons/max-k-10.png 1x, @/assets/windows_control_icons/max-k-12.png 1.25x, @/assets/windows_control_icons/max-k-15.png 1.5x, @/assets/windows_control_icons/max-k-15.png 1.75x, @/assets/windows_control_icons/max-k-20.png 2x, @/assets/windows_control_icons/max-k-20.png 2.25x, @/assets/windows_control_icons/max-k-24.png 2.5x, @/assets/windows_control_icons/max-k-30.png 3x, @/assets/windows_control_icons/max-k-30.png 3.5x"
+                     draggable="false" alt=""/>
+            </div>
+
+            <div class="button" v-bind:class="{disabled: !maximizable}" v-if="maximizable" id="restore-button"
+                 @click="maximize">
+                <img class="icon"
+                     srcset="@/assets/windows_control_icons/restore-k-10.png 1x, @/assets/windows_control_icons/restore-k-12.png 1.25x, @/assets/windows_control_icons/restore-k-15.png 1.5x, @/assets/windows_control_icons/restore-k-15.png 1.75x, @/assets/windows_control_icons/restore-k-20.png 2x, @/assets/windows_control_icons/restore-k-20.png 2.25x, @/assets/windows_control_icons/restore-k-24.png 2.5x, @/assets/windows_control_icons/restore-k-30.png 3x, @/assets/windows_control_icons/restore-k-30.png 3.5x"
+                     draggable="false" alt=""/>
+            </div>
+
+            <div class="button" id="close-button" @click="close">
+                <img class="icon"
+                     srcset="@/assets/windows_control_icons/close-k-10.png 1x, @/assets/windows_control_icons/close-k-12.png 1.25x, @/assets/windows_control_icons/close-k-15.png 1.5x, @/assets/windows_control_icons/close-k-15.png 1.75x, @/assets/windows_control_icons/close-k-20.png 2x, @/assets/windows_control_icons/close-k-20.png 2.25x, @/assets/windows_control_icons/close-k-24.png 2.5x, @/assets/windows_control_icons/close-k-30.png 3x, @/assets/windows_control_icons/close-k-30.png 3.5x"
+                     draggable="false" alt=""/>
+            </div>
         </div>
-
-        <div class="button" v-bind:class="{disabled: !maximizable}" v-if="maximizable" id="restore-button"
-             @click="maximize">
-            <img class="icon"
-                 srcset="@/assets/windows_control_icons/restore-k-10.png 1x, @/assets/windows_control_icons/restore-k-12.png 1.25x, @/assets/windows_control_icons/restore-k-15.png 1.5x, @/assets/windows_control_icons/restore-k-15.png 1.75x, @/assets/windows_control_icons/restore-k-20.png 2x, @/assets/windows_control_icons/restore-k-20.png 2.25x, @/assets/windows_control_icons/restore-k-24.png 2.5x, @/assets/windows_control_icons/restore-k-30.png 3x, @/assets/windows_control_icons/restore-k-30.png 3.5x"
-                 draggable="false" alt=""/>
-        </div>
-
-        <div class="button" id="close-button" @click="close">
-            <img class="icon"
-                 srcset="@/assets/windows_control_icons/close-k-10.png 1x, @/assets/windows_control_icons/close-k-12.png 1.25x, @/assets/windows_control_icons/close-k-15.png 1.5x, @/assets/windows_control_icons/close-k-15.png 1.75x, @/assets/windows_control_icons/close-k-20.png 2x, @/assets/windows_control_icons/close-k-20.png 2.25x, @/assets/windows_control_icons/close-k-24.png 2.5x, @/assets/windows_control_icons/close-k-30.png 3x, @/assets/windows_control_icons/close-k-30.png 3.5x"
-                 draggable="false" alt=""/>
-        </div>
-
     </div>
 </template>
 
@@ -283,6 +286,8 @@ export default {
 
 /*windows or linux*/
 #window-controls {
+    position: absolute;
+    right: 0;
     --control-count: 3;
     --close-button-column: 3;
     display: grid;
