@@ -70,7 +70,7 @@ npm run cross-package-linux
 #打包linux系统arm64架构
 npm run cross-package-linux-arm64
 
-#打包mac系统amd64架构
+#打包mac系统
 npm run cross-package-mac
 ```
 
@@ -132,6 +132,11 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
        // windows 7 下面，如果启动黑屏，请将下面注释打开
        //app.disableHardwareAcceleration();
     ```
+16. MAC打包的版本是Universal版本，可以同时支持x64架构和arm64架构。Universal版本比单架构版本要大一下，如果想要打包单架构的版本，可以把野火SDK瘦身到对应单一架构，然后打包对应平台。具体实现方法请自行查找。
+
+17. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
+
+18. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
 
 ## 截图
 ![](./image/contact.png)
