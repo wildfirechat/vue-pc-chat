@@ -715,7 +715,7 @@ const createMainWindow = async () => {
     ipcMain.on('show-file-window', async (event, args) => {
         console.log('on show-file-window', fileWindow, args)
         if (!fileWindow) {
-            let win = createWindow(args.url, 800, 730, 640, 400, true, true);
+            let win = createWindow(args.url, 960, 600, 640, 400, true, true);
 
             // win.webContents.openDevTools();
             win.on('close', () => {
@@ -740,7 +740,7 @@ const createMainWindow = async () => {
             }else {
                 url = args.url;
             }
-            let win = createWindow(url, 700, 850, 700, 850, false, false);
+            let win = createWindow(url, 960, 600, 640, 400, false, false);
             if (messageUid){
                 compositeMessageWindows.set(messageUid, win)
             }
@@ -761,7 +761,7 @@ const createMainWindow = async () => {
     ipcMain.on('show-workspace-window', async (event, args) => {
         console.log('on show-workspace-window', workspaceWindow, args)
         if (!workspaceWindow) {
-            workspaceWindow = createWindow(args.url, 1080, 720, 800, 600, true, true);
+            workspaceWindow = createWindow(args.url, 960, 600, 640, 400, true, true);
             workspaceWindow.on('close', () => {
                 workspaceWindow = null;
             });
@@ -776,7 +776,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 850, 720, 850, 600, false, false, false);
+            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
@@ -790,7 +790,7 @@ const createMainWindow = async () => {
     ipcMain.on(IPCRendererEventType.showMessageHistoryPage, async (event, args) => {
         console.log(`on ${IPCRendererEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
         if (!messageHistoryMessageWindow) {
-            messageHistoryMessageWindow = createWindow(args.url, 850, 850, 0, 850, false, false, true);
+            messageHistoryMessageWindow = createWindow(args.url, 960, 600, 640, 400, false, false, true);
             messageHistoryMessageWindow.on('close', () => {
                 messageHistoryMessageWindow = null;
             });
@@ -823,6 +823,7 @@ const createMainWindow = async () => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.resizable = true;
         mainWindow.maximizable = true;
+        mainWindow.minimizable = true;
         mainWindow.setMinimumSize(960, 600);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.center();
@@ -883,6 +884,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
             minHeight: mh,
             resizable: resizable,
             maximizable: maximizable,
+            minimizable: true,
             titleBarStyle: showTitle ? 'default' : 'hiddenInset',
             // titleBarStyle: 'customButtonsOnHover',
             webPreferences: {

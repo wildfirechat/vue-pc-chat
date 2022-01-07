@@ -508,6 +508,8 @@ export class AvEngineKitProxy {
 
         let width = 360;
         let height = 640;
+        let minWidth = 360;
+        let minHeight = 640;
         switch (type) {
             case 'single':
                 width = 360;
@@ -515,8 +517,10 @@ export class AvEngineKitProxy {
                 break;
             case 'multi':
             case 'conference':
-                width = 1024;
-                height = 800;
+                width = 960;
+                height = 600;
+                minWidth = 800;
+                minHeight = 480;
                 break;
             default:
                 break;
@@ -526,10 +530,10 @@ export class AvEngineKitProxy {
                 {
                     width: width,
                     height: height,
-                    minWidth: width,
-                    minHeight: height,
+                    minWidth: minWidth,
+                    minHeight: minHeight,
                     resizable: true,
-                    maximizable: false,
+                    maximizable: true,
                     transparent: !!isConference,
                     frame: !isConference,
                     webPreferences: {
