@@ -776,7 +776,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 850, 850, 850, 850, false, false, false);
+            conversationMessageHistoryMessageWindow = createWindow(url, 850, 720, 850, 600, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
