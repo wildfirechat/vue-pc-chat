@@ -32,6 +32,8 @@ import IPCEventType from "../../ipc/ipcEventType";
 import Conversation from "../../wfc/model/conversation";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import {remote} from "../../platform";
+import TextMessageContent from "../../wfc/messages/textMessageContent";
+import IpcSub from "../../ipc/ipcSub";
 
 let tabGroup = null;
 
@@ -96,25 +98,9 @@ export default {
         },
 
         sendMessage() {
-            // TODO ipc时需要messagePayload，messageContent会丢失类型信息
-            // let conversation = new Conversation(0, 'FireRobot', 0)
-            // let textMessageContent = new TextMessageContent('hello world')
-            // let message = new Message(conversation, textMessageContent)
-            // let messagePayload = null;
-            // ipcRenderer.send(IPCEventType.sendMessage, messagePayload);
-
-            // let total = 0;
-            // for (let i = 1; i <= 100; i++) {
-            //     localStorageEmitter.invoke('add', {a:1, b:1}, (v)=>{
-            //         total += v;
-            //         if(i % 10 === 0){
-            //             console.log('xxxx', i, v, total)
-            //         }
-            //     })
-            // }
-
-            // localStorageEmitter.send('once', 'hello world')
-            // localStorageEmitter.send('pick-conversation', 'hello world')
+            let conversation = new Conversation(0, 'FireRobot', 0)
+            let textMessageContent = new TextMessageContent(' 你好，小火。')
+            IpcSub.sendMessage(conversation, textMessageContent);
         },
 
         onTabActive() {
