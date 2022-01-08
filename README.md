@@ -1,6 +1,6 @@
-## 野火IM解决方案
+## Panda DB解决方案
 
-野火IM是专业级即时通讯和实时音视频整体解决方案，由北京野火无限网络科技有限公司维护和支持。
+Panda DB是专业级即时通讯和实时音视频整体解决方案，由北京Panda DB无限网络科技有限公司维护和支持。
 
 主要特性有：私有部署安全可靠，性能强大，功能齐全，全平台支持，开源率高，部署运维简单，二次开发友好，方便与第三方系统对接或者嵌入现有系统中。详细情况请参考[在线文档](https://docs.wildfirechat.cn)。
 
@@ -8,8 +8,8 @@
 
 | [GitHub仓库地址(主站)](https://github.com/wildfirechat)      | [码云仓库地址(镜像)](https://gitee.com/wfchat)        | 说明                                                                                      | 备注                                           |
 | ------------------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| [android-chat](https://github.com/wildfirechat/android-chat) | [android-chat](https://gitee.com/wfchat/android-chat) | 野火IM Android SDK源码和App源码                                                           | 可以很方便地进行二次开发，或集成到现有应用当中 |
-| [ios-chat](https://github.com/wildfirechat/ios-chat)         | [ios-chat](https://gitee.com/wfchat/ios-chat)         | 野火IM iOS SDK源码和App源码                                                               | 可以很方便地进行二次开发，或集成到现有应用当中 |
+| [android-chat](https://github.com/wildfirechat/android-chat) | [android-chat](https://gitee.com/wfchat/android-chat) | Panda DB Android SDK源码和App源码                                                           | 可以很方便地进行二次开发，或集成到现有应用当中 |
+| [ios-chat](https://github.com/wildfirechat/ios-chat)         | [ios-chat](https://gitee.com/wfchat/ios-chat)         | Panda DB iOS SDK源码和App源码                                                               | 可以很方便地进行二次开发，或集成到现有应用当中 |
 | [pc-chat](https://github.com/wildfirechat/pc-chat)           | [pc-chat](https://gitee.com/wfchat/pc-chat)           | 基于[Electron](https://electronjs.org/)开发的PC平台应用                                   |                                                |
 | [web-chat](https://github.com/wildfirechat/web-chat)         | [web-chat](https://gitee.com/wfchat/web-chat)         | Web平台的Demo, [体验地址](http://web.wildfirechat.cn)                                     |                                                |
 | [wx-chat](https://github.com/wildfirechat/wx-chat)           | [wx-chat](https://gitee.com/wfchat/wx-chat)           | 微信小程序平台的Demo                                                                      |                                                |
@@ -17,36 +17,36 @@
 | [app server](https://github.com/wildfirechat/app_server)     | [app server](https://gitee.com/wfchat/app_server)     | 应用服务端                                                                                |                                                |
 | [robot_server](https://github.com/wildfirechat/robot_server) | [robot_server](https://gitee.com/wfchat/robot_server) | 机器人服务端                                                                              |                                                |
 | [push_server](https://github.com/wildfirechat/push_server)   | [push_server](https://gitee.com/wfchat/push_server)   | 推送服务器                                                                                |                                                |
-| [docs](https://github.com/wildfirechat/docs)                 | [docs](https://gitee.com/wfchat/docs)                 | 野火IM相关文档，包含设计、概念、开发、使用说明，[在线查看](https://docs.wildfirechat.cn/) |                                                |  |
+| [docs](https://github.com/wildfirechat/docs)                 | [docs](https://gitee.com/wfchat/docs)                 | Panda DB相关文档，包含设计、概念、开发、使用说明，[在线查看](https://docs.wildfirechat.cn/) |                                                |  |
 
 
-野火IM VUE Demo，演示如何将野火IM的能力集成到VUE Electron项目。
+Panda DB VUE Demo，演示如何将Panda DB的能力集成到VUE Electron项目。
 
 ## 环境依赖
 #### mac系统
 1. 最新版本的Xcode
-2. nodejs v14.18.X
-3. npm 6.14.15
+2. nodejs 10.16.X
+3. npm 6.9.0
 4. python 2.7.X
 5. git
-6. npm install -g node-gyp@8.3.0
+6. npm install -g node-gyp
 
 #### windows系统
-1. nodejs v14.18.X
+1. nodejs v10.16.x
 2. python 2.7.X
 3. git
-4. npm 6.14.15
-5. npm install --global --vs2019 --production windows-build-tools
-6. npm install -g node-gyp@8.3.0
+4. npm 6.9.0
+5. npm install --global --vs2015 windows-build-tools
+6. npm install -g node-gyp
 > 第5步安装windows开发环境的安装内容较多，如果网络情况不好可能需要等较长时间，选择早上网络较好时安装是个好的选择
 
 #### linux系统
-1. nodejs v14.18.X
+1. nodejs10.16.X
 2. python2.7X
 3. git
 
 ## 开发
-1. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
+1. ```npm install```，建议使用华为镜像```npm install --registry=https://mirrors.huaweicloud.com/repository/npm/```
 2. ```npm run dev```
 
 ## 打包
@@ -70,12 +70,9 @@ npm run cross-package-linux
 #打包linux系统arm64架构
 npm run cross-package-linux-arm64
 
-#打包mac系统
+#打包mac系统amd64架构
 npm run cross-package-mac
 ```
-
-## 历史Electron版本
-目前master的使用的Electron版本是15.1.2。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8)。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。
 
 ## 常见开发问题
 1. 如何调试？PC使用了Electron，内嵌Chrome浏览器，跟在浏览器上开发调试是一样的。快捷键Ctrl
@@ -98,10 +95,10 @@ npm run cross-package-mac
 
 6. ubuntu下，启动时，若提示，```A JavaScript error occurred in the main process Uncaught Exception:Error: Cannot open /opt/wildfirechat/resources/app.asar/marswrapper.node: Error: libdouble-conversion.so.1: cannot open shared object file: No such file or directory```，可安装[libdouble-conversion1](https://packages.debian.org/buster/libdouble-conversion1)解决
 
-7. win平台野火客户端依赖Visual C++ Redistributable Package runtime。如果用户PC上没有安装就需要安装之后才能运行，请从微软官方下载安装
+7. win平台Panda DB客户端依赖Visual C++ Redistributable Package runtime。如果用户PC上没有安装就需要安装之后才能运行，请从微软官方下载安装
 https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个安装包是有32位/64位区分的，需要安装对应架构的版本。
 
-8. MAC应用截屏时只能截屏空白桌面，无法截图窗口内容。这是因为没有通过mac系统的安全许可，在设置-》安全与隐私-》切换到隐私那个标签-》屏幕录制-》在野火IM PC应用前打勾，并重启应用。
+8. MAC应用截屏时只能截屏空白桌面，无法截图窗口内容。这是因为没有通过mac系统的安全许可，在设置-》安全与隐私-》切换到隐私那个标签-》屏幕录制-》在Panda DB PC应用前打勾，并重启应用。
 
 9. 使用```cnpm```后打包失败，在某些平台```cnpm```是会出现问题的，请使用npm。
 
@@ -120,23 +117,10 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 
 13. 想自己部署表情图片
     请常见问题12
-
+ 
 14. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
     1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
     2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
-
-15. windows 7 无法正常启动，显示黑屏
-    1. ```background.js``` 里面找到下面代码，并取消```//app.disableHardwareAcceleration();```前面的注释
-    ```
-       // pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
-       // windows 7 下面，如果启动黑屏，请将下面注释打开
-       //app.disableHardwareAcceleration();
-    ```
-16. MAC打包的版本是Universal版本，可以同时支持x64架构和arm64架构。Universal版本比单架构版本要大一下，如果想要打包单架构的版本，可以把野火SDK瘦身到对应单一架构，然后打包对应平台。具体实现方法请自行查找。
-
-17. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
-
-18. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
 
 ## 截图
 ![](./image/contact.png)

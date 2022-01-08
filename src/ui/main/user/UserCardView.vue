@@ -12,27 +12,27 @@
         <div class="content">
             <ul>
                 <li v-if="isFriend">
-                    <label>{{ $t('common.alias') }}</label>
+                    <label>{{ $t('common.name') }}</label>
                     <div class="alias">
                         <input @click.stop="" type="text"
-                               v-model="friendAlias"
-                               @keyup.enter="updateFriendAlias"
-                               placeholder="备注名"/>
+                               v-model="displayName"
+                               @keyup.enter="updateFriendName"
+                               placeholder="$t('common.name')"/>
                     </div>
                 </li>
-                <li>
+                <!-- <li>
                     <label>{{ $t('common.area') }}</label>
                     <div>{{ $t('misc.beijing') }}</div>
                 </li>
                 <li>
                     <label>{{ $t('common.label') }}</label>
                     <div>{{ $t('misc.test_user') }}</div>
-                </li>
+                </li> -->
             </ul>
         </div>
         <div class="action">
-            <a href="#"><i class="icon-ion-ios-shuffle" @click="share"></i></a>
-            <a v-if="isFriend" href="#"><i class="icon-ion-ios-chatboxes" @click="chat"></i></a>
+            <!-- <a href="#"><i class="icon-ion-ios-shuffle" @click="share"></i></a> -->
+            <a v-if="isFriend" href="#"><i class="icon-ion-ios-chatbubble-outline large" @click="chat"></i></a>
             <a v-if="!isFriend" href="#"><i class="icon-ion-person-add" @click="addFriend"></i></a>
         </div>
     </section>
@@ -56,6 +56,7 @@ export default {
     data() {
         return {
             friendAlias: this.userInfo.friendAlias,
+            displayName: this.userInfo.displayName
         }
     },
     methods: {
@@ -81,6 +82,17 @@ export default {
                     height: 250,
                     clickToClose: false,
                 }, {})
+        },
+        updateFriendName() {
+            if (this.displayName) {
+                wfc.modifyMyInfo(0, this.displayName,
+                    () => {
+                        this.userInfo.displayName = this.displayName;
+                    },
+                    (error) => {
+                        console.log("Failure");
+                    })
+            }
         },
         updateFriendAlias() {
             if (this.friendAlias !== this.userInfo.friendAlias) {
@@ -181,7 +193,7 @@ export default {
     display: flex;
     justify-content: flex-end;
 
-    padding-top: 20px;
+    padding-top: 10px;
     padding-bottom: 10px;
 }
 
@@ -202,6 +214,8 @@ export default {
 i:hover {
     color: #34b7f1;
 }
-
+.action a i.large{
+    font-size: 33px;
+}
 
 </style>

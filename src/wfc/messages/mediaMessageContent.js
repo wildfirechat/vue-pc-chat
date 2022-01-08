@@ -1,9 +1,8 @@
 /*
- * Copyright (c) 2020 WildFireChat. All rights reserved.
+ * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
 
 import MessageContent from './messageContent'
-import Config from '../../config'
 
 export default class MediaMessageContent extends MessageContent {
     file;
@@ -52,10 +51,6 @@ export default class MediaMessageContent extends MessageContent {
         super.decode(payload);
         this.localPath = payload.localMediaPath;
         this.remotePath = payload.remoteMediaUrl;
-        if (Config.urlRedirect){
-            this.remotePath = Config.urlRedirect(payload.remoteMediaUrl);
-    }
-
         this.mediaType = payload.mediaType;
     }
 }

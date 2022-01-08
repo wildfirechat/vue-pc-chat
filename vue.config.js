@@ -6,10 +6,6 @@ module.exports = {
     chainWebpack: config => {
         config.module.rules.delete('eslint');
     },
-    configureWebpack: {
-        // Webpack configuration applied to web builds and the electron renderer process
-        target: "electron-renderer"
-    },
 
     pluginOptions: {
         chainWebpack: config => {
@@ -40,8 +36,7 @@ module.exports = {
             chainWebpackRendererProcess: (config) => {
                 // Chain webpack config for electron renderer process only (won't be applied to web builds)
             },
-            // nodeIntegration: true,
-            contextIsolation: false,
+            nodeIntegration: true,
             webSecurity: false,
             // Use this to change the entrypoint of your app's main process
             // mainProcessFile: 'src/myBackgroundFile.js',
@@ -58,9 +53,9 @@ module.exports = {
             // outputDir: 'release',
             builderOptions: {
               // 产品名称
-              productName: 'wildfirechat',
+              productName: 'Panda-DB-Chat',
               // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
-              appId: 'cn.wildfire.chat',
+              appId: 'cn.Panda-DB-Chat.chat',
               compression: 'normal',
               artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
               protocols: {
@@ -75,20 +70,11 @@ module.exports = {
                 hardenedRuntime: true,
                 gatekeeperAssess: false,
                 entitlements: "build/mac/entitlements.mac.plist",
-                entitlementsInherit: "build/mac/entitlements.mac.plist",
-                target: [
-                    {
-                        target:'default',
-                        arch:[
-                          'universal'
-                        ]
-
-                    }
-                ]
+                entitlementsInherit: "build/mac/entitlements.mac.plist"
               },
               linux: {
                 category: "Chat",
-                executableName: "wildfireChat",
+                executableName: "Panda-DB-Chat",
                 target: [
                   'deb',
                   'AppImage'
@@ -105,7 +91,7 @@ module.exports = {
                 deleteAppDataOnUninstall: true,
                 perMachine: false,
                 createDesktopShortcut: true,
-                shortcutName: "wildfireChat"
+                shortcutName: "Panda-DB-Chat"
               }
             }
         }

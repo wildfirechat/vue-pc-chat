@@ -15,7 +15,6 @@ import {
     shell,
     screen,
     Tray,
-    crashReporter
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -26,23 +25,6 @@ import pkg from '../package.json';
 import Badge from 'electron-windows-badge';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
-import nodePath from 'path'
-
-
-console.log('start crash report', app.getPath('crashDumps'))
-crashReporter.start({uploadToServer:false});
-crashReporter.start({
-    companyName: 'imndxx@gmail.com',
-    productName: 'pc-chat',
-    submitURL: 'https://pc_chat.bugsplat.com/post/electron/crash.php',
-    compress: true,
-    ignoreSystemCrashHandler: true,
-    extra: {
-        'key': 'a24145344c9d900ecb00d54925ecd64a',
-        'email': 'imndxx@gmail.com',
-        'comments': '<<comment>>'
-    }
-})
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -52,8 +34,6 @@ protocol.registerSchemesAsPrivileged([
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
-
-require('@electron/remote/main').initialize()
 
 let Locales = {};
 i18n.configure({
@@ -394,10 +374,6 @@ function checkForUpdates() {
 
 function updateTray(unread = 0) {
     settings.showOnTray = true;
-    // linux 系统不支持 tray
-    if (process.platform === 'linux') {
-        return;
-    }
 
     if (settings.showOnTray) {
         if (tray
@@ -525,17 +501,17 @@ const downloadHandler = (event, item, webContents) => {
 
 const createMainWindow = async () => {
     let mainWindowState = windowStateKeeper({
-        defaultWidth: 960,
-        defaultHeight: 600,
+        defaultWidth: 1080,
+        defaultHeight: 720,
     });
 
     mainWindow = new BrowserWindow({
         x: mainWindowState.x,
         y: mainWindowState.y,
-        width: 960,
-        height: 600,
-        minWidth: 960,
-        minHeight: 600,
+        width: 400,
+        height: 480,
+        minWidth: 400,
+        minHeight: 480,
         opacity: 0,
         titleBarStyle: 'hidden',
         maximizable: false,
@@ -547,7 +523,6 @@ const createMainWindow = async () => {
         webPreferences: {
             scrollBounce: false,
             nodeIntegration: true,
-            contextIsolation: false,
             nativeWindowOpen: true,
             webSecurity: false,
         },
@@ -561,13 +536,12 @@ const createMainWindow = async () => {
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
         await mainWindow.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
-        //if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
+        if (!process.env.IS_TEST) mainWindow.webContents.openDevTools()
     } else {
         createProtocol('app')
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
-    require("@electron/remote/main").enable(mainWindow.webContents);
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
@@ -653,10 +627,6 @@ const createMainWindow = async () => {
         app.badgeCount = count;
         //}
     });
-    app.on('remote-require', (event, args) => {
-        // event.preventDefault();
-        event.returnValue = require('@electron/remote/main');
-    });
 
     ipcMain.on('file-paste', (event) => {
         var image = clipboard.readImage();
@@ -672,25 +642,6 @@ const createMainWindow = async () => {
             };
 
             fs.writeFileSync(filename, image.toPNG());
-        } else {
-            const clipboardEx = require('electron-clipboard-ex')
-            // only support windows and mac
-            if(clipboardEx){
-                const filePaths = clipboardEx.readFilePaths();
-                if (filePaths && filePaths.length > 0){
-                    args = {
-                        hasFile: true,
-                        files: [],
-                    };
-                    filePaths.forEach(path => {
-                        args.files.push({
-                            path: path,
-                            name: nodePath.basename(path),
-                            size: fs.statSync(path).size,
-                        })
-                    })
-                }
-            }
         }
 
         event.returnValue = args;
@@ -715,7 +666,7 @@ const createMainWindow = async () => {
     ipcMain.on('show-file-window', async (event, args) => {
         console.log('on show-file-window', fileWindow, args)
         if (!fileWindow) {
-            let win = createWindow(args.url, 960, 600, 640, 400, true, true);
+            let win = createWindow(args.url, 800, 730, 640, 400, true, true);
 
             // win.webContents.openDevTools();
             win.on('close', () => {
@@ -734,22 +685,13 @@ const createMainWindow = async () => {
         let messageUid = args.messageUid;
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
         if (!compositeMessageWin) {
-            let url;
-            if(messageUid){
-                url = args.url + ('?messageUid=' + messageUid)
-            }else {
-                url = args.url;
-            }
-            let win = createWindow(url, 960, 600, 640, 400, false, false);
-            if (messageUid){
-                compositeMessageWindows.set(messageUid, win)
-            }
+            let url = args.url + ('?messageUid=' + messageUid)
+            let win = createWindow(url, 700, 850, 700, 850, false, false);
+            compositeMessageWindows.set(messageUid, win)
 
             // win.webContents.openDevTools();
             win.on('close', () => {
-                if (messageUid){
-                    compositeMessageWindows.delete(messageUid);
-                }
+                compositeMessageWindows.delete(messageUid);
             });
             win.show();
         } else {
@@ -761,7 +703,7 @@ const createMainWindow = async () => {
     ipcMain.on('show-workspace-window', async (event, args) => {
         console.log('on show-workspace-window', workspaceWindow, args)
         if (!workspaceWindow) {
-            workspaceWindow = createWindow(args.url, 960, 600, 640, 400, true, true);
+            workspaceWindow = createWindow(args.url, 1080, 720, 800, 600, true, true);
             workspaceWindow.on('close', () => {
                 workspaceWindow = null;
             });
@@ -776,7 +718,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false);
+            conversationMessageHistoryMessageWindow = createWindow(url, 850, 850, 850, 850, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
@@ -790,7 +732,7 @@ const createMainWindow = async () => {
     ipcMain.on(IPCRendererEventType.showMessageHistoryPage, async (event, args) => {
         console.log(`on ${IPCRendererEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
         if (!messageHistoryMessageWindow) {
-            messageHistoryMessageWindow = createWindow(args.url, 960, 600, 640, 400, false, false, true);
+            messageHistoryMessageWindow = createWindow(args.url, 850, 850, 0, 850, false, false, true);
             messageHistoryMessageWindow.on('close', () => {
                 messageHistoryMessageWindow = null;
             });
@@ -823,8 +765,7 @@ const createMainWindow = async () => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.resizable = true;
         mainWindow.maximizable = true;
-        mainWindow.minimizable = true;
-        mainWindow.setMinimumSize(960, 600);
+        mainWindow.setMinimumSize(800, 600);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.center();
         mainWindowState.manage(mainWindow);
@@ -884,14 +825,12 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
             minHeight: mh,
             resizable: resizable,
             maximizable: maximizable,
-            minimizable: true,
             titleBarStyle: showTitle ? 'default' : 'hiddenInset',
             // titleBarStyle: 'customButtonsOnHover',
             webPreferences: {
                 scrollBounce: false,
                 nativeWindowOpen: true,
                 nodeIntegration: true,
-                contextIsolation: false,
                 webviewTag: true
             },
             // frame:false
@@ -901,7 +840,6 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
-    require("@electron/remote/main").enable(win.webContents);
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)
@@ -919,9 +857,6 @@ function onDeepLink(url) {
 }
 
 app.setAsDefaultProtocolClient(PROTOCOL);
-// pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
-// windows 7 下面，如果启动黑屏，请将下面注释打开
-//app.disableHardwareAcceleration();
 app.on('open-url', (event, url) => {
     onDeepLink(url);
 })

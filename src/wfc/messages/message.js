@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 WildFireChat. All rights reserved.
+ * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
 
 /**
@@ -67,14 +67,14 @@ export default class Message {
     }
 
     static fromProtoMessage(obj) {
-        if (!obj.conversation.target) {
-            return null;
-        }
         // osx or windows
         if (Config.getWFCPlatform() === 3 || Config.getWFCPlatform() === 4) {
             let msg = Object.assign(new Message(), obj);
             // big integer to number
             msg.messageId = Number(msg.messageId);
+            if (msg.messageId === -1) {
+                return null;
+            }
 
             msg.messageUid = Long.fromValue(msg.messageUid);
             msg.timestamp = Long.fromValue(msg.timestamp).toNumber();

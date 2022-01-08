@@ -1,5 +1,17 @@
 <template>
     <div class="image-content-container">
+
+        <PinchScrollZoom
+            ref="zoomer"
+            :width="300"
+            :height="400"
+            :scale="2"
+            style="border: 1px solid black"
+        >
+           <img
+             v-bind:src="'https://picsum.photos/600/1000'"  width="300" height="400">
+        </PinchScrollZoom>
+
         <img v-show="imageLoaded === false" @click="preview(message)"
              v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
         <img v-show="imageLoaded" @click="preview(message)" @load="onImageLoaded"
@@ -11,6 +23,7 @@
 <script>
 import Message from "@/wfc/messages/message";
 import store from "@/store";
+import PinchScrollZoom from "@coddicat/vue-pinch-scroll-zoom";
 
 export default {
     name: "ImageMessageContentView",
@@ -33,6 +46,9 @@ export default {
         onImageLoaded() {
             this.imageLoaded = true
         }
+    },
+    components: {
+        PinchScrollZoom
     }
 }
 </script>

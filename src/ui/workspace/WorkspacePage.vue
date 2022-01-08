@@ -9,10 +9,10 @@
         </div>
         <div v-if="shouldShowWorkspacePortal" class="workspace-portal">
             <div>
-                <button @click="showWFCHome">点击打开野火IM官网</button>
+                <button @click="showWFCHome">点击打开Panda DB官网</button>
             </div>
             <div>
-                <button @click="showDevDocs">点击打开野火开发者文档</button>
+                <button @click="showDevDocs">点击打开Panda DB开发者文档</button>
             </div>
             <div>
                 <button @click="openConversation">打开和机器人小火的会话界面</button>
@@ -32,8 +32,6 @@ import IPCEventType from "../../ipc/ipcEventType";
 import Conversation from "../../wfc/model/conversation";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import {remote} from "../../platform";
-import TextMessageContent from "../../wfc/messages/textMessageContent";
-import IpcSub from "../../ipc/ipcSub";
 
 let tabGroup = null;
 
@@ -49,12 +47,12 @@ export default {
             // window.open('www.baidu.com')
             // let tabGroup = new ElectronTabs();
             let tab = tabGroup.addTab({
-                title: "野火IM",
+                title: "Panda DB",
                 src: "https://www.wildfirechat.cn",
                 visible: true
             });
             let tab2 = tabGroup.addTab({
-                title: "野火IM开发文档",
+                title: "Panda DB开发文档",
                 src: "https://docs.wildfirechat.cn",
                 visible: true,
                 active: true
@@ -62,7 +60,7 @@ export default {
         },
         showWFCHome() {
             tabGroup.addTab({
-                title: "野火IM",
+                title: "Panda DB",
                 src: "https://www.wildfirechat.cn",
                 visible: true,
                 active: true,
@@ -71,7 +69,7 @@ export default {
         },
         showDevDocs() {
             tabGroup.addTab({
-                title: "野火IM开发文档",
+                title: "Panda DB开发文档",
                 src: "https://docs.wildfirechat.cn",
                 visible: true,
                 active: true
@@ -80,7 +78,7 @@ export default {
         },
         addInitialTab() {
             tabGroup.addTab({
-                title: "野火IM工作空间",
+                title: "Panda DB工作空间",
                 // src: url,
                 visible: true,
                 closable: false,
@@ -98,9 +96,25 @@ export default {
         },
 
         sendMessage() {
-            let conversation = new Conversation(0, 'FireRobot', 0)
-            let textMessageContent = new TextMessageContent(' 你好，小火。')
-            IpcSub.sendMessage(conversation, textMessageContent);
+            // TODO ipc时需要messagePayload，messageContent会丢失类型信息
+            // let conversation = new Conversation(0, 'FireRobot', 0)
+            // let textMessageContent = new TextMessageContent('hello world')
+            // let message = new Message(conversation, textMessageContent)
+            // let messagePayload = null;
+            // ipcRenderer.send(IPCEventType.sendMessage, messagePayload);
+
+            // let total = 0;
+            // for (let i = 1; i <= 100; i++) {
+            //     localStorageEmitter.invoke('add', {a:1, b:1}, (v)=>{
+            //         total += v;
+            //         if(i % 10 === 0){
+            //             console.log('xxxx', i, v, total)
+            //         }
+            //     })
+            // }
+
+            // localStorageEmitter.send('once', 'hello world')
+            // localStorageEmitter.send('pick-conversation', 'hello world')
         },
 
         onTabActive() {

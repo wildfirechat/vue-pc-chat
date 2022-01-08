@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 WildFireChat. All rights reserved.
+ * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
 
 import NotificationMessageContent from "./notificationMessageContent";

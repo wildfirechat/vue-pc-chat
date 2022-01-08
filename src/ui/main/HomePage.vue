@@ -36,47 +36,72 @@
                     <ul>
                         <li>
                             <div class="menu-item">
-                                <i class="icon-ion-ios-chatboxes"
+                                <img class="icon-img" v-if="this.$router.currentRoute.path === '/home'"
+                                 @click="go2Conversation" src="../../assets/icons/messages-active-icon.svg" alt="contact" >
+                                <img class="icon-img" v-else
+                                 @click="go2Conversation" src="../../assets/icons/messages-icon.svg" alt="contact" >
+
+                                <!-- <i class="icon-ion-ios-chatboxes"
                                    v-bind:class="{active : this.$router.currentRoute.path === '/home'}"
-                                   @click="go2Conversation"></i>
+                                   @click="go2Conversation"></i> -->
                                 <em v-show="unread > 0" class="badge">{{ unread > 99 ? '99' : unread }}</em>
                             </div>
                         </li>
                         <li>
-                            <div class="menu-item">
-                                <i class="icon-ion-android-contact"
-                                   v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
-                                   @click="go2Contact"></i>
-                                <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount}}</em>
-                            </div>
+                            <img class="icon-img" v-if="this.$router.currentRoute.path === '/home/contact'"
+                               @click="go2Contact" src="../../assets/icons/profile-active-icon.svg" alt="contact" >
+                            <img class="icon-img" v-else
+                               @click="go2Contact" src="../../assets/icons/profile-icon.svg" alt="contact" >
+
+                            <!-- <i class="icon-ion-android-contact"
+                               v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
+                               @click="go2Contact"></i> -->
                         </li>
                         <li v-if="sharedMiscState.isElectron">
-                            <i class="icon-ion-android-favorite"
+
+                             <img class="icon-img" v-if="this.$router.currentRoute.path === '/home/fav'"
+                               @click="go2Fav" src="../../assets/icons/heart-active-icon.svg" alt="favourite" >
+                            <img class="icon-img" v-else
+                               @click="go2Fav" src="../../assets/icons/heart-icon.svg" alt="favourite" >
+
+                            <!-- <i class="icon-ion-android-favorite"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/fav'}"
-                               @click="go2Fav"></i>
+                               @click="go2Fav"></i> -->
                         </li>
                         <li v-if="sharedMiscState.isElectron && sharedMiscState.wfc.isCommercialServer()">
-                            <i class="icon-ion-ios-folder"
+                             
+                            <img v-if="this.$router.currentRoute.path === '/home/files'"
+                               @click="go2Files" src="../../assets/icons/folder-active-icon.svg" alt="folders" >
+                            <img v-else
+                               @click="go2Files" src="../../assets/icons/folder-icon.svg" alt="folders" >
+                            <!-- <i class="icon-ion-ios-folder"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
-                               @click="go2Files"></i>
+                               @click="go2Files"></i> -->
                         </li>
-                        <li v-if="sharedMiscState.isElectron">
+                        <!-- <li v-if="sharedMiscState.isElectron">
                             <i class="icon-ion-code-working"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/files'}"
                                @click="go2Workspace"></i>
-                        </li>
+                        </li> -->
                         <li>
-                            <i class="icon-ion-android-upload"
-                               @click="showUploadDialog"></i>
+                            <img class="icon-img" @click="showUploadDialog" src="../../assets/icons/upload-icon.svg" alt="upload" >
+                            <!-- <i class="icon-ion-android-upload"
+                               @click="showUploadDialog"></i> -->
                         </li>
                         <li v-if="supportConference">
-                            <i class="icon-ion-speakerphone"
-                               @click="createConference"></i>
+                            <img class="icon-img"
+                               @click="createConference" src="../../assets/icons/speaker-icon.svg" alt="connect-conference" >
+                            <!-- <i class="icon-ion-speakerphone"
+                               @click="createConference"></i> -->
                         </li>
                         <li>
-                            <i class="icon-ion-android-settings"
+                            <img class="icon-img" v-if="this.$router.currentRoute.path === '/home/setting'"
+                               @click="go2Setting" src="../../assets/icons/settings-active-icon.svg" alt="folders" >
+                            <img class="icon-img" v-else
+                               @click="go2Setting" src="../../assets/icons/settings-icon.svg" alt="folders" >
+                            <!-- <i class="icon-ion-android-settings"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/setting'}"
-                               @click="go2Setting"></i>
+                               @click="go2Setting"></i> -->
                         </li>
                     </ul>
                 </nav>

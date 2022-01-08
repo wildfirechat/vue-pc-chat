@@ -14,11 +14,18 @@ export default class Config {
     // 默认的app server使用端口是8888，注意端口号别忘记了。
     // 上线建议使用https，使用https更安全。
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
-    static APP_SERVER = 'https://app.wildfirechat.net';
+    // static APP_SERVER = 'https://app.wildfirechat.net';
+    static APP_SERVER = 'https://imapp.pandadb.net';
+
+    // static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
+    // turn server 配置，可以添加多个
+    static ICE_SERVERS = [{uri: 'turn:turn.prod.pandadb.net:3478', userName: 'wfchat', password: 'wfchat'}];
+
+    // static APP_SERVER = 'http://10.39.1.56:8888';
 
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
-    // turn server 配置，可以添加多个
-    static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.net:3478', userName: 'wfchat', password: 'wfchat'}];
+    // static ICE_SERVERS = [{uri: 'turn:turn.10.39.1.56:3478', userName: 'wfchat', password: 'wfchat'}];
+
     static LANGUAGE = 'zh_CN';
 
     static SDK_PLATFORM_WINDOWS = 3;
@@ -54,22 +61,5 @@ export default class Config {
         Object.keys(options).forEach(key => {
             Config[key] = options[key];
         });
-    }
-
-    /**
-     * 网络地址重定向
-     *
-     * 仅当双网环境时，需要特殊处理，默认原样返回
-     *
-     * @param {string} url
-     * @return {string} newUrl
-     */
-    static urlRedirect(url){
-        if (!url){
-            return url;
-        }
-        // 示例代码
-        // url = url.replace('oss.xxxx.com', '192.168.2.19');
-        return url;
     }
 }

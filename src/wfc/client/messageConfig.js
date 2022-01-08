@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 WildFireChat. All rights reserved.
+ * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
 
 import TextMessageContent from '../messages/textMessageContent'
@@ -86,7 +86,7 @@ export default class MessageConfig {
                 return content.flag;
             }
         }
-        return -1;
+        return 0;
     }
 
     static getMessageContentType(messageContent) {

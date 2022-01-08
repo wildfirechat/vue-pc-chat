@@ -1,16 +1,15 @@
 /*
- * Copyright (c) 2020 WildFireChat. All rights reserved.
+ * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
 
 
 /*
- * Copyright © 2020 WildFireChat. All rights reserved.
+ * Copyright © 2021 Panda DB Chat. All rights reserved.
  */
 
 import MessageContent from './messageContent'
 import MessageContentType from './messageContentType'
 import wfc from '../client/wfc'
-import Config from '../../config'
 
 export default class CardMessageContent extends MessageContent {
     /**
@@ -54,9 +53,6 @@ export default class CardMessageContent extends MessageContent {
         this.name = obj.n;
         this.displayName = obj.d;
         this.portrait = obj.p;
-        if (Config.urlRedirect){
-            this.portrait = Config.urlRedirect(obj.p);
-        }
         this.from = obj.f;
     }
 

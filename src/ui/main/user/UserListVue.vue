@@ -34,7 +34,7 @@
                                  @click.stop="clickUserItem(user)">
                                 <img class="avatar" :src="user.portrait" alt="">
                                 <span
-                                    class="single-line"> {{ user._displayName }}</span>
+                                    class="single-line"> {{ user._displayName || user.displayName }}</span>
                             </div>
 
                         </li>

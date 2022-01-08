@@ -24,7 +24,7 @@
                                     }}</span>
                             </div>
                             <p class="reason single-line">{{
-                                    friendRequest.reason ? friendRequest.reason : $t('friend_request.im') + friendRequest._target.displayName
+                                    $t('friend_request.im') + friendRequest._target.displayName
                                 }}</p>
                         </div>
                     </div>
@@ -38,7 +38,6 @@
 <script>
 import store from "@/store";
 import wfc from "../../../wfc/client/wfc";
-import EventType from "../../../wfc/client/wfcEvent";
 
 export default {
     name: "NewFriendListView",
@@ -48,7 +47,6 @@ export default {
     data() {
         return {
             sharedContactState: store.state.contact,
-            isActive: false,
         };
     },
     methods: {
@@ -61,32 +59,7 @@ export default {
             }, (err) => {
                 console.log('accept friend request error', err)
             })
-        },
-        onFriendRequestUpdate() {
-            if (this.isActive) {
-                wfc.clearUnreadFriendRequestStatus();
-            }
-        },
-    },
-
-    activated() {
-        this.isActive = true;
-        wfc.clearUnreadFriendRequestStatus();
-    },
-
-    deactivated() {
-        this.isActive = false;
-    },
-
-    mounted() {
-        this.isActive = true;
-        wfc.clearUnreadFriendRequestStatus();
-        wfc.eventEmitter.on(EventType.FriendRequestUpdate, this.onFriendRequestUpdate);
-    },
-
-    beforeDestroy() {
-        this.isActive = false;
-        wfc.eventEmitter.removeListener(EventType.FriendRequestUpdate, this.onFriendRequestUpdate);
+        }
     }
 }
 </script>
@@ -141,7 +114,6 @@ export default {
     color: white;
     background: #4168e0;
     border-radius: 10px;
-    border: solid 1px #4168e0;
 }
 
 .new-friend-item .info .name-action .status {

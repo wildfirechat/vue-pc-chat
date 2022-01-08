@@ -14,7 +14,8 @@
 
 <script>
 import store from "@/store";
-import PickerUserView from "@/ui/main/pick/PickUserView";
+import PickAllUserView from "@/ui/main/pick/PickAllUserView";
+import PickUserView from "@/ui/main/pick/PickUserView";
 import Config from "../../../config";
 
 export default {
@@ -27,12 +28,19 @@ export default {
         searchType: {
             type: String,
             default: '',
+            isAllUserSearch: false
+        },
+        searchCategory: {
+            type: String,
+            required: false,
+            default: 'normalSearch'
         }
     },
     data() {
         return {
             sharedSearchState: store.state.search,
             sharedContactState: store.state.contact,
+            allUsersState: store.state,
         };
     },
     methods: {
@@ -41,13 +49,14 @@ export default {
         },
 
         showCreateConversationModal() {
+            console.log(this.allUsersState)
             let beforeOpen = () => {
-                console.log('Opening...')
+                // console.log('Opening...')
             };
             let beforeClose = (event) => {
-                console.log('Closing...', event, event.params)
+                // console.log('Closing...', event, event.params)
                 // What a gamble... 50% chance to cancel closing
-                if (event.params.confirm) {
+                if (event.params && event.params.confirm) {
                     let users = event.params.users;
                     store.createConversation(users);
 
@@ -64,21 +73,39 @@ export default {
             users = users.filter(u => {
                return u.uid !== Config.FILE_HELPER_ID
             });
-            this.$modal.show(
-                PickerUserView,
-                {
-                    users: users,
-                    confirmTitle: this.$t('common.create'),
-                }, {
-                    name: 'pick-user-modal',
-                    width: 600,
-                    height: 480,
-                    clickToClose: false,
-                }, {
-                    'before-open': beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': closed,
-                })
+            if(this.searchCategory && this.searchCategory == "allUsersSearch"){
+                this.$modal.show(
+                    PickAllUserView,
+                    {
+                        users: users,
+                        confirmTitle: this.$t('common.create'),
+                    }, {
+                        name: 'pick-user-modal',
+                        width: 600,
+                        height: 480,
+                        clickToClose: true,
+                    }, {
+                        'before-open': beforeOpen,
+                        'before-close': beforeClose,
+                        'closed': closed,
+                    })
+            }else{
+                this.$modal.show(
+                    PickUserView,
+                    {
+                        users: users,
+                        confirmTitle: this.$t('common.create'),
+                    }, {
+                        name: 'pick-user-modal',
+                        width: 600,
+                        height: 480,
+                        clickToClose: false,
+                    }, {
+                        'before-open': beforeOpen,
+                        'before-close': beforeClose,
+                        'closed': closed,
+                    })
+            }
         },
         cancel() {
             store.toggleSearchView(false);
@@ -105,9 +132,7 @@ export default {
     margin-right: 10px;
     padding: 0 10px 0 20px;
     text-align: left;
-    /* flex: 1; */
-    /* 兼容Firefox 52 */
-    width: 209px;
+    flex: 1;
     border: 1px solid #e5e5e5;
     border-radius: 3px;
     outline: none;
@@ -125,9 +150,6 @@ export default {
 .search-input-container i {
     position: absolute;
     left: 15px;
-    /* 兼容Firefox 52 */
-    top: 50%;
-    transform: translate(0, -50%);
 }
 
 .search-input-container button {

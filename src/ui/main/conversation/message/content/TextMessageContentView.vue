@@ -54,7 +54,7 @@ export default {
                 return new Array(x.length + 1).join('&nbsp;')
             })
             if (tmp.indexOf('<img') >= 0) {
-                tmp = tmp.replace(/<img/g, '<img style="max-width:400px;"')
+                tmp = tmp.replace(/<img/g, '<img style="max-width:800px;"')
                 return tmp;
             }
             return tmp;
@@ -83,11 +83,11 @@ export default {
     background-color: #98ea70;
 }
 
+
 .text-message-container .text {
     color: #050505;
     font-size: 16px;
     line-height: 25px;
-    /*max-width: 600px;*/
     max-height: 1000px;
     word-break: break-word;
     overflow: hidden;
@@ -97,12 +97,8 @@ export default {
 
 /*style for v-html */
 .text-message-container .text >>> img {
-    max-width: 400px !important;
+    max-width: 800px !important;
     display: inline-block;
-}
-
-.text-message-container .text >>> a{
-    white-space: normal;
 }
 
 </style>

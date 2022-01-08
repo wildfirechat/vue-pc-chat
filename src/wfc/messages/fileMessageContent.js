@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 WildFireChat. All rights reserved.
+ * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
 
 import MessageContentMediaType from "./messageContentMediaType";
@@ -12,7 +12,7 @@ export default class FileMessageContent extends MediaMessageContent {
 
     constructor(fileOrLocalPath, remotePath, name, size) {
         super(MessageContentType.File, MessageContentMediaType.File, fileOrLocalPath, remotePath);
-        if (fileOrLocalPath && fileOrLocalPath.path) {
+        if (typeof File !== 'undefined' && fileOrLocalPath instanceof File) {
             this.name = fileOrLocalPath.name;
             this.size = fileOrLocalPath.size;
         } else if (remotePath) {

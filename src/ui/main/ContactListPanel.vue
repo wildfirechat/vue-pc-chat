@@ -1,6 +1,6 @@
 <template>
     <section class="contact-list-panel-container">
-        <SearchView/>
+        <SearchView :searchCategory="'allUsersSearch'" />
         <div class="panel">
             <SearchResultView v-bind:query="sharedSearchState.query"
                               v-if="sharedSearchState.show"
@@ -46,7 +46,6 @@ export default {
     height: calc(100% - 60px);
     position: relative;
     background-color: #fafafa;
-    overflow-y: auto;
     flex: 1;
 }
 

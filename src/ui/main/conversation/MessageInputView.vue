@@ -12,19 +12,34 @@
                 @select="onSelectEmoji"
             />
             <ul>
-                <li><i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"></i></li>
-                <li><i @click="pickFile" class="icon-ion-android-attach"></i>
+                <li>
+                    <img id="showEmoji" class="icon-img" @click="toggleEmojiView" src="../../../assets/icons/emoji-icon.svg" alt="emojis" >
+                    <!-- <i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"></i> -->
+                </li>
+                <li>
+                    <img class="icon-img" @click="pickFile" src="../../../assets/icons/folder-icon.svg" alt="attach" >
+                    <!-- <i @click="pickFile" class="icon-ion-android-attach"></i> -->
                     <input ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
                            style="display: none">
                 </li>
-                <li v-if="sharedMiscState.isElectron"><i id="screenShot" @click="screenShot"
-                                                         class="icon-ion-scissors"></i></li>
-                <li v-if="sharedMiscState.isElectron"><i id="messageHistory" @click="showMessageHistory"
-                                                         class="icon-ion-android-chat"></i></li>
+                <li v-if="sharedMiscState.isElectron">
+                    <img id="screenShot" class="icon-img" @click="screenShot" src="../../../assets/icons/screenshot-icon.svg" alt="screenshot" >
+
+                    <!-- <i id="screenShot" @click="screenShot"
+                                                         class="icon-ion-scissors"></i> -->
+                </li>
+                <li v-if="sharedMiscState.isElectron">
+                    <img id="messageHistory" class="icon-img" @click="showMessageHistory" src="../../../assets/icons/chat-icon.svg" alt="chat" >
+                    <!-- <i id="messageHistory" @click="showMessageHistory"
+                                                         class="icon-ion-android-chat"></i> -->
+                </li>
             </ul>
             <ul>
                 <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
-                <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
+                <li>
+                    <img id="startVideoCall" class="icon-img" @click="startVideoCall" src="../../../assets/icons/video-icon.svg" alt="startVideoCall" >
+                    <!-- <i @click="startVideoCall" class="icon-ion-ios-videocam"></i> -->
+                </li>
             </ul>
         </section>
         <div @keydown.enter="send($event)"
@@ -36,7 +51,6 @@
              @contextmenu.prevent="$refs.menu.open($event)"
              onmouseover="this.setAttribute('org_title', this.title); this.title='';"
              onmouseout="this.title = this.getAttribute('org_title');"
-             v-on:tribute-replaced="onTributeReplaced"
              contenteditable="true">
         </div>
         <vue-context ref="menu" :lazy="true">
@@ -115,18 +129,10 @@ export default {
             emojiCategories: categoriesDefault,
             emojis: emojisDefault,
             lastConversationInfo: null,
-            storeDraftIntervalId: 0,
-            tributeReplaced: false,
+            storeDraftIntervalId: 0
         }
     },
     methods: {
-        onTributeReplaced(e){
-            // 正常下面这两行应当就生效了，不知道为啥不生效，所以采用了后面的 trick
-            e.detail.event.preventDefault();
-            e.detail.event.stopPropagation();
-
-            this.tributeReplaced = true;
-        },
         canisend() {
             let target = this.conversationInfo.conversation._target;
             if (target instanceof GroupInfo) {
@@ -163,11 +169,6 @@ export default {
                 if (args.hasImage) {
                     e.preventDefault();
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
-                }else if (args.hasFile){
-                    e.preventDefault();
-                    args.files.forEach(file => {
-                        store.sendFile(this.conversationInfo.conversation, file)
-                    })
                 }
             }
         },
@@ -184,8 +185,7 @@ export default {
         },
 
         send(e) {
-            if (this.tribute && this.tribute.isActive || this.tributeReplaced) {
-                this.tributeReplaced = false;
+            if (this.tribute && this.tribute.isActive) {
                 return;
             }
 
@@ -710,6 +710,7 @@ export default {
 #emoji {
     position: absolute;
     bottom: 55px;
+    left: -50px;
 }
 
 /*pls refer to https://vue-loader.vuejs.org/guide/scoped-css.html#child-component-root-elements*/

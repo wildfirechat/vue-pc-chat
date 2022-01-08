@@ -3,7 +3,7 @@
         <div class="header">
             <div>
                 <h2>{{ name }}</h2>
-                <p>你好，野火</p>
+                <p>你好，Panda DB</p>
             </div>
             <div>
                 <img class="avatar" :src="sharedStateContact.currentFriend.portrait">
@@ -14,7 +14,7 @@
                 <li>
                     <label>{{ $t('common.alias') }}</label>
                     <div class="alias">
-                        <input type="text" v-model="friendAlias" placeholder="备注名" @keyup.enter="updateFriendAlias"/>
+                        <input type="text" v-model="user.friendAlias" placeholder="备注名" @keyup.enter="updateFriendAlias"/>
                     </div>
                 </li>
                 <li>
@@ -25,10 +25,10 @@
                     <label>{{ $t('common.area') }}</label>
                     <p>{{ $t('common.unknown') }}</p>
                 </li>
-                <li>
+                <!-- <li>
                     <label>{{ $t('common.label') }}</label>
                     <p>{{ $t('misc.test_user') }}</p>
-                </li>
+                </li> -->
             </ul>
         </div>
         <div class="footer">
@@ -50,8 +50,7 @@ export default {
     },
     data() {
         return {
-            sharedStateContact: store.state.contact,
-            friendAlias: store.state.contact.currentFriend.friendAlias
+            sharedStateContact: store.state.contact
         }
     },
 
@@ -62,8 +61,9 @@ export default {
             this.$router.replace('/home');
         },
         updateFriendAlias() {
-            if (this.friendAlias !== this.sharedStateContact.currentFriend.friendAlias) {
-                wfc.setFriendAlias(this.user.uid, this.friendAlias,
+            // OLD one variable thing removed if (this.friendAlias !== this.sharedStateContact.currentFriend.friendAlias) {
+            if (this.user.friendAlias && this.user.friendAlias !== '') {
+                wfc.setFriendAlias(this.user.uid, this.user.friendAlias,
                     () => {
                         // do nothing
                     },
@@ -142,9 +142,7 @@ export default {
 
 .content ul li label {
     margin-right: 20px;
-    width: 50px;
-    text-align: justify;
-    text-align-last: justify;
+    width: 150px;
 }
 
 .content ul li .alias > input {

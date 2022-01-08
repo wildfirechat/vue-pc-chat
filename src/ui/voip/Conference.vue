@@ -8,8 +8,8 @@
 <template>
     <div class="flex-column flex-align-center flex-justify-center voip-container" ref="contentContainer">
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
-            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"
-                                              :title="'野火会议'"
+            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px"
+                                              :title="'Panda DB会议'"
                                               :macos="!sharedMiscState.isElectronWindowsOrLinux"/>
             <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
@@ -245,7 +245,7 @@ export default {
 
             startTimestamp: 0,
             currentTimestamp: 0,
-            testCount: 0,
+            ddd: '',
 
             showParticipantList: false,
             sharedMiscState: store.state.misc,
@@ -512,52 +512,6 @@ export default {
             if (this.session.audioOnly) {
                 return;
             }
-
-            // if (true) {
-            //     navigator.mediaDevices.enumerateDevices().then(deviceInfos => {
-            //         // test input
-            //         for (const deviceInfo of deviceInfos) {
-            //             if (this.testCount % 2 === 0) {
-            //                    //仅仅是为测试了，生成不能这么写死
-            //                 if (deviceInfo.label === "外置麦克风 (Built-in)") {
-            //                     console.log('audioInput 外置');
-            //                     this.session.setAudioInputDeviceId(deviceInfo.deviceId);
-            //                     break;
-            //                 }
-            //             } else {
-            //                 if (deviceInfo.label === "MacBook Pro麦克风 (Built-in)") {
-            //                     console.log('audioInput 内置');
-            //                     this.session.setAudioInputDeviceId(deviceInfo.deviceId);
-            //                     break;
-            //                 }
-            //             }
-            //         }
-            //
-            //         // test output
-            //         // for (const deviceInfo of deviceInfos) {
-            //         //     if (this.testCount % 2 === 0) {
-            //         //         if (deviceInfo.label === "外置耳机 (Built-in)") {
-            //         //             console.log('audioOut 外置');
-            //         //             this.setAudioOutputDeviceId(deviceInfo.deviceId)
-            //         //             break;
-            //         //         }
-            //         //     } else {
-            //         //         if (deviceInfo.label === "MacBook Pro扬声器 (Built-in)") {
-            //         //             console.log('audioOutput 内置');
-            //         //             this.setAudioOutputDeviceId(deviceInfo.deviceId)
-            //         //             break;
-            //         //         }
-            //         //     }
-            //         // }
-            //
-            //     }).catch(err => {
-            //         console.log()
-            //     })
-            //     this.testCount++;
-            //     return;
-            // }
-
-
             if (this.session.isScreenSharing()) {
                 this.session.stopScreenShare();
                 // currentWindow.setIgnoreMouseEvents(false)
@@ -597,18 +551,6 @@ export default {
                 } else {
                     this.session.startScreenShare();
                 }
-            }
-        },
-
-        // 设置音频输出设备
-        setAudioOutputDeviceId(deviceId) {
-            let audioEls = this.$el.getElementsByTagName('audio');
-            for (const audioEl of audioEls) {
-                audioEl.setSinkId(deviceId);
-            }
-            let videoEls = this.$el.getElementsByTagName('video');
-            for (const videoEl of videoEls) {
-                videoEl.setSinkId(deviceId);
             }
         },
 
@@ -729,6 +671,7 @@ export default {
                 if (!this.session.isScreenSharing()) {
                     return;
                 }
+                this.ddd = event.target.id;
                 if (event.target.id === "main-content-container") {
                     currentWindow.setIgnoreMouseEvents(true, {forward: true});
                 } else {

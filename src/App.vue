@@ -26,12 +26,27 @@
             </video>
         </div>
 
+        
+
         <CoolLightBox
-            :items="sharedConversationState.previewMediaItems"
-            :index="sharedConversationState.previewMediaIndex"
-            :slideshow="false"
-            @close="sharedConversationState.previewMediaIndex = null">
-        </CoolLightBox>
+                :items="sharedConversationState.previewMediaItems"
+                :index="sharedConversationState.previewMediaIndex"
+                :slideshow="false"
+                @close="sharedConversationState.previewMediaIndex = null">
+                <slot>
+                    <PinchScrollZoom
+                        ref="zoomer"
+                        :width="300"
+                        :height="400"
+                        :scale="2"
+                        style="border: 1px solid black"
+                    >
+                    <img
+                        v-bind:src="'https://picsum.photos/600/1000'"  width="300" height="400">
+                    </PinchScrollZoom>
+                </slot>
+            </CoolLightBox>
+
         <notifications/>
         <IpcMain/>
         <router-view id="main-content-container" class="main-content-container"></router-view>
@@ -43,6 +58,7 @@ import store from "@/store";
 import {isElectron} from "@/platform";
 import CoolLightBox from 'vue-cool-lightbox'
 import 'vue-cool-lightbox/dist/vue-cool-lightbox.min.css'
+import PinchScrollZoom, { PinchScrollZoomEmitData } from "@coddicat/vue-pinch-scroll-zoom";
 import './twemoji'
 import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
@@ -54,6 +70,7 @@ export default {
             url: '',
             sharedMiscState: store.state.misc,
             sharedConversationState: store.state.conversation,
+            scale: 2
         }
     },
     methods: {
@@ -65,7 +82,11 @@ export default {
         },
         onfocus() {
             store.setPageVisibility(true);
-        }
+        },
+        scalingHandler(e) {
+            console.log(e);
+        },
+        
     },
 
     created() {
@@ -126,6 +147,7 @@ export default {
     components: {
         IpcMain,
         CoolLightBox,
+        PinchScrollZoom
     }
 }
 

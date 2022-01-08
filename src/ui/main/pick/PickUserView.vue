@@ -32,7 +32,7 @@
             </div>
             <footer>
                 <button @click="cancel" class="cancel">{{ $t('common.cancel') }}</button>
-                <button @click="confirm" class="confirm" v-bind:class="{disable:checkedUsers.length === 0}">
+                <button @click="confirm" class="confirm" v-bind:class="{disable:checkedUsers.length === 0}" :disabled="checkedUsers.length === 0">
                     {{ confirmTitle }}
                 </button>
             </footer>
@@ -112,8 +112,10 @@ export default {
                 pickedUsers = this.sharedPickState.users;
             }
             let users = [...pickedUsers];
-            this.sharedPickState.users.length = 0
-            this.$modal.hide('pick-user-modal', {confirm: true, users: users})
+            if(users && users.length > 0){
+                this.sharedPickState.users.length = 0
+                this.$modal.hide('pick-user-modal', {confirm: true, users: users})
+            }
         },
     },
 

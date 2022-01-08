@@ -50,9 +50,8 @@
         <footer>
             <a class="button" target="_blank" @click="logout">
                 {{ $t('setting.exit_switch_user') }}
-                <!--        <i class="icon-ion-ios-email-outline"/>-->
             </a>
-            <a
+            <!-- <a
                 class="button"
                 href="mailto:imndxx@gmail.com?Subject=WildfireChat%20Feedback"
                 target="_blank">
@@ -72,9 +71,9 @@
                 class="button"
                 href="https://wildfirechat.cn"
                 target="_blank">
-                关于野火
+                关于Panda DB
                 <i class="icon-ion-home"/>
-            </a>
+            </a> -->
 
         </footer>
     </div>

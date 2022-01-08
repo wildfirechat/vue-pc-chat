@@ -6,7 +6,6 @@
 import localStorageEmitter from "./localStorageEmitter";
 import wfc from "../wfc/client/wfc";
 import Message from "../wfc/messages/message";
-import Conversation from "../wfc/model/conversation";
 
 export default {
     name: "ipcMain",
@@ -27,7 +26,7 @@ export default {
         });
 
         localStorageEmitter.on('sendMessage', (ev, args) => {
-            let conversation = Object.assign(new Conversation(), args.conversation);
+            let conversation = args.conversation;
             let payload = args.messagePayload;
             let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
             wfc.sendConversationMessage(conversation, messageContent);

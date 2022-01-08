@@ -16,7 +16,7 @@
                 <p>{{ $t('login.desc') }}</p>
                 <p>{{ $t('login.tip') }}</p>
                 <p>{{ $t('login.warning') }}</p>
-                <a  target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
+                <a  target="_blank" href="https://www.pandadbapp.com">点击下载Panda DB移动端</a>
             </div>
             <!--    已经扫码-->
             <div v-else-if="loginStatus === 1" class="scanned">

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 WildFireChat. All rights reserved.
+ * Copyright (c) 2021 Panda DB Chat. All rights reserved.
  */
 
 import {EventEmitter} from 'events';
@@ -457,7 +457,7 @@ export class WfcManager {
      * @param {string} name 群名称
      * @param {string} portrait 群头像的链接
      * @param {string} groupExtra 群组扩展信息
-     * @param {[string]} memberIds 群成员id列表
+     * @param {[string]} memberIds 群成员id
      * @param {string} memberExtra 群组成员扩展信息
      * @param {[number]} lines 会话线路，默认传[0]即可
      * @param {CreateGroupNotification} notifyContent 通知信息，默认传null，服务端会生成默认通知
@@ -772,7 +772,7 @@ export class WfcManager {
 
     /**
      * 修改个人信息
-     * @param {[ModifyMyInfoEntry]} modifyMyInfoEntries 需要修改的信息列表，pc端，一次只允许修改一个项。
+     * @param {[ModifyMyInfoEntry]} modifyMyInfoEntries 需要修改的信息列表
      * @param successCB
      * @param failCB
      */
@@ -1290,23 +1290,12 @@ export class WfcManager {
      * 根据会话线路，获取远程历史消息
      * @param {number} line 会话线路
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
-     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
      * @param {number} count
      * @param {function ([Message])} successCB
      * @param failCB
      */
-    loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB){
-        impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB)
-    }
-
-    /**
-     * 根据消息 uid，获取远程消息
-     * @param {Long} messageUid 消息uid
-     * @param {function ([Message])} successCB
-     * @param failCB
-     */
-    loadRemoteMessage(messageUid, successCB, failCB){
-        impl.loadRemoteMessage(messageUid, successCB, failCB);
+    loadRemoteLineMessages(line, beforeUid, count, successCB, failCB) {
+        impl.loadRemoteLineMessages(line, beforeUid, count, successCB, failCB)
     }
 
     /**
@@ -1414,16 +1403,6 @@ export class WfcManager {
     }
 
     /**
-     * 删除远程消息
-     * @param {Long | string} msgUid 消息uid
-     * @param {function ()} successCB
-     * @param {function (number)} failCB
-     */
-    deleteRemoteMessageByUid(msgUid, successCB, failCB){
-        impl.deleteRemoteMessage(msgUid, successCB, failCB);
-    }
-
-    /**
      * 清除会话消息
      * @param {Conversation} conversation 目标会话
      * @returns {Promise<void>}
@@ -1508,16 +1487,11 @@ export class WfcManager {
         return impl.isSupportBigFilesUpload();
     }
 
-   /**
-    * 获取上传链接。一般用户大文件上传。
-    * @param {string} fileName
-    * @param {number} mediaType 媒体类型，可选值参考{@link MessageContentMediaType}
-    * @param {string} contentType HTTP请求的ContentType header，为空时默认为"application/octet-stream"
-    * @param {function (string)} successCB 回调通知上传成功之后的url
-    * @param {function (number)} failCB
-    */
-    getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
-        impl.getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB);
+    /**
+     * 获取上传链接。一般用户大文件上传。
+     */
+    getUploadMediaUrl(fileName, mediaType, successCB, failCB) {
+        impl.getUploadMediaUrl(fileName, mediaType, successCB, failCB);
     }
 
     /**
@@ -1738,18 +1712,6 @@ export class WfcManager {
      */
     b64_to_utf8(str) {
         return decodeURIComponent(escape(atob(str)));
-    }
-
-    unescape (str) {
-        return (str + '==='.slice((str.length + 3) % 4))
-            .replace(/-/g, '+')
-            .replace(/_/g, '/')
-    }
-
-    escape (str) {
-        return str.replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=/g, '')
     }
 }
 

@@ -1,8 +1,8 @@
 {
   "name": "wf-pc-chat",
-  "version": "0.5.0",
+  "version": "0.3.0",
   "private": true,
-  "homepage": "https://wildfirechat.cn",
+  "homepage": "https://pandadb.net",
   "maintainers": [
     "imndx"
   ],
@@ -21,13 +21,13 @@
     "cross-package-win32": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 ia32 && vue-cli-service electron:build --win --ia32 -p never",
     "cross-package-linux": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux x64 && vue-cli-service electron:build --linux --x64 -p never",
     "cross-package-linux-arm64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
-    "cross-package-mac": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin && vue-cli-service electron:build --mac -p never",
+    "cross-package-mac": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin x64 && vue-cli-service electron:build --mac --x64 -p never",
     "cross-package-all": "node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
     "preinstall": "npx npm-force-resolutions"
   },
   "main": "background.js",
   "dependencies": {
-    "@electron/remote": "^2.0.1",
+    "@coddicat/vue-pinch-scroll-zoom": "^3.2.1",
     "@imndx/v-emoji-picker": "^2.3.7",
     "anchorme": "^2.1.2",
     "atob": "^2.1.2",
@@ -39,7 +39,7 @@
     "core-js": "^3.6.5",
     "detectrtc": "^1.4.1",
     "draggable-vue-directive": "^2.1.0",
-    "electron-screenshots": "^0.1.2",
+    "electron-screenshots": "0.1.2",
     "electron-tabs": "^0.15.0",
     "electron-window-state": "^5.0.3",
     "electron-windows-badge": "^1.1.0",
@@ -68,16 +68,13 @@
     "vue-tippy": "^4.7.2",
     "vue-visibility-change": "^1.2.1"
   },
-  "optionalDependencies": {
-    "electron-clipboard-ex": "^1.3.3"
-  },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
     "cpy-cli": "^3.1.1",
     "del-cli": "^3.0.1",
-    "electron": "15.3.4",
+    "electron": "8.2.3",
     "electron-devtools-installer": "^3.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
@@ -85,7 +82,7 @@
     "native-ext-loader": "^2.3.0",
     "npm-force-resolutions": "0.0.10",
     "shelljs": "^0.8.4",
-    "vue-cli-plugin-electron-builder": "^2.0.0",
+    "vue-cli-plugin-electron-builder": "~2.0.0-rc.5",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
@@ -99,6 +96,6 @@
     "rules": {}
   },
   "resolutions": {
-    "vue-cli-plugin-electron-builder/electron-builder": "22.14.5"
+    "vue-cli-plugin-electron-builder/electron-builder": "22.9.1"
   }
 }
