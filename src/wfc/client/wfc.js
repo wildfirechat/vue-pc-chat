@@ -1351,6 +1351,35 @@ export class WfcManager {
     }
 
     /**
+     * 搜索消息
+     * @param {Conversation} conversation 目标会话，如果为空搜索所有会话
+     * @param {string} keyword 关键字
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {boolean} desc 逆序排列
+     * @param {int} limit 返回数量
+     * @param {int} offset 偏移
+     * @returns {[Message]}
+     */
+    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset) {
+        return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset);
+    }
+
+    /**
+     * 搜索消息
+     * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
+     * @param {[number]} lines 会话线路列表
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {string} keyword 关键字
+     * @param {number} fromIndex messageId，表示从那一条消息开始获取
+     * @param {boolean} desc 逆序排列
+     * @param {int} count 最大数量
+     * @returns {[Message]}
+     */
+    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count) {
+        return impl.searchMessageEx2(conversation, keyword, contentTypes, fromIndex, desc, count);
+    }
+
+    /**
      * 发送消息
      * @param {Conversation} conversation 目标会话
      * @param {MessageContent} messageContent 具体的消息内容，一定要求是{@link MessageContent} 的子类，不能是普通的object
