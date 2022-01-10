@@ -29,23 +29,11 @@
         
 
         <CoolLightBox
-                :items="sharedConversationState.previewMediaItems"
-                :index="sharedConversationState.previewMediaIndex"
-                :slideshow="false"
-                @close="sharedConversationState.previewMediaIndex = null">
-                <slot>
-                    <PinchScrollZoom
-                        ref="zoomer"
-                        :width="300"
-                        :height="400"
-                        :scale="2"
-                        style="border: 1px solid black"
-                    >
-                    <img
-                        v-bind:src="'https://picsum.photos/600/1000'"  width="300" height="400">
-                    </PinchScrollZoom>
-                </slot>
-            </CoolLightBox>
+            :items="sharedConversationState.previewMediaItems"
+            :index="sharedConversationState.previewMediaIndex"
+            :slideshow="false"
+            @close="sharedConversationState.previewMediaIndex = null">
+        </CoolLightBox>
 
         <notifications/>
         <IpcMain/>
@@ -146,8 +134,7 @@ export default {
 
     components: {
         IpcMain,
-        CoolLightBox,
-        PinchScrollZoom
+        CoolLightBox
     }
 }
 

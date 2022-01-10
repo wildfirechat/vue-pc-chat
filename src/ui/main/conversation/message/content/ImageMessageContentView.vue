@@ -1,29 +1,29 @@
 <template>
     <div class="image-content-container">
-
-        <PinchScrollZoom
-            ref="zoomer"
-            :width="300"
-            :height="400"
-            :scale="2"
-            style="border: 1px solid black"
-        >
-           <img
-             v-bind:src="'https://picsum.photos/600/1000'"  width="300" height="400">
-        </PinchScrollZoom>
-
-        <img v-show="imageLoaded === false" @click="preview(message)"
-             v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
-        <img v-show="imageLoaded" @click="preview(message)" @load="onImageLoaded"
-             draggable="true"
-             v-bind:src="message.messageContent.remotePath">
+        <div v-if="message.messageContent.type == ImageMessageContentType">
+            <viewer  ref="viewer" v-viewer="{toolbar: false, zoomable: true, fullscreen: true, zoomOnWheel: true, transition: true}" class="images clearfix">
+                <img :src="message.content.remoteMediaUrl" class="image">
+            </viewer>
+        </div>
+        <div v-else>
+            <img v-show="imageLoaded === false" @click="preview(message)"
+                v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
+            <img v-show="imageLoaded" @click="preview(message)" @load="onImageLoaded"
+                draggable="true" v-bind:src="message.messageContent.remotePath">
+        </div>
+        
     </div>
 </template>
 
 <script>
 import Message from "@/wfc/messages/message";
 import store from "@/store";
-import PinchScrollZoom from "@coddicat/vue-pinch-scroll-zoom";
+import MessageContentType from "@/wfc/messages/messageContentType";
+
+import Vue from "vue";
+import Viewer from "v-viewer";
+import "viewerjs/dist/viewer.css";
+Vue.use(Viewer);
 
 export default {
     name: "ImageMessageContentView",
@@ -36,6 +36,7 @@ export default {
     data() {
         return {
             imageLoaded: false,
+            ImageMessageContentType: MessageContentType.Image
         }
     },
     methods: {
@@ -48,7 +49,6 @@ export default {
         }
     },
     components: {
-        PinchScrollZoom
     }
 }
 </script>
