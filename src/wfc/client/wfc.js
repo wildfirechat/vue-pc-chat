@@ -1376,7 +1376,7 @@ export class WfcManager {
      * @returns {[Message]}
      */
     searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count) {
-        return impl.searchMessageEx2(conversation, keyword, contentTypes, fromIndex, desc, count);
+        return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count);
     }
 
     /**
