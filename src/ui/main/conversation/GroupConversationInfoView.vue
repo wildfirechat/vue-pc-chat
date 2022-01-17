@@ -74,7 +74,7 @@ export default {
             filterQuery: '',
             sharedContactState: store.state.contact,
             groupAnnouncement: '',
-            newGroupName: '',
+            newGroupName: this.conversationInfo.conversation._target._displayName,
             newGroupAnnouncement: '',
         }
     },
