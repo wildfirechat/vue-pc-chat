@@ -62,7 +62,7 @@ export default {
         },
         updateFriendAlias() {
             // OLD one variable thing removed if (this.friendAlias !== this.sharedStateContact.currentFriend.friendAlias) {
-            if (this.user.friendAlias && this.user.friendAlias !== '') {
+            // if (this.user.friendAlias && this.user.friendAlias !== '') {
                 wfc.setFriendAlias(this.user.uid, this.user.friendAlias,
                     () => {
                         // do nothing
@@ -70,7 +70,7 @@ export default {
                     (error) => {
                         // do nothing
                     })
-            }
+            // }
         },
     },
     computed: {

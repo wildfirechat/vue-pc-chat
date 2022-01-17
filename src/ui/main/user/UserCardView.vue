@@ -95,7 +95,7 @@ export default {
             }
         },
         updateFriendAlias() {
-            if (this.friendAlias !== this.userInfo.friendAlias) {
+            // if (this.friendAlias !== this.userInfo.friendAlias) {
                 wfc.setFriendAlias(this.userInfo.uid, this.friendAlias,
                     () => {
                         // do nothing
@@ -103,7 +103,7 @@ export default {
                     (error) => {
                         // do nothing
                     })
-            }
+            // }
         },
         close() {
             this.$emit('close');
