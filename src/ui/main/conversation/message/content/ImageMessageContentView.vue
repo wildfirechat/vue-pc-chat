@@ -1,8 +1,8 @@
 <template>
     <div class="image-content-container">
         <div v-if="message.messageContent.type == ImageMessageContentType">
-            <viewer  ref="viewer" v-viewer="{toolbar: false, zoomable: true, fullscreen: true, zoomOnWheel: true, transition: true}" class="images clearfix">
-                <img :src="message.content.remoteMediaUrl" class="image">
+            <viewer :options="viewerOptions" class="images clearfix">
+                <img :src="message.content.remoteMediaUrl || message.content.localMediaPath" class="image" @load="onImageLoaded">
             </viewer>
         </div>
         <div v-else>
@@ -24,7 +24,6 @@ import Vue from "vue";
 import Viewer from "v-viewer";
 import "viewerjs/dist/viewer.css";
 Vue.use(Viewer);
-
 export default {
     name: "ImageMessageContentView",
     props: {
@@ -36,7 +35,14 @@ export default {
     data() {
         return {
             imageLoaded: false,
-            ImageMessageContentType: MessageContentType.Image
+            ImageMessageContentType: MessageContentType.Image,
+            viewerOptions: {
+                toolbar: true, 
+                zoomable: true, 
+                fullscreen: true, 
+                zoomOnWheel: true, 
+                transition: true,
+            }
         }
     },
     methods: {
