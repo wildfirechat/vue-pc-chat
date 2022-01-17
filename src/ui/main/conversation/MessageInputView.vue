@@ -203,7 +203,7 @@ export default {
             //
 
             let input = this.$refs['input'];
-            let message = input.innerHTML.trim();
+            let message = input.innerText.trim();
             let conversation = this.conversationInfo.conversation;
 
             if (
@@ -255,7 +255,7 @@ export default {
                     img.parentNode.removeChild(img);
                 });
             }
-            message = input.innerHTML.trim();
+            message = input.innerText.trim();
             message = message.replace(/<br>/g, '\n')
                 .replace(/<div>/g, '\n')
                 .replace(/<\/div>/g, '')
@@ -549,7 +549,7 @@ export default {
         },
 
         storeDraft(conversationInfo, quotedMessage) {
-            let draftText = this.$refs['input'].innerHTML.trim();
+            let draftText = this.$refs['input'].innerText.trim();
             draftText = draftText
                 .replace(/<br>/g, '')
                 .replace(/<div>/g, '\n')
