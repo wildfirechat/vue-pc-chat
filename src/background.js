@@ -668,7 +668,7 @@ const createMainWindow = async () => {
         if (!fileWindow) {
             let win = createWindow(args.url, 800, 730, 640, 400, true, true);
 
-            // win.webContents.openDevTools();
+            win.webContents.openDevTools();
             win.on('close', () => {
                 fileWindow = null;
             });
@@ -689,7 +689,7 @@ const createMainWindow = async () => {
             let win = createWindow(url, 700, 850, 700, 850, false, false);
             compositeMessageWindows.set(messageUid, win)
 
-            // win.webContents.openDevTools();
+            win.webContents.openDevTools();
             win.on('close', () => {
                 compositeMessageWindows.delete(messageUid);
             });
@@ -810,7 +810,7 @@ const createMainWindow = async () => {
         }
     });
 
-    mainWindow.webContents.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8');
+    mainWindow.webContents.userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8';
     createMenu();
     regShortcut();
 };
@@ -861,13 +861,13 @@ app.on('open-url', (event, url) => {
     onDeepLink(url);
 })
 
-app.setName(pkg.name);
+app.name = pkg.name;
 app.dock && app.dock.setIcon(icon);
 
-if (!app.requestSingleInstanceLock()) {
-    console.log('only allow start one instance!')
-    app.quit()
-}
+// if (!app.requestSingleInstanceLock()) {
+//     console.log('only allow start one instance!')
+//     app.quit()
+// }
 
 app.on('second-instance', (event, argv) => {
     if (mainWindow) {
