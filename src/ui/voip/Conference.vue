@@ -33,10 +33,14 @@
                                    class="video"
                                    v-bind:style="{transform:!session.isScreenSharing() ? 'scaleX(-1)' :'none','-webkit-transform': !session.isScreenSharing() ? 'scaleX(-1)' :'none'}"
                                    ref="localVideo"
+                                   @click="switchCamera"
                                    :srcObject.prop="selfUserInfo._stream"
                                    playsInline
                                    muted
                                    autoPlay/>
+                            <div v-if="!selfUserInfo._isVideoMuted && !session.isScreenSharing()" class="video-stream-tip-container">
+                                <p>点击视频， 切换摄像头</p>
+                            </div>
                             <div class="info-container">
                                 <i v-if="selfUserInfo._isHost" class="icon-ion-person"></i>
                                 <div>{{ userName(selfUserInfo) }}</div>
@@ -249,6 +253,7 @@ export default {
 
             showParticipantList: false,
             sharedMiscState: store.state.misc,
+            videoInputDeviceIndex: 0,
         }
     },
     components: {ScreenShareControlView, UserCardView, ElectronWindowsControlButtonView},
@@ -443,6 +448,26 @@ export default {
             this.session.leaveConference(false);
         },
 
+        switchCamera() {
+            if (!this.session || this.session.isScreenSharing()) {
+                return;
+            }
+            // The order is significant - the default capture devices will be listed first.
+            // navigator.mediaDevices.enumerateDevices()
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                devices = devices.filter(d => d.kind === 'videoinput');
+                if (devices.length < 2) {
+                    console.log('switchCamera error, no more video input device')
+                    return;
+                }
+                this.videoInputDeviceIndex++;
+                if (this.videoInputDeviceIndex >= devices.length) {
+                    this.videoInputDeviceIndex = 0;
+                }
+                this.session.setVideoInputDeviceId(devices[this.videoInputDeviceIndex].deviceId)
+                console.log('setVideoInputDeviceId', devices[this.videoInputDeviceIndex]);
+            })
+        },
         mute() {
             let enable = this.session.audioMuted ? true : false;
             this.selfUserInfo._isAudioMuted = !enable;
