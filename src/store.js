@@ -1466,6 +1466,15 @@ let store = {
         }, failCB);
     },
 
+    deleteFriend(target){
+        wfc.deleteFriend(target, ()=> {
+            wfc.removeConversation(new Conversation(ConversationType.Single, target, 0), true);
+            this._loadDefaultConversationList();
+        }, (err) => {
+            console.log('deleteFriend error', err);
+        });
+    },
+
     _patchFileRecords(fileRecords) {
         fileRecords.forEach(fileRecord => {
             let groupId = fileRecord.conversation.type === 1 ? fileRecord.conversation.target : '';
