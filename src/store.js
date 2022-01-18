@@ -1282,13 +1282,15 @@ let store = {
     },
 
     filterGroupConversation(query) {
-        query = query.toLowerCase();
-        let groups = conversationState.conversationInfoList.filter(info => info.conversation.type === ConversationType.Group).map(info => info.conversation._target);
-        return groups.filter(groupInfo => {
-            let namePinyin = convert(groupInfo.name, {style: 0}).join('').trim().toLowerCase();
-            let firstLetters = convert(groupInfo.name, {style: 4}).join('').trim().toLowerCase();
-            return groupInfo.name.indexOf(query) > -1 || namePinyin.indexOf(query) > -1 || firstLetters.indexOf(query) > -1
-        })
+        // query = query.toLowerCase();
+        // let groups = conversationState.conversationInfoList.filter(info => info.conversation.type === ConversationType.Group).map(info => info.conversation._target);
+        // return groups.filter(groupInfo => {
+        //     let namePinyin = convert(groupInfo.name, {style: 0}).join('').trim().toLowerCase();
+        //     let firstLetters = convert(groupInfo.name, {style: 4}).join('').trim().toLowerCase();
+        //     return groupInfo.name.indexOf(query) > -1 || namePinyin.indexOf(query) > -1 || firstLetters.indexOf(query) > -1
+        // })
+        let gsr = wfc.searchGroups(query)
+        return gsr.map(r => r.groupInfo);
     },
 
     searchMessage(conversation, query) {
