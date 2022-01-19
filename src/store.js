@@ -1601,4 +1601,5 @@ let searchState = store.state.search;
 let pickState = store.state.pick;
 let miscState = store.state.misc;
 
+window.__store = store;
 export default store
