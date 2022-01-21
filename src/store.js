@@ -48,6 +48,8 @@ let store = {
             currentConversationInfo: null,
             conversationInfoList: [],
             currentConversationMessageList: [],
+            currentConversationOldestMessageId: 0,
+            currentConversationOldestMessageUid: 0,
 
             currentConversationDeliveries: null,
             currentConversationRead: null,
@@ -197,8 +199,7 @@ let store = {
                     || (msg.messageContent instanceof KickoffGroupMemberNotification && msg.messageContent.kickedMembers.indexOf(wfc.getUserId()) >= 0)
                     || (msg.messageContent instanceof QuitGroupNotification && msg.messageContent.operator === wfc.getUserId())
                 ) {
-                    conversationState.currentConversationInfo = null;
-                    conversationState.currentConversationMessageList = [];
+                    this.setCurrentConversationInfo(null);
                     return;
                 }
                 // 移动端，目前只有单聊会发送typing消息
@@ -240,6 +241,8 @@ let store = {
                 }
                 this._patchMessage(msg, lastTimestamp);
                 conversationState.currentConversationMessageList.push(msg);
+                conversationState.currentConversationOldestMessageId = conversationState.currentConversationMessageList[0].messageId;
+                conversationState.currentConversationOldestMessageUid = conversationState.currentConversationMessageList[0].messageUid;
             }
 
             if (msg.conversation.type !== 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
@@ -460,6 +463,8 @@ let store = {
             conversationState.currentConversationInfo = null;
             conversationState.shouldAutoScrollToBottom = false;
             conversationState.currentConversationMessageList.length = 0;
+            conversationState.currentConversationOldestMessageId = 0;
+            conversationState.currentConversationOldestMessageUid = 0;
             conversationState.currentConversationDeliveries = null;
             conversationState.currentConversationRead = null;
             conversationState.enableMessageMultiSelection = false;
@@ -472,6 +477,8 @@ let store = {
         conversationState.currentConversationInfo = conversationInfo;
         conversationState.shouldAutoScrollToBottom = true;
         conversationState.currentConversationMessageList.length = 0;
+        conversationState.currentConversationOldestMessageId = 0;
+        conversationState.currentConversationOldestMessageUid = 0;
         this._loadCurrentConversationMessages();
 
         conversationState.currentConversationDeliveries = wfc.getConversationDelivery(conversationInfo.conversation);
@@ -876,25 +883,30 @@ let store = {
             lastTimestamp = m.timestamp;
         });
         conversationState.currentConversationMessageList = msgs;
+        if (msgs.length){
+            conversationState.currentConversationOldestMessageId = msgs[0].messageId;
+            conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
+        }
     },
 
     _onloadConversationMessages(conversation, messages) {
-        let loadNewMsg = false;
         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
             let lastTimestamp = 0;
             let newMsgs = [];
+            conversationState.currentConversationOldestMessageUid = messages[0].messageUid;
             messages.forEach(m => {
                 let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid))
                 if (index === -1) {
                     this._patchMessage(m, lastTimestamp);
                     lastTimestamp = m.timestamp;
                     newMsgs.push(m);
-                    loadNewMsg = true;
                 }
             });
             conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
+            if (newMsgs.length){
+                conversationState.currentConversationOldestMessageId = newMsgs[0].messageId;
+            }
         }
-        return loadNewMsg;
     },
 
     loadConversationHistoryMessages(loadedCB, completeCB) {
@@ -902,11 +914,8 @@ let store = {
             return;
         }
         let conversation = conversationState.currentConversationInfo.conversation;
-        let firstMsg = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0] : null;
-        let firstMsgUid = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0].messageUid : 0;
-        let firstMsgId = conversationState.currentConversationMessageList.length > 0 ? conversationState.currentConversationMessageList[0].messageId : 0;
-        console.log('loadConversationHistoryMessage', conversation, firstMsgId, stringValue(firstMsgUid), firstMsg);
-        let lmsgs = wfc.getMessages(conversation, firstMsgId, true, 20);
+        console.log('loadConversationHistoryMessage', conversation, conversationState.currentConversationOldestMessageId, stringValue(conversationState.currentConversationOldestMessageUid), firstMsg);
+        let lmsgs = wfc.getMessages(conversation, conversationState.currentConversationOldestMessageId, true, 20);
         if (lmsgs.length > 0) {
             let loadNewMsg = this._onloadConversationMessages(conversation, lmsgs)
             if (!loadNewMsg) {
@@ -915,10 +924,10 @@ let store = {
                 setTimeout(() => loadedCB(), 200)
             }
         } else {
-            wfc.loadRemoteConversationMessages(conversation, [], firstMsgUid, 20,
+            wfc.loadRemoteConversationMessages(conversation, [], conversationState.currentConversationOldestMessageUid, 20,
                 (msgs) => {
-                    let loadNewMsg = this._onloadConversationMessages(conversation, msgs)
-                    if (!loadNewMsg) {
+                    this._onloadConversationMessages(conversation, msgs)
+                    if (msgs.length === 0) {
                         completeCB();
                     } else {
                         this._loadDefaultConversationList();
