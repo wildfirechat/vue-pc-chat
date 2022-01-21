@@ -890,6 +890,7 @@ let store = {
     },
 
     _onloadConversationMessages(conversation, messages) {
+        let loadNewMsg = false;
         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
             let lastTimestamp = 0;
             let newMsgs = [];
@@ -900,6 +901,7 @@ let store = {
                     this._patchMessage(m, lastTimestamp);
                     lastTimestamp = m.timestamp;
                     newMsgs.push(m);
+                    loadNewMsg = true;
                 }
             });
             conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
@@ -907,6 +909,7 @@ let store = {
                 conversationState.currentConversationOldestMessageId = newMsgs[0].messageId;
             }
         }
+        return loadNewMsg;
     },
 
     loadConversationHistoryMessages(loadedCB, completeCB) {
@@ -914,7 +917,7 @@ let store = {
             return;
         }
         let conversation = conversationState.currentConversationInfo.conversation;
-        console.log('loadConversationHistoryMessage', conversation, conversationState.currentConversationOldestMessageId, stringValue(conversationState.currentConversationOldestMessageUid), firstMsg);
+        console.log('loadConversationHistoryMessage', conversation, conversationState.currentConversationOldestMessageId, stringValue(conversationState.currentConversationOldestMessageUid));
         let lmsgs = wfc.getMessages(conversation, conversationState.currentConversationOldestMessageId, true, 20);
         if (lmsgs.length > 0) {
             let loadNewMsg = this._onloadConversationMessages(conversation, lmsgs)
