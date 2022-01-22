@@ -722,7 +722,6 @@ export default {
                     width = '25%';
                     height = '25%'
                 }
-                console.log('jyj', 'wp', infos, videoParticipants, count, width, height);
                 if (this.$refs.contentContainer) {
                     this.$refs.contentContainer.style.setProperty('--participant-video-item-width', width);
                     this.$refs.contentContainer.style.setProperty('--participant-video-item-height', height);
