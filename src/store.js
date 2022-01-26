@@ -929,10 +929,10 @@ let store = {
         } else {
             wfc.loadRemoteConversationMessages(conversation, [], conversationState.currentConversationOldestMessageUid, 20,
                 (msgs) => {
-                    this._onloadConversationMessages(conversation, msgs)
                     if (msgs.length === 0) {
                         completeCB();
                     } else {
+                        this._onloadConversationMessages(conversation, msgs)
                         this._loadDefaultConversationList();
                         loadedCB();
                     }
