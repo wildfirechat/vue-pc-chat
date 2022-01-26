@@ -31,18 +31,6 @@ import nodePath from 'path'
 
 console.log('start crash report', app.getPath('crashDumps'))
 crashReporter.start({uploadToServer:false});
-crashReporter.start({
-    companyName: 'imndxx@gmail.com',
-    productName: 'pc-chat',
-    submitURL: 'https://pc_chat.bugsplat.com/post/electron/crash.php',
-    compress: true,
-    ignoreSystemCrashHandler: true,
-    extra: {
-        'key': 'a24145344c9d900ecb00d54925ecd64a',
-        'email': 'imndxx@gmail.com',
-        'comments': '<<comment>>'
-    }
-})
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
