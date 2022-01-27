@@ -199,6 +199,14 @@ export default class CallSession {
     }
 
     /**
+     * 切换摄像头，手机端有效
+     * @return true，支持切换摄像头，正在切换；false，不支持切换摄像头
+     */
+    switchCamera(){
+
+    }
+
+    /**
      * 仅会议时有效
      * 设置视频最大码率
      * @param maxBitrateKbps
