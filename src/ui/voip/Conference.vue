@@ -336,7 +336,7 @@ export default {
                 console.log('didParticipantJoined', userId, screenSharing)
                 IpcSub.getUserInfos([userId], null, (userInfos) => {
                     let userInfo = userInfos[0];
-                    let subscriber = this.session.getSubscriber(userId);
+                    let subscriber = this.session.getSubscriber(userId, screenSharing);
                     userInfo._stream = subscriber.stream;
                     userInfo._isAudience = subscriber.audience;
                     userInfo._isHost = this.session.host === userId;

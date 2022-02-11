@@ -140,9 +140,10 @@ export default class CallSession {
     /**
      * 请在callState变为connecting 或 connected之后，调用
      * @param {string} userId
+     * @param {boolean} screenSharing
      * @return {Subscriber}
      */
-    getSubscriber(userId){
+    getSubscriber(userId, screenSharing){
     }
 
 
