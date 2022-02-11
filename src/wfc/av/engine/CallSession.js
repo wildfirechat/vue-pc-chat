@@ -129,10 +129,20 @@ export default class CallSession {
 
     /**
      * 请在callState变为connecting 或 connected之后，调用
+     * @deprecated
      * @param {string} userId
-     * @return {PeerConnectionClient}
+     * @return {Subscriber}
      */
     getPeerConnectionClient(userId){
+        return this.getSubscriber(userId);
+    }
+
+    /**
+     * 请在callState变为connecting 或 connected之后，调用
+     * @param {string} userId
+     * @return {Subscriber}
+     */
+    getSubscriber(userId){
     }
 
 

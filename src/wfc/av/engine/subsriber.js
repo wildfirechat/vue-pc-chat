@@ -2,7 +2,7 @@
  * Copyright (c) 2020 WildFireChat. All rights reserved.
  */
 import WfcAVEngineKit from "./avenginekit";
-export default class PeerConnectionClient {
+export default class Subsriber {
     isInitiator = false;
     userId;
     status;
