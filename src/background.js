@@ -30,7 +30,7 @@ import nodePath from 'path'
 
 
 console.log('start crash report', app.getPath('crashDumps'))
-crashReporter.start({uploadToServer:false});
+crashReporter.start({uploadToServer: false});
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -648,37 +648,42 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('file-paste', (event) => {
-        var image = clipboard.readImage();
-        var args = {hasImage: false};
+        let args = {hasImage: false};
 
-        if (!image.isEmpty()) {
-            let filename = tmp.tmpNameSync() + '.png';
-
-            args = {
-                hasImage: true,
-                filename: filename,
-                raw: image.toPNG(),
-            };
-
-            fs.writeFileSync(filename, image.toPNG());
-        } else {
-            const clipboardEx = require('electron-clipboard-ex')
-            // only support windows and mac
-            if(clipboardEx){
-                const filePaths = clipboardEx.readFilePaths();
-                if (filePaths && filePaths.length > 0){
-                    args = {
-                        hasFile: true,
-                        files: [],
-                    };
-                    filePaths.forEach(path => {
-                        args.files.push({
-                            path: path,
-                            name: nodePath.basename(path),
-                            size: fs.statSync(path).size,
-                        })
+        let foundFiles = false;
+        const clipboardEx = require('electron-clipboard-ex')
+        // only support windows and mac
+        if (clipboardEx) {
+            const filePaths = clipboardEx.readFilePaths();
+            if (filePaths && filePaths.length > 0) {
+                args = {
+                    hasFile: true,
+                    files: [],
+                };
+                filePaths.forEach(path => {
+                    args.files.push({
+                        path: path,
+                        name: nodePath.basename(path),
+                        size: fs.statSync(path).size,
                     })
-                }
+                })
+                foundFiles = true;
+            }
+        }
+
+        if (!foundFiles) {
+            let image = clipboard.readImage();
+            console.log('file-paste', image, image.isEmpty(), image.isTemplateImage(), image.isMacTemplateImage);
+            if (!image.isEmpty()) {
+                let filename = tmp.tmpNameSync() + '.png';
+
+                args = {
+                    hasImage: true,
+                    filename: filename,
+                    raw: image.toPNG(),
+                };
+
+                fs.writeFileSync(filename, image.toPNG());
             }
         }
 
@@ -724,19 +729,19 @@ const createMainWindow = async () => {
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
         if (!compositeMessageWin) {
             let url;
-            if(messageUid){
+            if (messageUid) {
                 url = args.url + ('?messageUid=' + messageUid)
-            }else {
+            } else {
                 url = args.url;
             }
             let win = createWindow(url, 960, 600, 640, 400, false, false);
-            if (messageUid){
+            if (messageUid) {
                 compositeMessageWindows.set(messageUid, win)
             }
 
             // win.webContents.openDevTools();
             win.on('close', () => {
-                if (messageUid){
+                if (messageUid) {
                     compositeMessageWindows.delete(messageUid);
                 }
             });

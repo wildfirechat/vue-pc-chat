@@ -153,7 +153,7 @@ export default {
             } else {
                 text = await navigator.clipboard.readText();
             }
-            if (source === 'menu' && text && text.trim()) {
+            if (text && text.trim()) {
                 e.preventDefault();
                 document.execCommand('insertText', false, text);
                 return;
