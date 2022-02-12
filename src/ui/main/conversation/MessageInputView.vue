@@ -261,6 +261,8 @@ export default {
                 .replace(/<\/div>/g, '')
                 .replace(/&nbsp;/g, ' ');
 
+            // TODO 可以在此对文本消息进行处理，比如过滤掉 script，iframe 等标签
+
             message = message.replace(/<img class="emoji" draggable="false" alt="/g, '')
                 .replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')
 
