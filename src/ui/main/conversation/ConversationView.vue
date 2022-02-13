@@ -296,6 +296,7 @@ export default {
                 store.setShouldAutoScrollToBottom(false)
             } else {
                 store.setShouldAutoScrollToBottom(true)
+                store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
             }
         },
 

@@ -883,7 +883,7 @@ let store = {
             lastTimestamp = m.timestamp;
         });
         conversationState.currentConversationMessageList = msgs;
-        if (msgs.length){
+        if (msgs.length) {
             conversationState.currentConversationOldestMessageId = msgs[0].messageId;
             conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
         }
@@ -905,7 +905,7 @@ let store = {
                 }
             });
             conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
-            if (newMsgs.length){
+            if (newMsgs.length) {
                 conversationState.currentConversationOldestMessageId = newMsgs[0].messageId;
             }
         }
@@ -1032,7 +1032,7 @@ let store = {
             info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
             info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
             info.conversation._target._displayName = info.conversation._target.name;
-        }else if (info.conversation.type === ConversationType.Channel){
+        } else if (info.conversation.type === ConversationType.Channel) {
             info.conversation._target = wfc.getChannelInfo(info.conversation.target, false);
             info.conversation._target._displayName = info.conversation._target.name;
         }
@@ -1480,8 +1480,8 @@ let store = {
         }, failCB);
     },
 
-    deleteFriend(target){
-        wfc.deleteFriend(target, ()=> {
+    deleteFriend(target) {
+        wfc.deleteFriend(target, () => {
             wfc.removeConversation(new Conversation(ConversationType.Single, target, 0), true);
             this._loadDefaultConversationList();
         }, (err) => {
@@ -1516,16 +1516,14 @@ let store = {
 
     setPageVisibility(visible) {
         miscState.isPageHidden = !visible;
-        if (visible) {
-            if (conversationState.currentConversationInfo) {
-                this.clearConversationUnreadStatus(conversationState.currentConversationInfo.conversation)
-            }
-        }
     },
 
     clearConversationUnreadStatus(conversation) {
-        wfc.clearConversationUnreadStatus(conversation);
-        this.updateTray();
+        let info = wfc.getConversationInfo(conversation);
+        if (info && (info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll) > 0) {
+            wfc.clearConversationUnreadStatus(conversation);
+            this.updateTray();
+        }
     },
 
     notify(msg) {
