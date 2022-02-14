@@ -148,23 +148,21 @@ export default {
 
         async handlePaste(e, source) {
             let text;
+            e.preventDefault();
             if ((e.originalEvent || e).clipboardData) {
                 text = (e.originalEvent || e).clipboardData.getData('text/plain');
             } else {
                 text = await navigator.clipboard.readText();
             }
             if (text && text.trim()) {
-                e.preventDefault();
                 document.execCommand('insertText', false, text);
                 return;
             }
             if (isElectron()) {
                 let args = ipcRenderer.sendSync('file-paste');
                 if (args.hasImage) {
-                    e.preventDefault();
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
                 }else if (args.hasFile){
-                    e.preventDefault();
                     args.files.forEach(file => {
                         store.sendFile(this.conversationInfo.conversation, file)
                     })
