@@ -169,6 +169,23 @@ export default {
                 }
             }
         },
+
+        mention(groupId, memberId){
+            let displayName = wfc.getGroupMemberDisplayName(groupId, memberId);
+            this.mentions.push({
+                key: displayName,
+                value: '@' + memberId,
+            })
+            let text = this.$refs.input.innerText;
+            let mentionValue;
+            if (text.endsWith(' ')){
+                mentionValue = '@' + displayName + ' ';
+            }else {
+                mentionValue = ' @' + displayName + ' ';
+            }
+            document.execCommand('insertText', false, mentionValue);
+        },
+
         copy() {
             let text = this.$refs['input'].innerText;
             if (text) {
