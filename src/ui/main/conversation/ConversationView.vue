@@ -41,6 +41,7 @@
                             <!--todo 不同的消息类型 notification in out-->
 
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
+                            <RecallNotificationMessageContentView :message="message" v-if="isRecallNotificationMessage(message)"/>
                             <NormalOutMessageContentView
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
                                 :message="message"
@@ -130,6 +131,7 @@ import ClickOutside from 'vue-click-outside'
 import NormalOutMessageContentView from "@/ui/main/conversation/message/NormalOutMessageContentContainerView";
 import NormalInMessageContentView from "@/ui/main/conversation/message/NormalInMessageContentContainerView";
 import NotificationMessageContentView from "@/ui/main/conversation/message/NotificationMessageContentView";
+import RecallNotificationMessageContentView from "@/ui/main/conversation/message/RecallNotificationMessageContentView";
 import NotificationMessageContent from "@/wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "@/wfc/messages/textMessageContent";
 import store from "@/store";
@@ -165,6 +167,7 @@ export default {
     components: {
         MultiSelectActionView,
         NotificationMessageContentView,
+        RecallNotificationMessageContentView,
         NormalInMessageContentView,
         NormalOutMessageContentView,
         MessageInputView,
@@ -282,7 +285,15 @@ export default {
         },
 
         isNotificationMessage(message) {
-            return message && message.messageContent instanceof NotificationMessageContent;
+            return message && message.messageContent instanceof NotificationMessageContent && message.messageContent.type !== MessageContentType.RecallMessage_Notification;
+        },
+
+        isRecallNotificationMessage(message) {
+            return message && message.messageContent.type === MessageContentType.RecallMessage_Notification;
+        },
+
+        reedit(message){
+            this.$refs.messageInputView.insertText(message.messageContent.originalSearchableContent);
         },
 
         onScroll(e) {

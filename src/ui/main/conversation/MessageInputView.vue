@@ -186,6 +186,10 @@ export default {
             document.execCommand('insertText', false, mentionValue);
         },
 
+        insertText(text){
+            document.execCommand('insertText', false, text);
+        },
+
         copy() {
             let text = this.$refs['input'].innerText;
             if (text) {
