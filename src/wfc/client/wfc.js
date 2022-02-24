@@ -237,7 +237,7 @@ export class WfcManager {
     /**
      * 获取用户信息
      * @param {string} userId 用户id
-     * @param {boolean} refresh 是否刷新用户信息，如果刷新的话，且用户信息有更新，会通过{@link eventEmitter}通知
+     * @param {boolean} refresh 是否刷新用户信息，如果刷新的话，且用户信息有更新，会通过{@link eventEmitter}进行通知，事件的名字是{@link EventType.UserInfosUpdate }
      * @param {string} groupId
      * @returns {UserInfo}
      */
@@ -252,8 +252,8 @@ export class WfcManager {
     /**
      * 获取用户信息
      * @param {string} userId 用户ID
-     * @param {boolean} refresh 是否强制从服务器更新，如果本地没有或者强制，会从服务器刷新，然后发出通知UserInfosUpdate
-     * @param {function (UserInfo)} success 成功回调
+     * @param {boolean} refresh 是否强制从服务器更新，如果本地没有或者强制，会从服务器刷新
+     * @param {function (UserInfo)} success 成功回调，如果本地有该用户信息，则通过回调返回本地的用户信息；如果本地没有，则从服务端拉取该用户信息，并通过回调返回
      * @param {function (number)} fail 失败回调
      */
     getUserInfoEx(userId, refresh, success, fail) {
@@ -1344,7 +1344,7 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
-     * @returns {[Message]}
+     * @returns {Message[]}
      */
     searchMessageEx(conversation, keyword, desc, limit, offset) {
         return impl.searchMessageEx(conversation, keyword, desc, limit, offset);
@@ -1358,7 +1358,7 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
-     * @returns {[Message]}
+     * @returns {Message[]}
      */
     searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset) {
         return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset);
@@ -1372,7 +1372,7 @@ export class WfcManager {
      * @param {string} keyword 关键字
      * @param {number} fromIndex messageId，表示从那一条消息开始获取
      * @param {boolean} desc 逆序排列
-     * @param {int} count 最大数量
+     * @param {number} count 最大数量
      * @returns {[Message]}
      */
     searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count) {
@@ -1555,7 +1555,7 @@ export class WfcManager {
     * @param {string} fileName
     * @param {number} mediaType 媒体类型，可选值参考{@link MessageContentMediaType}
     * @param {string} contentType HTTP请求的ContentType header，为空时默认为"application/octet-stream"
-    * @param {function (string)} successCB 回调通知上传成功之后的url
+    * @param {function (string, string)} successCB 回调通知上传成功之后的url
     * @param {function (number)} failCB
     */
     getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
@@ -1652,7 +1652,7 @@ export class WfcManager {
      * @param {String} fromUser 来源用户
      * @param {Long} beforeMessageUid 消息uid，表示获取此消息uid之前的文件记录
      * @param {number} count 数量
-     * @param {function ([FileRecord])} successCB 成功回调
+     * @param {function (FileRecord[])} successCB 成功回调
      * @param {function (number)} failCB 失败回调
      */
     getConversationFileRecords(conversation, fromUser, beforeMessageUid, count, successCB, failCB) {
@@ -1663,7 +1663,7 @@ export class WfcManager {
      * 获取我发送的文件记录
      * @param {Long} beforeMessageUid 消息uid，表示获取此消息uid之前的文件记录
      * @param {number} count 数量
-     * @param {function ([FileRecord])} successCB 成功回调
+     * @param {function (FileRecord[])} successCB 成功回调
      * @param {function (number)} failCB 失败回调
      */
     getMyFileRecords(beforeMessageUid, count, successCB, failCB) {
@@ -1687,7 +1687,7 @@ export class WfcManager {
      * @param {string} fromUser 文件发送用户，如果为空则获取该用户发出的文件记录
      * @param {Long | string} beforeMessageId 起始消息的消息id
      * @param {number} count
-     * @param {function ([fileRecord])} successCB
+     * @param {function (FileRecord[])} successCB
      * @param {function (number)} failCB
      */
     searchFiles(keyword, conversation, fromUser, beforeMessageId, count, successCB, failCB) {
