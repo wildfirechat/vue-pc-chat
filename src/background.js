@@ -1028,6 +1028,7 @@ app.on('before-quit', () => {
     if (!tray) return;
     // if (!isOsx) {
     tray.destroy();
+    tray = null;
     // }
 });
 app.on('activate', e => {
@@ -1078,6 +1079,8 @@ function execBlink(flag, _interval) {
 }
 
 function toggleTrayIcon(icon) {
-    tray.setImage(icon);
+    if (tray){
+        tray.setImage(icon);
+    }
 }
 
