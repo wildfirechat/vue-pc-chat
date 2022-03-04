@@ -279,6 +279,7 @@ let store = {
             userOnlineStatus.forEach(e => {
                 miscState.userOnlineStateMap.set(e.userId, e);
             })
+            this._loadFriendList();
         })
         // 服务端删除
         wfc.eventEmitter.on(EventType.MessageDeleted, (messageUid) => {
