@@ -1,4 +1,5 @@
 import ConnectionStatus from "@/wfc/client/connectionStatus";
+import Vue from 'vue'
 import wfc from "@/wfc/client/wfc";
 import EventType from "@/wfc/client/wfcEvent";
 import ConversationType from "@/wfc/model/conversationType";
@@ -123,6 +124,7 @@ let store = {
             uploadBigFiles: [],
             wfc: wfc,
             config: Config,
+            userOnlineStateMap: new Map(),
         },
     },
 
@@ -273,6 +275,11 @@ let store = {
             this.updateTray();
         });
 
+        wfc.eventEmitter.on(EventType.UserOnlineEvent, (userOnlineStatus) => {
+            userOnlineStatus.forEach(e => {
+                miscState.userOnlineStateMap.set(e.userId, e);
+            })
+        })
         // 服务端删除
         wfc.eventEmitter.on(EventType.MessageDeleted, (messageUid) => {
             this._loadDefaultConversationList();
@@ -460,6 +467,10 @@ let store = {
 
     setCurrentConversationInfo(conversationInfo) {
         if (!conversationInfo) {
+            if (conversationState.currentConversationInfo) {
+                let conversation = conversationState.currentConversationInfo.conversation;
+                wfc.unwatchOnlineState(conversation.type, [conversation.target]);
+            }
             conversationState.currentConversationInfo = null;
             conversationState.shouldAutoScrollToBottom = false;
             conversationState.currentConversationMessageList.length = 0;
@@ -474,6 +485,16 @@ let store = {
         if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation)) {
             return;
         }
+        let conversation = conversationInfo.conversation;
+        wfc.watchOnlineState(conversation.type, [conversation.target], 1000, (states) => {
+            states.forEach((e => {
+                miscState.userOnlineStateMap.set(e.userId, e);
+            }))
+            this._patchCurrentConversationOnlineStatus();
+
+        }, (err) => {
+            console.log('watchOnlineState error', err);
+        })
         conversationState.currentConversationInfo = conversationInfo;
         conversationState.shouldAutoScrollToBottom = true;
         conversationState.currentConversationMessageList.length = 0;
@@ -1089,6 +1110,25 @@ let store = {
         }
     },
 
+    getUserOnlineState(userId) {
+        let userOnlineState = miscState.userOnlineStateMap.get(userId);
+        if (userOnlineState) {
+            return userOnlineState.desc();
+        }
+        return '';
+    },
+
+    _patchCurrentConversationOnlineStatus() {
+        let convInfo = conversationState.currentConversationInfo;
+        if (convInfo && convInfo.conversation.type === ConversationType.Single) {
+            // 在讲 object 和 ui 绑定之前，想 object 中新增的属性是 reactive 的，但绑定之后，才新增的属性，不是 reactive 的，
+            // 故需要通过下面这种方法，让其成为 reactive 的属性
+            // conversationState.currentConversationInfo.conversation._targetOnlineStateDesc = userOnlineStatus.desc();
+            Vue.set(conversationState.currentConversationInfo.conversation, '_targetOnlineStateDesc', this.getUserOnlineState(convInfo.conversation.target))
+        } else {
+            //TODO
+        }
+    },
     _loadFriendRequest() {
         let requests = wfc.getIncommingFriendRequest()
 
@@ -1138,6 +1178,7 @@ let store = {
             } else {
                 u._category = '#';
             }
+            u._userOnlineStatusDesc = this.getUserOnlineState(u.uid);
         });
         return userInfos;
     },
@@ -1516,6 +1557,11 @@ let store = {
 
     setPageVisibility(visible) {
         miscState.isPageHidden = !visible;
+        if (visible) {
+            if (conversationState.currentConversationInfo) {
+                this.clearConversationUnreadStatus(conversationState.currentConversationInfo.conversation)
+            }
+        }
     },
 
     clearConversationUnreadStatus(conversation) {

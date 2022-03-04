@@ -1287,6 +1287,20 @@ export class WfcManager {
     }
 
     /**
+     * 获取会话的远程历史消息，仅 web 有效
+     * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
+     * @param {number} count
+     * @param {boolean} filterLocalMessage 是否过滤本地已经存在的消息
+     * @param {function ([Message])} successCB
+     * @param failCB
+     */
+    loadRemoteConversationMessagesEx(conversation, contentTypes, beforeUid, count, filterLocalMessage, successCB, failCB){
+        impl.loadRemoteMessages(conversation, contentTypes, beforeUid, count, successCB, failCB, filterLocalMessage);
+    }
+
+    /**
      * 根据会话线路，获取远程历史消息
      * @param {number} line 会话线路
      * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
@@ -1297,6 +1311,20 @@ export class WfcManager {
      */
     loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB){
         impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB)
+    }
+
+    /**
+     * 根据会话线路，获取远程历史消息，仅 web 端有效
+     * @param {number} line 会话线路
+     * @param {number | Long} beforeUid 消息uid，表示拉取本条消息之前的消息
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {number} count
+     * @param {boolean} filterLocalMessage 是否过滤本地已经存在的消息
+     * @param {function ([Message])} successCB
+     * @param failCB
+     */
+    loadRemoteLineMessages(line,contentTypes, beforeUid, count, filterLocalMessage, successCB, failCB){
+        impl.loadRemoteLineMessages(line, contentTypes, beforeUid, count, successCB, failCB, filterLocalMessage)
     }
 
     /**
@@ -1752,9 +1780,39 @@ export class WfcManager {
         impl.sendConferenceRequest(sessionId, roomId, request, data, advance, callback);
     }
 
+    isUserOnlineStateEnabled(){
+        return impl.isUserOnlineStateEnabled();
+    }
+
+    /**
+     *
+     * @param {number} type 会话类型， 支持{@link ConversationType.Single}和{@link ConversationType.Group}
+     * @param {string[]} targets 会话类型为单聊时，是用户 id列表；会话类型为群组时，是群组 id 列表
+     * @param {number} duration 关注时间长度，单位是秒
+     * @param {function(UserOnlineState[])} successCB
+     * @param {function(number)} failCB
+     */
+    watchOnlineState(type, targets, duration, successCB, failCB){
+        impl.watchOnlineState(type, targets, duration, successCB, failCB);
+    }
+
+    unwatchOnlineState(type, targets, successCB, failCB){
+        impl.unwatchOnlineState(type, targets, successCB, failCB);
+    }
+
+    setMyCustomState(customState, customText, successCB, failCB){
+        impl.setMyCustomState(customState, customText, successCB, failCB)
+    }
+
     _getStore() {
         return impl._getStore();
     }
+
+
+    _getStore() {
+        return impl._getStore();
+    }
+
 
     /**
      * 内部使用，electron主窗口之外的，其他窗口，attach到主窗口初始化的proto上，可以调用get相关方法，但没有通知
