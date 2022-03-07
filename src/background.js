@@ -30,7 +30,20 @@ import nodePath from 'path'
 
 
 console.log('start crash report', app.getPath('crashDumps'))
-crashReporter.start({uploadToServer: false});
+//crashReporter.start({uploadToServer: false});
+crashReporter.start({
+    companyName: 'wildfire',
+    productName: 'vue-pc-chat',
+    submitURL: 'https://imndxx_gmail_com.bugsplat.com/post/electron/crash.php',
+    compress: true,
+    ignoreSystemCrashHandler: true,
+    extra: {
+        'key': 'application key',
+        'email': 'user email',
+        'comments': 'comment'
+    }
+})
+
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
