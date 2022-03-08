@@ -364,14 +364,9 @@ let trayMenu = [
             mainWindow = null;
             global.sharedObj.proto.disconnect(0);
             console.log('--------------- disconnect', global.sharedObj.proto);
-            var now = new Date();
-            var exitTime = now.getTime() + 1000;
-            while (true) {
-                now = new Date();
-                if (now.getTime() > exitTime)
-                    break;
-            }
-            app.exit(0);
+            setTimeout(()=> {
+                app.exit(0);
+            }, 1000);
         }
     }
 ];
@@ -1053,14 +1048,9 @@ app.on('activate', e => {
 
 function disconnectAndQuit() {
     global.sharedObj.proto.disconnect(0);
-    var now = new Date();
-    var exitTime = now.getTime() + 500;
-    while (true) {
-        now = new Date();
-        if (now.getTime() > exitTime)
-            break;
-    }
-    app.quit();
+    setTimeout(()=> {
+        app.quit();
+    }, 1000)
 }
 
 function clearBlink() {
