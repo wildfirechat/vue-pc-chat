@@ -1652,8 +1652,8 @@ export class WfcManager {
      * @param successCB
      * @param failCB
      */
-    setUserEnableReceipt(enable, successCB, failCB) {
-        impl.setUserEnableReceipt(enable, successCB, failCB);
+    setUserReceiptEnable(enable, successCB, failCB) {
+        impl.setUserReceiptEnable(enable, successCB, failCB);
     }
 
     /**
