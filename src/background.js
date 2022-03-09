@@ -659,6 +659,11 @@ const createMainWindow = async () => {
     ipcMain.on('file-paste', (event) => {
         let args = {hasImage: false};
 
+        if (process.platform === 'linux'){
+            event.returnValue = args;
+            return;
+        }
+
         let foundFiles = false;
         const clipboardEx = require('electron-clipboard-ex')
         // only support windows and mac
