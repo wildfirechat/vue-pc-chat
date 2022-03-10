@@ -39,6 +39,8 @@ import store from "@/store";
 import MessageContentType from "@/wfc/messages/messageContentType";
 import Message from "@/wfc/messages/message";
 import PreviewQuotedMessageView from "@/ui/main/conversation/message/PreviewQuotedMessageView";
+import {fs, isElectron, shell} from "../../../../platform";
+import {downloadFile} from "../../../../platformHelper";
 
 export default {
     name: "QuoteMessageView",
@@ -84,11 +86,15 @@ export default {
             if (!this.enableMessagePreview) {
                 return;
             }
+            console.log('xxxx q')
             if (this.quotedMessage) {
                 switch (this.quotedMessage.messageContent.type) {
                     case MessageContentType.Video:
                     case MessageContentType.Image:
                         store.previewMessage(this.quotedMessage, false);
+                        break;
+                    case MessageContentType.File:
+                        this.downloadQuotedFile(this.quotedMessage)
                         break;
                     case MessageContentType.Text:
                         // do nothing
@@ -100,6 +106,25 @@ export default {
                         break
 
                 }
+            }
+        },
+
+        downloadQuotedFile(quotedFileMessage){
+            if (isElectron()) {
+                let localPath = quotedFileMessage.messageContent.localPath;
+                if (localPath && fs.existsSync(localPath)) {
+                    shell.openPath(localPath);
+                } else {
+                    if (!store.isDownloadingMessage(quotedFileMessage.messageId)) {
+                        downloadFile(quotedFileMessage)
+                        store.addDownloadingMessage(quotedFileMessage.messageId)
+                    } else {
+                        // TODO toast 下载中
+                        console.log('file isDownloading')
+                    }
+                }
+            } else {
+                downloadFile(quotedFileMessage)
             }
         }
     },
