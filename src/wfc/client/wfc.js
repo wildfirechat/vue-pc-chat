@@ -1394,6 +1394,22 @@ export class WfcManager {
 
     /**
      * 搜索消息
+     * @param {Conversation} conversation 目标会话，如果为空搜索所有会话
+     * @param {string} keyword 关键字
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {Long} 消息起始时间，如果为0，则忽略起始时间。
+     * @param {Long} 消息结束时间，如果为0，测忽略结束时间。
+     * @param {boolean} desc 逆序排列
+     * @param {int} limit 返回数量
+     * @param {int} offset 偏移
+     * @returns {Message[]}
+     */
+    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset) {
+        return impl.searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset);
+    }
+
+    /**
+     * 搜索消息
      * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
      * @param {[number]} lines 会话线路列表
      * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
