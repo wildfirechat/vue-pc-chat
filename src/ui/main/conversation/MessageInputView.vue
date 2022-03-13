@@ -121,7 +121,7 @@ export default {
         }
     },
     methods: {
-        onTributeReplaced(e){
+        onTributeReplaced(e) {
             // 正常下面这两行应当就生效了，不知道为啥不生效，所以采用了后面的 trick
             e.detail.event.preventDefault();
             e.detail.event.stopPropagation();
@@ -157,13 +157,15 @@ export default {
             }
             if (text && text.trim()) {
                 document.execCommand('insertText', false, text);
+                // Safari 浏览器 execCommand 失效，可以采用下面这种方式处理粘贴
+                // this.$refs.input.innerText += text;
                 return;
             }
             if (isElectron()) {
                 let args = ipcRenderer.sendSync('file-paste');
                 if (args.hasImage) {
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
-                }else if (args.hasFile){
+                } else if (args.hasFile) {
                     args.files.forEach(file => {
                         store.sendFile(this.conversationInfo.conversation, file)
                     })
@@ -171,7 +173,7 @@ export default {
             }
         },
 
-        mention(groupId, memberId){
+        mention(groupId, memberId) {
             let displayName = wfc.getGroupMemberDisplayName(groupId, memberId);
             this.mentions.push({
                 key: displayName,
@@ -179,15 +181,15 @@ export default {
             })
             let text = this.$refs.input.innerText;
             let mentionValue;
-            if (text.endsWith(' ')){
+            if (text.endsWith(' ')) {
                 mentionValue = '@' + displayName + ' ';
-            }else {
+            } else {
                 mentionValue = ' @' + displayName + ' ';
             }
             document.execCommand('insertText', false, mentionValue);
         },
 
-        insertText(text){
+        insertText(text) {
             document.execCommand('insertText', false, text);
         },
 

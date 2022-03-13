@@ -86,7 +86,6 @@ export default {
             if (!this.enableMessagePreview) {
                 return;
             }
-            console.log('xxxx q')
             if (this.quotedMessage) {
                 switch (this.quotedMessage.messageContent.type) {
                     case MessageContentType.Video:
