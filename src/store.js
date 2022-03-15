@@ -669,7 +669,7 @@ let store = {
                 let xhr = upload.xhr;
                 upload.status = 3;
                 upload.xhr = null;
-                xhr && xhr.terminate();
+                xhr && xhr.abort();
             }
         })
     },
