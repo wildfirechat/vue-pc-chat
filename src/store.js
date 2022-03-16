@@ -441,6 +441,7 @@ let store = {
             if (conversationState.currentConversationInfo
                 && conversationState.currentConversationInfo.conversation.equal(info.conversation)) {
                 conversationState.currentConversationInfo = info;
+                this._patchCurrentConversationOnlineStatus();
             }
         });
         conversationState.conversationInfoList = conversationList;
