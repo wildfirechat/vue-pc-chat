@@ -108,10 +108,11 @@ export default {
 
     methods: {
         infiniteHandler($state) {
-            let firstMessageUid = this.messages.length > 0 ? this.messages[0].messageUid : 0;
-            console.log('to load', stringValue(firstMessageUid))
-            store.getMessages(this.conversationInfo.conversation, firstMessageUid, true, '', (msgs) => {
+            let firstMessageId = this.messages.length > 0 ? this.messages[0].messageId: 0;
+            console.log('to load', stringValue(firstMessageId))
+            store.getMessages(this.conversationInfo.conversation, firstMessageId, true, '', (msgs) => {
                 if (msgs && msgs.length > 0) {
+                    console.log('xxx', msgs.length)
                     this.messages = msgs.concat(this.messages);
                     $state.loaded();
                 } else {
