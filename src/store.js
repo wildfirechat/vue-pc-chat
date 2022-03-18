@@ -882,15 +882,15 @@ let store = {
      * @param {number} fromIndex 其实消息的 messageId
      * @param {boolean} before 获取其实消息之前，还是之后的消息
      * @param {string} withUser 过滤该用户发送或接收的消息
-     * @param {Message[] } callback 消息列表会回调
+     * @param {function (Message[]) } callback 消息列表会回调
      */
     getMessages(conversation, fromIndex = 0, before = true, withUser = '', callback) {
         let lmsgs = wfc.getMessages(conversation, fromIndex, before, 20);
         if (lmsgs.length > 0) {
             lmsgs = lmsgs.map(m => this._patchMessage(m, 0));
-            setTimeout(() => callback(lmsgs), 200)
+            setTimeout(() => callback && callback(lmsgs), 200)
         } else {
-            callback([]);
+            callback && callback([]);
             // 只获取本地的消息
             // wfc.loadRemoteConversationMessages(conversation, fromUid, 20,
             //     (msgs) => {

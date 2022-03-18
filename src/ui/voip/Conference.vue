@@ -447,7 +447,7 @@ export default {
                 }
             };
 
-            avenginekit.sessionCallback = sessionCallback;
+            avenginekit.setup(sessionCallback);
         },
 
 
@@ -780,7 +780,6 @@ export default {
     },
 
     mounted() {
-        avenginekit.setup();
         this.setupSessionCallback();
 
         if (isElectron()) {
