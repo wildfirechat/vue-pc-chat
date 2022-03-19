@@ -112,7 +112,6 @@ export default {
             console.log('to load', stringValue(firstMessageId))
             store.getMessages(this.conversationInfo.conversation, firstMessageId, true, '', (msgs) => {
                 if (msgs && msgs.length > 0) {
-                    console.log('xxx', msgs.length)
                     this.messages = msgs.concat(this.messages);
                     $state.loaded();
                 } else {
