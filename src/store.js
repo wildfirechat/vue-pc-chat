@@ -794,6 +794,12 @@ let store = {
             }
             return true;
         }
+
+        if (new Date().getTime() - file.lastModified < 30 * 1000 && file.path.indexOf('/var/folders') === 0){
+            console.log('not support file', file)
+            return false;
+        }
+
         let fileOrLocalPath = null;
         let remotePath = null;
         if (typeof file === 'string') {
