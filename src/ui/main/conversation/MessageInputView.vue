@@ -582,6 +582,7 @@ export default {
                 .replace(/&nbsp;/g, ' ')
                 .replace(/<img class="emoji" draggable="false" alt="/g, '')
                 .replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')
+                .replace(/<img src="local-resource:.*">/g, '')
                 .trimStart()
                 .replace(/\s+$/g, ' ')
             ;
