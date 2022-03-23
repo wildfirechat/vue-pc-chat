@@ -1052,6 +1052,10 @@ app.on('activate', e => {
 });
 
 function disconnectAndQuit() {
+    global.sharedObj.proto.setConnectionStatusListener(()=>{
+        // 仅仅是为了让渲染进程不收到 ConnectionStatusLogout
+        // do nothing
+    });
     global.sharedObj.proto.disconnect(0);
     setTimeout(()=> {
         app.quit();
