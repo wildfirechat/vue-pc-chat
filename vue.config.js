@@ -55,6 +55,7 @@ module.exports = {
             // Note that it is ignored when --debug flag is used with "electron:serve", as you must launch Electron yourself
             // Command line args (excluding --debug, --dashboard, and --headless) are passed to Electron as well
             // mainProcessArgs: ['--arg-name', 'arg-value']
+            mainProcessArgs: ['--disable-background-timer-throttling', ''],
             // outputDir: 'release',
             builderOptions: {
               // 产品名称
