@@ -164,6 +164,7 @@ export default {
             if (isElectron()) {
                 let args = ipcRenderer.sendSync('file-paste');
                 if (args.hasImage) {
+                    document.execCommand('insertText', false, ' ');
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
                 } else if (args.hasFile) {
                     args.files.forEach(file => {
