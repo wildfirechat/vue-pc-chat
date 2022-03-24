@@ -281,7 +281,7 @@ export default {
     width: 250px;
     height: 250px;
     border-radius: 3px;
-    object-fit: contain;
+    object-fit: cover;
 }
 
 .qr-container .loading {

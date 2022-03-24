@@ -461,6 +461,16 @@ export default {
             //   showMessage('Send file not allowed to exceed 100M.');
             //   return false;
             // }
+            if (isElectron()) {
+                if (new Date().getTime() - file.lastModified < 30 * 1000 && file.path.indexOf('/var/folders') === 0) {
+                    console.log('not support file', file)
+                    this.$notify({
+                        text: ' 不支持的文件类型',
+                        type: 'error'
+                    });
+                    return;
+                }
+            }
             this.$eventBus.$emit('uploadFile', file)
             store.sendFile(this.conversationInfo.conversation, file);
         },
