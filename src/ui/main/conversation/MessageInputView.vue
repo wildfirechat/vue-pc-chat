@@ -268,7 +268,8 @@ export default {
                     let src = img.src;
                     let file;
                     if (isElectron()) {
-                        file = src.substring(17, src.length);
+                        // 'local-resource://' + 绝对路径
+                        file = decodeURI(src.substring(17, src.length));
                     } else {
                         file = fileFromDataUri(src, new Date().getTime() + '.png');
                     }
