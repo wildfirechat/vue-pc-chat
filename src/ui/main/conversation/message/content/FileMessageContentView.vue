@@ -7,6 +7,9 @@
             <p class="file-name">{{ this.message.messageContent.name }}</p>
             <p class="file-size single-line">{{ size }}</p>
         </div>
+        <div v-if="message.direction === 1 && downloadStats " style="height:5px; background: lightgrey; position: absolute; left: 0; bottom: 0"
+             v-bind:style="{width: downloadStats.receivedBytes / downloadStats.totalBytes * 100 + '%'}">
+        </div>
     </div>
 </template>
 
@@ -74,6 +77,11 @@ export default {
             let icon = helper.getFiletypeIcon(fileName.substring(fileName.lastIndexOf('.') + 1))
             return require("@/assets/images/filetypes/" + icon);
         },
+
+        downloadStats() {
+            let dm = store.getDownloadingMessageStatus(this.message.messageId);
+            return dm;
+        }
     }
 }
 </script>

@@ -69,7 +69,7 @@ let store = {
             enableMessageMultiSelection: false,
             quotedMessage: null,
 
-            downloadingMessageIds: [],
+            downloadingMessages: [],
 
             currentVoiceMessage: null,
         },
@@ -360,7 +360,7 @@ let store = {
                 let localPath = args.filePath;
                 console.log('file-downloaded', args)
 
-                conversationState.downloadingMessageIds = conversationState.downloadingMessageIds.filter(v => v !== messageId);
+                conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => v.messageId !== messageId);
                 let msg = wfc.getMessageById(messageId);
                 if (msg) {
                     msg.messageContent.localPath = localPath;
@@ -376,7 +376,7 @@ let store = {
 
             ipcRenderer.on('file-download-failed', (event, args) => {
                 let messageId = args.messageId;
-                conversationState.downloadingMessageIds = conversationState.downloadingMessageIds.filter(v => v !== messageId);
+                conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => v.messageId !== messageId);
                 // TODO 其他下载失败处理
             });
 
@@ -384,8 +384,12 @@ let store = {
                 let messageId = args.messageId;
                 let receivedBytes = args.receivedBytes;
                 let totalBytes = args.totalBytes;
-                console.log('file download progress', messageId, receivedBytes, totalBytes);
-                // do nothing now
+                let dm = conversationState.downloadingMessages.find(dm => dm.messageId === messageId);
+                if (dm){
+                    dm.receivedBytes = receivedBytes;
+                    dm.totalBytes = totalBytes;
+                }
+                // console.log('file download progress', messageId, receivedBytes, totalBytes);
             });
 
             localStorageEmitter.on('wf-ipc-to-main', (events, args) => {
@@ -1096,7 +1100,11 @@ let store = {
     },
 
     addDownloadingMessage(messageId) {
-        conversationState.downloadingMessageIds.push(messageId);
+        conversationState.downloadingMessages.push({
+            messageId: messageId,
+            receivedBytes:0,
+            totalBytes:Number.MAX_SAFE_INTEGER,
+        });
         console.log('add downloading')
     },
 
@@ -1105,7 +1113,11 @@ let store = {
         if (!isElectron()) {
             return false;
         }
-        return conversationState.downloadingMessageIds.indexOf(messageId) >= 0
+        return conversationState.downloadingMessages.findIndex(dm => dm.messageId === messageId) >= 0;
+    },
+
+    getDownloadingMessageStatus(messageId){
+        return conversationState.downloadingMessages.find(dm => dm.messageId === messageId);
     },
 
     // contact actions

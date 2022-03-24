@@ -481,7 +481,7 @@ const downloadHandler = (event, item, webContents) => {
                 if (item.isPaused()) {
                     console.log('Download is paused')
                 } else {
-                    console.log(`Received bytes: ${fileName} ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
+                    // console.log(`Received bytes: ${fileName} ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
                     let downloadFile = downloadFileMap.get(item.getURL());
                     let messageId = downloadFile.messageId
                     webContents.send('file-download-progress', {
