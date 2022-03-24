@@ -1137,7 +1137,7 @@ let store = {
     _patchCurrentConversationOnlineStatus() {
         let convInfo = conversationState.currentConversationInfo;
         if (convInfo && convInfo.conversation.type === ConversationType.Single) {
-            // 在讲 object 和 ui 绑定之前，想 object 中新增的属性是 reactive 的，但绑定之后，才新增的属性，不是 reactive 的，
+            // 在 将 object 和 ui 绑定之前， 向 object 中新增的属性是 reactive 的，但绑定之后，才新增的属性，不是 reactive 的，
             // 故需要通过下面这种方法，让其成为 reactive 的属性
             // conversationState.currentConversationInfo.conversation._targetOnlineStateDesc = userOnlineStatus.desc();
             Vue.set(conversationState.currentConversationInfo.conversation, '_targetOnlineStateDesc', this.getUserOnlineState(convInfo.conversation.target))
