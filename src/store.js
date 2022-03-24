@@ -72,6 +72,26 @@ let store = {
             downloadingMessages: [],
 
             currentVoiceMessage: null,
+
+            _reset() {
+                this.currentConversationInfo = null;
+                this.conversationInfoList = []
+                this.currentConversationMessageList = [];
+                this.currentConversationOldestMessageId = 0;
+                this.currentConversationOldestMessageUid = 0;
+                this.currentConversationDeliveries = null;
+                this.currentConversationRead = null;
+                this.isMessageReceiptEnable = false;
+                this.inputtingUser = null;
+                this.inputClearHandler = null;
+                this.shouldAutoScrollToBottom = true;
+                this.previewMediaItems = [];
+                this.previewMediaIndex = null;
+                this.enableMessageMultiSelection = false;
+                this.quotedMessage = null;
+                this.downloadingMessages = [];
+                this.currentVoiceMessage = null;
+            }
         },
 
         contact: {
@@ -90,6 +110,23 @@ let store = {
             favContactList: [],
 
             selfUserInfo: null,
+            _reset() {
+                this.currentFriendRequest = null;
+                this.currentGroup = null;
+                this.currentFriend = null;
+
+                this.expandFriendRequestList = false;
+                this.expandFriendList = true;
+                this.expandGroup = false;
+
+                this.unreadFriendRequestCount = 0;
+                this.friendList = [];
+                this.friendRequestList = [];
+                this.favGroupList = [];
+                this.favContactList = [];
+
+                this.selfUserInfo = null;
+            }
         },
 
         search: {
@@ -101,12 +138,29 @@ let store = {
             conversationSearchResult: [],
             messageSearchResult: [],
 
+            _reset() {
+                this.query = null;
+                this.show = false;
+                this.userSearchResult = [];
+                this.contactSearchResult = [];
+                this.groupSearchResult = [];
+                this.conversationSearchResult = [];
+                this.messageSearchResult = [];
+
+            }
         },
 
         pick: {
             users: [],
             conversations: [],
             messages: [],
+
+            _reset() {
+                this.users = [];
+                this.conversations = [];
+                this.messages = [];
+
+            }
         },
 
         misc: {
@@ -125,6 +179,24 @@ let store = {
             wfc: wfc,
             config: Config,
             userOnlineStateMap: new Map(),
+
+            _reset() {
+                this.connectionStatus = ConnectionStatus.ConnectionStatusUnconnected;
+                this.isPageHidden = false;
+                this.enableNotification = true;
+                this.enableMinimize = getItem('minimizable') === '1';
+                this.enableNotificationMessageDetail = true;
+                this.enableCloseWindowToExit = false;
+                this.enableAutoLogin = false;
+                this.isElectron = isElectron();
+                this.isElectronWindowsOrLinux = process && (process.platform === 'win32' || process.platform === 'linux');
+                this.isMainWindow = false;
+                this.linuxUpdateTitleInterval = 0;
+                this.uploadBigFiles = [];
+                this.wfc = wfc;
+                this.config = Config;
+                this.userOnlineStateMap = new Map();
+            }
         },
     },
 
@@ -137,6 +209,8 @@ let store = {
                 this._loadDefaultData();
 
                 this.updateTray();
+            } else if (status === ConnectionStatus.ConnectionStatusLogout) {
+                _reset();
             }
         });
 
@@ -385,7 +459,7 @@ let store = {
                 let receivedBytes = args.receivedBytes;
                 let totalBytes = args.totalBytes;
                 let dm = conversationState.downloadingMessages.find(dm => dm.messageId === messageId);
-                if (dm){
+                if (dm) {
                     dm.receivedBytes = receivedBytes;
                     dm.totalBytes = totalBytes;
                 }
@@ -799,7 +873,7 @@ let store = {
             return true;
         }
 
-        if (new Date().getTime() - file.lastModified < 30 * 1000 && file.path.indexOf('/var/folders') === 0){
+        if (new Date().getTime() - file.lastModified < 30 * 1000 && file.path.indexOf('/var/folders') === 0) {
             console.log('not support file', file)
             return false;
         }
@@ -1102,8 +1176,8 @@ let store = {
     addDownloadingMessage(messageId) {
         conversationState.downloadingMessages.push({
             messageId: messageId,
-            receivedBytes:0,
-            totalBytes:Number.MAX_SAFE_INTEGER,
+            receivedBytes: 0,
+            totalBytes: Number.MAX_SAFE_INTEGER,
         });
         console.log('add downloading')
     },
@@ -1116,7 +1190,7 @@ let store = {
         return conversationState.downloadingMessages.findIndex(dm => dm.messageId === messageId) >= 0;
     },
 
-    getDownloadingMessageStatus(messageId){
+    getDownloadingMessageStatus(messageId) {
         return conversationState.downloadingMessages.find(dm => dm.messageId === messageId);
     },
 
@@ -1684,6 +1758,14 @@ let contactState = store.state.contact;
 let searchState = store.state.search;
 let pickState = store.state.pick;
 let miscState = store.state.misc;
+
+function _reset() {
+    conversationState._reset();
+    contactState._reset();
+    searchState._reset();
+    pickState._reset();
+    miscState._reset();
+}
 
 window.__store = store;
 export default store
