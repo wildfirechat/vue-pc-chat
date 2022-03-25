@@ -33,6 +33,7 @@ export class WfcManager {
     init(args = []) {
         impl.init(args);
         avenginekit.setup(self);
+        //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
     }
 
     /**
@@ -69,6 +70,19 @@ export class WfcManager {
      */
     connect(userId, token) {
         impl.connect(userId, token);
+    }
+
+    /**
+     * 设置代理，只支持socks5代理
+     *
+     * @param {String} host       代理host，host和ip必须至少有一个。
+     * @param {String} ip         代理IP，host和ip必须至少有一个。
+     * @param {number} port       代理端口
+     * @param {String} username   username
+     * @param {String} password   password
+     */
+    setProxyInfo(host, ip, port, username, password) {
+        impl.setProxyInfo(host, ip, port, username, password);
     }
 
     /**
