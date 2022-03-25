@@ -76,6 +76,15 @@
                 <i class="icon-ion-home"/>
             </a>
 
+            <a
+                v-if="!sharedMiscState.isElectron"
+                class="button"
+                href="javascript:"
+                @click="openPcChat"
+            >
+                打开野火PC端
+                <i class="icon-ion-android-desktop"/>
+            </a>
         </footer>
     </div>
 </template>
@@ -93,6 +102,7 @@ export default {
     data() {
         return {
             sharedMiscState: store.state.misc,
+            openPcChatTimeoutHandler: 0,
             langs: [{lang: 'zh-CN', name: '简体中文'}, {lang: 'zh-TW', name: '繁體中文'}, {lang: 'en', name: 'English'}],
         }
     },
@@ -125,7 +135,34 @@ export default {
         setLang(lang) {
             setItem('lang', lang.lang)
             // this.$router.go();
+        },
+
+        openPcChat() {
+            // pc 端，deeplink 的 scheme 是 wfc://
+            // 打开和 小火的会话
+            let url = 'wfc://conversation?target=FireRobot&line=0&type=0';
+            // 未安装 pc  版时，跳转到 pc 版的下载链接
+            let fallback = 'https://github.com/wildfirechat/vue-pc-chat';
+            window.location = url;
+            this.openPcChatTimeoutHandler = setTimeout(() => {
+                window.open(fallback, '_blank');
+            }, 1000)
+        },
+
+        blurListener() {
+            if (this.openPcChatTimeoutHandler) {
+                clearTimeout(this.openPcChatTimeoutHandler);
+                this.openPcChatTimeoutHandler = 0;
         }
+        }
+
+    },
+
+    mounted() {
+        window.addEventListener('blur', this.blurListener)
+    },
+    beforeDestroy() {
+        window.removeEventListener('blur', this.blurListener)
     },
     computed: {
         currentLang() {

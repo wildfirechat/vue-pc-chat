@@ -466,7 +466,7 @@ export default {
                     console.log('not support file', file)
                     this.$notify({
                         text: ' 不支持的文件类型',
-                        type: 'error'
+                        type: 'warn'
                     });
                     return;
                 }
