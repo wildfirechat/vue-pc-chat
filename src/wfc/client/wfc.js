@@ -1570,7 +1570,7 @@ export class WfcManager {
     /**
      * 更新消息状态
      * @param {number} messageId 消息id
-     * @param {MessageStatus} 消息状态，可选值参考{@link MessageStatus}
+     * @param {MessageStatus} status 消息状态，可选值参考{@link MessageStatus}
      */
     async updateMessageStatus(messageId, status) {
         impl.updateMessageStatus(messageId, status);
