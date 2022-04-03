@@ -7,7 +7,7 @@
             <header>
                 <div class="title-container">
                     <div>
-                    	<h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
+                        <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
                         <p class="single-line user-online-status">{{ targetUserOnlineStateDesc }}</p>
                     </div>
                     <a href="#"><i class="icon-ion-ios-settings-strong"
@@ -295,7 +295,7 @@ export default {
             return message && message.messageContent.type === MessageContentType.RecallMessage_Notification;
         },
 
-        reedit(message){
+        reedit(message) {
             this.$refs.messageInputView.insertText(message.messageContent.originalSearchableContent);
         },
 
@@ -470,7 +470,18 @@ export default {
         },
 
         delMessage(message) {
-            wfc.deleteMessage(message.messageId);
+            this.$alert({
+                title: ' 删除消息',
+                content: '确定删除消息？',
+                confirmText: '本地删除',
+                cancelText: '远程删除',
+                cancelCallback: () => {
+                    wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
+                },
+                confirmCallback: () => {
+                    wfc.deleteMessage(message.messageId);
+                }
+            })
         },
 
         forward(message) {
@@ -650,7 +661,7 @@ export default {
             })
         },
         mentionMessageSenderTitle(message) {
-            if (!message){
+            if (!message) {
                 return ''
             }
             let displayName = wfc.getGroupMemberDisplayName(message.conversation.target, message.from);
