@@ -1403,7 +1403,7 @@ let store = {
         if (!keyword) {
             return;
         }
-        wfc.searchFiles(keyword, null, '', beforeMessageUid, 20,
+        wfc.searchFiles(keyword, null, '', beforeMessageUid, 0, 20,
             (files) => {
                 this._patchFileRecords(files);
                 successCB && successCB(files);
@@ -1625,14 +1625,14 @@ let store = {
         if (!successCB) {
             return;
         }
-        wfc.getMyFileRecords(beforeUid, count, fileRecords => {
+        wfc.getMyFileRecords(beforeUid, 0, count, fileRecords => {
             this._patchFileRecords(fileRecords)
             successCB(fileRecords);
         }, failCB)
     },
 
     getConversationFileRecords(conversation, fromUser, beforeMessageUid, count, successCB, failCB) {
-        wfc.getConversationFileRecords(conversation, fromUser, beforeMessageUid, count, fileRecords => {
+        wfc.getConversationFileRecords(conversation, fromUser, beforeMessageUid, 0, count, fileRecords => {
             this._patchFileRecords(fileRecords)
             successCB(fileRecords);
         }, failCB);
