@@ -642,7 +642,7 @@ export default {
             }
         },
 
-        onGroupMembersUpdate(groupId) {
+        onGroupMembersUpdate(groupId, groupMembers) {
             console.log('messageInput onGroupMembersUpdate', groupId)
             if (this.conversationInfo
                 && this.conversationInfo.conversation.type === ConversationType.Group
