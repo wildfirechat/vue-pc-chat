@@ -25,7 +25,6 @@ export default {
         textContent() {
             let voip = this.message.messageContent;
             let desc = this.$t('voip.desc');
-            console.log('call sar')
             if (voip.endTime > 0 && voip.connectTime > 0) {
                 let duration = parseInt((voip.endTime - voip.connectTime) / 1000);
                 desc = `通话时长：${duration}''`

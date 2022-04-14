@@ -209,7 +209,7 @@ export default {
         },
 
         send(e) {
-            if (this.tribute && this.tribute.isActive || this.tributeReplaced) {
+            if (this.tribute && this.tribute.isActive) {
                 this.tributeReplaced = false;
                 return;
             }
@@ -240,7 +240,10 @@ export default {
             if (e.ctrlKey) {
                 // e.preventDefault();
                 // this.refs.input.innerHTML = this.refs.input.innerHTML+ "<div><br></div>";
-                document.execCommand('InsertHTML', true, '<br>');
+                let nextChar = window.getSelection().focusNode.textContent.charAt(window.getSelection().focusOffset)
+                if (!nextChar) {
+                    document.execCommand('InsertHTML', true, '<br>');
+                }
                 if (window.getSelection) {
                     let selection = window.getSelection(),
                         range = selection.getRangeAt(0),
