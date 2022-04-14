@@ -117,6 +117,7 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
     1. 将```src/assets/twemoji```目录上传到一个内网能访问的服务器，比如部署```app server```的服务器
     2. 确保通过```http(s)://base_twemoji_url/72x72/1f1e6.png```能访问到对应表情，此处```1f1e6.png```蓝底白字大写字母A
     3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/```替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
+    4. 修改```MessageInputView.vue```， 根据新部署的服务器地址，修改正则表达式```replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')```
 
 13. 想自己部署表情图片
     请常见问题12

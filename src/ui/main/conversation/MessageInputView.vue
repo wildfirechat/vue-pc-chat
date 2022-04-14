@@ -289,6 +289,8 @@ export default {
 
             // TODO 可以在此对文本消息进行处理，比如过滤掉 script，iframe 等标签
 
+            //  自行部署表情时，需要手动替换下面的正则
+            // TODO 在正则中使用变量，避免手动替换
             message = message.replace(/<img class="emoji" draggable="false" alt="/g, '')
                 .replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')
 
