@@ -259,7 +259,7 @@ export class AvEngineKitProxy {
                         return;
                     }
                     this.conversation = null;
-                    this.queueEvents = [];
+                    // this.queueEvents = [];
                     this.callId = null;
                     this.inviteMessageUid = null;
                     this.participants = [];
@@ -611,6 +611,7 @@ export class AvEngineKitProxy {
             this.queueEvents = [];
             this.callId = null;
             this.participants = [];
+            this.queueEvents = [];
             this.callWin = null;
             this.voipEventRemoveAllListeners('voip-message', 'conference-request', 'update-call-start-message', 'start-screen-share');
         }, 2000);
