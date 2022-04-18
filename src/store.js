@@ -33,6 +33,7 @@ import {getConversationPortrait} from "./ui/util/imageUtil";
 import DismissGroupNotification from "./wfc/messages/notification/dismissGroupNotification";
 import KickoffGroupMemberNotification from "./wfc/messages/notification/kickoffGroupMemberNotification";
 import QuitGroupNotification from "./wfc/messages/notification/quitGroupNotification";
+import avenginekitproxy from "./wfc/av/engine/avenginekitproxy";
 
 /**
  * 一些说明
@@ -753,7 +754,7 @@ let store = {
         let msg;
         for (let i = 0; i < mediaMsgs.length; i++) {
             msg = mediaMsgs[i];
-            if (eq(msg.messageUid,  focusMessageUid)) {
+            if (eq(msg.messageUid, focusMessageUid)) {
                 conversationState.previewMediaIndex = i;
             }
             conversationState.previewMediaItems.push({
@@ -1183,6 +1184,11 @@ let store = {
 
         if (info.unreadCount) {
             info._unread = info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll;
+        }
+        if (info.conversation.equal(avenginekitproxy.conversation)){
+            info._isVoipOngoing = true;
+        }else {
+            info._isVoipOngoing = false;
         }
 
         return info;
@@ -1765,6 +1771,16 @@ let store = {
                 this.updateLinuxTitle.showTitle = !this.updateLinuxTitle.showTitle;
             }, 1000)
         }
+    },
+
+    updateVoipStatus(conversation, isOngoing) {
+        conversationState.conversationInfoList.forEach(ci => {
+            if (ci.conversation.equal(conversation)) {
+                ci._isVoipOngoing = isOngoing;
+            } else {
+                ci._isVoipOngoing = false;
+            }
+        })
     }
 }
 
