@@ -7,7 +7,7 @@ function validate() {
     let regex = /\s+static\s+APP_SERVER\s*=.*/gm
     const data = fs.readFileSync('./src/config.js', 'utf8')
     let results = data.match(regex);
-    console.log(results)
+    // console.log(results)
     if(results[0].indexOf('wildfirechat') > -1){
         return;
     }
