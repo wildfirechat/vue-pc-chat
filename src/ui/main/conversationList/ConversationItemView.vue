@@ -14,6 +14,7 @@
             </div>
             <div class="content-container">
                 <div class="title-time-container">
+                    <i v-if="conversationInfo.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 5px"></i>
                     <h2 class="title single-line">{{ conversationTitle }}</h2>
                     <p class="time">{{ conversationInfo._timeStr }}</p>
                 </div>
@@ -238,6 +239,7 @@ export default {
 .content-container .title-time-container {
     display: flex;
     width: 100%;
+    align-content: center;
     justify-content: space-between;
 }
 

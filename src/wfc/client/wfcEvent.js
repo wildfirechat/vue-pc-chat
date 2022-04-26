@@ -47,4 +47,11 @@ export default class EventType {
     static ConferenceEvent = 'conferenceEvent';
     // function (UserOnlineState[]) {}
     static UserOnlineEvent = 'onlineEvent';
+
+    // function (targetId, playedMessageId) {}
+    static SecretChatStartBurn = 'secretChatStartBurn';
+    // function ([messageId]) {}
+    static SecretChatMessageBurned = 'secretChatMessageBurned';
+    // function (targetId) {}
+    static SecretChatStateChange = 'secretChatStateChange';
 }

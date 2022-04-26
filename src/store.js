@@ -378,6 +378,22 @@ let store = {
             }
         });
 
+        wfc.eventEmitter.on(EventType.SecretChatMessageBurned, (target, playedMessageId) => {
+            // todo 倒计时等
+        });
+
+        wfc.eventEmitter.on(EventType.SecretChatMessageBurned, (messageIds) => {
+            this._loadDefaultConversationList();
+            if (conversationState.currentConversationInfo) {
+                if (conversationState.currentConversationMessageList) {
+                    conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.filter(msg => messageIds.indexOf(msg.messageId) < 0)
+                }
+            }
+        });
+
+        wfc.eventEmitter.on(EventType.SecretChatStateChange, (targetId) => {
+            this._loadDefaultConversationList();
+        });
 
         wfc.eventEmitter.on(EventType.SendMessage, (message) => {
             this._loadDefaultConversationList();
@@ -532,6 +548,8 @@ let store = {
 
     setCurrentConversation(conversation) {
         if (!conversation) {
+            this._loadDefaultConversationList();
+            this.setCurrentConversationInfo(null)
             return;
         }
         if (conversationState.currentConversationInfo && conversation.equal(conversationState.currentConversationInfo.conversation)) {
@@ -1021,7 +1039,7 @@ let store = {
     },
 
     _onloadConversationMessages(conversation, messages) {
-        if (!messages || messages.length === 0){
+        if (!messages || messages.length === 0) {
             return false;
         }
         let loadNewMsg = false;
@@ -1133,9 +1151,9 @@ let store = {
         } else {
             m._from._displayName = wfc.getUserDisplayNameEx(m._from);
         }
-        if (m.conversation.type === ConversationType.SecretChat){
-            if (m.messageContent instanceof MediaMessageContent && m.messageContent.remotePath && m.messageContent.remotePath.startsWith("http")){
-                m.messageContent.remotePath = `http://localhost:8888?target=${m.conversation.target}&url=${m.messageContent.remotePath}`
+        if (m.conversation.type === ConversationType.SecretChat) {
+            if (m.messageContent instanceof MediaMessageContent && m.messageContent.remotePath && m.messageContent.remotePath.startsWith("http")) {
+                m.messageContent.remotePath = `http://localhost:${Config.SECRET_CHAT_MEDIA_DECODE_SERVER_PORT}?target=${m.conversation.target}&url=${m.messageContent.remotePath}`
             }
         }
 
@@ -1742,7 +1760,7 @@ let store = {
             }
 
             Push.create(tip, {
-                body: miscState.enableNotificationMessageDetail ? content.digest() : '',
+                body: miscState.enableNotificationMessageDetail ? content.digest(msg) : '',
                 // TODO 下面好像不生效，更新成图片链接
                 icon: icon,
                 timeout: 4000,

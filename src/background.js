@@ -852,7 +852,7 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('start-secret-server', (event, args) => {
-        startSecretDecodeServer();
+        startSecretDecodeServer(args.port);
     })
 
     powerMonitor.on('resume', () => {
@@ -1103,7 +1103,7 @@ function toggleTrayIcon(icon) {
     }
 }
 
-function startSecretDecodeServer() {
+function startSecretDecodeServer(port) {
 
     let http = require('http');
     let url = require('url')
@@ -1113,6 +1113,12 @@ function startSecretDecodeServer() {
         let urlWithStringQuery = url.parse(req.url, true);
         let target = urlWithStringQuery.query.target;
         let mediaUrl = urlWithStringQuery.query.url;
+
+        if (!target || !mediaUrl){
+            orgRes.statusCode = 403;
+            orgRes.end('invalid request');
+            return;
+        }
 
         let protocol = mediaUrl.startsWith("https") ? https : http
 
@@ -1142,7 +1148,7 @@ function startSecretDecodeServer() {
 
         });
     });
-    server.listen(8888, 'localhost', function () {
+    server.listen(port, 'localhost', function () {
         // do nothing
     });
 }
