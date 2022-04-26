@@ -364,7 +364,7 @@ let trayMenu = [
             mainWindow = null;
             global.sharedObj.proto.disconnect(0);
             console.log('--------------- disconnect', global.sharedObj.proto);
-            setTimeout(()=> {
+            setTimeout(() => {
                 app.exit(0);
             }, 1000);
         }
@@ -659,7 +659,7 @@ const createMainWindow = async () => {
     ipcMain.on('file-paste', (event) => {
         let args = {hasImage: false};
 
-        if (process.platform === 'linux'){
+        if (process.platform === 'linux') {
             event.returnValue = args;
             return;
         }
@@ -851,6 +851,10 @@ const createMainWindow = async () => {
         closeWindowToExit = enable;
     });
 
+    ipcMain.on('start-secret-server', (event, args) => {
+        startSecretDecodeServer();
+    })
+
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
@@ -1026,6 +1030,8 @@ app.on('ready', () => {
         } catch (e) {
             // do nothing
         }
+
+        startSecretDecodeServer();
     }
 );
 
@@ -1052,12 +1058,12 @@ app.on('activate', e => {
 });
 
 function disconnectAndQuit() {
-    global.sharedObj.proto.setConnectionStatusListener(()=>{
+    global.sharedObj.proto.setConnectionStatusListener(() => {
         // 仅仅是为了让渲染进程不收到 ConnectionStatusLogout
         // do nothing
     });
     global.sharedObj.proto.disconnect(0);
-    setTimeout(()=> {
+    setTimeout(() => {
         app.quit();
     }, 1000)
 }
@@ -1092,8 +1098,70 @@ function execBlink(flag, _interval) {
 }
 
 function toggleTrayIcon(icon) {
-    if (tray){
+    if (tray) {
         tray.setImage(icon);
     }
+}
+
+function startSecretDecodeServer() {
+
+    let http = require('http');
+    let url = require('url')
+    let https = require('https');
+    let server = http.createServer((req, orgRes) => {
+        console.log('req', req.url);
+        let urlWithStringQuery = url.parse(req.url, true);
+        let target = urlWithStringQuery.query.target;
+        let mediaUrl = urlWithStringQuery.query.url;
+
+        let protocol = mediaUrl.startsWith("https") ? https : http
+
+        protocol.get(mediaUrl, res => {
+            let data = [];
+            res.on('data', function (chunk) {
+                data.push(chunk);
+            }).on('end', function () {
+                //at this point data is an array of Buffers
+                //so Buffer.concat() can make us a new Buffer
+                //of all of them together
+                let buffer = Buffer.concat(data);
+                let ab = toArrayBuffer(buffer);
+                let decodedAb = proto.decodeSecretChatMediaData(target, ab);
+                let decodedBuff = toBuffer(decodedAb);
+
+                let rawHeaders = res.rawHeaders;
+                for (let i = 0; i < rawHeaders.length;) {
+                    if (rawHeaders[i] !== 'Content-Length') {
+                        orgRes.setHeader(rawHeaders[i], rawHeaders[i + 1])
+                    }
+                    i += 2;
+                }
+                orgRes.setHeader('Content-Length', decodedBuff.byteLength)
+                orgRes.end(decodedBuff)
+            });
+
+        });
+    });
+    server.listen(8888, 'localhost', function () {
+        // do nothing
+    });
+}
+
+function toArrayBuffer(buf) {
+    const ab = new ArrayBuffer(buf.length);
+    const view = new Uint8Array(ab);
+    for (let i = 0; i < buf.length; ++i) {
+        view[i] = buf[i];
+    }
+    return ab;
+}
+
+function toBuffer(ab) {
+    const buf = Buffer.alloc(ab.byteLength);
+    const view = new Uint8Array(ab);
+    for (let i = 0; i < buf.length; ++i) {
+        buf[i] = view[i];
+    }
+    return buf;
 }
 

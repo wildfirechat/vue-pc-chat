@@ -34,6 +34,7 @@ import DismissGroupNotification from "./wfc/messages/notification/dismissGroupNo
 import KickoffGroupMemberNotification from "./wfc/messages/notification/kickoffGroupMemberNotification";
 import QuitGroupNotification from "./wfc/messages/notification/quitGroupNotification";
 import avenginekitproxy from "./wfc/av/engine/avenginekitproxy";
+import MediaMessageContent from "./wfc/messages/mediaMessageContent";
 
 /**
  * 一些说明
@@ -512,7 +513,7 @@ let store = {
     },
 
     _loadDefaultConversationList() {
-        this._loadConversationList([0, 1, 3], [0])
+        this._loadConversationList([0, 1, 3, 5], [0])
     },
 
     _loadConversationList(conversationType = [0, 1, 3, 5], lines = [0]) {
@@ -1020,6 +1021,9 @@ let store = {
     },
 
     _onloadConversationMessages(conversation, messages) {
+        if (!messages || messages.length === 0){
+            return false;
+        }
         let loadNewMsg = false;
         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
             let lastTimestamp = 0;
@@ -1129,6 +1133,12 @@ let store = {
         } else {
             m._from._displayName = wfc.getUserDisplayNameEx(m._from);
         }
+        if (m.conversation.type === ConversationType.SecretChat){
+            if (m.messageContent instanceof MediaMessageContent && m.messageContent.remotePath && m.messageContent.remotePath.startsWith("http")){
+                m.messageContent.remotePath = `http://localhost:8888?target=${m.conversation.target}&url=${m.messageContent.remotePath}`
+            }
+        }
+
         if (numberValue(lastTimestamp) > 0 && numberValue(m.timestamp) - numberValue(lastTimestamp) > 5 * 60 * 1000) {
             m._showTime = true;
         }
@@ -1166,6 +1176,16 @@ let store = {
         } else if (info.conversation.type === ConversationType.Channel) {
             info.conversation._target = wfc.getChannelInfo(info.conversation.target, false);
             info.conversation._target._displayName = info.conversation._target.name;
+        } else if (info.conversation.type === ConversationType.SecretChat) {
+            let secretChatInfo = wfc.getSecretChatInfo(info.conversation.target);
+            if (secretChatInfo) {
+                let userId = secretChatInfo.userId;
+                let userInfo = wfc.getUserInfo(userId, false);
+                info.conversation._target = userInfo;
+                info.conversation._target._displayName = 'sc ' + wfc.getUserDisplayNameEx(userInfo);
+            } else {
+                info.conversation._target = {};
+            }
         }
         if (!info.conversation._target.portrait) {
             getConversationPortrait(info.conversation).then((portrait => {
@@ -1185,9 +1205,9 @@ let store = {
         if (info.unreadCount) {
             info._unread = info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll;
         }
-        if (info.conversation.equal(avenginekitproxy.conversation)){
+        if (info.conversation.equal(avenginekitproxy.conversation)) {
             info._isVoipOngoing = true;
-        }else {
+        } else {
             info._isVoipOngoing = false;
         }
 
@@ -1243,6 +1263,7 @@ let store = {
 
     _patchCurrentConversationOnlineStatus() {
         let convInfo = conversationState.currentConversationInfo;
+        // TODO secretchat
         if (convInfo && convInfo.conversation.type === ConversationType.Single) {
             // 在 将 object 和 ui 绑定之前， 向 object 中新增的属性是 reactive 的，但绑定之后，才新增的属性，不是 reactive 的，
             // 故需要通过下面这种方法，让其成为 reactive 的属性

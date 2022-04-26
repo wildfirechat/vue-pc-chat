@@ -91,7 +91,7 @@ export default {
                 e.dataTransfer.dropEffect = 'copy';
             }
         },
-        imgUrlAlt(e){
+        imgUrlAlt(e) {
             e.target.src = Config.DEFAULT_PORTRAIT_URL;
         }
     },
@@ -100,6 +100,8 @@ export default {
             let info = this.conversationInfo;
             if (info.conversation.type === ConversationType.Single) {
                 return info.conversation._target._displayName;
+            } else if (info.conversation.type === ConversationType.SecretChat) {
+                return 'sc-' + info.conversation._target._displayName;
             } else {
                 return info.conversation._target.name;
             }
@@ -116,7 +118,7 @@ export default {
             return draft.text.trim() !== '' || draft.quotedMessage !== null;
         },
 
-        shouldShowVoipStatus(){
+        shouldShowVoipStatus() {
             return this.conversationInfo._isVoipOngoing;
         },
 
