@@ -1031,7 +1031,6 @@ app.on('ready', () => {
             // do nothing
         }
 
-        startSecretDecodeServer();
     }
 );
 
@@ -1103,18 +1102,23 @@ function toggleTrayIcon(icon) {
     }
 }
 
-function startSecretDecodeServer(port) {
+var secretDecodeServer;
 
+function startSecretDecodeServer(port) {
+    if (secretDecodeServer) {
+        return;
+    }
+    console.log('startSecretDecodeServer', port)
     let http = require('http');
     let url = require('url')
     let https = require('https');
-    let server = http.createServer((req, orgRes) => {
+    secretDecodeServer = http.createServer((req, orgRes) => {
         console.log('req', req.url);
         let urlWithStringQuery = url.parse(req.url, true);
         let target = urlWithStringQuery.query.target;
         let mediaUrl = urlWithStringQuery.query.url;
 
-        if (!target || !mediaUrl){
+        if (!target || !mediaUrl) {
             orgRes.statusCode = 403;
             orgRes.end('invalid request');
             return;
@@ -1137,7 +1141,7 @@ function startSecretDecodeServer(port) {
 
                 let rawHeaders = res.rawHeaders;
                 for (let i = 0; i < rawHeaders.length;) {
-                    if (rawHeaders[i] !== 'Content-Length') {
+                    if (rawHeaders[i] !== 'Content-Length' && rawHeaders[i] !== 'content-Length') {
                         orgRes.setHeader(rawHeaders[i], rawHeaders[i + 1])
                     }
                     i += 2;
@@ -1148,7 +1152,7 @@ function startSecretDecodeServer(port) {
 
         });
     });
-    server.listen(port, 'localhost', function () {
+    secretDecodeServer.listen(port, 'localhost', function () {
         // do nothing
     });
 }
