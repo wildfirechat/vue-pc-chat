@@ -653,6 +653,10 @@ export default {
                 && this.conversationInfo.conversation.type === ConversationType.Group
                 && this.conversationInfo.conversation.target === groupId) {
                 this.initMention(this.conversationInfo.conversation);
+                let groupMember = wfc.getGroupMember(groupId, wfc.getUserId());
+                if (groupMember && groupMember.type === GroupMemberType.Muted){
+                    this.muted = true;
+                }
             }
         }
     },
@@ -738,7 +742,7 @@ export default {
                 if (groupInfo.mute === 1) {
                     return [GroupMemberType.Owner, GroupMemberType.Manager, GroupMemberType.Allowed].indexOf(groupMember.type) < 0;
                 } else {
-                    return groupMember.type === GroupMemberType.Muted;
+                    return groupMember && groupMember.type === GroupMemberType.Muted;
                 }
             }
             return false;
