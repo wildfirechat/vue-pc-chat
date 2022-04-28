@@ -176,7 +176,6 @@ let store = {
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
             isMainWindow: false,
             linuxUpdateTitleInterval: 0,
-            uploadBigFiles: [],
             wfc: wfc,
             config: Config,
             userOnlineStateMap: new Map(),
@@ -193,7 +192,6 @@ let store = {
                 this.isElectronWindowsOrLinux = process && (process.platform === 'win32' || process.platform === 'linux');
                 this.isMainWindow = false;
                 this.linuxUpdateTitleInterval = 0;
-                this.uploadBigFiles = [];
                 this.wfc = wfc;
                 this.config = Config;
                 this.userOnlineStateMap = new Map();
@@ -783,70 +781,6 @@ let store = {
                 autoplay: true,
             });
         }
-    },
-
-    cancelUploadBigFile(remoteUrl) {
-        miscState.uploadBigFiles.forEach(upload => {
-            if (upload.remoteUrl === remoteUrl) {
-                let xhr = upload.xhr;
-                upload.status = 3;
-                upload.xhr = null;
-                xhr && xhr.abort();
-            }
-        })
-    },
-
-    _uploadXMLHttpRequest(fileName, remoteUrl, progressCB, successCB, failCB) {
-        let xhr = new XMLHttpRequest();
-        xhr.upload.onprogress = (e) => {
-            console.log('upload.onprogress', Math.ceil(e.loaded / e.total * 100))
-            let progress = e.loaded;
-            let total = e.total;
-            miscState.uploadBigFiles.forEach(upload => {
-                if (upload.remoteUrl === remoteUrl) {
-                    upload.progress = Math.ceil(progress / total * 100)
-                }
-            })
-            progressCB && progressCB(progress, total);
-        }
-        xhr.onreadystatechange = (e) => {
-            console.log('onr', xhr.readyState, xhr.status, e)
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    miscState.uploadBigFiles.forEach(upload => {
-                        if (upload.remoteUrl === remoteUrl) {
-                            upload.progress = 100;
-                            upload.status = 2;
-                            upload.xhr = null;
-                        }
-                    })
-                    console.log('upload file success', fileName, remoteUrl);
-                    successCB && successCB(fileName, remoteUrl);
-                    return;
-                }
-                console.log('upload file error', xhr.status);
-                miscState.uploadBigFiles.forEach(upload => {
-                    if (upload.remoteUrl === remoteUrl) {
-                        // status:1 上传中，2 上传成功 3 上传失败
-                        upload.status = 3;
-                        upload.xhr = null;
-                    }
-                })
-                failCB && failCB(-1);
-            }
-        }
-        xhr.onerror = e => {
-            miscState.uploadBigFiles.forEach(upload => {
-                if (upload.remoteUrl === remoteUrl) {
-                    // status:1 上传中，2 上传成功 3 上传失败
-                    upload.status = 3;
-                    upload.xhr = null;
-                }
-            })
-            failCB && failCB(e);
-        }
-
-        return xhr;
     },
 
     /**
