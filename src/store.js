@@ -854,11 +854,10 @@ let store = {
         msg.messageContent = messageContent;
         wfc.sendMessage(msg,
             (messageId) => {
-                console.log('sf, p', messageId)
-
+                console.log('sf, pr', messageId)
             },
             (progress, total) => {
-                console.log('sf pp', progress, total)
+                console.log('sf p', Math.ceil(progress / total * 100))
             },
             (messageUid) => {
                 console.log('sf s', messageUid)
