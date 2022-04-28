@@ -398,6 +398,26 @@ let store = {
             conversationState.currentConversationMessageList.push(message);
         });
 
+        wfc.eventEmitter.on(EventType.MessageStatusUpdate, (message) => {
+            console.log('message status update', message)
+            if (!this._isDisplayMessage(message)) {
+                return;
+            }
+
+            if (!conversationState.currentConversationInfo || !message.conversation.equal(conversationState.currentConversationInfo.conversation)) {
+                console.log('not current conv')
+                return;
+            }
+
+            let index = conversationState.currentConversationMessageList.findIndex(m => m.messageId === message.messageId);
+            if (index < 0) {
+                return;
+            }
+            let msg = conversationState.currentConversationMessageList[index];
+
+            Object.assign(msg, message)
+        });
+
         wfc.eventEmitter.on(EventType.MessageReceived, (delivery) => {
             if (conversationState.currentConversationInfo) {
                 conversationState.currentConversationDeliveries = wfc.getConversationDelivery(conversationState.currentConversationInfo.conversation);
@@ -829,53 +849,6 @@ let store = {
         return xhr;
     },
 
-    uploadBigFile(file, mediaType, progressCB, successCB, failCB) {
-        wfc.getUploadMediaUrl(file.name, mediaType, `application/octet-stream`, (uploadUrl, remoteUrl, backUploadUrl, serverType) => {
-            let xhr;
-            if (serverType === 1) {
-                // qiniu
-                let ss = uploadUrl.split('?');
-                let url = ss[0];
-                let token = ss[1];
-                let key = ss[2];
-                xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
-
-                let formData = new FormData();
-                formData.append('key', key)
-                formData.append('token', token)
-                formData.append('file', file)
-                xhr.open('POST', url);
-                xhr.setRequestHeader("content-disposition", `attachment; filename="${encodeURI(file.name)}"`);
-                xhr.send(formData);
-            } else {
-                // 野火专业存储或阿里云
-                xhr = this._uploadXMLHttpRequest(file.name, remoteUrl, progressCB, successCB, failCB);
-                xhr.open('PUT', uploadUrl);
-
-                xhr.setRequestHeader("content-type", `application/octet-stream`);
-                xhr.send(file);
-            }
-
-            miscState.uploadBigFiles.push({
-                remoteUrl: remoteUrl,
-                name: file.name,
-                size: file.size,
-                _sizeStr: helper.humanSize(file.size),
-                _fileIconName: helper.getFiletypeIcon(file.name.substring(file.name.lastIndexOf('.'))),
-                status: 1,
-                progress: 0,
-                xhr: xhr,
-            });
-        }, (e) => {
-            console.log('getUploadMediaUrl e', e)
-        })
-    },
-
-    sendBigFile(conversation, file) {
-        console.log('upload and then send big file')
-        this.uploadBigFile(file, 4)
-    },
-
     /**
      *
      * @param conversation
@@ -885,12 +858,10 @@ let store = {
     async sendFile(conversation, file) {
         console.log('send file', file)
         if (file.size && file.size > 100 * 1024 * 1024) {
-            if (wfc.isSupportBigFilesUpload()) {
-                this.sendBigFile(conversation, file);
-            } else {
+            if (!wfc.isSupportBigFilesUpload()) {
                 console.log('file too big, and not support upload big file')
+                return true;
             }
-            return true;
         }
 
         let fileOrLocalPath = null;
@@ -953,7 +924,7 @@ let store = {
 
             },
             (progress, total) => {
-                // console.log('sf pp', progress, total)
+                console.log('sf pp', progress, total)
             },
             (messageUid) => {
                 console.log('sf s', messageUid)
@@ -1185,9 +1156,9 @@ let store = {
         if (info.unreadCount) {
             info._unread = info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll;
         }
-        if (info.conversation.equal(avenginekitproxy.conversation)){
+        if (info.conversation.equal(avenginekitproxy.conversation)) {
             info._isVoipOngoing = true;
-        }else {
+        } else {
             info._isVoipOngoing = false;
         }
 

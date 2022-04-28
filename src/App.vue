@@ -46,6 +46,7 @@ import 'vue-cool-lightbox/dist/vue-cool-lightbox.min.css'
 import './twemoji'
 import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
+import wfc from "./wfc/client/wfc";
 
 export default {
     name: 'App',
@@ -107,11 +108,11 @@ export default {
             if (!file) {
                 return;
             }
-            if (file.size > 100 * 1024 * 1024) {
+            if (file.size > 100 * 1024 * 1024 && !wfc.isSupportBigFilesUpload()) {
 
                 this.$notify({
                     title: '大文件提示',
-                    text: file.name + '上传中，请到上传页面查看或发送!',
+                    text: ' 不支持大文件上传',
                     type: 'warn'
                 });
             }
