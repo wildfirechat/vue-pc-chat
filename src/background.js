@@ -28,7 +28,6 @@ import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
 import nodePath from 'path'
 
-
 console.log('start crash report', app.getPath('crashDumps'))
 //crashReporter.start({uploadToServer: false});
 crashReporter.start({
@@ -44,6 +43,15 @@ crashReporter.start({
     }
 })
 
+function forwardWFCEventToSubWindow(wfcEvent, ...args) {
+    let windows = BrowserWindow.getAllWindows();
+    windows.forEach(w => {
+        if (w.webContents.getURL() === mainWindow.webContents.getURL()){
+            return;
+        }
+        w.webContents.send('wfcEvent', wfcEvent, args);
+    })
+}
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -364,7 +372,7 @@ let trayMenu = [
             mainWindow = null;
             global.sharedObj.proto.disconnect(0);
             console.log('--------------- disconnect', global.sharedObj.proto);
-            setTimeout(()=> {
+            setTimeout(() => {
                 app.exit(0);
             }, 1000);
         }
@@ -659,7 +667,7 @@ const createMainWindow = async () => {
     ipcMain.on('file-paste', (event) => {
         let args = {hasImage: false};
 
-        if (process.platform === 'linux'){
+        if (process.platform === 'linux') {
             event.returnValue = args;
             return;
         }
@@ -850,6 +858,10 @@ const createMainWindow = async () => {
     ipcMain.on('enable-close-window-to-exit', (event, enable) => {
         closeWindowToExit = enable;
     });
+
+    ipcMain.on('wfcEvent', (event, wfcEvent, args) => {
+        forwardWFCEventToSubWindow(wfcEvent, args);
+    })
 
     powerMonitor.on('resume', () => {
         isSuspend = false;
@@ -1052,12 +1064,12 @@ app.on('activate', e => {
 });
 
 function disconnectAndQuit() {
-    global.sharedObj.proto.setConnectionStatusListener(()=>{
+    global.sharedObj.proto.setConnectionStatusListener(() => {
         // 仅仅是为了让渲染进程不收到 ConnectionStatusLogout
         // do nothing
     });
     global.sharedObj.proto.disconnect(0);
-    setTimeout(()=> {
+    setTimeout(() => {
         app.quit();
     }, 1000)
 }
@@ -1092,7 +1104,7 @@ function execBlink(flag, _interval) {
 }
 
 function toggleTrayIcon(icon) {
-    if (tray){
+    if (tray) {
         tray.setImage(icon);
     }
 }
