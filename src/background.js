@@ -28,6 +28,7 @@ import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
 import nodePath from 'path'
 
+
 console.log('start crash report', app.getPath('crashDumps'))
 //crashReporter.start({uploadToServer: false});
 crashReporter.start({
@@ -43,84 +44,6 @@ crashReporter.start({
     }
 })
 
-
-function forwardWFCEventToAllWindow(wfcEvent, ...args) {
-    let windows = BrowserWindow.getAllWindows();
-    windows.forEach(w => {
-        w.webContents.send('wfcEvent', wfcEvent, args);
-    })
-}
-
-function setupProtoListeners() {
-    proto.setConnectionStatusListener((status) => {
-        forwardWFCEventToAllWindow('connectionStatus', status)
-    });
-    proto.setConnectToServerListener((host, ip, port) => {
-        forwardWFCEventToAllWindow('connectToServer', host, ip, port);
-    });
-    //proto.setReceiveMessageListener(self.onReceiveMessage, self.onRecallMessage, self.onDeleteRemoteMessage, self.onUserReceivedMessage, self.onUserReadedMessage);
-    proto.setReceiveMessageListener((messages, hasMore) => {
-        // onReceiveMessage
-        forwardWFCEventToAllWindow('onReceiveMessage', messages, hasMore)
-
-    }, (operatorUid, messageUid) => {
-        // onRecallMessage
-        forwardWFCEventToAllWindow('onRecallMessage', operatorUid, messageUid)
-
-    }, (messageUid) => {
-        // onDeleteRemoteMessage
-        forwardWFCEventToAllWindow('onDeleteRemoteMessage', messageUid)
-
-    }, (receivedMapStr) => {
-        // onUserReceivedMessage
-        forwardWFCEventToAllWindow('onUserReceivedMessage', receivedMapStr)
-
-    }, (readedMapStr) => {
-        // onUserReadedMessage
-        forwardWFCEventToAllWindow('onUserReadedMessage', readedMapStr)
-
-    });
-    //proto.setConferenceEventListener(self.onConferenceEvent);
-    proto.setConferenceEventListener((event)=> {
-        forwardWFCEventToAllWindow('conferenceEvent', event);
-    });
-    // proto.setOnlineEventListener(self.onOnlineEvent);
-    proto.setOnlineEventListener((event) => {
-        forwardWFCEventToAllWindow('onlineEvent', event);
-    });
-    // proto.setUserInfoUpdateListener(self.onUserInfoUpdate);
-    proto.setUserInfoUpdateListener((userIds) => {
-        forwardWFCEventToAllWindow('userInfoUpdate', userIds)
-    });
-
-    // proto.setFriendUpdateListener(self.onFriendListUpdate);
-    proto.setFriendUpdateListener((friendListIds) => {
-        forwardWFCEventToAllWindow('friendUpdate', friendListIds)
-    });
-
-    // proto.setFriendRequestListener(self.onFriendRequestUpdate);
-    proto.setFriendRequestListener((newRequests='[]') => {
-        forwardWFCEventToAllWindow('friendRequestUpdate', newRequests)
-    });
-    // proto.setGroupInfoUpdateListener(self.onGroupInfoUpdate);
-    proto.setGroupInfoUpdateListener((groupListIds) => {
-        forwardWFCEventToAllWindow('groupInfoUpdate', groupListIds)
-    });
-    // proto.setSettingUpdateListener(self.onSettingUpdate);
-    proto.setSettingUpdateListener(() => {
-        forwardWFCEventToAllWindow('settingUpdate')
-    });
-    // proto.setChannelInfoUpdateListener(self.onChannelInfoUpdate);
-    proto.setChannelInfoUpdateListener((channelListIds) => {
-        forwardWFCEventToAllWindow('channelInfoUpdate', channelListIds)
-    });
-    // proto.setGroupMemberUpdateListener(self.onGroupMemberUpdateListener);
-    proto.setGroupMemberUpdateListener((groupId, groupMembersStr) => {
-        forwardWFCEventToAllWindow('groupMemberUpdate', groupId, groupMembersStr)
-    });
-}
-
-setupProtoListeners();
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -441,7 +364,7 @@ let trayMenu = [
             mainWindow = null;
             global.sharedObj.proto.disconnect(0);
             console.log('--------------- disconnect', global.sharedObj.proto);
-            setTimeout(() => {
+            setTimeout(()=> {
                 app.exit(0);
             }, 1000);
         }
@@ -736,7 +659,7 @@ const createMainWindow = async () => {
     ipcMain.on('file-paste', (event) => {
         let args = {hasImage: false};
 
-        if (process.platform === 'linux') {
+        if (process.platform === 'linux'){
             event.returnValue = args;
             return;
         }
@@ -1129,12 +1052,12 @@ app.on('activate', e => {
 });
 
 function disconnectAndQuit() {
-    global.sharedObj.proto.setConnectionStatusListener(() => {
+    global.sharedObj.proto.setConnectionStatusListener(()=>{
         // 仅仅是为了让渲染进程不收到 ConnectionStatusLogout
         // do nothing
     });
     global.sharedObj.proto.disconnect(0);
-    setTimeout(() => {
+    setTimeout(()=> {
         app.quit();
     }, 1000)
 }
@@ -1169,7 +1092,7 @@ function execBlink(flag, _interval) {
 }
 
 function toggleTrayIcon(icon) {
-    if (tray) {
+    if (tray){
         tray.setImage(icon);
     }
 }
