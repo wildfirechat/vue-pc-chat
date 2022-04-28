@@ -1479,6 +1479,18 @@ export class WfcManager {
         impl.sendMessageEx(message, toUsers, preparedCB, progressCB, successCB, failCB);
     }
 
+    /**
+     * 发送已经保存的消息，参考{@link sendMessage}
+     * @param message
+     * @param toUsers
+     * @param successCB
+     * @param failCB
+     * @returns {Promise<void>}
+     */
+    async sendSavedMessage(message, toUsers = [], successCB, failCB) {
+        impl.sendSavedMessage(message, toUsers, successCB, failCB);
+    }
+
     // 更新了原始消息的内容
     /**
      * 撤回消息
