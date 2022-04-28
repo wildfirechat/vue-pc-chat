@@ -1482,13 +1482,13 @@ export class WfcManager {
     /**
      * 发送已经保存的消息，参考{@link sendMessage}
      * @param message
-     * @param toUsers
+     * @param expireDuration
      * @param successCB
      * @param failCB
      * @returns {Promise<void>}
      */
-    async sendSavedMessage(message, toUsers = [], successCB, failCB) {
-        impl.sendSavedMessage(message, toUsers, successCB, failCB);
+    async sendSavedMessage(message, expireDuration, successCB, failCB) {
+        impl.sendSavedMessage(message, expireDuration, successCB, failCB);
     }
 
     // 更新了原始消息的内容
