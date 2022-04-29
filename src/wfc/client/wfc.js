@@ -934,6 +934,10 @@ export class WfcManager {
         impl.destroySecretChat(targetId, successCB, failCB);
     }
 
+    encodeSecretChatMediaData(targetId, mediaDataBuffer) {
+        return impl.encodeSecretChatMediaData(targetId, mediaDataBuffer);
+    }
+
     decodeSecretChatMediaData(targetId, mediaDataBuffer) {
         return impl.decodeSecretChatMediaData(targetId, mediaDataBuffer);
     }
