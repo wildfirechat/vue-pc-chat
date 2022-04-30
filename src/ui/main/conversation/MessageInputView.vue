@@ -22,7 +22,7 @@
                 <li v-if="sharedMiscState.isElectron"><i id="messageHistory" @click="showMessageHistory"
                                                          class="icon-ion-android-chat"></i></li>
             </ul>
-            <ul>
+            <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
                 <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
                 <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
             </ul>
