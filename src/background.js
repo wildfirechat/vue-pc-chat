@@ -695,7 +695,7 @@ const createMainWindow = async () => {
 
         if (!foundFiles) {
             let image = clipboard.readImage();
-            console.log('file-paste', image, image.isEmpty(), image.isTemplateImage(), image.isMacTemplateImage);
+            console.log('file-paste', image.isEmpty(), image.isTemplateImage(), image.isMacTemplateImage);
             if (!image.isEmpty()) {
                 let filename = tmp.tmpNameSync() + '.png';
 
