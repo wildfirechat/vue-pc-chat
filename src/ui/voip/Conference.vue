@@ -315,6 +315,11 @@ export default {
                 this.selfUserInfo._stream = stream;
             };
 
+            sessionCallback.didRotateLocalVideoTrack = (stream) => {
+                console.log('didRotateLocalVideoTrack', stream.getAudioTracks())
+                this.selfUserInfo._stream = stream;
+            };
+
             sessionCallback.didCreateLocalVideoTrackError = () => {
                 // TODO
                 // 没有摄像头或者麦克风，加入会议时，会回调到此处，自己断会显示自己的头像，其他端会显示黑屏
