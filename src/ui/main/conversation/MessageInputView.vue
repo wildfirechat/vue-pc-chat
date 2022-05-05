@@ -3,6 +3,7 @@
         <section class="input-action-container">
             <VEmojiPicker
                 id="emoji"
+                ref="emojiPicker"
                 v-show="showEmojiDialog"
                 labelSearch="Search"
                 lang="pt-BR"
@@ -484,8 +485,14 @@ export default {
 
         initEmojiPicker() {
             let config = emojiConfig();
-            this.emojiCategories = config.emojiCategories;
-            this.emojis = config.emojis;
+            if (this.conversationInfo.conversation.type === ConversationType.SecretChat) {
+                this.emojiCategories = config.emojiCategories.filter(c => !c.name.startsWith('Sticker'));
+                this.emojis = config.emojis.filter(c => !c.category.startsWith('Sticker'));
+                this.$refs.emojiPicker.changeCategory({name:'Peoples'});
+            } else {
+                this.emojiCategories = config.emojiCategories;
+                this.emojis = config.emojis;
+            }
         },
 
         initMention(conversation) {
@@ -721,6 +728,7 @@ export default {
             }
             this.lastConversationInfo = this.conversationInfo;
             this.focusInput();
+            this.initEmojiPicker()
         },
     },
 

@@ -38,6 +38,8 @@ export default class Config {
      */
     static RECALL_REEDIT_TIME_LIMIT = 60;
 
+    static SECRET_CHAT_MEDIA_DECODE_SERVER_PORT = 7982;
+
 
     static getWFCPlatform() {
         if (isElectron()) {

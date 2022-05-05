@@ -863,6 +863,10 @@ const createMainWindow = async () => {
         forwardWFCEventToSubWindow(wfcEvent, args);
     })
 
+    ipcMain.on('start-secret-server', (event, args) => {
+        startSecretDecodeServer(args.port);
+    })
+
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
@@ -1038,6 +1042,7 @@ app.on('ready', () => {
         } catch (e) {
             // do nothing
         }
+
     }
 );
 
@@ -1107,5 +1112,78 @@ function toggleTrayIcon(icon) {
     if (tray) {
         tray.setImage(icon);
     }
+}
+
+var secretDecodeServer;
+
+function startSecretDecodeServer(port) {
+    if (secretDecodeServer) {
+        return;
+    }
+    console.log('startSecretDecodeServer', port)
+    let http = require('http');
+    let url = require('url')
+    let https = require('https');
+    secretDecodeServer = http.createServer((req, orgRes) => {
+        console.log('req', req.url);
+        let urlWithStringQuery = url.parse(req.url, true);
+        let target = urlWithStringQuery.query.target;
+        let mediaUrl = urlWithStringQuery.query.url;
+
+        if (!target || !mediaUrl) {
+            orgRes.statusCode = 403;
+            orgRes.end('invalid request');
+            return;
+        }
+
+        let protocol = mediaUrl.startsWith("https") ? https : http
+
+        protocol.get(mediaUrl, res => {
+            let data = [];
+            res.on('data', function (chunk) {
+                data.push(chunk);
+            }).on('end', function () {
+                //at this point data is an array of Buffers
+                //so Buffer.concat() can make us a new Buffer
+                //of all of them together
+                let buffer = Buffer.concat(data);
+                let ab = toArrayBuffer(buffer);
+                let decodedAb = proto.decodeSecretChatMediaData(target, ab);
+                let decodedBuff = toBuffer(decodedAb);
+
+                let rawHeaders = res.rawHeaders;
+                for (let i = 0; i < rawHeaders.length;) {
+                    if (rawHeaders[i] !== 'Content-Length' && rawHeaders[i] !== 'content-Length') {
+                        orgRes.setHeader(rawHeaders[i], rawHeaders[i + 1])
+                    }
+                    i += 2;
+                }
+                orgRes.setHeader('Content-Length', decodedBuff.byteLength)
+                orgRes.end(decodedBuff)
+            });
+
+        });
+    });
+    secretDecodeServer.listen(port, 'localhost', function () {
+        // do nothing
+    });
+}
+
+function toArrayBuffer(buf) {
+    const ab = new ArrayBuffer(buf.length);
+    const view = new Uint8Array(ab);
+    for (let i = 0; i < buf.length; ++i) {
+        view[i] = buf[i];
+    }
+    return ab;
+}
+
+function toBuffer(ab) {
+    const buf = Buffer.alloc(ab.byteLength);
+    const view = new Uint8Array(ab);
+    for (let i = 0; i < buf.length; ++i) {
+        buf[i] = view[i];
+    }
+    return buf;
 }
 

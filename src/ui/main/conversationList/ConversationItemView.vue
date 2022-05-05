@@ -14,6 +14,7 @@
             </div>
             <div class="content-container">
                 <div class="title-time-container">
+                    <i v-if="conversationInfo.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 5px"></i>
                     <h2 class="title single-line">{{ conversationTitle }}</h2>
                     <p class="time">{{ conversationInfo._timeStr }}</p>
                 </div>
@@ -91,7 +92,7 @@ export default {
                 e.dataTransfer.dropEffect = 'copy';
             }
         },
-        imgUrlAlt(e){
+        imgUrlAlt(e) {
             e.target.src = Config.DEFAULT_PORTRAIT_URL;
         }
     },
@@ -100,6 +101,8 @@ export default {
             let info = this.conversationInfo;
             if (info.conversation.type === ConversationType.Single) {
                 return info.conversation._target._displayName;
+            } else if (info.conversation.type === ConversationType.SecretChat) {
+                return 'sc-' + info.conversation._target._displayName;
             } else {
                 return info.conversation._target.name;
             }
@@ -116,7 +119,7 @@ export default {
             return draft.text.trim() !== '' || draft.quotedMessage !== null;
         },
 
-        shouldShowVoipStatus(){
+        shouldShowVoipStatus() {
             return this.conversationInfo._isVoipOngoing;
         },
 
@@ -236,6 +239,7 @@ export default {
 .content-container .title-time-container {
     display: flex;
     width: 100%;
+    align-content: center;
     justify-content: space-between;
 }
 
