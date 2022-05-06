@@ -877,7 +877,7 @@ let store = {
                 console.log('sf, pr', messageId)
             },
             (progress, total) => {
-                console.log('sf p', Math.ceil(progress / total * 100))
+                // console.log('sf p', Math.ceil(progress / total * 100))
             },
             (messageUid) => {
                 console.log('sf s', messageUid)
@@ -1186,7 +1186,6 @@ let store = {
 
     _patchCurrentConversationOnlineStatus() {
         let convInfo = conversationState.currentConversationInfo;
-        // TODO secretchat
         if (convInfo && convInfo.conversation.type === ConversationType.Single) {
             // 在 将 object 和 ui 绑定之前， 向 object 中新增的属性是 reactive 的，但绑定之后，才新增的属性，不是 reactive 的，
             // 故需要通过下面这种方法，让其成为 reactive 的属性

@@ -46,7 +46,7 @@ crashReporter.start({
 function forwardWFCEventToSubWindow(wfcEvent, ...args) {
     let windows = BrowserWindow.getAllWindows();
     windows.forEach(w => {
-        if (w.webContents.getURL() === mainWindow.webContents.getURL()){
+        if (w.webContents.getURL() === mainWindow.webContents.getURL()) {
             return;
         }
         w.webContents.send('wfcEvent', wfcEvent, args);
@@ -672,28 +672,30 @@ const createMainWindow = async () => {
             return;
         }
 
-        let foundFiles = false;
         const clipboardEx = require('electron-clipboard-ex')
         // only support windows and mac
         if (clipboardEx) {
             const filePaths = clipboardEx.readFilePaths();
             if (filePaths && filePaths.length > 0) {
                 args = {
-                    hasFile: true,
                     files: [],
                 };
                 filePaths.forEach(path => {
-                    args.files.push({
-                        path: path,
-                        name: nodePath.basename(path),
-                        size: fs.statSync(path).size,
-                    })
+                    let stat = fs.statSync(path);
+                    if (stat.isFile()) {
+                        args.files.push({
+                            path: path,
+                            name: nodePath.basename(path),
+                            size: stat.size,
+                        })
+                    }
                 })
-                foundFiles = true;
             }
         }
 
-        if (!foundFiles) {
+        args.hasFile = args.files && args.files.length > 0;
+
+        if (!args.hasFile) {
             let image = clipboard.readImage();
             console.log('file-paste', image.isEmpty(), image.isTemplateImage(), image.isMacTemplateImage);
             if (!image.isEmpty()) {
