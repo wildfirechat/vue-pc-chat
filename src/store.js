@@ -547,10 +547,11 @@ let store = {
     },
 
     _loadDefaultConversationList() {
-        this._loadConversationList([0, 1, 3, 5], [0])
+        let conversationTypes = isElectron() ? [0, 1, 3, 5] : [0, 1, 3];
+        this._loadConversationList(conversationTypes, [0])
     },
 
-    _loadConversationList(conversationType = [0, 1, 3, 5], lines = [0]) {
+    _loadConversationList(conversationType = [0, 1, 3], lines = [0]) {
         let conversationList = wfc.getConversationList(conversationType, lines);
         conversationList.forEach(info => {
             this._patchConversationInfo(info);
