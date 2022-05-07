@@ -812,7 +812,7 @@ let store = {
     async sendFile(conversation, file) {
         console.log('send file', file)
         if (file.size && file.size > 100 * 1024 * 1024) {
-            if (!wfc.isSupportBigFilesUpload()) {
+            if (!wfc.isSupportBigFilesUpload() || conversation.type === ConversationType.SecretChat) {
                 console.log('file too big, and not support upload big file')
                 return true;
             }
