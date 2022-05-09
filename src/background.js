@@ -936,15 +936,15 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
     return win;
 }
 
-// deep link
-const PROTOCOL = 'wfc';
+// deep link，需要和 vue.config.js 里面的 wf-deep-linking 对应上
+const DEEP_LINK_PROTOCOL = 'wfc';
 
 function onDeepLink(url) {
     console.log('onOpenDeepLink', url)
     mainWindow.webContents.send('deep-link', url);
 }
 
-app.setAsDefaultProtocolClient(PROTOCOL);
+app.setAsDefaultProtocolClient(DEEP_LINK_PROTOCOL);
 // pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
 // windows 7 下面，如果启动黑屏，请将下面注释打开
 //app.disableHardwareAcceleration();
@@ -966,7 +966,7 @@ app.on('second-instance', (event, argv) => {
         mainWindow.focus()
         mainWindow.show()
     }
-    let url = argv.find((arg) => arg.startsWith(PROTOCOL));
+    let url = argv.find((arg) => arg.startsWith(DEEP_LINK_PROTOCOL));
     if (url) {
         onDeepLink(url)
     }
