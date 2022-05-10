@@ -1020,6 +1020,14 @@ export class WfcManager {
     }
 
     /**
+    * @param {function ([string])} successCB
+    * @param {function (number)} failCB
+    */
+    async getRemoteListenedChannels(successCB, failCB) {
+        impl.getRemoteListenedChannels(successCB, failCB);
+    }
+    
+    /**
      * 销毁频道
      * @param {string} channelId 频道id
      * @param {function ()} successCB
