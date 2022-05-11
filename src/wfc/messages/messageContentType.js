@@ -80,6 +80,9 @@ export default class MessageContentType {
     static CONFERENCE_CONTENT_TYPE_CHANGE_MODE = 410;
     static CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER = 411;
 
+    static VOIP_Multi_Call_Ongoing = 416;
+    static VOIP_Join_Call_Request = 417;
+
     static MESSAGE_CONTENT_TYPE_FEED = 501;
     static MESSAGE_CONTENT_TYPE_COMMENT = 502;
 }

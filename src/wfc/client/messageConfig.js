@@ -58,6 +58,8 @@ import LinkMessageContent from "../messages/linkMessageContent";
 import FriendAddedNotification from "../messages/notification/friendAddedNotification";
 import FriendGreetingNotification from "../messages/notification/friendGreetingNotification";
 import StartSecretChatNotification from "../messages/notification/startSecretChatNotification";
+import MultiCallOngoingMessageContent from "../av/messages/multiCallOngoingMessageContent";
+import JoinCallRequestMessageContent from "../av/messages/joinCallRequestMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -405,6 +407,18 @@ export default class MessageConfig {
             flag: PersistFlag.Transparent,
             type: MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER,
             contentClazz: ConferenceKickoffMemberMessageContent,
+        },
+        {
+            name: 'multiCallOngoing',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.VOIP_Multi_Call_Ongoing,
+            contentClazz: MultiCallOngoingMessageContent,
+        },
+        {
+            name: 'joinCallRequest',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.VOIP_Join_Call_Request,
+            contentClazz: JoinCallRequestMessageContent,
         },
         {
             name: 'markUnreadMessage',

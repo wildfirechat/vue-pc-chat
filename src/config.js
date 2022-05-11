@@ -40,6 +40,8 @@ export default class Config {
 
     static SECRET_CHAT_MEDIA_DECODE_SERVER_PORT = 7982;
 
+    // 允许主动加入多人音视频通话
+    static ENABLE_MULTI_CALL_AUTO_JOIN = false;
 
     static getWFCPlatform() {
         if (isElectron()) {
