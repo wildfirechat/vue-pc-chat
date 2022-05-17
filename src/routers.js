@@ -38,6 +38,11 @@ const routers = [
                 component: FavPage,
             },
             {
+                name: 'workspace',
+                path: 'workspace',
+                component: WorkspacePage,
+            },
+            {
                 path: 'setting',
                 name: 'setting',
                 component: SettingPage,
@@ -65,9 +70,6 @@ const routers = [
         component: FileRecordPage,
     },
     {
-        name: 'workspace',
-        path: '/workspace',
-        component: WorkspacePage,
     },
     {
         name: 'composite-message',

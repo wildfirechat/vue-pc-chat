@@ -40,7 +40,7 @@
     "detectrtc": "^1.4.1",
     "draggable-vue-directive": "^2.1.0",
     "electron-screenshots": "^0.1.2",
-    "electron-tabs": "^0.15.0",
+    "electron-tabs": "^0.17.0",
     "electron-window-state": "^5.0.3",
     "electron-windows-badge": "^1.1.0",
     "events": "^3.2.0",

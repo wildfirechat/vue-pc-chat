@@ -1,5 +1,5 @@
 <template>
-    <section>
+    <section class="workspace-page">
         <div class="workspace-container">
             <div class="etabs-tabgroup">
                 <div class="etabs-tabs"></div>
@@ -31,7 +31,7 @@ import '../../../node_modules/electron-tabs/electron-tabs.css'
 import IPCEventType from "../../ipc/ipcEventType";
 import Conversation from "../../wfc/model/conversation";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
-import {remote} from "../../platform";
+import {remote, shell} from "../../platform";
 import TextMessageContent from "../../wfc/messages/textMessageContent";
 import IpcSub from "../../ipc/ipcSub";
 
@@ -57,24 +57,34 @@ export default {
                 title: "野火IM开发文档",
                 src: "https://docs.wildfirechat.cn",
                 visible: true,
-                active: true
+                active: true,
             });
         },
         showWFCHome() {
-            tabGroup.addTab({
+            let tab = tabGroup.addTab({
                 title: "野火IM",
                 src: "https://www.wildfirechat.cn",
                 visible: true,
                 active: true,
+                webviewAttributes: {
+                    allowpopups: true,
+                },
             });
+            tab.webview.addEventListener('new-window', (e) => {
+                // TODO 判断是否需要用默认浏览器打开
+                shell.openExternal(e.url);
+            })
             this.shouldShowWorkspacePortal = false;
         },
         showDevDocs() {
-            tabGroup.addTab({
+            let tab = tabGroup.addTab({
                 title: "野火IM开发文档",
                 src: "https://docs.wildfirechat.cn",
                 visible: true,
-                active: true
+                active: true,
+                webviewAttributes: {
+                    allowpopups: true,
+                },
             });
             this.shouldShowWorkspacePortal = false;
         },
@@ -111,6 +121,10 @@ export default {
 
         onTabClose() {
 
+        },
+
+        handleNewWindow(url) {
+
         }
     },
 
@@ -130,6 +144,13 @@ export default {
 </script>
 
 <style scoped>
+.workspace-page {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    position: relative;
+}
+
 .workspace-container {
     width: 100%;
     height: 100%;
