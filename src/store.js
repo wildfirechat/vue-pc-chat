@@ -1742,4 +1742,5 @@ function _reset() {
 }
 
 window.__store = store;
+window.stringValue = stringValue;
 export default store
