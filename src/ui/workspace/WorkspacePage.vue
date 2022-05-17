@@ -7,20 +7,6 @@
             </div>
             <div class="etabs-views"></div>
         </div>
-        <div v-if="shouldShowWorkspacePortal" class="workspace-portal">
-            <div>
-                <button @click="showWFCHome">点击打开野火IM官网</button>
-            </div>
-            <div>
-                <button @click="showDevDocs">点击打开野火开发者文档</button>
-            </div>
-            <div>
-                <button @click="openConversation">打开和机器人小火的会话界面</button>
-            </div>
-            <div>
-                <button @click="sendMessage">给机器人小火发送消息：嘿，你好，小火。</button>
-            </div>
-        </div>
     </section>
 </template>
 
@@ -45,27 +31,13 @@ export default {
         }
     },
     methods: {
-        tab() {
-            // window.open('www.baidu.com')
-            // let tabGroup = new ElectronTabs();
+        addInitialTab() {
             let tab = tabGroup.addTab({
-                title: "野火IM",
-                src: "https://www.wildfirechat.cn",
-                visible: true
-            });
-            let tab2 = tabGroup.addTab({
-                title: "野火IM开发文档",
-                src: "https://docs.wildfirechat.cn",
+                title: "工作台",
+                src: "https://open.wildfirechat.cn/work.html",
                 visible: true,
                 active: true,
-            });
-        },
-        showWFCHome() {
-            let tab = tabGroup.addTab({
-                title: "野火IM",
-                src: "https://www.wildfirechat.cn",
-                visible: true,
-                active: true,
+                closable: false,
                 webviewAttributes: {
                     allowpopups: true,
                 },
@@ -73,32 +45,6 @@ export default {
             tab.webview.addEventListener('new-window', (e) => {
                 // TODO 判断是否需要用默认浏览器打开
                 shell.openExternal(e.url);
-            })
-            this.shouldShowWorkspacePortal = false;
-        },
-        showDevDocs() {
-            let tab = tabGroup.addTab({
-                title: "野火IM开发文档",
-                src: "https://docs.wildfirechat.cn",
-                visible: true,
-                active: true,
-                webviewAttributes: {
-                    allowpopups: true,
-                },
-            });
-            this.shouldShowWorkspacePortal = false;
-        },
-        addInitialTab() {
-            tabGroup.addTab({
-                title: "野火IM工作空间",
-                // src: url,
-                visible: true,
-                closable: false,
-            });
-
-            localStorageEmitter.on('pick-conversation-done', (ev, args) => {
-                console.log('pick-conversation-done')
-                remote.getCurrentWindow().focus();
             })
         },
 
@@ -128,10 +74,6 @@ export default {
         }
     },
 
-    created() {
-        document.title = '工作空间';
-    },
-
     mounted() {
         tabGroup = new ElectronTabs();
         tabGroup.on('tab-active', this.onTabActive)
@@ -154,16 +96,6 @@ export default {
 .workspace-container {
     width: 100%;
     height: 100%;
-}
-
-.workspace-portal {
-    position: absolute;
-    left: 0;
-    top: 32px;
-    width: 100%;
-    height: calc(100% - 32px);
-    display: flex;
-    flex-direction: column;
 }
 
 .workspace-portal button {
