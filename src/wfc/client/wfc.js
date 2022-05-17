@@ -1026,7 +1026,7 @@ export class WfcManager {
     async getRemoteListenedChannels(successCB, failCB) {
         impl.getRemoteListenedChannels(successCB, failCB);
     }
-    
+
     /**
      * 销毁频道
      * @param {string} channelId 频道id
@@ -1823,6 +1823,43 @@ export class WfcManager {
      */
     searchMyFiles(keyword, beforeMessageUid, order, count, successCB, failCB) {
         impl.searchMyFiles(keyword, beforeMessageUid, order, count, successCB, failCB);
+    }
+
+
+    /**
+    * 获取应用的authCode
+    * @param appId 应用ID；
+    * @param {int}appType 应用类型；0 是机器人请求；1是频道请求。
+    * @param host 请求网页的host；
+    * @param successCB
+    * @param failCB
+    */
+    async getAuthCode(appId, appType, host, successCB, failCB) {
+      proto.getAuthCode(appId, appType, host, (authCode) => {
+        successCB && successCB(authCode);
+      }),
+      (errorCode) => {
+          failCB && failCB(errorCode);
+      }
+    }
+
+    /**
+    * 验证应用
+    * @param appId 应用ID；
+    * @param {int}appType 应用类型；0 是机器人请求；1是频道请求。
+    * @param timestamp {number} 时间戳
+    * @param nonceStr
+    * @param signature
+    * @param successCB
+    * @param failCB
+    */
+    async configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB) {
+      proto.configApplication(appId, appType, timestamp, nonceStr, signature, () => {
+        successCB && successCB();
+      }),
+      (errorCode) => {
+          failCB && failCB(errorCode);
+      }
     }
 
     /**
