@@ -870,6 +870,9 @@ const createMainWindow = async () => {
     ipcMain.on('start-secret-server', (event, args) => {
         startSecretDecodeServer(args.port);
     })
+    ipcMain.on('start-op-server', (event, args) => {
+        startOpenPlatformServer(args.port);
+    })
 
     powerMonitor.on('resume', () => {
         isSuspend = false;
@@ -1171,6 +1174,28 @@ function startSecretDecodeServer(port) {
     secretDecodeServer.listen(port, 'localhost', function () {
         // do nothing
     });
+}
+
+var openPlatformServer;
+
+function startOpenPlatformServer(port){
+    if (openPlatformServer){
+        return
+    }
+    const WebSocket = require('ws');
+    const wss = new WebSocket.Server({ port: port ? port : 7983});
+
+    wss.on('connection', (ws) => {
+        ws.on('message', (data) => {
+            wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(data);
+                }
+            });
+        });
+    });
+
+    openPlatformServer = wss;
 }
 
 function toArrayBuffer(buf) {

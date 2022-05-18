@@ -8,7 +8,10 @@ module.exports = {
     },
     configureWebpack: {
         // Webpack configuration applied to web builds and the electron renderer process
-        target: "electron-renderer"
+        target: "electron-renderer",
+        resolve: {
+            mainFields: ['main', 'browser']
+        }
     },
 
     pluginOptions: {
