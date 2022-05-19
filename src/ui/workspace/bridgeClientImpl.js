@@ -8,8 +8,9 @@
  */
 
 let callbackMap = new Map();
+let eventListeners = {};
 let requestId = 0;
-var client;
+let client;
 
 function init() {
     const WebSocket = require('ws');
@@ -18,40 +19,51 @@ function init() {
         let obj;
         try {
             obj = JSON.parse(data);
-        }catch (e) {
+        } catch (e) {
             console.error('parse ws data error', e);
             return;
         }
         if (obj.type === 'wf-op-event') {
-
+            handleOpEvent(obj.handlerName, obj.args);
         } else if (obj.type === 'wf-op-response') {
-
+            handleOpResponse(obj.requestId, obj.args)
         }
-        console.log('receive data', obj);
     })
 
     window.__wf_bridge_ = {
         call: call,
         register: register,
     }
-    console.log('bridgeImpl init')
+    console.log('bridgeClientImpl init')
 }
 
 function call(handlerName, args, callback) {
-    requestId++;
+    let reqId = 0;
     if (callback && typeof callback === 'function') {
-        callbackMap.set(requestId, callback)
+        reqId = requestId++;
+        callbackMap.set(reqId, callback)
     }
-    let obj = {type: 'wf-op-request', requestId, handlerName, args};
+    let obj = {type: 'wf-op-request', requestId: reqId, handlerName, args};
+    console.log('wf-op-request', obj);
     client.send(JSON.stringify(obj));
 }
 
+function handleOpResponse(requestId, args) {
+    console.log('handle op response', requestId, args)
+    let cb = callbackMap.get(requestId);
+    if (cb) {
+        cb(args);
+        callbackMap.delete(requestId);
+    }
+}
+
+function handleOpEvent(handlerName, args) {
+    eventListeners[handlerName] && eventListeners[handlerName](args);
+
+}
+
 function register(handlerName, callback) {
-    // ipcRenderer.on('wf-op-event', (event, args) => {
-    //     console.log('event e', event);
-    //     console.log('event a', args)
-    //     // TODO
-    // })
+    eventListeners[handlerName] = callback;
 }
 
 init();

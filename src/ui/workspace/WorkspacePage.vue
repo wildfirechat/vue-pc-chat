@@ -16,10 +16,9 @@ import '../../../node_modules/electron-tabs/electron-tabs.css'
 import IPCEventType from "../../ipc/ipcEventType";
 import Conversation from "../../wfc/model/conversation";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
-import {shell} from "../../platform";
 import TextMessageContent from "../../wfc/messages/textMessageContent";
 import IpcSub from "../../ipc/ipcSub";
-import Config from "../../config";
+import bridgeServerImpl from './bridgeServerImpl'
 
 let tabGroup = null;
 
@@ -32,23 +31,6 @@ export default {
     },
 
     created() {
-        const WebSocket = require('ws');
-        let client = new WebSocket('ws://127.0.0.1:' + Config.OPEN_PLATFORM_SERVE_PORT + '/');
-        client.on('message', (data) => {
-            let obj;
-            try {
-                obj = JSON.parse(data);
-            } catch (e) {
-                console.error('parse ws data error', e);
-                return;
-            }
-            if (obj.type === 'wf-op-request') {
-                console.log('response')
-                obj.type = 'wf-op-response';
-                client.send(JSON.stringify(obj));
-            }
-            console.log('receive data', obj);
-        })
     },
     methods: {
         addInitialTab() {
@@ -64,16 +46,17 @@ export default {
                     webpreferences: 'contextIsolation=false',
                 },
             });
-            tab.webview.addEventListener('new-window', (e) => {
-                // TODO 判断是否需要用默认浏览器打开
-                shell.openExternal(e.url);
-            });
+            // tab.webview.addEventListener('new-window', (e) => {
+            //     // TODO 判断是否需要用默认浏览器打开
+            //     shell.openExternal(e.url);
+            // });
             tab.webview.addEventListener('dom-ready', (e) => {
-                tab.webview.openDevTools();
+                // for debug
+                // tab.webview.openDevTools();
             })
             console.log('to preload')
             if (process.env.NODE_ENV !== 'production') {
-                tab.webview.preload = `file:///Users/imndx/bitbucket/wildfirechat/vue-pc-chat/src/ui/workspace/bridgeClientImpl.js`;
+                tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
             } else {
                 tab.webview.preload = `file://${__dirname}/../preload.js`;
             }
@@ -100,9 +83,6 @@ export default {
 
         },
 
-        handleNewWindow(url) {
-
-        }
     },
 
     mounted() {
@@ -110,6 +90,8 @@ export default {
         tabGroup.on('tab-active', this.onTabActive)
 
         this.addInitialTab();
+        console.log('initxxx', tabGroup)
+        bridgeServerImpl.init('http://localhost:8081', tabGroup);
     },
 
     computed: {}
