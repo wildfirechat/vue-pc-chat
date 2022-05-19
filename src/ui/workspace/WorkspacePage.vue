@@ -5,7 +5,9 @@
                 <div class="etabs-tabs"></div>
                 <div class="etabs-buttons"></div>
             </div>
-            <div class="etabs-views"></div>
+            <div class="etabs-views">
+                <OpenPlatformAppHostView/>
+            </div>
         </div>
     </section>
 </template>
@@ -18,12 +20,20 @@ import Conversation from "../../wfc/model/conversation";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import TextMessageContent from "../../wfc/messages/textMessageContent";
 import IpcSub from "../../ipc/ipcSub";
-import bridgeServerImpl from './bridgeServerImpl'
+import {init} from './bridgeServerImpl'
+import wfc from "../../wfc/client/wfc";
+import vm from "../../main";
+import PickUserView from "../main/pick/PickUserView";
+import store from "../../store";
+import {shell} from "../../platform";
+import Config from "../../config";
+import OpenPlatformAppHostView from "./OpenPlatformAppHostView";
 
 let tabGroup = null;
 
 export default {
     name: "WorkspacePage",
+    components: {OpenPlatformAppHostView},
     data() {
         return {
             shouldShowWorkspacePortal: true,
@@ -83,6 +93,40 @@ export default {
 
         },
 
+        // 开放平台相关方法 start
+        chooseContacts(options, successCB, failCB) {
+            let beforeClose = (event) => {
+                if (event.params.confirm) {
+                    let users = event.params.users;
+                    successCB && successCB(users);
+                } else {
+                    failCB && failCB(-1);
+                }
+            };
+            vm.$modal.show(
+                PickUserView,
+                {
+                    users: store.state.contact.favContactList.concat(store.state.contact.friendList),
+                    // initialCheckedUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+                    // uncheckableUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+                    showCategoryLabel: true,
+                    confirmTitle: '确定',
+                }, {
+                    name: 'pick-user-modal',
+                    width: 600,
+                    height: 480,
+                    clickToClose: false,
+                }, {
+                    // 'before-open': this.beforeOpen,
+                    'before-close': beforeClose,
+                    // 'closed': this.closed,
+                })
+        },
+
+        openExternal(url) {
+            shell.openExternal(url);
+        }
+        // 开放平台相关方法 end
     },
 
     mounted() {
@@ -90,8 +134,7 @@ export default {
         tabGroup.on('tab-active', this.onTabActive)
 
         this.addInitialTab();
-        console.log('initxxx', tabGroup)
-        bridgeServerImpl.init('http://localhost:8081', tabGroup);
+        init('http://localhost:8081', tabGroup, wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
     },
 
     computed: {}
