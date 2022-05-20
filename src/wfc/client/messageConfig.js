@@ -60,6 +60,7 @@ import FriendGreetingNotification from "../messages/notification/friendGreetingN
 import StartSecretChatNotification from "../messages/notification/startSecretChatNotification";
 import MultiCallOngoingMessageContent from "../av/messages/multiCallOngoingMessageContent";
 import JoinCallRequestMessageContent from "../av/messages/joinCallRequestMessageContent";
+import RichNotificationMessageContent from "../messages/notification/richNotificationMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -431,6 +432,12 @@ export default class MessageConfig {
             flag: PersistFlag.Persist_And_Count,
             type: MessageContentType.StartSecretChat_Notification,
             contentClazz: StartSecretChatNotification,
+        },
+        {
+            name: 'richNotification',
+            flag: PersistFlag.Persist_And_Count,
+            type: MessageContentType.Rich_Notification,
+            contentClazz: RichNotificationMessageContent,
         },
 
     ];

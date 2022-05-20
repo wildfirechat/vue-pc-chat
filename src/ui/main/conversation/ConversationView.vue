@@ -51,6 +51,7 @@
 
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                             <RecallNotificationMessageContentView :message="message" v-else-if="isRecallNotificationMessage(message)"/>
+                            <RichNotificationMessageContentView :message="message" v-if="isRichNotificationMessage(message)"/>
                             <NormalOutMessageContentView
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
                                 :message="message"
@@ -182,10 +183,13 @@ import CompositeMessageContent from "../../../wfc/messages/compositeMessageConte
 import EventType from "../../../wfc/client/wfcEvent";
 import MultiCallOngoingMessageContent from "../../../wfc/av/messages/multiCallOngoingMessageContent";
 import JoinCallRequestMessageContent from "../../../wfc/av/messages/joinCallRequestMessageContent";
+import RichNotificationMessageContent from "../../../wfc/messages/notification/richNotificationMessageContent";
+import RichNotificationMessageContentView from "./message/RichNotificationMessageContentView";
 
 var amr;
 export default {
     components: {
+        RichNotificationMessageContentView,
         MultiSelectActionView,
         NotificationMessageContentView,
         RecallNotificationMessageContentView,
@@ -309,7 +313,13 @@ export default {
         },
 
         isNotificationMessage(message) {
-            return message && message.messageContent instanceof NotificationMessageContent && message.messageContent.type !== MessageContentType.RecallMessage_Notification;
+            return message && message.messageContent instanceof NotificationMessageContent
+                && message.messageContent.type !== MessageContentType.RecallMessage_Notification
+                && message.messageContent.type !== MessageContentType.Rich_Notification;
+        },
+
+        isRichNotificationMessage(message) {
+            return message && message.messageContent instanceof RichNotificationMessageContent;
         },
 
         isRecallNotificationMessage(message) {
@@ -709,7 +719,7 @@ export default {
                     }, 1000)
                 }
                 // 自己是不是已经在通话中
-                if (message.messageContent.targets.indexOf(wfc.getUserId())>= 0){
+                if (message.messageContent.targets.indexOf(wfc.getUserId()) >= 0) {
                     return;
                 }
                 let index = this.ongoingCalls.findIndex(call => call.messageContent.callId === message.messageContent.callId);
@@ -721,7 +731,7 @@ export default {
             }
         },
 
-        joinMultiCall(message){
+        joinMultiCall(message) {
             let request = new JoinCallRequestMessageContent(message.messageContent.callId, wfc.getClientId());
             wfc.sendConversationMessage(this.conversationInfo.conversation, request);
         }
