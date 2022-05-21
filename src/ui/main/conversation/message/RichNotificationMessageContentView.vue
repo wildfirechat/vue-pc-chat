@@ -1,6 +1,6 @@
 <template>
     <div style="display: flex; justify-content: center">
-        <div class="notification-container">
+        <div class="notification-container" @click="onClickRichNotification">
             <p class="title">{{ message.messageContent.title }}</p>
             <p class="desc">{{ message.messageContent.desc }}</p>
             <div v-if="message.messageContent.datas">
@@ -28,6 +28,12 @@ export default {
             required: true
         }
     },
+    methods:{
+        onClickRichNotification(){
+            // TODO 打开 app 或者链接
+            console.log('onClickRichNotification');
+        }
+    },
     components: {}
 }
 </script>
@@ -39,6 +45,10 @@ export default {
     padding: 5px 10px;
     border-radius: 5px;
     margin: 5px 0;
+}
+
+.notification-container:active {
+    background-color: lightgrey;
 }
 
 .notification-container .title {
