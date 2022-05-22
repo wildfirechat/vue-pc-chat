@@ -89,7 +89,11 @@ let openUrl = (url) => { // addTab or open new window?
 }
 
 let getAuthCode = (args, requestId) => {
-    mWfc.getAuthCode(args.appId, args.appType, args.host, (authCode) => {
+    let host = args.host;
+    if (host.indexOf(':')){
+        host = host.substring(0, host.indexOf(':'))
+    }
+    mWfc.getAuthCode(args.appId, args.appType, host, (authCode) => {
         console.log('authCode', authCode);
         _response('getAuthCode', requestId, 0, authCode);
     }, (err) => {
