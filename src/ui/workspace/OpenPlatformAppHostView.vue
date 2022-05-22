@@ -8,7 +8,6 @@
 </template>
 
 <script>
-import vm from "../../main";
 import PickUserView from "../main/pick/PickUserView";
 import store from "../../store";
 import {shell} from "../../platform";
@@ -33,7 +32,7 @@ export default {
                     failCB && failCB(-1);
                 }
             };
-            vm.$modal.show(
+            this.$modal.show(
                 PickUserView,
                 {
                     users: store.state.contact.favContactList.concat(store.state.contact.friendList),

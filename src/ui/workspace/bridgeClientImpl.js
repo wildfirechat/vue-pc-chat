@@ -43,8 +43,8 @@ function call(handlerName, args, callback) {
         reqId = requestId++;
         callbackMap.set(reqId, callback)
     }
+    args.host = location.host;
     let obj = {type: 'wf-op-request', requestId: reqId, handlerName, args};
-    console.log('wf-op-request', obj);
     client.send(JSON.stringify(obj));
 }
 

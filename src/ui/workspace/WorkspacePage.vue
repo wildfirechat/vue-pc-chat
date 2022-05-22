@@ -37,7 +37,7 @@ export default {
         addInitialTab() {
             let tab = tabGroup.addTab({
                 title: "工作台",
-                src: "http://localhost:8081",
+                src: "https://open.wildfirechat.cn/work.html",
                 visible: true,
                 active: true,
                 closable: false,
@@ -55,11 +55,11 @@ export default {
                 // for debug
                 // tab.webview.openDevTools();
             })
-            console.log('to preload')
-            if (process.env.NODE_ENV !== 'production') {
+            console.log('to preload', process.env.NODE_ENV)
+            if (process.env.NODE_ENV === 'development') {
                 tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
             } else {
-                tab.webview.preload = `file://${__dirname}/../preload.js`;
+                tab.webview.preload = `file://${__dirname}/preload.js`;
             }
         },
 
@@ -80,7 +80,7 @@ export default {
         tabGroup.on('tab-active', this.onTabActive)
 
         this.addInitialTab();
-        init('http://localhost:8081', tabGroup, wfc, this.$refs.opAppHost, Config.OPEN_PLATFORM_SERVE_PORT);
+        init('https://open.wildfirechat.cn/work.html', tabGroup, wfc, this.$refs.opAppHost, Config.OPEN_PLATFORM_SERVE_PORT);
     },
 
     computed: {}

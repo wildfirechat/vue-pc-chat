@@ -52,8 +52,12 @@ export function init(appUrl, tabGroup, wfc, hostPage, wsPort) {
 }
 
 let openUrl = (url) => { // addTab or open new window?
+    console.log('to openurl', url)
     // 直接从工作台打开的，addTab
     // 从应用打开的，new window
+    if (!mTabGroup) {
+        return
+    }
     console.log('openUrl', mAppUrl, mTabGroup, url)
     let tab = mTabGroup.addTab({
         //title: "工作台",
@@ -75,18 +79,17 @@ let openUrl = (url) => { // addTab or open new window?
         tab.setTitle(e.title);
     })
     tab.webview.addEventListener('dom-ready', (e) => {
-        tab.webview.openDevTools();
+        //tab.webview.openDevTools();
     })
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV === 'development') {
         tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
     } else {
-        tab.webview.preload = `file://${__dirname}/../preload.js`;
+        tab.webview.preload = `file://${__dirname}/preload.js`;
     }
 }
 
 let getAuthCode = (args, requestId) => {
-    let host = 'localhost';
-    mWfc.getAuthCode(args.appId, args.appType, host, (authCode) => {
+    mWfc.getAuthCode(args.appId, args.appType, args.host, (authCode) => {
         console.log('authCode', authCode);
         _response('getAuthCode', requestId, 0, authCode);
     }, (err) => {

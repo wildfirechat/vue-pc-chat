@@ -19,6 +19,7 @@ module.exports = {
             // config.module.rules.delete('eslint');
         },
         electronBuilder: {
+            preload: 'src/ui/workspace/bridgeClientImpl.js',
             externals: ['electron-screenshots'],
             chainWebpackMainProcess: (config) => {
                 // Chain webpack config for electron main process only
