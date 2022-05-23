@@ -70,6 +70,9 @@ const routers = [
         component: FileRecordPage,
     },
     {
+        name: 'workspace',
+        path: '/workspace',
+        component: WorkspacePage,
     },
     {
         name: 'composite-message',

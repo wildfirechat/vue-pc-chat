@@ -79,7 +79,7 @@ let downloading = false;
 let mainWindow;
 let fileWindow;
 let compositeMessageWindows = new Map();
-let workspaceWindow;
+let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
 let winBadge;
@@ -724,10 +724,10 @@ const createMainWindow = async () => {
         downloadFileMap.set(encodeURI(remotePath), {messageId: messageId, fileName: args.fileName, source: source});
 
         if (source === 'file') {
-            console.log('file-download file')
+            console.log('file-download file', remotePath)
             fileWindow.webContents.downloadURL(remotePath)
         } else {
-            console.log('file-download main')
+            console.log('file-download main', remotePath)
             mainWindow.webContents.downloadURL(remotePath)
         }
     });
@@ -778,17 +778,19 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on('show-workspace-window', async (event, args) => {
-        console.log('on show-workspace-window', workspaceWindow, args)
-        if (!workspaceWindow) {
-            workspaceWindow = createWindow(args.url, 960, 600, 640, 400, true, true);
-            workspaceWindow.on('close', () => {
-                workspaceWindow = null;
+    ipcMain.on('show-open-platform-app-host-window', async (event, args) => {
+        console.log('on show-open-platform-app-host-window', args)
+        let win = openPlatformAppHostWindows.get(args.appUrl);
+        if (!win) {
+            win = createWindow(args.url, 960, 600, 640, 400, true, true);
+            openPlatformAppHostWindows.set(args.appUrl, win);
+            win.on('close', () => {
+                openPlatformAppHostWindows.delete(args.appUrl);
             });
-            workspaceWindow.show();
+            win.show();
         } else {
-            workspaceWindow.show();
-            workspaceWindow.focus();
+            win.show();
+            win.focus();
         }
     });
 
@@ -1178,12 +1180,12 @@ function startSecretDecodeServer(port) {
 
 var openPlatformServer;
 
-function startOpenPlatformServer(port){
-    if (openPlatformServer){
+function startOpenPlatformServer(port) {
+    if (openPlatformServer) {
         return
     }
     const WebSocket = require('ws');
-    const wss = new WebSocket.Server({ port: port ? port : 7983});
+    const wss = new WebSocket.Server({port: port ? port : 7983});
 
     wss.on('connection', (ws) => {
         ws.on('message', (data) => {

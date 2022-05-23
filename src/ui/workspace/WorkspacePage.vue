@@ -28,16 +28,22 @@ export default {
     data() {
         return {
             shouldShowWorkspacePortal: true,
+            url: Config.OPEN_PLATFORM_WORK_SPACE_URL,
         }
     },
 
     created() {
+        let query = window.location.href.split('?');
+        if (query && query.length > 1) {
+            let params = new URLSearchParams(query[1]);
+            this.url = params.get('url');
+        }
     },
     methods: {
         addInitialTab() {
             let tab = tabGroup.addTab({
                 title: "工作台",
-                src: "https://open.wildfirechat.cn/work.html",
+                src: this.url,
                 visible: true,
                 active: true,
                 closable: false,
@@ -47,13 +53,12 @@ export default {
                     webpreferences: 'contextIsolation=false',
                 },
             });
-            // tab.webview.addEventListener('new-window', (e) => {
-            //     // TODO 判断是否需要用默认浏览器打开
-            //     shell.openExternal(e.url);
-            // });
             tab.webview.addEventListener('dom-ready', (e) => {
                 // for debug
-                // tab.webview.openDevTools();
+                tab.webview.openDevTools();
+            });
+            tab.webview.addEventListener('page-title-updated', event => {
+                tab.setTitle(event.title);
             })
             console.log('to preload', process.env.NODE_ENV)
             if (process.env.NODE_ENV === 'development') {
@@ -80,7 +85,7 @@ export default {
         tabGroup.on('tab-active', this.onTabActive)
 
         this.addInitialTab();
-        init('https://open.wildfirechat.cn/work.html', tabGroup, wfc, this.$refs.opAppHost, Config.OPEN_PLATFORM_SERVE_PORT);
+        init(this.url, tabGroup, wfc, this.$refs.opAppHost, Config.OPEN_PLATFORM_SERVE_PORT);
     },
 
     computed: {}

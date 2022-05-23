@@ -1,4 +1,5 @@
 import WebSocket from 'ws'
+import {remote} from "../../platform";
 
 /**
  * 大概流程
@@ -31,9 +32,12 @@ export function init(appUrl, tabGroup, wfc, hostPage, wsPort) {
             console.error('parse ws data error', e);
             return;
         }
+        if (remote.getCurrentWindow().getMediaSourceId() !== obj.windowId) {
+            return;
+        }
         //let obj = {type: 'wf-op-request', requestId, handlerName, args};
+        console.log('wf-op-request', mAppUrl, obj)
         if (obj.type === 'wf-op-request') {
-            console.log('wf-op-request', obj)
             if (handlers[obj.handlerName]) {
                 handlers[obj.handlerName](obj.args, obj.requestId);
             } else {
@@ -48,20 +52,25 @@ export function init(appUrl, tabGroup, wfc, hostPage, wsPort) {
         'getAuthCode': getAuthCode,
         'config': config,
         'chooseContacts': chooseContacts,
+        'close': close,
     }
 }
 
-let openUrl = (url) => { // addTab or open new window?
-    console.log('to openurl', url)
+let openUrl = (args) => { // addTab or open new window?
+    console.log('openUrl', mAppUrl, mTabGroup, args)
     // 直接从工作台打开的，addTab
     // 从应用打开的，new window
+    if (args.external) {
+        mHostPage.openExternal(args);
+        return;
+    }
     if (!mTabGroup) {
         return
     }
-    console.log('openUrl', mAppUrl, mTabGroup, url)
     let tab = mTabGroup.addTab({
-        //title: "工作台",
-        src: url,
+        // title: "工作台000",
+        //src: args.url ? args.url : args,
+        src: args,
         visible: true,
         active: true,
         closable: true,
@@ -71,16 +80,27 @@ let openUrl = (url) => { // addTab or open new window?
             webpreferences: 'contextIsolation=false',
         },
     });
-    tab.webview.addEventListener('new-window', (e) => {
-        // TODO 判断是否需要用默认浏览器打开
-        mHostPage.openExternal(e.url);
-    });
+    // tab.webview.addEventListener('new-window', (e) => {
+    //     // TODO 判断是否需要用默认浏览器打开
+    //     console.log('new-window', e.url)
+    // });
+    //
+    // tab.webview.addEventListener('update-target-url', event => {
+    //     console.log('update-target-url', event);
+    // })
+    //
+    // tab.webview.addEventListener('will-navigate', event => {
+    //     console.log('will-navigate', event)
+    //     event.preventDefault();
+    // })
+
     tab.webview.addEventListener('page-title-updated', (e) => {
         tab.setTitle(e.title);
     })
     tab.webview.addEventListener('dom-ready', (e) => {
-        //tab.webview.openDevTools();
+        tab.webview.openDevTools();
     })
+
     if (process.env.NODE_ENV === 'development') {
         tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
     } else {
@@ -90,7 +110,7 @@ let openUrl = (url) => { // addTab or open new window?
 
 let getAuthCode = (args, requestId) => {
     let host = args.host;
-    if (host.indexOf(':')){
+    if (host.indexOf(':')) {
         host = host.substring(0, host.indexOf(':'))
     }
     mWfc.getAuthCode(args.appId, args.appType, host, (authCode) => {
@@ -121,6 +141,10 @@ let chooseContacts = (args, requestId) => {
     })
 }
 
+let close = () => {
+    remote.getCurrentWindow().close();
+}
+
 let toast = (text) => {
     mHostPage.$notify({
         title: '提示',
@@ -139,6 +163,7 @@ function _response(handlerName, requestId, code, data) {
         type: 'wf-op-response',
         handlerName,
         requestId,
+        windowId: remote.getCurrentWindow().getMediaSourceId(),
         args: {
             code,
             data
@@ -152,6 +177,7 @@ function _notify(handlerName, args) {
     let obj = {
         type: 'wf-op-event',
         handlerName,
+        windowId: remote.getCurrentWindow().getMediaSourceId(),
         args
     }
     console.log('send event', obj)

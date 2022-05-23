@@ -6,11 +6,14 @@
  * 3. client 和 server 之间的交互，通过 websocket 进行中转
  *
  */
+const remote = require('@electron/remote');
 
 let callbackMap = new Map();
 let eventListeners = {};
 let requestId = 0;
 let client;
+let appUrl;
+let windowId;
 
 function init() {
     const WebSocket = require('ws');
@@ -21,6 +24,9 @@ function init() {
             obj = JSON.parse(data);
         } catch (e) {
             console.error('parse ws data error', e);
+            return;
+        }
+        if (obj.windowId !== windowId) {
             return;
         }
         if (obj.type === 'wf-op-event') {
@@ -34,7 +40,9 @@ function init() {
         call: call,
         register: register,
     }
-    console.log('bridgeClientImpl init')
+    appUrl = location.href;
+    windowId = remote.getCurrentWindow().getMediaSourceId();
+    console.log('bridgeClientImpl init', appUrl)
 }
 
 function call(handlerName, args, callback) {
@@ -44,7 +52,8 @@ function call(handlerName, args, callback) {
         callbackMap.set(reqId, callback)
     }
     args.host = location.host;
-    let obj = {type: 'wf-op-request', requestId: reqId, handlerName, args};
+    let obj = {type: 'wf-op-request', requestId: reqId, appUrl, windowId, handlerName, args};
+    console.log('wf-op-request', obj)
     client.send(JSON.stringify(obj));
 }
 

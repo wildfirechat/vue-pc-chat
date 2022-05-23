@@ -10,7 +10,7 @@
 <script>
 import PickUserView from "../main/pick/PickUserView";
 import store from "../../store";
-import {shell} from "../../platform";
+import {ipcRenderer} from "../../platform";
 
 export default {
     name: "OpenPlatformAppHostView",
@@ -52,16 +52,29 @@ export default {
                 })
         },
 
-        openExternal(url) {
-            shell.openExternal(url);
+        openExternal(args) {
+            let hash = window.location.hash;
+            let url = window.location.origin;
+            if (hash) {
+                url = window.location.href.replace(hash, '#/workspace');
+            } else {
+                url += "/workspace"
+            }
+
+            url += '?url=' + args.url;
+
+            ipcRenderer.send('show-open-platform-app-host-window', {url, appUrl: args.url})
         }
         // 开放平台相关方法 end
     },
 
     mounted() {
-        // TODO preload and init
         if (this.$refs.webview) {
-            console.log('embed webview')
+            if (process.env.NODE_ENV === 'development') {
+                this.$refs.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
+            } else {
+                this.$refs.webview.preload = `file://${__dirname}/preload.js`;
+            }
         }
     }
 }
