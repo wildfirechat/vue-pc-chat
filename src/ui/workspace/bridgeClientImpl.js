@@ -25,7 +25,8 @@ function init() {
             console.error('parse ws data error', e);
             return;
         }
-        if (obj.windowId !== windowId) {
+        if (obj.windowId !== windowId || obj.appUrl !== location.href) {
+            console.log('ignore wf-op data', obj);
             return;
         }
         if (obj.type === 'wf-op-event') {
@@ -49,8 +50,8 @@ function call(handlerName, args, callback) {
         reqId = requestId++;
         callbackMap.set(reqId, callback)
     }
-    args.host = location.host;
-    let obj = {type: 'wf-op-request', requestId: reqId, windowId, handlerName, args};
+    let appUrl = location.href;
+    let obj = {type: 'wf-op-request', requestId: reqId, windowId, appUrl, handlerName, args};
     console.log('wf-op-request', obj)
     client.send(JSON.stringify(obj));
 }

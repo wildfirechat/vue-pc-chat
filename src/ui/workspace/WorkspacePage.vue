@@ -122,13 +122,13 @@ export default {
 
             url += '?url=' + args.url;
 
-            ipcRenderer.send('show-open-platform-app-host-window', {url, appUrl: args.appUrl})
+            ipcRenderer.send('show-open-platform-app-host-window', {url, hostUrl: args.hostUrl})
         },
 
         addTab(args) {
             console.log('addTab', args)
             let tab = tabGroup.addTab({
-                title: "工作台000",
+                title: "工作台",
                 //src: args.url ? args.url : args,
                 src: args,
                 visible: true,
@@ -138,6 +138,7 @@ export default {
                     allowpopups: true,
                     nodeintegration: true,
                     webpreferences: 'contextIsolation=false',
+                    url: args,
                 },
             });
             // tab.webview.addEventListener('new-window', (e) => {
@@ -158,7 +159,7 @@ export default {
                 tab.setTitle(e.title);
             })
             tab.webview.addEventListener('dom-ready', (e) => {
-                // tab.webview.openDevTools();
+                tab.webview.openDevTools();
             })
 
             if (process.env.NODE_ENV === 'development') {
@@ -183,7 +184,7 @@ export default {
         })
 
         this.addTab(this.url);
-        init(this.url, wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
+        init(wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
     },
 
     computed: {}

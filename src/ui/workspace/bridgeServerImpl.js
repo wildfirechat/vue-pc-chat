@@ -13,12 +13,10 @@ import {remote} from "../../platform";
 
 let handlers;
 let client;
-let mAppUrl;
 let mWfc;
 let mHostPage;
 
-export function init(appUrl, wfc, hostPage, wsPort) {
-    mAppUrl = appUrl;
+export function init(wfc, hostPage, wsPort) {
     mWfc = wfc;
     mHostPage = hostPage;
     client = new WebSocket('ws://127.0.0.1:' + wsPort + '/');
@@ -34,10 +32,10 @@ export function init(appUrl, wfc, hostPage, wsPort) {
             return;
         }
         //let obj = {type: 'wf-op-request', requestId, handlerName, args};
-        console.log('wf-op-request', mAppUrl, obj)
+        console.log('wf-op-request', obj)
         if (obj.type === 'wf-op-request') {
             if (handlers[obj.handlerName]) {
-                handlers[obj.handlerName](obj.args, obj.requestId);
+                handlers[obj.handlerName](obj.args, obj.appUrl, obj.requestId);
             } else {
                 console.log('wf-op-request, unknown handlerName', obj.handlerName);
             }
@@ -55,52 +53,55 @@ export function init(appUrl, wfc, hostPage, wsPort) {
 }
 
 let openUrl = (args) => { // addTab or open new window?
-    console.log('openUrl', mAppUrl, args)
+    console.log('openUrl', args)
     // 直接从工作台打开的，addTab
     // 从应用打开的，new window
     if (args.external) {
-        args.appUrl = mAppUrl;
+        args.hostUrl = location.href;
         mHostPage.openExternal(args);
         return;
     }
     mHostPage.addTab(args)
 }
 
-let getAuthCode = (args, requestId) => {
-    let host = args.host;
+let getAuthCode = (args, appUrl, requestId) => {
+    let host = new URL(appUrl).host;
     if (host.indexOf(':')) {
         host = host.substring(0, host.indexOf(':'))
     }
     mWfc.getAuthCode(args.appId, args.appType, host, (authCode) => {
         console.log('authCode', authCode);
-        _response('getAuthCode', requestId, 0, authCode);
+        _response('getAuthCode', appUrl, requestId, 0, authCode);
     }, (err) => {
         console.log('getAuthCode error', err);
-        _response('getAuthCode', requestId, err)
+        _response('getAuthCode', appUrl, requestId, err)
     })
 }
 
-let config = (args) => {
+let config = (args, appUrl) => {
     mWfc.configApplication(args.appId, args.appType, args.timestamp, args.nonceStr, args.signature, () => {
         console.log('config success');
-        _notify('ready')
+        _notify('ready', appUrl)
 
     }, (err) => {
         console.log('config failed');
-        _notify('error', err)
+        _notify('error', appUrl, err)
     })
 }
 
-let chooseContacts = (args, requestId) => {
+let chooseContacts = (args, appUrl, requestId) => {
     mHostPage.chooseContacts(args, (users) => {
-        _response('chooseContacts', requestId, 0, users);
+        _response('chooseContacts', appUrl, requestId, 0, users);
     }, (err) => {
-        _response('chooseContacts', requestId, err, 'user canceled');
+        _response('chooseContacts', appUrl, requestId, err, 'user canceled');
     })
 }
 
 let close = () => {
-    remote.getCurrentWindow().close();
+    // 关闭当前 tab
+    console.log('close---', location.href)
+    let tabs = mHostPage.tabGroup.getTabs();
+    // remote.getCurrentWindow().close();
 }
 
 let toast = (text) => {
@@ -112,10 +113,11 @@ let toast = (text) => {
 
 }
 
-function _response(handlerName, requestId, code, data) {
+function _response(handlerName, appUrl, requestId, code, data) {
     let obj = {
         type: 'wf-op-response',
         handlerName,
+        appUrl,
         requestId,
         windowId: remote.getCurrentWindow().getMediaSourceId(),
         args: {
@@ -127,10 +129,11 @@ function _response(handlerName, requestId, code, data) {
     client.send(JSON.stringify(obj));
 }
 
-function _notify(handlerName, args) {
+function _notify(handlerName, appUrl, args) {
     let obj = {
         type: 'wf-op-event',
         handlerName,
+        appUrl,
         windowId: remote.getCurrentWindow().getMediaSourceId(),
         args
     }

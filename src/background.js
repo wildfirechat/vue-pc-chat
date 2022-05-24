@@ -780,12 +780,12 @@ const createMainWindow = async () => {
 
     ipcMain.on('show-open-platform-app-host-window', async (event, args) => {
         console.log('on show-open-platform-app-host-window', args)
-        let win = openPlatformAppHostWindows.get(args.appUrl);
+        let win = openPlatformAppHostWindows.get(args.hostUrl);
         if (!win) {
             win = createWindow(args.url, 960, 600, 640, 400, true, true);
-            openPlatformAppHostWindows.set(args.appUrl, win);
+            openPlatformAppHostWindows.set(args.hostUrl, win);
             win.on('close', () => {
-                openPlatformAppHostWindows.delete(args.appUrl);
+                openPlatformAppHostWindows.delete(args.hostUrl);
             });
             win.show();
         } else {
