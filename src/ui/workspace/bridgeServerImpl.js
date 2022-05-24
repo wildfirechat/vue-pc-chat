@@ -97,11 +97,15 @@ let chooseContacts = (args, appUrl, requestId) => {
     })
 }
 
-let close = () => {
+let close = (args, appUrl) => {
     // 关闭当前 tab
     console.log('close---', location.href)
     let tabs = mHostPage.tabGroup.getTabs();
-    // remote.getCurrentWindow().close();
+    for (let tab of tabs) {
+        if (tab.webviewAttributes.src === appUrl) {
+            tab.close(true);
+        }
+    }
 }
 
 let toast = (text) => {

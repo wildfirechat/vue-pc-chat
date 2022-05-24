@@ -178,12 +178,13 @@ export default {
         tabGroup.on('tab-active', this.onTabActive)
         tabGroup.on('tab-removed', () => {
             let tabs = tabGroup.getTabs();
-            if (!tabs || tabs.length === 0){
+            if (!tabs || tabs.length === 0) {
                 remote.getCurrentWindow().close();
             }
         })
 
         this.addTab(this.url);
+        this.tabGroup = tabGroup;
         init(wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
     },
 
