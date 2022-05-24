@@ -12,7 +12,6 @@ let callbackMap = new Map();
 let eventListeners = {};
 let requestId = 0;
 let client;
-let appUrl;
 let windowId;
 
 function init() {
@@ -40,9 +39,8 @@ function init() {
         call: call,
         register: register,
     }
-    appUrl = location.href;
     windowId = remote.getCurrentWindow().getMediaSourceId();
-    console.log('bridgeClientImpl init', appUrl)
+    console.log('bridgeClientImpl init')
 }
 
 function call(handlerName, args, callback) {
@@ -52,7 +50,7 @@ function call(handlerName, args, callback) {
         callbackMap.set(reqId, callback)
     }
     args.host = location.host;
-    let obj = {type: 'wf-op-request', requestId: reqId, appUrl, windowId, handlerName, args};
+    let obj = {type: 'wf-op-request', requestId: reqId, windowId, handlerName, args};
     console.log('wf-op-request', obj)
     client.send(JSON.stringify(obj));
 }

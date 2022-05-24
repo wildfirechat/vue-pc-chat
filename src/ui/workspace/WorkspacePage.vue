@@ -6,7 +6,6 @@
                 <div class="etabs-buttons"></div>
             </div>
             <div class="etabs-views">
-                <OpenPlatformAppHostView ref="opAppHost"/>
             </div>
         </div>
     </section>
@@ -18,13 +17,15 @@ import '../../../node_modules/electron-tabs/electron-tabs.css'
 import {init} from './bridgeServerImpl'
 import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
-import OpenPlatformAppHostView from "./OpenPlatformAppHostView";
+import {ipcRenderer, remote} from "../../platform";
+import PickUserView from "../main/pick/PickUserView";
+import store from "../../store";
 
 let tabGroup = null;
 
 export default {
     name: "WorkspacePage",
-    components: {OpenPlatformAppHostView},
+    components: {},
     data() {
         return {
             shouldShowWorkspacePortal: true,
@@ -38,34 +39,35 @@ export default {
             let params = new URLSearchParams(query[1]);
             this.url = params.get('url');
         }
+        let tmpUrl = this._getQuery(location.href, 'url');
+        if (tmpUrl) {
+            this.url = tmpUrl;
+        }
+
+        ipcRenderer.on('new-open-platform-app-tab', (event, args) => {
+            console.log('new-open-platform-app-tab', args)
+            let tabUrl = this._getQuery(args.url, 'url');
+            let tabs = tabGroup.getTabs();
+            let found = false;
+            for (let tab of tabs) {
+                if (tab.webviewAttributes.src === tabUrl) {
+                    tab.activate();
+                    found = true;
+                }
+            }
+            if (!found) {
+                this.addTab(tabUrl);
+            }
+        })
     },
     methods: {
-        addInitialTab() {
-            let tab = tabGroup.addTab({
-                title: "工作台",
-                src: this.url,
-                visible: true,
-                active: true,
-                closable: false,
-                webviewAttributes: {
-                    allowpopups: true,
-                    nodeintegration: true,
-                    webpreferences: 'contextIsolation=false',
-                },
-            });
-            tab.webview.addEventListener('dom-ready', (e) => {
-                // for debug
-                tab.webview.openDevTools();
-            });
-            tab.webview.addEventListener('page-title-updated', event => {
-                tab.setTitle(event.title);
-            })
-            console.log('to preload', process.env.NODE_ENV)
-            if (process.env.NODE_ENV === 'development') {
-                tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
-            } else {
-                tab.webview.preload = `file://${__dirname}/preload.js`;
+        _getQuery(url, key) {
+            let query = url.split('?');
+            if (query && query.length > 1) {
+                let params = new URLSearchParams(query[1]);
+                return params.get(key);
             }
+            return null;
         },
 
         onTabActive() {
@@ -78,14 +80,110 @@ export default {
 
         },
 
+        // 开放平台UI相关方法 start
+
+        chooseContacts(options, successCB, failCB) {
+            let beforeClose = (event) => {
+                if (event.params.confirm) {
+                    let users = event.params.users;
+                    successCB && successCB(users);
+                } else {
+                    failCB && failCB(-1);
+                }
+            };
+            this.$modal.show(
+                PickUserView,
+                {
+                    users: store.state.contact.favContactList.concat(store.state.contact.friendList),
+                    // initialCheckedUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+                    // uncheckableUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+                    showCategoryLabel: true,
+                    confirmTitle: '确定',
+                }, {
+                    name: 'pick-user-modal',
+                    width: 600,
+                    height: 480,
+                    clickToClose: false,
+                }, {
+                    // 'before-open': this.beforeOpen,
+                    'before-close': beforeClose,
+                    // 'closed': this.closed,
+                })
+        },
+
+        openExternal(args) {
+            let hash = window.location.hash;
+            let url = window.location.origin;
+            if (hash) {
+                url = window.location.href.replace(hash, '#/workspace');
+            } else {
+                url += "/workspace"
+            }
+
+            url += '?url=' + args.url;
+
+            ipcRenderer.send('show-open-platform-app-host-window', {url, appUrl: args.appUrl})
+        },
+
+        addTab(args) {
+            console.log('addTab', args)
+            let tab = tabGroup.addTab({
+                title: "工作台000",
+                //src: args.url ? args.url : args,
+                src: args,
+                visible: true,
+                active: true,
+                closable: true,
+                webviewAttributes: {
+                    allowpopups: true,
+                    nodeintegration: true,
+                    webpreferences: 'contextIsolation=false',
+                },
+            });
+            // tab.webview.addEventListener('new-window', (e) => {
+            //     // TODO 判断是否需要用默认浏览器打开
+            //     console.log('new-window', e.url)
+            // });
+            //
+            // tab.webview.addEventListener('update-target-url', event => {
+            //     console.log('update-target-url', event);
+            // })
+            //
+            // tab.webview.addEventListener('will-navigate', event => {
+            //     console.log('will-navigate', event)
+            //     event.preventDefault();
+            // })
+
+            tab.webview.addEventListener('page-title-updated', (e) => {
+                tab.setTitle(e.title);
+            })
+            tab.webview.addEventListener('dom-ready', (e) => {
+                // tab.webview.openDevTools();
+            })
+
+            if (process.env.NODE_ENV === 'development') {
+                tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
+            } else {
+                tab.webview.preload = `file://${__dirname}/preload.js`;
+            }
+        }
+
+
+        // 开放平台UI相关方法 end
     },
 
     mounted() {
         tabGroup = new ElectronTabs();
         tabGroup.on('tab-active', this.onTabActive)
+        tabGroup.on('tab-removed', () => {
+            let tabs = tabGroup.getTabs();
+            if (!tabs || tabs.length === 0){
+                remote.getCurrentWindow().close();
+            }
+        })
 
-        this.addInitialTab();
-        init(this.url, tabGroup, wfc, this.$refs.opAppHost, Config.OPEN_PLATFORM_SERVE_PORT);
+        this.addTab(this.url);
+        init(this.url, wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
     },
 
     computed: {}

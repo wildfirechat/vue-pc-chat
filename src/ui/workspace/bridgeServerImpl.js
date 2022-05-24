@@ -14,13 +14,11 @@ import {remote} from "../../platform";
 let handlers;
 let client;
 let mAppUrl;
-let mTabGroup;
 let mWfc;
 let mHostPage;
 
-export function init(appUrl, tabGroup, wfc, hostPage, wsPort) {
+export function init(appUrl, wfc, hostPage, wsPort) {
     mAppUrl = appUrl;
-    mTabGroup = tabGroup;
     mWfc = wfc;
     mHostPage = hostPage;
     client = new WebSocket('ws://127.0.0.1:' + wsPort + '/');
@@ -57,55 +55,15 @@ export function init(appUrl, tabGroup, wfc, hostPage, wsPort) {
 }
 
 let openUrl = (args) => { // addTab or open new window?
-    console.log('openUrl', mAppUrl, mTabGroup, args)
+    console.log('openUrl', mAppUrl, args)
     // 直接从工作台打开的，addTab
     // 从应用打开的，new window
     if (args.external) {
+        args.appUrl = mAppUrl;
         mHostPage.openExternal(args);
         return;
     }
-    if (!mTabGroup) {
-        return
-    }
-    let tab = mTabGroup.addTab({
-        // title: "工作台000",
-        //src: args.url ? args.url : args,
-        src: args,
-        visible: true,
-        active: true,
-        closable: true,
-        webviewAttributes: {
-            allowpopups: true,
-            nodeintegration: true,
-            webpreferences: 'contextIsolation=false',
-        },
-    });
-    // tab.webview.addEventListener('new-window', (e) => {
-    //     // TODO 判断是否需要用默认浏览器打开
-    //     console.log('new-window', e.url)
-    // });
-    //
-    // tab.webview.addEventListener('update-target-url', event => {
-    //     console.log('update-target-url', event);
-    // })
-    //
-    // tab.webview.addEventListener('will-navigate', event => {
-    //     console.log('will-navigate', event)
-    //     event.preventDefault();
-    // })
-
-    tab.webview.addEventListener('page-title-updated', (e) => {
-        tab.setTitle(e.title);
-    })
-    tab.webview.addEventListener('dom-ready', (e) => {
-        tab.webview.openDevTools();
-    })
-
-    if (process.env.NODE_ENV === 'development') {
-        tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
-    } else {
-        tab.webview.preload = `file://${__dirname}/preload.js`;
-    }
+    mHostPage.addTab(args)
 }
 
 let getAuthCode = (args, requestId) => {
@@ -152,10 +110,6 @@ let toast = (text) => {
         type: 'warn'
     });
 
-}
-
-let setupTabGroup = (tabGroup) => {
-    mTabGroup = tabGroup;
 }
 
 function _response(handlerName, requestId, code, data) {

@@ -789,6 +789,7 @@ const createMainWindow = async () => {
             });
             win.show();
         } else {
+            win.webContents.send('new-open-platform-app-tab', args);
             win.show();
             win.focus();
         }
