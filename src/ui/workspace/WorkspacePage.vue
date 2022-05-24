@@ -159,7 +159,7 @@ export default {
                 tab.setTitle(e.title);
             })
             tab.webview.addEventListener('dom-ready', (e) => {
-                tab.webview.openDevTools();
+                // tab.webview.openDevTools();
             })
 
             if (process.env.NODE_ENV === 'development') {
