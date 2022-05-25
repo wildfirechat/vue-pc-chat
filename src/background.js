@@ -82,7 +82,6 @@ let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
-let winBadge;
 let screenshots;
 let tray;
 let downloadFileMap = new Map()
@@ -564,7 +563,6 @@ const createMainWindow = async () => {
     });
     mainWindow.center();
     const badgeOptions = {}
-    winBadge = new Badge(mainWindow, badgeOptions);
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
@@ -778,8 +776,8 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on('show-open-platform-app-host-window', async (event, args) => {
-        console.log('on show-open-platform-app-host-window', args)
+    ipcMain.on('open-h5-app-window', async (event, args) => {
+        console.log('on open-h5-app-window', args)
         let win = openPlatformAppHostWindows.get(args.hostUrl);
         if (!win) {
             win = createWindow(args.url, 960, 600, 640, 400, true, true);
@@ -860,6 +858,15 @@ const createMainWindow = async () => {
         mainWindow.setMinimumSize(400, 480);
         mainWindow.setSize(400, 480);
         mainWindow.center();
+
+        // 清未读数
+        updateTray(0);
+        app.badgeCount = 0;
+
+        // 请缓存
+        session.defaultSession.clearCache();
+        session.defaultSession.clearAuthCache();
+        session.defaultSession.clearStorageData();
     });
 
     ipcMain.on('enable-close-window-to-exit', (event, enable) => {

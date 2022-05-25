@@ -191,7 +191,7 @@ let store = {
                 this.enableAutoLogin = false;
                 this.isElectron = isElectron();
                 this.isElectronWindowsOrLinux = process && (process.platform === 'win32' || process.platform === 'linux');
-                this.isMainWindow = false;
+                // this.isMainWindow = false;
                 this.linuxUpdateTitleInterval = 0;
                 this.wfc = wfc;
                 this.config = Config;

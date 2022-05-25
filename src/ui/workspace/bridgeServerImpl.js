@@ -17,8 +17,13 @@ let mWfc;
 let mHostPage;
 
 export function init(wfc, hostPage, wsPort) {
+
     mWfc = wfc;
     mHostPage = hostPage;
+    if (client){
+        return;
+    }
+
     client = new WebSocket('ws://127.0.0.1:' + wsPort + '/');
     client.on('message', (data) => {
         let obj;
@@ -40,7 +45,7 @@ export function init(wfc, hostPage, wsPort) {
                 console.log('wf-op-request, unknown handlerName', obj.handlerName);
             }
         }
-    })
+    });
 
     handlers = {
         'toast': toast,
@@ -66,7 +71,7 @@ let openUrl = (args) => { // addTab or open new window?
 
 let getAuthCode = (args, appUrl, requestId) => {
     let host = new URL(appUrl).host;
-    if (host.indexOf(':')) {
+    if (host.indexOf(':') > 0) {
         host = host.substring(0, host.indexOf(':'))
     }
     mWfc.getAuthCode(args.appId, args.appType, host, (authCode) => {

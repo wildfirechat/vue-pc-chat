@@ -122,10 +122,10 @@ export default {
 
             url += '?url=' + args.url;
 
-            ipcRenderer.send('show-open-platform-app-host-window', {url, hostUrl: args.hostUrl})
+            ipcRenderer.send('open-h5-app-window', {url, hostUrl: args.hostUrl})
         },
 
-        addTab(args) {
+        addTab(args, closable = true) {
             console.log('addTab', args)
             let tab = tabGroup.addTab({
                 title: "工作台",
@@ -133,7 +133,7 @@ export default {
                 src: args,
                 visible: true,
                 active: true,
-                closable: true,
+                closable: closable,
                 webviewAttributes: {
                     allowpopups: true,
                     nodeintegration: true,
@@ -183,7 +183,7 @@ export default {
             }
         })
 
-        this.addTab(this.url);
+        this.addTab(this.url, false);
         this.tabGroup = tabGroup;
         init(wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
     },

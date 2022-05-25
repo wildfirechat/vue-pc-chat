@@ -19,6 +19,7 @@
 <script>
 
 import Message from "@/wfc/messages/message";
+import {ipcRenderer, isElectron} from "../../../../platform";
 
 export default {
     name: "RichNotificationMessageContentView",
@@ -28,10 +29,23 @@ export default {
             required: true
         }
     },
-    methods:{
-        onClickRichNotification(){
+    methods: {
+        onClickRichNotification() {
             // TODO 打开 app 或者链接
             console.log('onClickRichNotification');
+            if (isElectron()) {
+                let hash = window.location.hash;
+                let url = window.location.origin;
+                if (hash) {
+                    url = window.location.href.replace(hash, '#/workspace');
+                } else {
+                    url += "/workspace"
+                }
+
+                url += '?url=' + this.message.messageContent.exUrl;
+
+                ipcRenderer.send('open-h5-app-window', {hostUrl: location.href, url: url})
+            }
         }
     },
     components: {}
