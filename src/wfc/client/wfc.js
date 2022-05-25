@@ -1026,7 +1026,7 @@ export class WfcManager {
     async getRemoteListenedChannels(successCB, failCB) {
         impl.getRemoteListenedChannels(successCB, failCB);
     }
-    
+
     /**
      * 销毁频道
      * @param {string} channelId 频道id
@@ -1893,6 +1893,14 @@ export class WfcManager {
 
     setMyCustomState(customState, customText, successCB, failCB) {
         impl.setMyCustomState(customState, customText, successCB, failCB)
+    }
+
+    getAuthCode(appId, appType, host, successCB, failCB){
+        impl.getAuthCode(appId, appType, host, successCB, failCB);
+    }
+
+    configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB){
+        impl.configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB);
     }
 
     _getStore() {

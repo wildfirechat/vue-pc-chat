@@ -79,10 +79,9 @@ let downloading = false;
 let mainWindow;
 let fileWindow;
 let compositeMessageWindows = new Map();
-let workspaceWindow;
+let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
-let winBadge;
 let screenshots;
 let tray;
 let downloadFileMap = new Map()
@@ -554,6 +553,8 @@ const createMainWindow = async () => {
             contextIsolation: false,
             nativeWindowOpen: true,
             webSecurity: false,
+            webviewTag: true,
+
             // 如果想打包之后的版本，不能打开调试控制台，请取消下面的注释
             // devTools: !app.isPackaged,
         },
@@ -562,7 +563,6 @@ const createMainWindow = async () => {
     });
     mainWindow.center();
     const badgeOptions = {}
-    winBadge = new Badge(mainWindow, badgeOptions);
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
@@ -722,10 +722,10 @@ const createMainWindow = async () => {
         downloadFileMap.set(encodeURI(remotePath), {messageId: messageId, fileName: args.fileName, source: source});
 
         if (source === 'file') {
-            console.log('file-download file')
+            console.log('file-download file', remotePath)
             fileWindow.webContents.downloadURL(remotePath)
         } else {
-            console.log('file-download main')
+            console.log('file-download main', remotePath)
             mainWindow.webContents.downloadURL(remotePath)
         }
     });
@@ -776,17 +776,20 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on('show-workspace-window', async (event, args) => {
-        console.log('on show-workspace-window', workspaceWindow, args)
-        if (!workspaceWindow) {
-            workspaceWindow = createWindow(args.url, 960, 600, 640, 400, true, true);
-            workspaceWindow.on('close', () => {
-                workspaceWindow = null;
+    ipcMain.on('open-h5-app-window', async (event, args) => {
+        console.log('on open-h5-app-window', args)
+        let win = openPlatformAppHostWindows.get(args.hostUrl);
+        if (!win) {
+            win = createWindow(args.url, 960, 600, 640, 400, true, true);
+            openPlatformAppHostWindows.set(args.hostUrl, win);
+            win.on('close', () => {
+                openPlatformAppHostWindows.delete(args.hostUrl);
             });
-            workspaceWindow.show();
+            win.show();
         } else {
-            workspaceWindow.show();
-            workspaceWindow.focus();
+            win.webContents.send('new-open-platform-app-tab', args);
+            win.show();
+            win.focus();
         }
     });
 
@@ -855,6 +858,15 @@ const createMainWindow = async () => {
         mainWindow.setMinimumSize(400, 480);
         mainWindow.setSize(400, 480);
         mainWindow.center();
+
+        // 清未读数
+        updateTray(0);
+        app.badgeCount = 0;
+
+        // 请缓存
+        session.defaultSession.clearCache();
+        session.defaultSession.clearAuthCache();
+        session.defaultSession.clearStorageData();
     });
 
     ipcMain.on('enable-close-window-to-exit', (event, enable) => {
@@ -867,6 +879,9 @@ const createMainWindow = async () => {
 
     ipcMain.on('start-secret-server', (event, args) => {
         startSecretDecodeServer(args.port);
+    })
+    ipcMain.on('start-op-server', (event, args) => {
+        startOpenPlatformServer(args.port);
     })
 
     powerMonitor.on('resume', () => {
@@ -1169,6 +1184,28 @@ function startSecretDecodeServer(port) {
     secretDecodeServer.listen(port, 'localhost', function () {
         // do nothing
     });
+}
+
+var openPlatformServer;
+
+function startOpenPlatformServer(port) {
+    if (openPlatformServer) {
+        return
+    }
+    const WebSocket = require('ws');
+    const wss = new WebSocket.Server({port: port ? port : 7983});
+
+    wss.on('connection', (ws) => {
+        ws.on('message', (data) => {
+            wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(data);
+                }
+            });
+        });
+    });
+
+    openPlatformServer = wss;
 }
 
 function toArrayBuffer(buf) {

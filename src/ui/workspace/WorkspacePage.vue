@@ -1,106 +1,73 @@
 <template>
-    <section>
+    <section class="workspace-page">
         <div class="workspace-container">
             <div class="etabs-tabgroup">
                 <div class="etabs-tabs"></div>
                 <div class="etabs-buttons"></div>
             </div>
-            <div class="etabs-views"></div>
-        </div>
-        <div v-if="shouldShowWorkspacePortal" class="workspace-portal">
-            <div>
-                <button @click="showWFCHome">点击打开野火IM官网</button>
-            </div>
-            <div>
-                <button @click="showDevDocs">点击打开野火开发者文档</button>
-            </div>
-            <div>
-                <button @click="openConversation">打开和机器人小火的会话界面</button>
-            </div>
-            <div>
-                <button @click="sendMessage">给机器人小火发送消息：嘿，你好，小火。</button>
+            <div class="etabs-views">
             </div>
         </div>
     </section>
 </template>
 
 <script>
-// const TabGroup = require("electron-tabs");
 import ElectronTabs from 'electron-tabs'
 import '../../../node_modules/electron-tabs/electron-tabs.css'
-import IPCEventType from "../../ipc/ipcEventType";
-import Conversation from "../../wfc/model/conversation";
-import localStorageEmitter from "../../ipc/localStorageEmitter";
-import {remote} from "../../platform";
-import TextMessageContent from "../../wfc/messages/textMessageContent";
-import IpcSub from "../../ipc/ipcSub";
+import {init} from './bridgeServerImpl'
+import wfc from "../../wfc/client/wfc";
+import Config from "../../config";
+import {ipcRenderer, remote} from "../../platform";
+import PickUserView from "../main/pick/PickUserView";
+import store from "../../store";
 
 let tabGroup = null;
 
 export default {
     name: "WorkspacePage",
+    components: {},
     data() {
         return {
             shouldShowWorkspacePortal: true,
+            url: Config.OPEN_PLATFORM_WORK_SPACE_URL,
         }
     },
+
+    created() {
+        let query = window.location.href.split('?');
+        if (query && query.length > 1) {
+            let params = new URLSearchParams(query[1]);
+            this.url = params.get('url');
+        }
+        let tmpUrl = this._getQuery(location.href, 'url');
+        if (tmpUrl) {
+            this.url = tmpUrl;
+        }
+
+        ipcRenderer.on('new-open-platform-app-tab', (event, args) => {
+            console.log('new-open-platform-app-tab', args)
+            let tabUrl = this._getQuery(args.url, 'url');
+            let tabs = tabGroup.getTabs();
+            let found = false;
+            for (let tab of tabs) {
+                if (tab.webviewAttributes.src === tabUrl) {
+                    tab.activate();
+                    found = true;
+                }
+            }
+            if (!found) {
+                this.addTab(tabUrl);
+            }
+        })
+    },
     methods: {
-        tab() {
-            // window.open('www.baidu.com')
-            // let tabGroup = new ElectronTabs();
-            let tab = tabGroup.addTab({
-                title: "野火IM",
-                src: "https://www.wildfirechat.cn",
-                visible: true
-            });
-            let tab2 = tabGroup.addTab({
-                title: "野火IM开发文档",
-                src: "https://docs.wildfirechat.cn",
-                visible: true,
-                active: true
-            });
-        },
-        showWFCHome() {
-            tabGroup.addTab({
-                title: "野火IM",
-                src: "https://www.wildfirechat.cn",
-                visible: true,
-                active: true,
-            });
-            this.shouldShowWorkspacePortal = false;
-        },
-        showDevDocs() {
-            tabGroup.addTab({
-                title: "野火IM开发文档",
-                src: "https://docs.wildfirechat.cn",
-                visible: true,
-                active: true
-            });
-            this.shouldShowWorkspacePortal = false;
-        },
-        addInitialTab() {
-            tabGroup.addTab({
-                title: "野火IM工作空间",
-                // src: url,
-                visible: true,
-                closable: false,
-            });
-
-            localStorageEmitter.on('pick-conversation-done', (ev, args) => {
-                console.log('pick-conversation-done')
-                remote.getCurrentWindow().focus();
-            })
-        },
-
-        openConversation() {
-            let conversation = new Conversation(0, 'FireRobot', 0)
-            localStorageEmitter.send('wf-ipc-to-main', {type: IPCEventType.openConversation, value: conversation})
-        },
-
-        sendMessage() {
-            let conversation = new Conversation(0, 'FireRobot', 0)
-            let textMessageContent = new TextMessageContent(' 你好，小火。')
-            IpcSub.sendMessage(conversation, textMessageContent);
+        _getQuery(url, key) {
+            let query = url.split('?');
+            if (query && query.length > 1) {
+                let params = new URLSearchParams(query[1]);
+                return params.get(key);
+            }
+            return null;
         },
 
         onTabActive() {
@@ -111,18 +78,114 @@ export default {
 
         onTabClose() {
 
-        }
-    },
+        },
 
-    created() {
-        document.title = '工作空间';
+        // 开放平台UI相关方法 start
+
+        chooseContacts(options, successCB, failCB) {
+            let beforeClose = (event) => {
+                if (event.params.confirm) {
+                    let users = event.params.users;
+                    successCB && successCB(users);
+                } else {
+                    failCB && failCB(-1);
+                }
+            };
+            this.$modal.show(
+                PickUserView,
+                {
+                    users: store.state.contact.favContactList.concat(store.state.contact.friendList),
+                    // initialCheckedUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+                    // uncheckableUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
+                    showCategoryLabel: true,
+                    confirmTitle: '确定',
+                }, {
+                    name: 'pick-user-modal',
+                    width: 600,
+                    height: 480,
+                    clickToClose: false,
+                }, {
+                    // 'before-open': this.beforeOpen,
+                    'before-close': beforeClose,
+                    // 'closed': this.closed,
+                })
+        },
+
+        openExternal(args) {
+            let hash = window.location.hash;
+            let url = window.location.origin;
+            if (hash) {
+                url = window.location.href.replace(hash, '#/workspace');
+            } else {
+                url += "/workspace"
+            }
+
+            url += '?url=' + args.url;
+
+            ipcRenderer.send('open-h5-app-window', {url, hostUrl: args.hostUrl})
+        },
+
+        addTab(args, closable = true) {
+            console.log('addTab', args)
+            let tab = tabGroup.addTab({
+                title: "工作台",
+                //src: args.url ? args.url : args,
+                src: args,
+                visible: true,
+                active: true,
+                closable: closable,
+                webviewAttributes: {
+                    allowpopups: true,
+                    nodeintegration: true,
+                    webpreferences: 'contextIsolation=false',
+                    url: args,
+                },
+            });
+            // tab.webview.addEventListener('new-window', (e) => {
+            //     // TODO 判断是否需要用默认浏览器打开
+            //     console.log('new-window', e.url)
+            // });
+            //
+            // tab.webview.addEventListener('update-target-url', event => {
+            //     console.log('update-target-url', event);
+            // })
+            //
+            // tab.webview.addEventListener('will-navigate', event => {
+            //     console.log('will-navigate', event)
+            //     event.preventDefault();
+            // })
+
+            tab.webview.addEventListener('page-title-updated', (e) => {
+                tab.setTitle(e.title);
+            })
+            tab.webview.addEventListener('dom-ready', (e) => {
+                // tab.webview.openDevTools();
+            })
+
+            if (process.env.NODE_ENV === 'development') {
+                tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
+            } else {
+                tab.webview.preload = `file://${__dirname}/preload.js`;
+            }
+        }
+
+
+        // 开放平台UI相关方法 end
     },
 
     mounted() {
         tabGroup = new ElectronTabs();
         tabGroup.on('tab-active', this.onTabActive)
+        tabGroup.on('tab-removed', () => {
+            let tabs = tabGroup.getTabs();
+            if (!tabs || tabs.length === 0) {
+                remote.getCurrentWindow().close();
+            }
+        })
 
-        this.addInitialTab();
+        this.addTab(this.url, false);
+        this.tabGroup = tabGroup;
+        init(wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
     },
 
     computed: {}
@@ -130,19 +193,16 @@ export default {
 </script>
 
 <style scoped>
+.workspace-page {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    position: relative;
+}
+
 .workspace-container {
     width: 100%;
     height: 100%;
-}
-
-.workspace-portal {
-    position: absolute;
-    left: 0;
-    top: 32px;
-    width: 100%;
-    height: calc(100% - 32px);
-    display: flex;
-    flex-direction: column;
 }
 
 .workspace-portal button {
