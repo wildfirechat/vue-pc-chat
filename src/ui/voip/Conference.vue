@@ -14,6 +14,9 @@
             <ScreenShareControlView v-if="session && session.isScreenSharing()" type="conference"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
+        <div v-if="endReason !== undefined && endReason === 4" @click="rejoinConference" class="rejoin-container">
+            会议断开，点击重新加入
+        </div>
         <div v-if="session" class="conference-container"
              v-bind:style="{display: session.isScreenSharing() && sharedMiscState.isElectron ? 'none' : 'flex'}">
             <div class="conference-main-content-container">
@@ -257,6 +260,8 @@ export default {
             videoInputDeviceIndex: 0,
 
             refreshUserInfoInternal: 0,
+
+            endReason: undefined,
         }
     },
     components: {ScreenShareControlView, UserCardView, ElectronWindowsControlButtonView},
@@ -367,6 +372,11 @@ export default {
                 console.log('callEndWithReason', reason)
                 // 可以根据reason，进行一些提示
                 // alert('会议已结束');
+
+                this.endReason = reason;
+                if (reason === CallEndReason.REASON_MediaError || reason === CallEndReason.REASON_SignalError) {
+                    return;
+                }
                 if (reason === CallEndReason.RoomNotExist) {
                     console.log('join conference failed', reason, this.session)
                     let obj = {reason: reason, session: this.session};
@@ -419,7 +429,7 @@ export default {
                 participants.forEach(p => {
                     let s = this.session.getSubscriber(p);
                     // 自己
-                    if (!s){
+                    if (!s) {
                         return;
                     }
                     console.log('conference', 'didMuteStateChanged', p, s.videoMuted, s.audioMuted);
@@ -708,6 +718,25 @@ export default {
                     })
                 })
             }
+        },
+
+        rejoinConference() {
+            avenginekit.joinConference({
+                callId: this.session.callId,
+                pin: this.session.pin,
+                host: this.session.host,
+                tile: this.session.title,
+                desc: this.session.desc,
+                audioOnly: this.session.audioOnly,
+                audience: this.session.audience,
+                advance: this.session.audience,
+                muteVideo: this.session.videoMuted,
+                muteAudio: this.session.audioMuted,
+                extra: this.session.extra,
+                callExtra: this.session.callExtra,
+                selfUserInfo: this.selfUserInfo,
+            });
+            this.endReason = undefined;
         }
     },
 
@@ -837,6 +866,7 @@ export default {
     --participant-video-item-height: 100%;
     --conference-container-margin-top: 30px;
     background: #00000000 !important;
+    position: relative;
 }
 
 .conference-container {
@@ -1140,4 +1170,17 @@ footer {
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
 }
+
+.rejoin-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #e0e0e0e0;
+    text-align: center;
+    justify-content: center;
+    color: red;
+}
+
 </style>
