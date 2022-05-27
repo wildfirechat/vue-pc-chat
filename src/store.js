@@ -1096,7 +1096,7 @@ let store = {
         } else if (info.conversation.type === ConversationType.Group) {
             info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
             info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
-            info.conversation._target._displayName = info.conversation._target.name;
+            info.conversation._target._displayName = info.conversation._target.remark ? info.conversation._target.remark : info.conversation._target.name;
         } else if (info.conversation.type === ConversationType.Channel) {
             info.conversation._target = wfc.getChannelInfo(info.conversation.target, false);
             info.conversation._target._displayName = info.conversation._target.name;
