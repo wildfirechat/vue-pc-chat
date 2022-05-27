@@ -28,26 +28,8 @@ export default class AddParticipantsMessageContent extends NotificationMessageCo
     }
 
     formatNotification(message) {
-        let desc = '';
-        if (this.fromSelf){
-            desc = '您邀请'
-        }else {
-            desc = wfc.getGroupMemberDisplayName(message.conversation.target, this.initiator)
-            desc += "邀请"
-        }
-
-        if (this.participants){
-            this.participants.forEach(p => {
-                desc += ' ';
-                if (p === wfc.getUserId()){
-                    desc += '您';
-                }else {
-                    desc += wfc.getGroupMemberDisplayName(message.conversation.target, p);
-                }
-            })
-        }
-        desc += ' 加入了通话';
-        return desc;
+        // TODO
+        return "add participant";
     }
 
     encode() {
@@ -65,6 +47,14 @@ export default class AddParticipantsMessageContent extends NotificationMessageCo
         };
         payload.binaryContent = wfc.utf8_to_b64(JSON.stringify(obj));
 
+        let epids = this.existParticipants.map(p => p.userId);
+        let pushData = {
+            callId:this.callId,
+            audioOnly:this.audioOnly,
+            participants:this.participants,
+            existParticipants: epids,
+        }
+        payload.pushData = JSON.stringify(pushData);
         return payload;
     }
 
