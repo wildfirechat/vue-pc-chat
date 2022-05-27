@@ -1609,6 +1609,14 @@ export class WfcManager {
     }
 
     /**
+     * 清除所有消息
+     * @param {boolean} removeConversation 是否同时删除会话
+     */
+    clearAllMessages(removeConversation) {
+        impl.clearAllMessages(removeConversation);
+    }
+
+    /**
      * 清除远程会话消息
      * @param {Conversation} conversation
      * @param {function ()} successCB
