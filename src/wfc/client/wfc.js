@@ -724,6 +724,25 @@ export class WfcManager {
     }
 
     /**
+     * 设置群备注
+     * @param {string} groupId 群id
+     * @param {string} remark 群备注
+     * @param successCB
+     * @param failCB
+     */
+    async setGroupRemark(groupId, remark, successCB, failCB) {
+        impl.setGroupRemark(groupId, remark, successCB, failCB);
+    }
+
+    /**
+     *  获取群备注
+     * @param {string} groupId 群id
+     * @return 群备注
+     */
+    getGroupRemark(groupId) {
+        return impl.setGroupRemark(groupId);
+    }
+    /**
      * 获取保存到通讯录的群id列表
      * @returns {[string]}
      */
