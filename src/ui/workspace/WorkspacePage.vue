@@ -62,10 +62,12 @@ export default {
     },
     methods: {
         _getQuery(url, key) {
-            let query = url.split('?');
+            if (url.indexOf('?') > 0) {
+                let query = url.substring(url.indexOf('?'));
             if (query && query.length > 1) {
-                let params = new URLSearchParams(query[1]);
+                    let params = new URLSearchParams(query);
                 return params.get(key);
+            }
             }
             return null;
         },

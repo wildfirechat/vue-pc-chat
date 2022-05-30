@@ -1039,10 +1039,12 @@ export class WfcManager {
     }
 
     /**
-    * @param {function ([string])} successCB
+     * 从服务端获取所收听的频道id列表
+     * @param {function([String])} successCB
     * @param {function (number)} failCB
+     *
     */
-    async getRemoteListenedChannels(successCB, failCB) {
+    getRemoteListenedChannels(successCB, failCB) {
         impl.getRemoteListenedChannels(successCB, failCB);
     }
 
