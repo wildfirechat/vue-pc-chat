@@ -780,7 +780,7 @@ const createMainWindow = async () => {
         console.log('on open-h5-app-window', args)
         let win = openPlatformAppHostWindows.get(args.hostUrl);
         if (!win) {
-            win = createWindow(decodeURIComponent(args.url), 960, 600, 640, 400, true, true);
+            win = createWindow(args.url, 960, 600, 640, 400, true, true);
             openPlatformAppHostWindows.set(args.hostUrl, win);
             win.on('close', () => {
                 openPlatformAppHostWindows.delete(args.hostUrl);

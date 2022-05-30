@@ -109,9 +109,9 @@ export default {
                 url += "/workspace"
             }
 
-            url += '?url=' + args.url;
+            url += '?url=' + encodeURIComponent(args.url);
 
-            ipcRenderer.send('open-h5-app-window', {url: encodeURIComponent(url), hostUrl: args.hostUrl})
+            ipcRenderer.send('open-h5-app-window', {url: url, hostUrl: args.hostUrl})
         },
 
         addTab(url, closable = true) {
