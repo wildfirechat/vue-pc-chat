@@ -66,7 +66,7 @@ let openUrl = (args) => { // addTab or open new window?
         mHostPage.openExternal(args);
         return;
     }
-    mHostPage.addTab(args)
+    mHostPage.addTab(args.url)
 }
 
 let getAuthCode = (args, appUrl, requestId) => {

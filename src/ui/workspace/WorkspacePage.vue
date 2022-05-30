@@ -34,40 +34,27 @@ export default {
     },
 
     created() {
-        let query = window.location.href.split('?');
-        if (query && query.length > 1) {
-            let params = new URLSearchParams(query[1]);
-            this.url = params.get('url');
-        }
         let tmpUrl = this._getQuery(location.href, 'url');
         if (tmpUrl) {
-            this.url = tmpUrl;
+            this.url = decodeURIComponent(tmpUrl);
         }
 
         ipcRenderer.on('new-open-platform-app-tab', (event, args) => {
             console.log('new-open-platform-app-tab', args)
             let tabUrl = this._getQuery(args.url, 'url');
-            let tabs = tabGroup.getTabs();
-            let found = false;
-            for (let tab of tabs) {
-                if (tab.webviewAttributes.src === tabUrl) {
-                    tab.activate();
-                    found = true;
-                }
-            }
-            if (!found) {
-                this.addTab(tabUrl);
-            }
+            tabUrl = decodeURIComponent(tabUrl);
+            console.log('new-open-platform-app-tab', args, tabUrl)
+            this.addTab(tabUrl);
         })
     },
     methods: {
         _getQuery(url, key) {
             if (url.indexOf('?') > 0) {
                 let query = url.substring(url.indexOf('?'));
-            if (query && query.length > 1) {
+                if (query && query.length > 1) {
                     let params = new URLSearchParams(query);
-                return params.get(key);
-            }
+                    return params.get(key);
+                }
             }
             return null;
         },
@@ -124,15 +111,23 @@ export default {
 
             url += '?url=' + args.url;
 
-            ipcRenderer.send('open-h5-app-window', {url, hostUrl: args.hostUrl})
+            ipcRenderer.send('open-h5-app-window', {url: encodeURIComponent(url), hostUrl: args.hostUrl})
         },
 
-        addTab(args, closable = true) {
-            console.log('addTab', args)
+        addTab(url, closable = true) {
+            let tabs = tabGroup.getTabs();
+            let found = false;
+            for (let tab of tabs) {
+                if (tab.webviewAttributes.src === url) {
+                    tab.activate();
+                    found = true;
+                    return;
+                }
+            }
             let tab = tabGroup.addTab({
                 title: "工作台",
                 //src: args.url ? args.url : args,
-                src: args,
+                src: url,
                 visible: true,
                 active: true,
                 closable: closable,
@@ -140,7 +135,7 @@ export default {
                     allowpopups: true,
                     nodeintegration: true,
                     webpreferences: 'contextIsolation=false',
-                    url: args,
+                    url: url,
                 },
             });
             // tab.webview.addEventListener('new-window', (e) => {
