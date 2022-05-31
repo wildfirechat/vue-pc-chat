@@ -717,17 +717,16 @@ const createMainWindow = async () => {
     ipcMain.on('file-download', async (event, args) => {
         let remotePath = args.remotePath;
         let messageId = args.messageId;
-        let source = args.source;
+        let windowId = args.windowId;
         remotePath = remotePath.replace(':80', '');
-        downloadFileMap.set(encodeURI(remotePath), {messageId: messageId, fileName: args.fileName, source: source});
+        downloadFileMap.set(encodeURI(remotePath), {messageId: messageId, fileName: args.fileName, windowId: windowId});
 
-        if (source === 'file') {
-            console.log('file-download file', remotePath)
-            fileWindow.webContents.downloadURL(remotePath)
-        } else {
-            console.log('file-download main', remotePath)
-            mainWindow.webContents.downloadURL(remotePath)
-        }
+        let windows = BrowserWindow.getAllWindows();
+        windows.forEach(w => {
+            if (w.getMediaSourceId() === windowId) {
+                w.webContents.downloadURL(remotePath)
+            }
+        })
     });
 
     ipcMain.on('show-file-window', async (event, args) => {

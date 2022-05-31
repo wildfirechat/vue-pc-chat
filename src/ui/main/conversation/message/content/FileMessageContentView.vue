@@ -44,8 +44,11 @@ export default {
                         downloadFile(this.message)
                         store.addDownloadingMessage(this.message.messageId)
                     } else {
-                        // TODO toast 下载中
-                        console.log('file isDownloading')
+                        this.$notify({
+                            title: '下载中',
+                            text: '文件下载中，请稍后',
+                            type: 'warn'
+                        });
                     }
                 }
             } else {
