@@ -473,16 +473,12 @@ export default {
             }
         },
         download(message) {
-            if (isElectron()) {
-                downloadFile(message);
+            if (!store.isDownloadingMessage(message.messageId)) {
+                downloadFile(message)
+                store.addDownloadingMessage(message.messageId)
             } else {
-                if (!store.isDownloadingMessage(message.messageId)) {
-                    downloadFile(message)
-                    store.addDownloadingMessage(message.messageId)
-                } else {
-                    // TODO toast 下载中
-                    console.log('file isDownloading')
-                }
+                // TODO toast 下载中
+                console.log('file isDownloading')
             }
         },
 
