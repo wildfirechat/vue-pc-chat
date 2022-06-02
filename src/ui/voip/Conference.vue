@@ -238,6 +238,9 @@ import ScreenShareControlView from "./ScreenShareControlView";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView";
 import store from "../../store";
+import wfc from "../../wfc/client/wfc";
+import ForwardType from "../main/conversation/message/forward/ForwardType";
+import Message from "../../wfc/messages/message";
 
 export default {
     name: 'Conference',
@@ -523,10 +526,13 @@ export default {
         },
 
         invite() {
-            //IpcSub.inviteConferenceParticipant(this.session)
             let callSession = this.session;
             let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, callSession.host, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.defaultAudience, callSession.advance, callSession.pin)
-            localStorageEmitter.send('inviteConferenceParticipant', {messagePayload: inviteMessageContent.encode()})
+            let message = new Message(null, inviteMessageContent);
+            this.$forwardMessage({
+                forwardType: ForwardType.NORMAL,
+                messages: [message]
+            });
             this.showParticipantList = false;
         },
 
@@ -737,7 +743,7 @@ export default {
                 selfUserInfo: this.selfUserInfo,
             });
             this.endReason = undefined;
-        }
+        },
     },
 
     computed: {
@@ -821,11 +827,6 @@ export default {
         this.setupSessionCallback();
 
         if (isElectron()) {
-            let listener = (ev, args) => {
-                remote.getCurrentWindow().focus();
-            }
-            localStorageEmitter.on('inviteConferenceParticipantDone', listener)
-            localStorageEmitter.on('inviteConferenceParticipantCancel', listener)
             //
             // this.$on('stop-screen-share', () => {
             //     this.session.stopScreenShare();
