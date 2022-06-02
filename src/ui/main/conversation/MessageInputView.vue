@@ -89,7 +89,6 @@ import avenginekitproxy from "@/wfc/av/engine/avenginekitproxy";
 import {fileFromDataUri} from "@/ui/util/imageUtil";
 import StickerMessageContent from "@/wfc/messages/stickerMessageContent";
 import {config as emojiConfig} from "@/ui/main/conversation/EmojiAndStickerConfig";
-import PickUserView from "@/ui/main/pick/PickUserView";
 import {ipcRenderer, isElectron} from "@/platform";
 import {copyText} from "../../util/clipboard";
 import EventType from "../../../wfc/client/wfcEvent";
@@ -417,39 +416,17 @@ export default {
 
 
         startGroupVoip(isAudioOnly) {
-            let beforeOpen = (event) => {
-                console.log('Opening...')
-            }
-            let beforeClose = (event) => {
-                console.log('Closing...', event, event.params)
-                if (event.params.confirm) {
-                    let newPickedUsers = event.params.users;
-                    let participantIds = newPickedUsers.map(u => u.uid);
-                    avenginekitproxy.startCall(this.conversationInfo.conversation, isAudioOnly, participantIds)
-                }
-            }
-
-            let closed = (event) => {
-                console.log('Close...', event)
-            }
-
-            this.$modal.show(
-                PickUserView,
-                {
-                    users: store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, true, true),
-                    initialCheckedUsers: [this.sharedContactState.selfUserInfo],
-                    uncheckableUsers: [this.sharedContactState.selfUserInfo],
-                    confirmTitle: this.$t('common.confirm'),
-                }, {
-                    name: 'pick-user-modal',
-                    width: 600,
-                    height: 480,
-                    clickToClose: false,
-                }, {
-                    'before-open': beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': closed,
-                })
+            let successCB = users => {
+                let participantIds = users.map(u => u.uid);
+                avenginekitproxy.startCall(this.conversationInfo.conversation, isAudioOnly, participantIds)
+            };
+            this.$pickContact({
+                successCB,
+                users: store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, true, true),
+                initialCheckedUsers: [this.sharedContactState.selfUserInfo],
+                uncheckableUsers: [this.sharedContactState.selfUserInfo],
+                confirmTitle: this.$t('common.confirm'),
+            });
         },
 
         onPickFile(event) {

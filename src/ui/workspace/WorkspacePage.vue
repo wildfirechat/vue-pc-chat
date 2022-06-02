@@ -18,8 +18,6 @@ import {init} from './bridgeServerImpl'
 import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
 import {ipcRenderer, remote} from "../../platform";
-import PickUserView from "../main/pick/PickUserView";
-import store from "../../store";
 
 let tabGroup = null;
 
@@ -70,34 +68,11 @@ export default {
         },
 
         // 开放平台UI相关方法 start
-
         chooseContacts(options, successCB, failCB) {
-            let beforeClose = (event) => {
-                if (event.params.confirm) {
-                    let users = event.params.users;
-                    successCB && successCB(users);
-                } else {
-                    failCB && failCB(-1);
-                }
-            };
-            this.$modal.show(
-                PickUserView,
-                {
-                    users: store.state.contact.favContactList.concat(store.state.contact.friendList),
-                    // initialCheckedUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
-                    // uncheckableUsers: [...this.session.participantUserInfos, this.session.selfUserInfo],
-                    showCategoryLabel: true,
-                    confirmTitle: '确定',
-                }, {
-                    name: 'pick-user-modal',
-                    width: 600,
-                    height: 480,
-                    clickToClose: false,
-                }, {
-                    // 'before-open': this.beforeOpen,
-                    'before-close': beforeClose,
-                    // 'closed': this.closed,
-                })
+            this.$pickContact({
+                successCB,
+                failCB,
+            });
         },
 
         openExternal(args) {

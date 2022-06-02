@@ -51,7 +51,7 @@
 
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                             <RecallNotificationMessageContentView :message="message" v-else-if="isRecallNotificationMessage(message)"/>
-                            <RichNotificationMessageContentView :message="message" v-if="isRichNotificationMessage(message)"/>
+                            <RichNotificationMessageContentView :message="message" v-else-if="isRichNotificationMessage(message)"/>
                             <NormalOutMessageContentView
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
                                 :message="message"
@@ -313,6 +313,7 @@ export default {
         },
 
         isNotificationMessage(message) {
+            console.log('isNotificationMessage', message)
             return message && message.messageContent instanceof NotificationMessageContent
                 && message.messageContent.type !== MessageContentType.RecallMessage_Notification
                 && message.messageContent.type !== MessageContentType.Rich_Notification;

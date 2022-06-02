@@ -55,7 +55,6 @@
 import UserListVue from "@/ui/main/user/UserListVue";
 import ConversationInfo from "@/wfc/model/conversationInfo";
 import store from "@/store";
-import PickUserView from "@/ui/main/pick/PickUserView";
 import wfc from "@/wfc/client/wfc";
 import axios from "axios";
 import GroupMemberType from "@/wfc/model/groupMemberType";
@@ -83,74 +82,30 @@ export default {
     components: {UserListVue},
     methods: {
         showCreateConversationModal() {
-
-            let beforeOpen = (event) => {
-                console.log('Opening...')
-            };
-            let beforeClose = (event) => {
-                console.log('Closing...', event, event.params)
-                if (event.params.confirm) {
-                    let newPickedUsers = event.params.users;
-                    let ids = newPickedUsers.map(u => u.uid);
-                    wfc.addGroupMembers(this.conversationInfo.conversation.target, ids, null, [0])
-                }
-            };
-            let closed = (event) => {
-                console.log('Close...', event)
-            };
+            let successCB = users => {
+                let ids = users.map(u => u.uid);
+                wfc.addGroupMembers(this.conversationInfo.conversation.target, ids, null, [0])
+            }
             let groupMemberUserInfos = store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, false);
-            this.$modal.show(
-                PickUserView,
-                {
-                    users: this.sharedContactState.favContactList.concat(this.sharedContactState.friendList),
-                    initialCheckedUsers: groupMemberUserInfos,
-                    uncheckableUsers: groupMemberUserInfos,
-                    confirmTitle: this.$t('common.add'),
-                }, {
-                    name: 'pick-user-modal',
-                    width: 600,
-                    height: 480,
-                    clickToClose: false,
-                }, {
-                    'before-open': beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': closed,
-                })
+
+            this.$pickContact({
+                successCB,
+                initialCheckedUsers: groupMemberUserInfos,
+                uncheckableUsers: groupMemberUserInfos,
+                confirmTitle: this.$t('common.add'),
+            });
         },
 
         showRemoveGroupMemberModal() {
-            let beforeOpen = (event) => {
-                console.log('Opening...')
-            };
-            let beforeClose = (event) => {
-                console.log('Closing...', event, event.params)
-                if (event.params.confirm) {
-                    let newPickedUsers = event.params.users;
-                    let ids = newPickedUsers.map(u => u.uid);
-                    wfc.kickoffGroupMembers(this.conversationInfo.conversation.target, ids, [0])
-                }
-            };
-            let closed = (event) => {
-                console.log('Close...', event)
-            };
+            let successCB = users => {
+                let ids = users.map(u => u.uid);
+                wfc.kickoffGroupMembers(this.conversationInfo.conversation.target, ids, [0])
+            }
             let groupMemberUserInfos = store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, false, false);
-            this.$modal.show(
-                PickUserView,
-                {
-                    users: groupMemberUserInfos,
-                    confirmTitle: this.$t('common.remove'),
-                    showCategoryLabel: false,
-                }, {
-                    name: 'pick-user-modal',
-                    width: 600,
-                    height: 480,
-                    clickToClose: false,
-                }, {
-                    'before-open': beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': closed,
-                })
-
+            this.$pickContact({
+                successCB,
+                users: groupMemberUserInfos,
+            });
         },
 
         showUserInfo(user) {
