@@ -510,7 +510,6 @@ export default {
         },
 
         forward(message) {
-            // return this.pickConversationAndForwardMessage(ForwardType.NORMAL, [message]);
             return this.$forwardMessage({
                 forwardType: ForwardType.NORMAL,
                 messages: [message],
