@@ -144,7 +144,7 @@
                                      src='@/assets/images/av_conference_video_mute.png'/>
                                 <p>视频</p>
                             </div>
-                            <div v-if="!session.audience && !audioOnly" class="action">
+                            <div v-if="!audioOnly" class="action">
                                 <img v-if="!session.screenSharing" @click="screenShare"
                                      class="action-img"
                                      src='@/assets/images/av_conference_screen_sharing.png'/>
@@ -569,7 +569,7 @@ export default {
             alert('test alert')
         },
 
-        screenShare() {
+        async screenShare() {
             if (this.session.audioOnly) {
                 return;
             }
@@ -618,6 +618,9 @@ export default {
             //     return;
             // }
 
+            if (this.session.audience){
+                await this.session.switchAudience(false);
+            }
 
             if (this.session.isScreenSharing()) {
                 this.session.stopScreenShare();
@@ -735,7 +738,7 @@ export default {
                 desc: this.session.desc,
                 audioOnly: this.session.audioOnly,
                 audience: this.session.audience,
-                advance: this.session.audience,
+                advance: this.session.advance,
                 muteVideo: this.session.videoMuted,
                 muteAudio: this.session.audioMuted,
                 extra: this.session.extra,
