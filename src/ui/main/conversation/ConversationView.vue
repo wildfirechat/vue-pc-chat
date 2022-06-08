@@ -344,7 +344,10 @@ export default {
                 store.setShouldAutoScrollToBottom(false)
             } else {
                 store.setShouldAutoScrollToBottom(true)
-                store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
+                let info = this.sharedConversationState.currentConversationInfo;
+                if (info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll > 0) {
+                    store.clearConversationUnreadStatus(info.conversation);
+                }
             }
         },
 
