@@ -44,7 +44,7 @@ export default {
 
                 url += '?url=' + encodeURIComponent(this.message.messageContent.exUrl);
 
-                console.log('woooo', url)
+
                 ipcRenderer.send('open-h5-app-window', {hostUrl: location.href, url: encodeURI(url)})
             } else {
                 this.$notify({

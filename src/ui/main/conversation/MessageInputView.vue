@@ -195,6 +195,7 @@ export default {
 
         insertText(text) {
             // this.$refs['input'].innerText = text;
+            this.$refs.input.focus();
             document.execCommand('insertText', false, text);
         },
 
