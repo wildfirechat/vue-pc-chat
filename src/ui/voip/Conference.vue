@@ -377,7 +377,7 @@ export default {
                 // alert('会议已结束');
 
                 this.endReason = reason;
-                if (reason === CallEndReason.REASON_MediaError || reason === CallEndReason.REASON_SignalError) {
+                if (reason === CallEndReason.REASON_MediaError) {
                     return;
                 }
                 if (reason === CallEndReason.RoomNotExist) {
