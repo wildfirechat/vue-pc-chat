@@ -1118,7 +1118,7 @@ let store = {
                 let userId = secretChatInfo.userId;
                 let userInfo = wfc.getUserInfo(userId, false);
                 info.conversation._target = userInfo;
-                info.conversation._target._displayName = 'sc ' + wfc.getUserDisplayNameEx(userInfo);
+                info.conversation._target._displayName = wfc.getUserDisplayNameEx(userInfo);
             } else {
                 info.conversation._target = {};
             }
