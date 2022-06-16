@@ -1297,7 +1297,7 @@ export class WfcManager {
      *
      * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
      * @param {[number]} lines 会话线路列表
-     * @param messageStatus 消息状态，可选值参考{@link MessageStatus}
+     * @param {[number]} messageStatus 消息状态，可选值参考{@link MessageStatus}
      * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
      * @param {boolean} before 本参数暂时无效! true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
      * @param {number} count 本参数暂时无效! 获取多少条消息
