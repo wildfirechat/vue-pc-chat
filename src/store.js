@@ -1333,7 +1333,7 @@ let store = {
             searchState.conversationSearchResult = this.filterConversation(query);
             // searchState.messageSearchResult = this.searchMessage(query);
             // 默认不搜索新用户
-            // this.searchUser(query);
+            this.searchUser(query);
 
         } else {
             searchState.contactSearchResult = [];
