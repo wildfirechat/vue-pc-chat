@@ -35,6 +35,7 @@ import KickoffGroupMemberNotification from "./wfc/messages/notification/kickoffG
 import QuitGroupNotification from "./wfc/messages/notification/quitGroupNotification";
 import avenginekitproxy from "./wfc/av/engine/avenginekitproxy";
 import MediaMessageContent from "./wfc/messages/mediaMessageContent";
+import UnreadCount from "./wfc/model/unreadCount";
 
 /**
  * 一些说明
@@ -1657,6 +1658,14 @@ let store = {
             wfc.clearConversationUnreadStatus(conversation);
             this.updateTray();
         }
+    },
+
+    clearAllUnreadStatus() {
+        wfc.clearAllUnreadStatus();
+        conversationState.conversationInfoList.forEach(info => {
+            info.unreadCount = new UnreadCount();
+        });
+        this.updateTray();
     },
 
     notify(msg) {

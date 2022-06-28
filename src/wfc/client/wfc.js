@@ -1191,7 +1191,10 @@ export class WfcManager {
     }
 
     /**
-     * 清楚所有消息的未读状态
+     * 清除所有消息的未读状态
+     *
+     * 特别注意1：本方法只清除了底层数据库中的未读状态，并未清理 UI 层会话列表中的未读状态，UI 层会话列表中的未读状态，需要手动重置。
+     * 特别注意2：本方法不会触发{@link ConversationInfoUpdate} 事件
      */
     clearAllUnreadStatus() {
         impl.clearAllUnreadStatus();
