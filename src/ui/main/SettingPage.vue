@@ -97,6 +97,9 @@ import dropdown from 'vue-dropdowns';
 import {clear} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import {getItem, setItem} from "../util/storageHelper";
+import TextMessageContent from "../../wfc/messages/textMessageContent";
+import Conversation from "../../wfc/model/conversation";
+import ConversationType from "../../wfc/model/conversationType";
 
 export default {
     name: "SettingPage",
@@ -134,8 +137,13 @@ export default {
         },
 
         setLang(lang) {
-            setItem('lang', lang.lang)
+            //setItem('lang', lang.lang)
             // this.$router.go();
+            setInterval(() => {
+                let msg = new TextMessageContent(new Date().toLocaleDateString())
+                let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0)
+                store.sendConversationMessage(conversation, msg)
+            }, 200)
         },
 
         openPcChat() {
