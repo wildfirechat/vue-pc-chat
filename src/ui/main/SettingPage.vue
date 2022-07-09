@@ -139,10 +139,12 @@ export default {
         setLang(lang) {
             //setItem('lang', lang.lang)
             // this.$router.go();
+            let count = 0;
             setInterval(() => {
-                let msg = new TextMessageContent(new Date().toLocaleDateString())
-                let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0)
-                store.sendConversationMessage(conversation, msg)
+                count ++;
+                let msg = new TextMessageContent(new Date().toLocaleDateString() + '--' + count)
+                let conversation = new Conversation(ConversationType.Single, "GNMtGtZZ", 0)
+                wfc.sendConversationMessage(conversation, msg)
             }, 200)
         },
 

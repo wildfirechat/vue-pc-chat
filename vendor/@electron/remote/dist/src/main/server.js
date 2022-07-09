@@ -21,6 +21,23 @@ const FUNCTION_PROPERTIES = [
 ];
 // The remote functions in renderer processes.
 const rendererFunctionCache = new Map();
+const rendererFunctionCacheCleanInternal = setInterval(() => {
+    let now = new Date().getTime();
+    rendererFunctionCache.forEach((v, k) => {
+        let cb = v.deref();
+        if (!cb){
+            rendererFunctionCache.delete(k);
+            return;
+        }
+        if (cb.__ttl > 0 &&  now - cb.__timestamp > cb.__ttl){
+            rendererFunctionCache.delete(k);
+            locationInfo.delete(cb);
+            console.log('-------- clean rendererFunctionCache', rendererFunctionCache.size);
+        }
+    })
+
+}, 60 * 1000)
+
 // eslint-disable-next-line no-undef
 const finalizationRegistry = new FinalizationRegistry((fi) => {
     const mapKey = fi.id[0] + '~' + fi.id[1];
@@ -47,6 +64,7 @@ function getCachedRendererFunction(id) {
     }
 }
 function setCachedRendererFunction(id, wc, frameId, value) {
+    // console.log('---------- setCachedRendererFunction', id, wc, frameId, value)
     // eslint-disable-next-line no-undef
     const wr = new WeakRef(value);
     const mapKey = id[0] + '~' + id[1];
@@ -267,6 +285,7 @@ const unwrapArgs = function (sender, frameId, contextId, args) {
                 if (cachedFunction !== undefined) {
                     return cachedFunction;
                 }
+                // console.log('-------- getCachedRendererFunction', meta, objectId);
                 const callIntoRenderer = function (...args) {
                     let succeed = false;
                     if (!sender.isDestroyed()) {
@@ -281,6 +300,8 @@ const unwrapArgs = function (sender, frameId, contextId, args) {
                         removeRemoteListenersAndLogWarning(this, callIntoRenderer);
                     }
                 };
+                callIntoRenderer.__ttl = meta.__ttl;
+                callIntoRenderer.__timestamp = new Date().getTime();
                 locationInfo.set(callIntoRenderer, meta.location);
                 Object.defineProperty(callIntoRenderer, 'length', { value: meta.length });
                 setCachedRendererFunction(objectId, sender, frameId, callIntoRenderer);

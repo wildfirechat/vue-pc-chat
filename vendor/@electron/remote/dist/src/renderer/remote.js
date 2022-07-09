@@ -132,6 +132,7 @@ function wrapArgs(args, visited = new Set(), memberName = '') {
             }
             return {
                 type: 'function',
+                __ttl: value.__ttl,
                 id: callbacksRegistry.add(value),
                 location: callbacksRegistry.getLocation(value),
                 length: value.length
