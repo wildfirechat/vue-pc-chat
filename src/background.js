@@ -62,7 +62,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
-require('@electron/remote/main').initialize()
+require('../vendor/@electron/remote/main').initialize()
 
 let Locales = {};
 i18n.configure({
@@ -573,7 +573,7 @@ const createMainWindow = async () => {
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
-    require("@electron/remote/main").enable(mainWindow.webContents);
+    require("../vendor/@electron/remote/main").enable(mainWindow.webContents);
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
@@ -661,7 +661,7 @@ const createMainWindow = async () => {
     });
     app.on('remote-require', (event, args) => {
         // event.preventDefault();
-        event.returnValue = require('@electron/remote/main');
+        event.returnValue = require('../vendor/@electron/remote/main');
     });
 
     ipcMain.on('file-paste', (event) => {
@@ -941,7 +941,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
-    require("@electron/remote/main").enable(win.webContents);
+    require("../vendor/@electron/remote/main").enable(win.webContents);
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)

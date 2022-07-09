@@ -20,16 +20,16 @@ export function isElectron() {
 }
 
 // pc
-export const remote = require('@electron/remote');
+export const remote = require('../vendor/@electron/remote');
 export const ipcRenderer = require('electron').ipcRenderer;
 export const ipcMain = require('electron').ipcMain;
 export const shell = require('electron').shell;
 export const fs = require('file-system').fs;
-export const currentWindow = require('@electron/remote').getCurrentWindow();
-export const BrowserWindow = require('@electron/remote').BrowserWindow;
-export const AppPath = require('@electron/remote').app.getAppPath();
+export const currentWindow = require('../vendor/@electron/remote').getCurrentWindow();
+export const BrowserWindow = require('../vendor/@electron/remote').BrowserWindow;
+export const AppPath = require('../vendor/@electron/remote').app.getAppPath();
 export const desktopCapturer = require('electron').desktopCapturer;
-export const app = require('@electron/remote').app;
+export const app = require('../vendor/@electron/remote').app;
 
 // for web
 

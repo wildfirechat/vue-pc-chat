@@ -27,7 +27,6 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@electron/remote": "^2.0.1",
     "@imndx/v-emoji-picker": "^2.3.7",
     "anchorme": "^2.1.2",
     "atob": "^2.1.2",
