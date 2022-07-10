@@ -108,6 +108,7 @@ export default {
             sharedMiscState: store.state.misc,
             openPcChatTimeoutHandler: 0,
             langs: [{lang: 'zh-CN', name: '简体中文'}, {lang: 'zh-TW', name: '繁體中文'}, {lang: 'en', name: 'English'}],
+            testInternal: 0,
         }
     },
     methods: {
@@ -140,12 +141,16 @@ export default {
             //setItem('lang', lang.lang)
             // this.$router.go();
             let count = 0;
-            setInterval(() => {
-                count ++;
-                let msg = new TextMessageContent(new Date().toLocaleDateString() + '--' + count)
-                let conversation = new Conversation(ConversationType.Single, "GNMtGtZZ", 0)
-                wfc.sendConversationMessage(conversation, msg)
-            }, 200)
+            if (this.testInternal){
+                clearInterval(this.testInternal)
+            }else {
+                this.testInternal = setInterval(() => {
+                    count ++;
+                    let msg = new TextMessageContent(new Date().toLocaleDateString() + '--' + count)
+                    let conversation = new Conversation(ConversationType.Single, "GNMtGtZZ", 0)
+                    wfc.sendConversationMessage(conversation, msg)
+                }, 200)
+            }
         },
 
         openPcChat() {
