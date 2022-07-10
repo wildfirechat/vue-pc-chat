@@ -143,6 +143,7 @@ export default {
             let count = 0;
             if (this.testInternal){
                 clearInterval(this.testInternal)
+                this.testInternal = 0;
             }else {
                 this.testInternal = setInterval(() => {
                     count ++;
