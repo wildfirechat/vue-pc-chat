@@ -219,7 +219,7 @@ const throwRPCError = function (message) {
 const removeRemoteListenersAndLogWarning = (sender, callIntoRenderer) => {
     const location = locationInfo.get(callIntoRenderer);
     let message = 'Attempting to call a function in a renderer window that has been closed or released.' +
-        `\nFunction provided here: ${location}`;
+        `\nFunction provided here: ${location} ${callIntoRenderer.__memberName}`;
     if (sender instanceof events_1.EventEmitter) {
         const remoteEvents = sender.eventNames().filter((eventName) => {
             return sender.listeners(eventName).includes(callIntoRenderer);
