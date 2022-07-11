@@ -74,6 +74,13 @@ Locales.setLocale('ch');
 
 global.sharedObj = {proto: proto};
 
+app.commandLine.appendSwitch('js-flags', '--expose-gc')
+
+setInterval(() => {
+    let heapStatistics = process.getHeapStatistics();
+    console.log('------------------background heap', heapStatistics)
+}, 60 * 1000)
+
 let forceQuit = false;
 let downloading = false;
 let mainWindow;
@@ -468,8 +475,17 @@ function createMenu() {
 
 function regShortcut() {
     // if(isWin) {
+    globalShortcut.register('CommandOrControl+D', () => {
+        // mainWindow.webContents.toggleDevTools();
+        console.log('to takeHeapSnapshot')
+        process.takeHeapSnapshot('/Users/jiangecho/bitbucket/wildfirechat/vue-pc-chat/tmp');
+        console.log('takeHeapSnapshot end')
+    })
     globalShortcut.register('CommandOrControl+G', () => {
-        mainWindow.webContents.toggleDevTools();
+        // mainWindow.webContents.toggleDevTools();
+        console.log('to gc')
+        global.gc();
+        console.log('gc end')
     })
     // }
 }
