@@ -7,18 +7,6 @@
             <p>{{ message.messageContent.displayName }}</p>
         </div>
         <p class="desc single-line">个人名片</p>
-        <tippy
-            :to="'userCardInfoTrigger' + message.messageId"
-            interactive
-            :animate-fill="false"
-            placement="left"
-            distant="7"
-            theme="light"
-            animation="fade"
-            trigger="click"
-        >
-            <UserCardView v-on:close="closeUserCard" :user-info="userInfo()"/>
-        </tippy>
     </div>
 </template>
 

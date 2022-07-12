@@ -10,20 +10,6 @@
                     </div>
                     <ul>
                         <li v-for="(user) in groupedUser.users" :key="user.uid">
-                            <tippy
-                                v-if="!clickUserItemFunc"
-                                :to="'user-' + user.uid"
-                                interactive
-                                theme="light"
-                                :animate-fill="false"
-                                placement="left"
-                                distant="7"
-                                animation="fade"
-                                trigger="click"
-                                :style="tippyStyleFix"
-                            >
-                                <UserCardView :user-info="user" v-on:close="closeUserCard(user)"/>
-                            </tippy>
                             <div class="content"
                                  :ref="'userCardTippy-'+user.uid"
                                  :name="'user-'+user.uid"

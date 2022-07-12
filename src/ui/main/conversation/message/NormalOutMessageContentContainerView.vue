@@ -27,19 +27,6 @@
                                           :show-close-button="false"/>
                     </div>
 
-                    <tippy
-                        :to="'infoTrigger' + this.message.messageId"
-                        interactive
-                        :animate-fill="false"
-                        placement="left"
-                        distant="7"
-                        theme="light"
-                        animation="fade"
-                        trigger="click"
-                    >
-                        <UserCardView v-on:close="closeUserCard" :user-info="message._from"/>
-                    </tippy>
-
                     <img ref="userCardTippy"
                          :name="'infoTrigger' + this.message.messageId"
                          class="avatar"
