@@ -13,7 +13,7 @@
         <div class="login-action-container">
             <!--    等待扫码-->
             <div v-if="loginStatus === 0" class="pending-scan">
-                <p>{{ $t('login.desc') }}</p>
+                <p>{{ this.count }}</p>
                 <p>{{ $t('login.tip') }}</p>
                 <p>{{ $t('login.warning') }}</p>
                 <a  target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
@@ -43,7 +43,7 @@
 
             <!--      开发调试时，自动登录-->
             <div v-else-if="loginStatus === 4">
-                <p>数据同步中...</p>
+                <p @click="test">{{this.count}}</p>
             </div>
         </div>
     </div>
@@ -62,6 +62,9 @@ import {clear, getItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
+import TextMessageContent from "../../wfc/messages/textMessageContent";
+import Conversation from "../../wfc/model/conversation";
+import ConversationType from "../../wfc/model/conversationType";
 
 export default {
     name: 'App',
@@ -75,6 +78,8 @@ export default {
             appToken: '',
             lastAppToken: '',
             enableAutoLogin: false,
+            testInternal: 0,
+            count: 0,
         }
     },
     created() {
@@ -120,7 +125,7 @@ export default {
                 this.appToken = session.token;
                 if (!userId || session.status === 0/*服务端pc login session不存在*/) {
                     this.qrCode = jrQRCode.getQrBase64(Config.QR_CODE_PREFIX_PC_SESSION + session.token);
-                    this.refreshQrCode();
+                    // this.refreshQrCode();
                 }
                 this.login();
             }
@@ -153,6 +158,7 @@ export default {
                             this.loginStatus = 4;
                             setItem('userId', userId);
                             setItem('token', imToken);
+                            console.log('user---------', userId, imToken)
                             let appAuthToken = response.headers['authtoken'];
                             if (!appAuthToken) {
                                 appAuthToken = response.headers['authToken'];
@@ -218,15 +224,32 @@ export default {
                 this.cancel();
             }
             if (status === ConnectionStatus.ConnectionStatusConnected) {
-                this.$router.replace({path: "/home"});
-                if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
-                    isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
-                    if (this.enableAutoLogin) {
-                        store.setEnableAutoLogin(this.enableAutoLogin)
-                    }
-                }
+                // this.$router.replace({path: "/home"});
+                // if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
+                //     isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+                //     if (this.enableAutoLogin) {
+                //         store.setEnableAutoLogin(this.enableAutoLogin)
+                //     }
+                // }
+
+                // 不跳转了，免受 UI 影响
+
+                this.test();
             }
         },
+        test(){
+            if (this.testInternal){
+                clearInterval(this.testInternal)
+                this.testInternal = 0;
+            }else {
+                this.testInternal = setInterval(() => {
+                    this.count ++;
+                    let msg = new TextMessageContent(new Date().toLocaleDateString() + '--' + this.count)
+                    let conversation = new Conversation(ConversationType.Single, "GNMtGtZZ", 0)
+                    wfc.sendConversationMessage(conversation, msg)
+                }, 200)
+            }
+        }
     },
 
     computed: {
