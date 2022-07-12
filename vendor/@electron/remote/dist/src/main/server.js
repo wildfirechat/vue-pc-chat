@@ -21,6 +21,7 @@ const FUNCTION_PROPERTIES = [
 ];
 // The remote functions in renderer processes.
 const rendererFunctionCache = new Map();
+
 const rendererFunctionCacheCleanInternal = setInterval(() => {
     let now = new Date().getTime();
     rendererFunctionCache.forEach((v, k) => {
@@ -32,9 +33,14 @@ const rendererFunctionCacheCleanInternal = setInterval(() => {
         if (cb.__ttl > 0 &&  now - cb.__timestamp > cb.__ttl){
             rendererFunctionCache.delete(k);
             locationInfo.delete(cb);
-            console.log('-------- clean rendererFunctionCache', rendererFunctionCache.size);
         }
     })
+
+    let locationCount = 0;
+    for (const l in locationInfo) {
+        locationCount ++;
+    }
+    console.log('-------- clean rendererFunctionCache', rendererFunctionCache.size, locationCount);
 
 }, 60 * 1000)
 
@@ -320,12 +326,14 @@ const isRemoteModuleEnabledImpl = function (contents) {
 const isRemoteModuleEnabledCache = new WeakMap();
 const isRemoteModuleEnabled = function (contents) {
     if (hasWebPrefsRemoteModuleAPI && !isRemoteModuleEnabledCache.has(contents)) {
+        console.log('----- server isRemoteModuleEnabled', contents);
         isRemoteModuleEnabledCache.set(contents, isRemoteModuleEnabledImpl(contents));
     }
     return isRemoteModuleEnabledCache.get(contents);
 };
 exports.isRemoteModuleEnabled = isRemoteModuleEnabled;
 function enable(contents) {
+    console.log('----- server enable');
     isRemoteModuleEnabledCache.set(contents, true);
 }
 exports.enable = enable;

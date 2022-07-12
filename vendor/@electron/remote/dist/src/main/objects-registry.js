@@ -13,6 +13,21 @@ class ObjectsRegistry {
         // (ownerKey) => { id: refCount }
         this.owners = {};
         this.electronIds = new WeakMap();
+
+        setInterval(()=> {
+            let electronIdCount = 0;
+            for (const id in this.electronIds) {
+                electronIdCount ++;
+            }
+            let ownnerCount = 0;
+            for (const o in this.owners){
+                ownnerCount ++;
+                if (o instanceof Map) {
+                    console.log('------------o', o.size);
+                }
+            }
+            console.log('----------------- object-registry', electronIdCount, ownnerCount);
+        }, 60 * 1000)
     }
     // Register a new object and return its assigned ID. If the object is already
     // registered then the already assigned ID would be returned.
@@ -32,6 +47,17 @@ class ObjectsRegistry {
             this.storage[id].count++;
         }
         owner.set(id, owner.get(id) + 1);
+
+        let ownersCount = 0;
+        for (const o in this.owners) {
+            ownersCount ++;
+        }
+        let storageCount = 0;
+        for (const s in this.storage) {
+            storageCount ++;
+        }
+
+        console.log('----- objects-registry add', ownersCount, storageCount, owner.size, contextId, obj);
         return id;
     }
     // Get an object according to its ID.
@@ -80,6 +106,7 @@ class ObjectsRegistry {
                 count: 0,
                 object: object
             };
+            console.log('---- objects-registry saveToStorage', object)
             this.electronIds.set(object, id);
         }
         return id;
@@ -112,6 +139,40 @@ class ObjectsRegistry {
         // renderer process to send "ELECTRON_BROWSER_CONTEXT_RELEASE" message to
         // guard this situation.
         webContents.on('render-view-deleted', listener);
+    }
+
+    roughSizeOfObject( object ) {
+
+        var objectList = [];
+        var stack = [ object ];
+        var bytes = 0;
+
+        while ( stack.length ) {
+            var value = stack.pop();
+
+            if ( typeof value === 'boolean' ) {
+                bytes += 4;
+            }
+            else if ( typeof value === 'string' ) {
+                bytes += value.length * 2;
+            }
+            else if ( typeof value === 'number' ) {
+                bytes += 8;
+            }
+            else if
+            (
+                typeof value === 'object'
+                && objectList.indexOf( value ) === -1
+            )
+            {
+                objectList.push( value );
+
+                for( var i in value ) {
+                    stack.push( value[ i ] );
+                }
+            }
+        }
+        return bytes;
     }
 }
 exports.default = new ObjectsRegistry();
