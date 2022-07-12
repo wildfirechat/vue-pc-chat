@@ -478,14 +478,11 @@ function regShortcut() {
     globalShortcut.register('CommandOrControl+D', () => {
         // mainWindow.webContents.toggleDevTools();
         console.log('to takeHeapSnapshot')
-        process.takeHeapSnapshot('/Users/jiangecho/bitbucket/wildfirechat/vue-pc-chat/tmp');
-        console.log('takeHeapSnapshot end')
+        let result = process.takeHeapSnapshot(`${__dirname}`);
+        console.log('takeHeapSnapshot end', `${__dirname}`, result)
     })
     globalShortcut.register('CommandOrControl+G', () => {
-        // mainWindow.webContents.toggleDevTools();
-        console.log('to gc')
-        global.gc();
-        console.log('gc end')
+        mainWindow.webContents.toggleDevTools();
     })
     // }
 }
