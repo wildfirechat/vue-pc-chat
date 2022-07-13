@@ -79,6 +79,13 @@ app.commandLine.appendSwitch('js-flags', '--expose-gc')
 setInterval(() => {
     let heapStatistics = process.getHeapStatistics();
     console.log('------------------background heap', heapStatistics)
+    let blinkMemoryInfo = process.getBlinkMemoryInfo();
+    console.log('--------------- blinkMemoryInfo', blinkMemoryInfo);
+
+    process.getProcessMemoryInfo().then(info => {
+        console.log('-------------- processMemoryInfo', info)
+    })
+
 }, 60 * 1000)
 
 let forceQuit = false;

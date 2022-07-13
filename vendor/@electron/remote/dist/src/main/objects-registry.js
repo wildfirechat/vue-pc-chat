@@ -57,7 +57,7 @@ class ObjectsRegistry {
             storageCount ++;
         }
 
-        console.log('----- objects-registry add', ownersCount, storageCount, owner.size, contextId, obj);
+        // console.log('----- objects-registry add', ownersCount, storageCount, owner.size, contextId, obj);
         return id;
     }
     // Get an object according to its ID.
