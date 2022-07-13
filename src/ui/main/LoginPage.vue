@@ -95,8 +95,9 @@ export default {
             this.qrCode = portrait ? portrait : Config.DEFAULT_PORTRAIT_URL;
 
             let autoLogin = getItem(userId + '-' + 'autoLogin') === '1'
-            if (autoLogin && token) {
+            if (token) {
                 wfc.connect(userId, token);
+                window.__wfc = wfc;
                 this.loginStatus = 4;
             } else {
                 this.loginStatus = 2;
@@ -104,6 +105,20 @@ export default {
         } else {
             this.createPCLoginSession(null);
         }
+    },
+
+    mounted() {
+        setInterval(() => {
+            let heapStatistics = process.getHeapStatistics();
+            console.log('------------------renderer heap MemoryInfo', heapStatistics)
+            let blinkMemoryInfo = process.getBlinkMemoryInfo();
+            console.log('--------------- blinkMemoryInfo', blinkMemoryInfo);
+
+            process.getProcessMemoryInfo().then(info => {
+                console.log('-------------- processMemoryInfo', info)
+            })
+
+        }, 60 * 1000)
     },
 
     beforeDestroy() {
@@ -241,6 +256,9 @@ export default {
             if (this.testInternal){
                 clearInterval(this.testInternal)
                 this.testInternal = 0;
+                let filePath = '/Users/jiangecho/bitbucket/wildfirechat/vue-pc-chat/';
+                let result = process.takeHeapSnapshot(filePath);
+                console.log('takeHeapSnapshot end', filePath, result)
             }else {
                 this.testInternal = setInterval(() => {
                     this.count ++;
