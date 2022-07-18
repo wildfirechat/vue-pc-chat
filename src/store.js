@@ -272,6 +272,9 @@ let store = {
         });
 
         wfc.eventEmitter.on(EventType.ReceiveMessage, (msg, hasMore) => {
+            if (miscState.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing){
+                return;
+            }
             if (!hasMore) {
                 this._loadDefaultConversationList();
             }
