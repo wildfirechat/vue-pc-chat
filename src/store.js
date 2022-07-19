@@ -964,26 +964,24 @@ let store = {
         if (!messages || messages.length === 0) {
             return false;
         }
-        let loadNewMsg = false;
         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
             let lastTimestamp = 0;
             let newMsgs = [];
-            conversationState.currentConversationOldestMessageUid = messages[0].messageUid;
+            conversationState.currentConversationOldestMessageId = messages[0].messageId;
             messages.forEach(m => {
                 let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid))
                 if (index === -1) {
                     this._patchMessage(m, lastTimestamp);
                     lastTimestamp = m.timestamp;
                     newMsgs.push(m);
-                    loadNewMsg = true;
                 }
             });
             conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
             if (newMsgs.length) {
-                conversationState.currentConversationOldestMessageId = newMsgs[0].messageId;
+                conversationState.currentConversationOldestMessageUid = newMsgs[0].messageUid;
             }
         }
-        return loadNewMsg;
+        return true;
     },
 
     loadConversationHistoryMessages(loadedCB, completeCB) {
