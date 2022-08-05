@@ -309,7 +309,6 @@ export default {
 
             sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo) => {
                 this.session = session;
-                this.session.rotateAng = 90;
 
                 this.audioOnly = session.audioOnly;
                 this.selfUserInfo = selfUserInfo;
