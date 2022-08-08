@@ -5,7 +5,7 @@
                                           v-if="sharedMiscState.isElectronWindowsOrLinux"/>
 
         <div class="switch-login-type-container" @click="switchLoginType( loginType === 0 ? 1 : 0)">
-            <i class="icon-ion-log-in"></i>
+            <i class="icon-ion-qr-scanner" style="color: gray"></i>
         </div>
         <div class="drag-area"/>
         <div v-if="loginType === 0" class="qrcode-login-container">
@@ -53,7 +53,7 @@
             <!--            密码登录-->
             <p class="title">密码登录</p>
             <div class="item">
-                <input v-model="mobile" class="text-input" type="text" placeholder="请输入手机号">
+                <input v-model="mobile" class="text-input" type="number" placeholder="请输入手机号">
             </div>
             <div class="item">
                 <input v-model="password" class="text-input" type="text" placeholder="请输入密码">
@@ -65,10 +65,10 @@
             <!--            验证码登录-->
             <p class="title">验证码登录</p>
             <div class="item">
-                <input v-model="mobile" class="text-input" type="text" placeholder="请输入手机号">
+                <input v-model="mobile" class="text-input" type="number" placeholder="请输入手机号">
             </div>
             <div class="item">
-                <input v-model="authCode" class="text-input" type="text" placeholder="验证码">
+                <input v-model="authCode" class="text-input" type="number" placeholder="验证码">
                 <button :disabled="mobile.trim().length !== 11" class="request-auth-code-button" @click="requestAuthCode">获取验证码</button>
             </div>
             <p class="tip" @click="switchLoginType(1)">使用密码登录</p>
@@ -183,7 +183,6 @@ export default {
                     wfc.connect(userId, token);
                 } else {
                     this.mobile = '';
-                    this.password = '';
                     this.$notify({
                         title: '登录失败',
                         text: response.data.message,
@@ -191,8 +190,6 @@ export default {
                     });
                 }
             } else {
-                this.mobile = '';
-                this.password = '';
                 this.$notify({
                     // title: '收藏成功',
                     text: '登录异常',
@@ -214,7 +211,6 @@ export default {
                     wfc.connect(userId, token);
                 } else {
                     this.mobile = '';
-                    this.password = '';
                     this.$notify({
                         title: '登录失败',
                         text: response.data.message,
@@ -222,8 +218,6 @@ export default {
                     });
                 }
             } else {
-                this.mobile = '';
-                this.password = '';
                 this.$notify({
                     // title: '收藏成功',
                     text: '登录异常',
@@ -496,7 +490,7 @@ export default {
 }
 
 .login-form-container {
-    width: 250px;
+    width: 260px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -529,6 +523,13 @@ export default {
     border-radius: 3px;
     outline: none;
     padding: 0 5px;
+    -moz-appearance: textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
 }
 
 .login-form-container .text-input:active {
