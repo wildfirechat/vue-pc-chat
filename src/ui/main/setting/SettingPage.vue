@@ -49,6 +49,18 @@
         </div>
         <footer>
             <p class="proto-version-info">{{ protoRevision() }}</p>
+            <a class="button" target="_blank" @click.prevent.stop="showChangePasswordContextMenu">
+                修改密码
+                <!--        <i class="icon-ion-ios-email-outline"/>-->
+            </a>
+            <vue-context ref="changePasswordContextMenu" :close-on-scroll="false" v-on:close="onChangePasswordContextMenuClose">
+                <li>
+                    <a @click.prevent="showChangePasswordDialog()">密码验证</a>
+                </li>
+                <li>
+                    <a @click.prevent="showResetPasswordDialog()">短信验证码验证</a>
+                </li>
+            </vue-context>
             <a class="button" target="_blank" @click="logout">
                 {{ $t('setting.exit_switch_user') }}
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
@@ -96,8 +108,11 @@ import store from "@/store";
 import dropdown from 'vue-dropdowns';
 import {clear} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
-import {getItem, setItem} from "../util/storageHelper";
+import {getItem, setItem} from "../../util/storageHelper";
 import axios from "axios";
+import CreateConferenceView from "../../voip/CreateConferenceView";
+import ChangePasswordView from "./ChangePasswordView";
+import ResetPasswordView from "./ResetPasswordView";
 
 export default {
     name: "SettingPage",
@@ -110,76 +125,62 @@ export default {
     },
     methods: {
 
-        async requestResetAuthCode(mobile){
-            let response = await axios.post('/send_reset_code/', {
-                mobile: mobile,
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
-                    this.$notify({
-                        text: '发送重置验证码成功',
-                        type: 'info'
-                    });
-                } else {
-                    this.mobile = '';
-                    this.$notify({
-                        title: '发送重置验证码失败',
-                        text: response.data.message,
-                        type: 'error'
-                    });
-                }
-            } else {
-                console.error('requestResetAuthCode error', response)
-            }
+        showChangePasswordContextMenu(event) {
+            this.$refs.changePasswordContextMenu.open(event);
         },
 
-        async resetPassword(mobile, resetCode, newPassword) {
-            let response = await axios.post('/reset_pwd/', {
-                mobile: mobile,
-                resetCode: resetCode,
-                newPassword: newPassword,
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
-                    this.$notify({
-                        text: '重置密码成功',
-                        type: 'info'
-                    });
-                } else {
-                    this.mobile = '';
-                    this.$notify({
-                        title: '重置密码失败',
-                        text: response.data.message,
-                        type: 'error'
-                    });
-                }
-            } else {
-                console.error('resetPassword error', response)
-            }
+        onChangePasswordContextMenuClose() {
+            console.log('yyyyyy')
+        },
 
+        showChangePasswordDialog() {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                ChangePasswordView,
+                {}, {
+                    name: 'change-password-modal',
+                    width: 320,
+                    height: 400,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
         },
-        async changePassword(oldPassword, newPassword) {
-            let response = await axios.post('/change_pwd/', {
-                oldPassword: oldPassword,
-                newPassword: newPassword,
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
-                    this.$notify({
-                        text: '修改密码成功',
-                        type: 'info'
-                    });
-                } else {
-                    this.$notify({
-                        title: '修改密码失败',
-                        text: response.data.message,
-                        type: 'error'
-                    });
-                }
-            } else {
-                console.error('changePassword error', response)
-            }
+
+        showResetPasswordDialog() {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                ResetPasswordView,
+                {}, {
+                    name: 'rest-password-modal',
+                    width: 320,
+                    height: 400,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
         },
+
         logout() {
             clear();
             wfc.disconnect();
@@ -240,14 +241,17 @@ export default {
             return version;
         }
 
-    },
+    }
+    ,
 
     mounted() {
         window.addEventListener('blur', this.blurListener)
-    },
+    }
+    ,
     beforeDestroy() {
         window.removeEventListener('blur', this.blurListener)
-    },
+    }
+    ,
     computed: {
         currentLang() {
             let lang = getItem('lang')
@@ -256,10 +260,13 @@ export default {
             index = index >= 0 ? index : 0;
             return this.langs[index];
         }
-    },
+    }
+    ,
     components: {
-        'dropdown': dropdown,
-    },
+        'dropdown':
+        dropdown,
+    }
+    ,
 }
 </script>
 

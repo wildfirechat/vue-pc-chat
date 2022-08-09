@@ -111,9 +111,6 @@ export default {
     },
     created() {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
-        axios.defaults.baseURL = Config.APP_SERVER;
-
-        axios.defaults.headers.common['authToken'] = getItem('authToken');
 
         let userId = getItem('userId');
         let token = getItem('token');
@@ -161,7 +158,6 @@ export default {
                 }
             } else {
                 this.mobile = '';
-                this.password = '';
                 this.$notify({
                     // title: '收藏成功',
                     text: '发送验证码失败',
@@ -181,8 +177,17 @@ export default {
                 if (response.data.code === 0) {
                     const {userId, token} = response.data.result;
                     wfc.connect(userId, token);
+                    let appAuthToken = response.headers['authtoken'];
+                    if (!appAuthToken) {
+                        appAuthToken = response.headers['authToken'];
+                    }
+
+                    if (appAuthToken) {
+                        setItem('authToken', appAuthToken);
+                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                    }
                 } else {
-                    this.mobile = '';
+                    this.password = '';
                     this.$notify({
                         title: '登录失败',
                         text: response.data.message,
@@ -205,8 +210,17 @@ export default {
                 if (response.data.code === 0) {
                     const {userId, token} = response.data.result;
                     wfc.connect(userId, token);
+                    let appAuthToken = response.headers['authtoken'];
+                    if (!appAuthToken) {
+                        appAuthToken = response.headers['authToken'];
+                    }
+
+                    if (appAuthToken) {
+                        setItem('authToken', appAuthToken);
+                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                    }
                 } else {
-                    this.mobile = '';
+                    this.authCode = '';
                     this.$notify({
                         title: '登录失败',
                         text: response.data.message,
