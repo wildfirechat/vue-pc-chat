@@ -190,11 +190,7 @@ export default {
                     });
                 }
             } else {
-                this.$notify({
-                    // title: '收藏成功',
-                    text: '登录异常',
-                    type: 'error'
-                });
+                console.error('loginWithPassword error', response);
             }
         },
 
@@ -218,11 +214,7 @@ export default {
                     });
                 }
             } else {
-                this.$notify({
-                    // title: '收藏成功',
-                    text: '登录异常',
-                    type: 'error'
-                });
+                console.error('loginWithAuthCode error', response)
             }
         },
 

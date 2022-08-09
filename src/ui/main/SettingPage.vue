@@ -97,6 +97,7 @@ import dropdown from 'vue-dropdowns';
 import {clear} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import {getItem, setItem} from "../util/storageHelper";
+import axios from "axios";
 
 export default {
     name: "SettingPage",
@@ -108,6 +109,77 @@ export default {
         }
     },
     methods: {
+
+        async requestResetAuthCode(mobile){
+            let response = await axios.post('/send_reset_code/', {
+                mobile: mobile,
+            }, {withCredentials: true});
+            if (response.data) {
+                if (response.data.code === 0) {
+                    this.$notify({
+                        text: '发送重置验证码成功',
+                        type: 'info'
+                    });
+                } else {
+                    this.mobile = '';
+                    this.$notify({
+                        title: '发送重置验证码失败',
+                        text: response.data.message,
+                        type: 'error'
+                    });
+                }
+            } else {
+                console.error('requestResetAuthCode error', response)
+            }
+        },
+
+        async resetPassword(mobile, resetCode, newPassword) {
+            let response = await axios.post('/reset_pwd/', {
+                mobile: mobile,
+                resetCode: resetCode,
+                newPassword: newPassword,
+            }, {withCredentials: true});
+            if (response.data) {
+                if (response.data.code === 0) {
+                    this.$notify({
+                        text: '重置密码成功',
+                        type: 'info'
+                    });
+                } else {
+                    this.mobile = '';
+                    this.$notify({
+                        title: '重置密码失败',
+                        text: response.data.message,
+                        type: 'error'
+                    });
+                }
+            } else {
+                console.error('resetPassword error', response)
+            }
+
+        },
+        async changePassword(oldPassword, newPassword) {
+            let response = await axios.post('/change_pwd/', {
+                oldPassword: oldPassword,
+                newPassword: newPassword,
+            }, {withCredentials: true});
+            if (response.data) {
+                if (response.data.code === 0) {
+                    this.$notify({
+                        text: '修改密码成功',
+                        type: 'info'
+                    });
+                } else {
+                    this.$notify({
+                        title: '修改密码失败',
+                        text: response.data.message,
+                        type: 'error'
+                    });
+                }
+            } else {
+                console.error('changePassword error', response)
+            }
+        },
         logout() {
             clear();
             wfc.disconnect();
