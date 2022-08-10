@@ -1021,13 +1021,14 @@ app.on('ready', () => {
 
         });
         // 点击确定按钮回调事件
-        screenshots.on('ok', (e, data) => {
+        screenshots.on('ok', (e, buffer, bounds) => {
             if (isMainWindowFocusedWhenStartScreenshot) {
                 let filename = tmp.tmpNameSync() + '.png';
-                let image = NativeImage.createFromDataURL(data.dataURL);
+                let image = NativeImage.createFromBuffer(buffer);
                 fs.writeFileSync(filename, image.toPNG());
 
                 mainWindow.webContents.send('screenshots-ok', {filePath: filename});
+                mainWindow.focus();
             }
             console.log('capture')
         })

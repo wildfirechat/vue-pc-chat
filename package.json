@@ -41,7 +41,7 @@
     "core-js": "^3.6.5",
     "detectrtc": "^1.4.1",
     "draggable-vue-directive": "^2.1.0",
-    "electron-screenshots": "^0.1.2",
+    "electron-screenshots": "^0.5.11",
     "electron-tabs": "^0.17.0",
     "electron-window-state": "^5.0.3",
     "electron-windows-badge": "^1.1.0",
