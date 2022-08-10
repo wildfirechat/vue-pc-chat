@@ -23,7 +23,6 @@ import i18n from 'i18n';
 import proto from '../marswrapper.node';
 
 import pkg from '../package.json';
-import Badge from 'electron-windows-badge';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
 import nodePath from 'path'
@@ -31,8 +30,8 @@ import nodePath from 'path'
 console.log('start crash report', app.getPath('crashDumps'))
 //crashReporter.start({uploadToServer: false});
 crashReporter.start({
-    companyName: 'wildfire',
-    productName: 'vue-pc-chat',
+    companyName: pkg.company,
+    productName: pkg.name,
     submitURL: 'https://imndxx_gmail_com.bugsplat.com/post/electron/crash.php',
     compress: true,
     ignoreSystemCrashHandler: true,
@@ -988,7 +987,7 @@ app.on('second-instance', (event, argv) => {
 
 // windows上，需要正确设置appUserModelId，才能正常显示通知，不然通知的应用标识会显示为：electron.app.xxx
 app.on('will-finish-launching', () => {
-    app.setAppUserModelId("cn.wildfire.chat")
+    app.setAppUserModelId(pkg.appId)
 })
 
 function registerLocalResourceProtocol() {

@@ -1,6 +1,8 @@
 {
   "name": "wf-pc-chat",
+  "company": "wildfire",
   "version": "0.6.1",
+  "appId": "cn.wildfire.chat",
   "private": true,
   "homepage": "https://wildfirechat.cn",
   "maintainers": [

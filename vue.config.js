@@ -1,5 +1,6 @@
 // vue.config.js
 
+const pkg = require('./package.json');
 const CopywebpackPlugin = require('copy-webpack-plugin')
 module.exports = {
     publicPath: '.',
@@ -63,9 +64,9 @@ module.exports = {
             // outputDir: 'release',
             builderOptions: {
               // 产品名称
-              productName: 'wildfirechat',
+              productName: pkg.name,
               // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
-              appId: 'cn.wildfire.chat',
+              appId: pkg.appId,
               compression: 'normal',
               artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
               protocols: {
@@ -93,7 +94,7 @@ module.exports = {
               },
               linux: {
                 category: "Chat",
-                executableName: "wildfireChat",
+                executableName: pkg.name,
                 target: [
                   'deb',
                   'AppImage'
@@ -110,7 +111,7 @@ module.exports = {
                 deleteAppDataOnUninstall: true,
                 perMachine: false,
                 createDesktopShortcut: true,
-                shortcutName: "wildfireChat"
+                shortcutName: pkg.name,
               }
             }
         }
