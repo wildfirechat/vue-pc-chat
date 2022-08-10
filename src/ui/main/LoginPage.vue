@@ -56,7 +56,7 @@
                 <input v-model="mobile" class="text-input" type="number" placeholder="请输入手机号">
             </div>
             <div class="item">
-                <input v-model="password" class="text-input" type="text" placeholder="请输入密码">
+                <input v-model="password" class="text-input" @keydown.enter="loginWithPassword" type="text" placeholder="请输入密码">
             </div>
             <p class="tip" @click="switchLoginType(2)">使用验证码登录</p>
             <button class="login-button" :disabled="mobile.trim() === '' || password.trim() === ''" @click="loginWithPassword">登录</button>
@@ -69,7 +69,7 @@
             </div>
             <div class="item">
                 <input v-model="authCode" class="text-input" type="number" placeholder="验证码">
-                <button :disabled="mobile.trim().length !== 11" class="request-auth-code-button" @click="requestAuthCode">获取验证码</button>
+                <button :disabled="mobile.trim().length !== 11" class="request-auth-code-button" @keydown.enter="loginWithAuthCode" @click="requestAuthCode">获取验证码</button>
             </div>
             <p class="tip" @click="switchLoginType(1)">使用密码登录</p>
             <button class="login-button" :disabled="mobile.trim() === '' || authCode.trim() === ''" @click="loginWithAuthCode">登录</button>
@@ -167,6 +167,10 @@ export default {
         },
 
         async loginWithPassword() {
+            if(!this.mobile || !this.password){
+                return;
+            }
+
             let response = await axios.post('/login_pwd/', {
                 mobile: this.mobile,
                 password: this.password,
@@ -177,6 +181,8 @@ export default {
                 if (response.data.code === 0) {
                     const {userId, token} = response.data.result;
                     wfc.connect(userId, token);
+                    setItem('userId', userId);
+                    setItem('token', token);
                     let appAuthToken = response.headers['authtoken'];
                     if (!appAuthToken) {
                         appAuthToken = response.headers['authToken'];
@@ -200,6 +206,10 @@ export default {
         },
 
         async loginWithAuthCode() {
+            if (!this.mobile || !this.authCode){
+                return;
+            }
+
             let response = await axios.post('/login/', {
                 mobile: this.mobile,
                 code: this.authCode,
@@ -210,6 +220,8 @@ export default {
                 if (response.data.code === 0) {
                     const {userId, token} = response.data.result;
                     wfc.connect(userId, token);
+                    setItem('userId', userId);
+                    setItem('token', token);
                     let appAuthToken = response.headers['authtoken'];
                     if (!appAuthToken) {
                         appAuthToken = response.headers['authToken'];
