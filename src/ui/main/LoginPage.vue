@@ -432,6 +432,7 @@ export default {
 .pending-quick-login,
 .quick-logining {
     display: flex;
+    margin-top: 20px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
