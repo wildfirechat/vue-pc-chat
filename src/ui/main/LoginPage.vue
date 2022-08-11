@@ -4,9 +4,6 @@
                                           :maximizable="false"
                                           v-if="sharedMiscState.isElectronWindowsOrLinux"/>
 
-        <div class="switch-login-type-container" @click="switchLoginType( loginType === 0 ? 1 : 0)">
-            <i class="icon-ion-qr-scanner" style="color: gray"></i>
-        </div>
         <div class="drag-area"/>
         <div v-if="loginType === 0" class="qrcode-login-container">
             <div class="qr-container">
@@ -73,6 +70,9 @@
             </div>
             <p class="tip" @click="switchLoginType(1)">使用密码登录</p>
             <button class="login-button" :disabled="mobile.trim() === '' || authCode.trim() === ''" @click="loginWithAuthCode">登录</button>
+        </div>
+        <div class="switch-login-type-container">
+            <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
         </div>
     </div>
 </template>
@@ -167,7 +167,7 @@ export default {
         },
 
         async loginWithPassword() {
-            if(!this.mobile || !this.password){
+            if (!this.mobile || !this.password) {
                 return;
             }
 
@@ -206,7 +206,7 @@ export default {
         },
 
         async loginWithAuthCode() {
-            if (!this.mobile || !this.authCode){
+            if (!this.mobile || !this.authCode) {
                 return;
             }
 
@@ -502,10 +502,9 @@ export default {
 }
 
 .switch-login-type-container {
-    position: absolute;
-    top: 0;
-    right: 0;
-    padding: 20px;
+    padding-top: 10px;
+    font-size: 14px;
+    color: #4168e0;
 }
 
 .login-form-container {
@@ -519,13 +518,6 @@ export default {
 .login-form-container .title {
     align-self: flex-start;
     font-size: 18px;
-}
-
-.login-form-container .tip {
-    align-self: flex-start;
-    font-size: 12px;
-    color: #4168e0;
-    margin-top: 10px;
 }
 
 .login-form-container .item {
@@ -578,6 +570,13 @@ input::-webkit-inner-spin-button {
     right: 0;
     transform: translateY(-50%);
     margin: 0 5px;
+}
+
+.tip {
+    align-self: flex-start;
+    font-size: 12px;
+    color: #4168e0;
+    margin-top: 10px;
 }
 
 
