@@ -369,7 +369,7 @@ export default {
                     userInfo._volume = 0;
                     userInfo._isScreenSharing = screenSharing;
                     this.participantUserInfos.push(userInfo);
-                    console.log('joined', subscriber.audience, this.participantUserInfos.length);
+                    console.log('joined', userInfos, subscriber.audience, this.participantUserInfos.length);
                 })
             }
 
@@ -541,11 +541,16 @@ export default {
         invite() {
             let callSession = this.session;
             let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, callSession.host, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.defaultAudience, callSession.advance, callSession.pin)
-            let message = new Message(null, inviteMessageContent);
-            this.$forwardMessage({
-                forwardType: ForwardType.NORMAL,
-                messages: [message]
-            });
+            if (isElectron()) {
+                let message = new Message(null, inviteMessageContent);
+                this.$forwardMessage({
+                    forwardType: ForwardType.NORMAL,
+                    messages: [message]
+                });
+            } else {
+                console.log('invite----')
+                localStorageEmitter.send('inviteConferenceParticipant', {messagePayload: inviteMessageContent.encode()})
+            }
             this.showParticipantList = false;
         },
 
@@ -724,6 +729,7 @@ export default {
             });
 
             if (toRefreshUsers.length > 0) {
+                console.log('to refreshUsers', toRefreshUsers)
                 IpcSub.getUserInfos(toRefreshUsers, null, (userInfos) => {
                     userInfos.forEach(u => {
                         let index = this.participantUserInfos.findIndex(p => p.uid === u.uid);
