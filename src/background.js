@@ -590,10 +590,11 @@ const createMainWindow = async () => {
     });
 
     mainWindow.webContents.on('will-navigate', (event, url) => {
+        console.log('will-navigate', url)
         // do default action
-        // event.preventDefault();
+        event.preventDefault();
         // console.log('navigate', url)
-        // shell.openExternal(url);
+        shell.openExternal(url);
     });
 
     mainWindow.on('close', e => {
