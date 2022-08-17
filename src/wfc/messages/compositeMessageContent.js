@@ -11,6 +11,8 @@ import {isElectron} from "../../platform";
 export default class CompositeMessageContent extends MediaMessageContent {
     title = '';
     messages = [];
+    // web 端有效，仅仅是用来标识 mediaCompositeMessage 是否已加载
+    loaded = false;
 
     constructor() {
         super(MessageContentType.Composite_Message)
@@ -127,13 +129,15 @@ export default class CompositeMessageContent extends MediaMessageContent {
 
         } else if (this.localPath) {
             // electron
-            const fs = require("fs");
-            if (fs.existsSync(this.localPath)) {
-                const buffer = fs.readFileSync(this.localPath);
-                str = buffer.toString();
-                this._decodeMessages(str);
-            } else {
-                console.log('media composite message not downloaded', this.remotePath);
+            if (isElectron()){
+                const fs = require("fs");
+                if (fs.existsSync(this.localPath)) {
+                    const buffer = fs.readFileSync(this.localPath);
+                    str = buffer.toString();
+                    this._decodeMessages(str);
+                } else {
+                    console.log('media composite message not downloaded', this.remotePath);
+                }
             }
         }
 
@@ -144,6 +148,9 @@ export default class CompositeMessageContent extends MediaMessageContent {
     }
 
     _decodeMessages(str) {
+        if (this.loaded){
+            return;
+        }
         // FIXME node 环境，decodeURIComponent 方法，有时候会在最后添加上@字符，目前尚未找到原因，先规避
         str = str.substring(0, str.lastIndexOf('}') + 1);
         str = str.replace(/"uid":([0-9]+)/g, "\"uid\":\"$1\"");
@@ -177,6 +184,7 @@ export default class CompositeMessageContent extends MediaMessageContent {
             msg.messageContent = Message.messageContentFromMessagePayload(payload, msg.from);
             this.messages.push(msg);
         });
+        console.log('cp ms', this.messages)
     }
 
 }
