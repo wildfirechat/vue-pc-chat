@@ -1,71 +1,75 @@
 <template>
-    <section class="message-input-container">
-        <section class="input-action-container">
-            <VEmojiPicker
-                id="emoji"
-                ref="emojiPicker"
-                v-show="showEmojiDialog"
-                labelSearch="Search"
-                lang="pt-BR"
-                v-click-outside="hideEmojiView"
-                :customEmojis="emojis"
-                :customCategories="emojiCategories"
-                @select="onSelectEmoji"
-            />
-            <ul>
-                <li><i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"></i></li>
-                <li><i @click="pickFile" class="icon-ion-android-attach"></i>
-                    <input ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
-                           style="display: none">
+    <div>
+        <section class="message-input-container" v-if="!sharedConversationState.showChannelMenu">
+            <section class="input-action-container">
+                <VEmojiPicker
+                    id="emoji"
+                    ref="emojiPicker"
+                    v-show="showEmojiDialog"
+                    labelSearch="Search"
+                    lang="pt-BR"
+                    v-click-outside="hideEmojiView"
+                    :customEmojis="emojis"
+                    :customCategories="emojiCategories"
+                    @select="onSelectEmoji"
+                />
+                <ul>
+                    <li><i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"></i></li>
+                    <li><i @click="pickFile" class="icon-ion-android-attach"></i>
+                        <input ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
+                               style="display: none">
+                    </li>
+                    <li v-if="sharedMiscState.isElectron"><i id="screenShot" @click="screenShot"
+                                                             class="icon-ion-scissors"></i></li>
+                    <li v-if="sharedMiscState.isElectron"><i id="messageHistory" @click="showMessageHistory"
+                                                             class="icon-ion-android-chat"></i></li>
+                </ul>
+                <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
+                    <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
+                    <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
+                    <li v-if="conversationInfo.conversation.type === 3"><i @click="toggleChannelMenu" class="icon-ion-android-menu"></i></li>
+                </ul>
+            </section>
+            <div @keydown.13="send($event)"
+                 @keydown.229="()=>{}"
+                 ref="input" class="input"
+                 @paste="handlePaste"
+                 draggable="false"
+                 title="Enter发送，Ctrl+Enter换行"
+                 autofocus
+                 @contextmenu.prevent="$refs.menu.open($event)"
+                 onmouseover="this.setAttribute('org_title', this.title); this.title='';"
+                 onmouseout="this.title = this.getAttribute('org_title');"
+                 v-on:tribute-replaced="onTributeReplaced"
+                 contenteditable="true">
+            </div>
+            <vue-context ref="menu" :lazy="true">
+                <li>
+                    <a @click.prevent="handlePaste($event, 'menu')">
+                        {{ $t('common.paste') }}
+                    </a>
                 </li>
-                <li v-if="sharedMiscState.isElectron"><i id="screenShot" @click="screenShot"
-                                                         class="icon-ion-scissors"></i></li>
-                <li v-if="sharedMiscState.isElectron"><i id="messageHistory" @click="showMessageHistory"
-                                                         class="icon-ion-android-chat"></i></li>
-            </ul>
-            <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
-                <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
-                <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
-            </ul>
+                <li v-show="hasInputTextOrImage">
+                    <a @click.prevent="copy">
+                        {{ $t('common.copy') }}
+                    </a>
+                </li>
+                <li>
+                    <a @click.prevent="cut">{{ $t('common.cut') }}</a>
+                </li>
+            </vue-context>
+            <QuoteMessageView
+                v-if="quotedMessage !== null"
+                style="padding: 10px 20px"
+                v-on:cancelQuoteMessage="cancelQuoteMessage"
+                :enable-message-preview="false"
+                :quoted-message="quotedMessage" :show-close-button="true"/>
+            <div v-if="muted" style="width: 100%; height: 100%; background: lightgrey; position: absolute; display: flex; justify-content: center; align-items: center">
+                <p style="color: white">群禁言或者你被禁言</p>
+            </div>
         </section>
-        <div @keydown.13="send($event)"
-             @keydown.229="()=>{}"
-             ref="input" class="input"
-             @paste="handlePaste"
-             draggable="false"
-             title="Enter发送，Ctrl+Enter换行"
-             autofocus
-             @contextmenu.prevent="$refs.menu.open($event)"
-             onmouseover="this.setAttribute('org_title', this.title); this.title='';"
-             onmouseout="this.title = this.getAttribute('org_title');"
-             v-on:tribute-replaced="onTributeReplaced"
-             contenteditable="true">
-        </div>
-        <vue-context ref="menu" :lazy="true">
-            <li>
-                <a @click.prevent="handlePaste($event, 'menu')">
-                    {{ $t('common.paste') }}
-                </a>
-            </li>
-            <li v-show="hasInputTextOrImage">
-                <a @click.prevent="copy">
-                    {{ $t('common.copy') }}
-                </a>
-            </li>
-            <li>
-                <a @click.prevent="cut">{{ $t('common.cut') }}</a>
-            </li>
-        </vue-context>
-        <QuoteMessageView
-            v-if="quotedMessage !== null"
-            style="padding: 10px 20px"
-            v-on:cancelQuoteMessage="cancelQuoteMessage"
-            :enable-message-preview="false"
-            :quoted-message="quotedMessage" :show-close-button="true"/>
-        <div v-if="muted" style="width: 100%; height: 100%; background: lightgrey; position: absolute; display: flex; justify-content: center; align-items: center">
-            <p style="color: white">群禁言或者你被禁言</p>
-        </div>
-    </section>
+        <ChannelMenuView v-else v-bind:menus="conversationInfo.conversation._target.menus"></ChannelMenuView>
+    </div>
 </template>
 
 <script>
@@ -93,6 +97,7 @@ import {ipcRenderer, isElectron} from "@/platform";
 import {copyText} from "../../util/clipboard";
 import EventType from "../../../wfc/client/wfcEvent";
 import IPCRendererEventType from "../../../ipcRendererEventType";
+import ChannelMenuView from "./ChannelMenuView";
 
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
@@ -396,7 +401,6 @@ export default {
         },
 
         startAudioCall() {
-            // TODO
             let conversation = this.conversationInfo.conversation;
             if (conversation.type === ConversationType.Single) {
                 avenginekitproxy.startCall(conversation, true, [conversation.target])
@@ -406,7 +410,6 @@ export default {
         },
 
         startVideoCall() {
-            // TODO
             let conversation = this.conversationInfo.conversation;
             if (conversation.type === ConversationType.Single) {
                 avenginekitproxy.startCall(conversation, false, [conversation.target])
@@ -415,6 +418,17 @@ export default {
             }
         },
 
+        toggleChannelMenu(toggle = true) {
+            if (toggle) {
+                this.$parent.$refs['conversationMessageList'].style.flexGrow = 1;
+                this.storeDraft(this.lastConversationInfo, lastQuotedMessage);
+            } else {
+                if (this.$parent.messageInputViewResized) {
+                    this.$parent.$refs['conversationMessageList'].style.flexGrow = 0;
+                }
+            }
+            store.toggleChannelMenu(toggle);
+        },
 
         startGroupVoip(isAudioOnly) {
             let successCB = users => {
@@ -468,7 +482,7 @@ export default {
             if (this.conversationInfo.conversation.type === ConversationType.SecretChat) {
                 this.emojiCategories = config.emojiCategories.filter(c => !c.name.startsWith('Sticker'));
                 this.emojis = config.emojis.filter(c => !c.category.startsWith('Sticker'));
-                this.$refs.emojiPicker.changeCategory({name:'Peoples'});
+                this.$refs.emojiPicker.changeCategory({name: 'Peoples'});
             } else {
                 this.emojiCategories = config.emojiCategories;
                 this.emojis = config.emojis;
@@ -484,7 +498,7 @@ export default {
             }
             let type = conversation.conversationType;
             if (type === ConversationType.Single
-                || type === ConversationType.ChatRoom) {
+                || type === ConversationType.ChatRoom || type === ConversationType.Channel) {
                 return
             }
 
@@ -555,8 +569,10 @@ export default {
 
         focusInput() {
             this.$nextTick(() => {
-                this.$refs['input'].focus();
-                console.log('focus end')
+                if (this.$refs['input']) {
+                    this.$refs['input'].focus();
+                    console.log('focus end')
+                }
             })
         },
 
@@ -579,6 +595,9 @@ export default {
         },
 
         storeDraft(conversationInfo, quotedMessage) {
+            if (!this.$refs['input']) {
+                return;
+            }
             let draftText = this.$refs['input'].innerHTML.trim();
             draftText = draftText
                 .replace(/<br>/g, '')
@@ -641,7 +660,7 @@ export default {
                 && this.conversationInfo.conversation.target === groupId) {
                 this.initMention(this.conversationInfo.conversation);
                 let groupMember = wfc.getGroupMember(groupId, wfc.getUserId());
-                if (groupMember && groupMember.type === GroupMemberType.Muted){
+                if (groupMember && groupMember.type === GroupMemberType.Muted) {
                     this.muted = true;
                 }
             }
@@ -649,23 +668,29 @@ export default {
     },
 
     activated() {
-        this.restoreDraft();
-        this.focusInput();
+        if (!this.sharedConversationState.showChannelMenu) {
+            this.restoreDraft();
+            this.focusInput();
+        }
     },
 
     deactivated() {
-        this.storeDraft(this.lastConversationInfo, lastQuotedMessage);
-        this.$refs['input'].innerHTML = '';
+        if (!this.sharedConversationState.showChannelMenu) {
+            this.storeDraft(this.lastConversationInfo, lastQuotedMessage);
+            this.$refs['input'].innerHTML = '';
+        }
     },
 
     mounted() {
-        if (this.conversationInfo) {
-            this.initMention(this.conversationInfo.conversation)
-            this.initEmojiPicker()
-            this.restoreDraft();
+        if (!this.sharedConversationState.showChannelMenu) {
+            if (this.conversationInfo) {
+                this.initMention(this.conversationInfo.conversation)
+                this.initEmojiPicker()
+                this.restoreDraft();
+            }
+            this.focusInput();
         }
         this.lastConversationInfo = this.conversationInfo;
-        this.focusInput();
 
         if (isElectron()) {
             ipcRenderer.on('screenshots-ok', (event, args) => {
@@ -699,16 +724,27 @@ export default {
     watch: {
         conversationInfo() {
             if (this.lastConversationInfo && !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation)) {
-                this.storeDraft(this.lastConversationInfo, lastQuotedMessage);
-            }
+                this.$nextTick(() => {
+                    if (this.sharedConversationState.showChannelMenu) {
+                        this.$parent.$refs['conversationMessageList'].style.flexGrow = 1;
+                        return
+                    }
+                    if (this.$parent.messageInputViewResized) {
+                        this.$parent.$refs['conversationMessageList'].style.flexGrow = 0;
+                    }
+                    if (this.lastConversationInfo && !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation)) {
+                        this.storeDraft(this.lastConversationInfo, lastQuotedMessage);
+                    }
 
-            if (this.conversationInfo && (!this.lastConversationInfo || !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation))) {
-                this.restoreDraft();
-                this.initMention(this.conversationInfo.conversation)
+                    if (this.conversationInfo && (!this.lastConversationInfo || !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation))) {
+                        this.restoreDraft();
+                        this.initMention(this.conversationInfo.conversation)
+                    }
+                    this.lastConversationInfo = this.conversationInfo;
+                    this.focusInput();
+                    this.initEmojiPicker()
+                })
             }
-            this.lastConversationInfo = this.conversationInfo;
-            this.focusInput();
-            this.initEmojiPicker()
         },
     },
 
@@ -738,6 +774,7 @@ export default {
     },
 
     components: {
+        ChannelMenuView,
         QuoteMessageView,
         VEmojiPicker
     },
@@ -750,7 +787,8 @@ export default {
 
 <style lang='css' scoped>
 .message-input-container {
-    height: 100%;
+    height: 200px;
+    min-height: 200px;
     display: flex;
     flex-direction: column;
     position: relative;

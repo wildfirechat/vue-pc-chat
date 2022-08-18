@@ -70,6 +70,7 @@ let store = {
             previewMediaIndex: null,
 
             enableMessageMultiSelection: false,
+            showChannelMenu: false,
             quotedMessage: null,
 
             // 为什么不用 map？
@@ -94,6 +95,7 @@ let store = {
                 this.previewMediaItems = [];
                 this.previewMediaIndex = null;
                 this.enableMessageMultiSelection = false;
+                this.showChannelMenu = false;
                 this.quotedMessage = null;
                 this.downloadingMessages = [];
                 this.sendingMessages = [];
@@ -273,7 +275,7 @@ let store = {
         });
 
         wfc.eventEmitter.on(EventType.ReceiveMessage, (msg, hasMore) => {
-            if (miscState.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing){
+            if (miscState.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing) {
                 return;
             }
             if (!hasMore) {
@@ -609,6 +611,7 @@ let store = {
             conversationState.currentConversationDeliveries = null;
             conversationState.currentConversationRead = null;
             conversationState.enableMessageMultiSelection = false;
+            conversationState.showChannelMenu = false;
             return;
         }
 
@@ -636,6 +639,11 @@ let store = {
         conversationState.currentConversationRead = wfc.getConversationRead(conversationInfo.conversation);
 
         conversationState.enableMessageMultiSelection = false;
+        if (conversation.type === ConversationType.Channel) {
+            conversationState.showChannelMenu = true;
+        } else {
+            conversationState.showChannelMenu = false;
+        }
         conversationState.quotedMessage = null;
         conversationState.currentVoiceMessage = null;
 
@@ -659,6 +667,10 @@ let store = {
         if (conversationState.enableMessageMultiSelection && message) {
             pickState.messages.push(message);
         }
+    },
+
+    toggleChannelMenu(toggle) {
+        conversationState.showChannelMenu = toggle;
     },
 
     selectOrDeselectMessage(message) {
@@ -955,9 +967,9 @@ let store = {
         conversationState.currentConversationMessageList = msgs;
         if (msgs.length) {
             conversationState.currentConversationOldestMessageId = msgs[0].messageId;
-       }
+        }
         for (let i = 0; i < msgs.length; i++) {
-            if (gt(msgs[i].messageUid, 0)){
+            if (gt(msgs[i].messageUid, 0)) {
                 conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
                 break;
             }
@@ -993,7 +1005,7 @@ let store = {
         let lmsgs = wfc.getMessages(conversation, conversationState.currentConversationOldestMessageId, true, 20);
         if (lmsgs.length > 0) {
             conversationState.currentConversationOldestMessageId = lmsgs[0].messageId;
-            if (gt(lmsgs[0].messageUid, 0)){
+            if (gt(lmsgs[0].messageUid, 0)) {
                 conversationState.currentConversationOldestMessageUid = lmsgs[0].messageUid;
             }
             let loadNewMsg = this._onloadConversationMessages(conversation, lmsgs)
