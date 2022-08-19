@@ -640,7 +640,12 @@ let store = {
 
         conversationState.enableMessageMultiSelection = false;
         if (conversation.type === ConversationType.Channel) {
-            conversationState.showChannelMenu = true;
+            let channelInfo = wfc.getChannelInfo(conversation.target, false);
+            if (channelInfo.menus && channelInfo.menus.length > 0) {
+                conversationState.showChannelMenu = true;
+            } else {
+                conversationState.showChannelMenu = false;
+            }
         } else {
             conversationState.showChannelMenu = false;
         }

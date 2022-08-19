@@ -27,7 +27,7 @@
                 <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
                     <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
                     <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
-                    <li v-if="conversationInfo.conversation.type === 3"><i @click="toggleChannelMenu" class="icon-ion-android-menu"></i></li>
+                    <li v-if="conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length"><i @click="toggleChannelMenu" class="icon-ion-android-menu"></i></li>
                 </ul>
             </section>
             <div @keydown.13="send($event)"

@@ -52,6 +52,7 @@
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                             <RecallNotificationMessageContentView :message="message" v-else-if="isRecallNotificationMessage(message)"/>
                             <RichNotificationMessageContentView :message="message" v-else-if="isRichNotificationMessage(message)"/>
+                            <ArticlesMessageContentView :message="message" v-else-if="isArticlesMessage(message)"/>
                             <NormalOutMessageContentView
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
                                 :message="message"
@@ -187,10 +188,13 @@ import RichNotificationMessageContent from "../../../wfc/messages/notification/r
 import RichNotificationMessageContentView from "./message/RichNotificationMessageContentView";
 import MessageStatus from "../../../wfc/messages/messageStatus";
 import MediaMessageContent from "../../../wfc/messages/mediaMessageContent";
+import ArticlesMessageContentView from "./message/ArticlesMessageContentView";
+import ArticlesMessageContent from "../../../wfc/messages/articlesMessageContent";
 
 var amr;
 export default {
     components: {
+        ArticlesMessageContentView,
         RichNotificationMessageContentView,
         MultiSelectActionView,
         NotificationMessageContentView,
@@ -323,6 +327,10 @@ export default {
 
         isRichNotificationMessage(message) {
             return message && message.messageContent instanceof RichNotificationMessageContent;
+        },
+
+        isArticlesMessage(message) {
+            return message && message.messageContent instanceof ArticlesMessageContent;
         },
 
         isRecallNotificationMessage(message) {
