@@ -1,20 +1,20 @@
 <template>
     <section class="articles-container">
-        <div v-if="!message.messageContent.subArticles || !message.messageContent.subArticles.length" class="top-article">
+        <div v-if="!message.messageContent.subArticles || !message.messageContent.subArticles.length" class="top-article" @click="openArticle(message.messageContent.topArticle)">
             <img :src="message.messageContent.topArticle.cover">
             <p>{{
                     message.messageContent.topArticle.title
                 }}</p>
         </div>
-        <div v-else class="top-article sub">
+        <div v-else class="top-article sub" @click="openArticle(message.messageContent.topArticle)">
             <img :src="message.messageContent.topArticle.cover">
             <p>{{
-                    message.messageContent.topArticle.title + 'wjoj wwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwjeo wjeoje oaejoaje aoe jw'
+                    message.messageContent.topArticle.title
                 }}</p>
         </div>
         <template v-if="message.messageContent.subArticles">
-            <div v-for="(sa, si) in message.messageContent.subArticles" :key="si" class="sub-article">
-                <p>{{ sa.title + 'wjoj wwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwwjeo wjeoje oaejoaje aoe jwjeo wjeoje oaejoaje aoe jw' }}</p>
+            <div v-for="(sa, si) in message.messageContent.subArticles" :key="si" class="sub-article" @click="openArticle(message.messageContent.topArticle)">
+                <p>{{ sa.title }}</p>
                 <img :src="sa.cover">
             </div>
         </template>
@@ -32,6 +32,11 @@ export default {
             required: true,
         }
     },
+    methods: {
+        openArticle(article) {
+            open(article.url);
+        }
+    }
 }
 </script>
 
@@ -52,6 +57,10 @@ export default {
     padding: 10px;
     border-radius: 5px;
     margin: 5px 0;
+}
+
+.top-article:hover {
+    background: #e0e0e0e5;
 }
 
 .top-article img {
@@ -92,6 +101,10 @@ export default {
     height: 80px;
     background: white;
     padding: 0 10px;
+}
+
+.sub-article:hover {
+    background: #e0e0e0e5;
 }
 
 .articles-container .sub-article:last-of-type {
