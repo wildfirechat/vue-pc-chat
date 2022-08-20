@@ -14,6 +14,7 @@
     "contact": {
         "new_friend": "新的朋友",
         "group": "群聊",
+        "channel": "频道",
         "contact": "联系人"
     },
     "friend_request": {
@@ -26,9 +27,14 @@
         "intro": "你好"
     },
     "group": {
-        "name": "群名称{0}",
+        "name": "群名称: {0}",
         "chat": "进入群聊",
         "fav": "保存到通讯录"
+    },
+    "channel": {
+      "name": " 频道名称: {0}",
+      "chat": "进入频道",
+      "subscribe": "订阅"
     },
     "message":{
         "send_message": "发消息",
