@@ -189,10 +189,11 @@ export default {
             }, {withCredentials: true});
             if (response.data) {
                 if (response.data.code === 0) {
-                    const {userId, token} = response.data.result;
+                    const {userId, token, portrait} = response.data.result;
                     wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
+                    setItem("userPortrait", portrait);
                     let appAuthToken = response.headers['authtoken'];
                     if (!appAuthToken) {
                         appAuthToken = response.headers['authToken'];
@@ -228,10 +229,11 @@ export default {
             }, {withCredentials: true});
             if (response.data) {
                 if (response.data.code === 0) {
-                    const {userId, token} = response.data.result;
+                    const {userId, token, portrait} = response.data.result;
                     wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
+                    setItem("userPortrait", portrait);
                     let appAuthToken = response.headers['authtoken'];
                     if (!appAuthToken) {
                         appAuthToken = response.headers['authToken'];
