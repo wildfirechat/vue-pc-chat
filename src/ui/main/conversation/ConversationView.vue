@@ -51,8 +51,11 @@
 
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                             <RecallNotificationMessageContentView :message="message" v-else-if="isRecallNotificationMessage(message)"/>
-                            <RichNotificationMessageContentView :message="message" v-else-if="isRichNotificationMessage(message)"/>
-                            <ArticlesMessageContentView :message="message" v-else-if="isArticlesMessage(message)"/>
+                            <ContextableNotificationMessageContentContainerView
+                                v-else-if="isContextableNotificaitonMessage(message)"
+                                @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
+                                :message="message"
+                            />
                             <NormalOutMessageContentView
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
                                 :message="message"
@@ -72,7 +75,7 @@
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
                                   v-show="!sharedConversationState.enableMessageMultiSelection"
-                                  ref="messageInputView" />
+                                  ref="messageInputView"/>
                 <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection"/>
                 <SingleConversationInfoView
                     v-if="showConversationInfo &&  sharedConversationState.currentConversationInfo.conversation.type === 0"
@@ -190,10 +193,12 @@ import MessageStatus from "../../../wfc/messages/messageStatus";
 import MediaMessageContent from "../../../wfc/messages/mediaMessageContent";
 import ArticlesMessageContentView from "./message/ArticlesMessageContentView";
 import ArticlesMessageContent from "../../../wfc/messages/articlesMessageContent";
+import ContextableNotificationMessageContentContainerView from "./message/ContextableNotificationMessageContentContainerView";
 
 var amr;
 export default {
     components: {
+        ContextableNotificationMessageContentContainerView,
         ArticlesMessageContentView,
         RichNotificationMessageContentView,
         MultiSelectActionView,
@@ -325,12 +330,8 @@ export default {
                 && message.messageContent.type !== MessageContentType.Rich_Notification;
         },
 
-        isRichNotificationMessage(message) {
-            return message && message.messageContent instanceof RichNotificationMessageContent;
-        },
-
-        isArticlesMessage(message) {
-            return message && message.messageContent instanceof ArticlesMessageContent;
+        isContextableNotificaitonMessage(message) {
+            return message && (message.messageContent instanceof RichNotificationMessageContent || message.messageContent instanceof ArticlesMessageContent);
         },
 
         isRecallNotificationMessage(message) {
@@ -475,6 +476,7 @@ export default {
                 MessageContentType.Voice,
                 MessageContentType.Video,
                 MessageContentType.Composite_Message,
+                MessageContentType.Articles,
                 MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE].indexOf(message.messageContent.type) <= -1;
         },
 
@@ -514,9 +516,9 @@ export default {
         recallMessage(message) {
             wfc.recallMessage(message.messageUid, null, null);
         },
-        cancelMessage(message){
+        cancelMessage(message) {
             let canceled = wfc.cancelSendingMessage(message.messageId);
-            if (!canceled){
+            if (!canceled) {
                 this.$notify({
                     text: '取消失败',
                     type: 'warn',
@@ -722,7 +724,7 @@ export default {
             this.forward(message);
         });
 
-        if (!isElectron()){
+        if (!isElectron()) {
             localStorageEmitter.on('inviteConferenceParticipant', (ev, args) => {
                 let payload = args.messagePayload;
                 let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
