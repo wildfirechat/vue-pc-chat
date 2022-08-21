@@ -100,6 +100,14 @@
                     class="conversation-info-container"
                 />
 
+                <ChannelConversationInfoView
+                    v-if="showConversationInfo &&  sharedConversationState.currentConversationInfo.conversation.type === 3"
+                    v-click-outside="hideConversationInfo"
+                    :conversation-info="sharedConversationState.currentConversationInfo"
+                    v-bind:class="{ active: showConversationInfo }"
+                    class="conversation-info-container"
+                />
+
                 <vue-context ref="menu" v-slot="{data:message}" :close-on-scroll="true" v-on:close="onMenuClose">
                     <!--          更多menu item-->
                     <li v-if="isCopyable(message)">
@@ -188,19 +196,17 @@ import EventType from "../../../wfc/client/wfcEvent";
 import MultiCallOngoingMessageContent from "../../../wfc/av/messages/multiCallOngoingMessageContent";
 import JoinCallRequestMessageContent from "../../../wfc/av/messages/joinCallRequestMessageContent";
 import RichNotificationMessageContent from "../../../wfc/messages/notification/richNotificationMessageContent";
-import RichNotificationMessageContentView from "./message/RichNotificationMessageContentView";
 import MessageStatus from "../../../wfc/messages/messageStatus";
 import MediaMessageContent from "../../../wfc/messages/mediaMessageContent";
-import ArticlesMessageContentView from "./message/ArticlesMessageContentView";
 import ArticlesMessageContent from "../../../wfc/messages/articlesMessageContent";
 import ContextableNotificationMessageContentContainerView from "./message/ContextableNotificationMessageContentContainerView";
+import ChannelConversationInfoView from "./ChannelConversationInfoView";
 
 var amr;
 export default {
     components: {
+        ChannelConversationInfoView,
         ContextableNotificationMessageContentContainerView,
-        ArticlesMessageContentView,
-        RichNotificationMessageContentView,
         MultiSelectActionView,
         NotificationMessageContentView,
         RecallNotificationMessageContentView,

@@ -674,6 +674,13 @@ let store = {
             console.log('quit group error', err)
         })
     },
+    subscribeChannel(channelId, subscribe) {
+        wfc.listenChannel(channelId, subscribe, () => {
+            //this.setCurrentConversationInfo(null)
+        }, (err) => {
+            console.log('unsubscribe channel error', err)
+        })
+    },
 
     toggleMessageMultiSelection(message) {
         conversationState.enableMessageMultiSelection = !conversationState.enableMessageMultiSelection;
