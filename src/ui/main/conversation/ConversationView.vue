@@ -52,7 +52,7 @@
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                             <RecallNotificationMessageContentView :message="message" v-else-if="isRecallNotificationMessage(message)"/>
                             <ContextableNotificationMessageContentContainerView
-                                v-else-if="isContextableNotificaitonMessage(message)"
+                                v-else-if="isContextableNotificationMessage(message)"
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
                                 :message="message"
                             />
@@ -336,7 +336,7 @@ export default {
                 && message.messageContent.type !== MessageContentType.Rich_Notification;
         },
 
-        isContextableNotificaitonMessage(message) {
+        isContextableNotificationMessage(message) {
             return message && (message.messageContent instanceof RichNotificationMessageContent || message.messageContent instanceof ArticlesMessageContent);
         },
 
