@@ -648,15 +648,16 @@ let store = {
         conversationState.currentConversationRead = wfc.getConversationRead(conversationInfo.conversation);
 
         conversationState.enableMessageMultiSelection = false;
+        conversationState.showChannelMenu = false;
         if (conversation.type === ConversationType.Channel) {
-            let channelInfo = wfc.getChannelInfo(conversation.target, false);
+            let channelInfo = wfc.getChannelInfo(conversation.target, true);
             if (channelInfo.menus && channelInfo.menus.length > 0) {
                 conversationState.showChannelMenu = true;
-            } else {
-                conversationState.showChannelMenu = false;
             }
-        } else {
-            conversationState.showChannelMenu = false;
+        } else if (conversation.type === ConversationType.Group){
+            wfc.getGroupInfo(conversation.target, true);
+        }else if (conversation.type === ConversationType.Single){
+            wfc.getUserInfo(conversation.target, true);
         }
         conversationState.quotedMessage = null;
         conversationState.currentVoiceMessage = null;
