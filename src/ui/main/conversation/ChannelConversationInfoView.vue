@@ -46,8 +46,9 @@ export default {
             newChannelDesc: '',
         }
     },
-    components: {},
 
+
+    components: {},
     methods: {
 
         updateChannelName() {
@@ -64,11 +65,6 @@ export default {
         subscribeChannel() {
             store.subscribeChannel(this.conversationInfo.conversation.target, !this.isSubscribedChannel());
         },
-    },
-
-    mounted() {
-        // 刷新一下
-        wfc.getChannelInfo(this.conversationInfo.conversation.target, true);
     },
 
     computed: {},
