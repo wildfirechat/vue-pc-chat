@@ -83,7 +83,7 @@ export default {
 
     mounted() {
         wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
-
+        wfc.getGroupInfo(this.conversationInfo.conversation.target, true);
     },
 
     beforeDestroy() {
