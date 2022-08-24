@@ -26,6 +26,7 @@ import pkg from '../package.json';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
 import nodePath from 'path'
+import {init as initProtoMain} from "./wfc/proto/proto.main";
 
 console.log('start crash report', app.getPath('crashDumps'))
 //crashReporter.start({uploadToServer: false});
@@ -883,6 +884,8 @@ const createMainWindow = async () => {
     ipcMain.on('start-op-server', (event, args) => {
         startOpenPlatformServer(args.port);
     })
+
+    initProtoMain();
 
     powerMonitor.on('resume', () => {
         isSuspend = false;
