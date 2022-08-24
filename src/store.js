@@ -70,6 +70,7 @@ let store = {
             previewMediaIndex: null,
 
             enableMessageMultiSelection: false,
+            showChannelMenu: false,
             quotedMessage: null,
 
             // 为什么不用 map？
@@ -94,6 +95,7 @@ let store = {
                 this.previewMediaItems = [];
                 this.previewMediaIndex = null;
                 this.enableMessageMultiSelection = false;
+                this.showChannelMenu = false;
                 this.quotedMessage = null;
                 this.downloadingMessages = [];
                 this.sendingMessages = [];
@@ -104,32 +106,38 @@ let store = {
         contact: {
             currentFriendRequest: null,
             currentGroup: null,
+            currentChannel: null,
             currentFriend: null,
 
             expandFriendRequestList: false,
             expandFriendList: true,
             expandGroup: false,
+            expandChanel: false,
 
             unreadFriendRequestCount: 0,
             friendList: [],
             friendRequestList: [],
             favGroupList: [],
+            channelList: [],
             favContactList: [],
 
             selfUserInfo: null,
             _reset() {
                 this.currentFriendRequest = null;
                 this.currentGroup = null;
+                this.currentChannel = null;
                 this.currentFriend = null;
 
                 this.expandFriendRequestList = false;
                 this.expandFriendList = true;
                 this.expandGroup = false;
+                this.expandChanel = false;
 
                 this.unreadFriendRequestCount = 0;
                 this.friendList = [];
                 this.friendRequestList = [];
                 this.favGroupList = [];
+                this.channelList = [];
                 this.favContactList = [];
 
                 this.selfUserInfo = null;
@@ -216,6 +224,7 @@ let store = {
                 this.updateTray();
             } else if (status === ConnectionStatus.ConnectionStatusLogout) {
                 _reset();
+                this.updateTray();
             }
         });
 
@@ -233,6 +242,7 @@ let store = {
             this._loadDefaultConversationList();
             this._loadFavContactList();
             this._loadFavGroupList();
+            this._loadChannelList();
             this.updateTray();
             // 清除远程消息时，WEB SDK会同时触发ConversationInfoUpdate 和 setting更新，但PC SDK不会，只会触发setting更新
             if (isElectron()) {
@@ -262,6 +272,7 @@ let store = {
 
         wfc.eventEmitter.on(EventType.ChannelInfosUpdate, (groupInfos) => {
             this._loadDefaultConversationList();
+            this._loadChannelList();
         });
 
         wfc.eventEmitter.on(EventType.ConversationInfoUpdate, (conversationInfo) => {
@@ -272,6 +283,9 @@ let store = {
         });
 
         wfc.eventEmitter.on(EventType.ReceiveMessage, (msg, hasMore) => {
+            if (miscState.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing) {
+                return;
+            }
             if (!hasMore) {
                 this._loadDefaultConversationList();
             }
@@ -322,8 +336,6 @@ let store = {
                 }
                 this._patchMessage(msg, lastTimestamp);
                 conversationState.currentConversationMessageList.push(msg);
-                conversationState.currentConversationOldestMessageId = conversationState.currentConversationMessageList[0].messageId;
-                conversationState.currentConversationOldestMessageUid = conversationState.currentConversationMessageList[0].messageUid;
             }
 
             if (msg.conversation.type !== 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
@@ -533,6 +545,7 @@ let store = {
 
     _loadDefaultData() {
         this._loadFavGroupList();
+        this._loadChannelList();
         this._loadFriendList();
         this._loadFavContactList();
         this._loadFriendRequest();
@@ -607,6 +620,7 @@ let store = {
             conversationState.currentConversationDeliveries = null;
             conversationState.currentConversationRead = null;
             conversationState.enableMessageMultiSelection = false;
+            conversationState.showChannelMenu = false;
             return;
         }
 
@@ -634,6 +648,17 @@ let store = {
         conversationState.currentConversationRead = wfc.getConversationRead(conversationInfo.conversation);
 
         conversationState.enableMessageMultiSelection = false;
+        conversationState.showChannelMenu = false;
+        if (conversation.type === ConversationType.Channel) {
+            let channelInfo = wfc.getChannelInfo(conversation.target, true);
+            if (channelInfo.menus && channelInfo.menus.length > 0) {
+                conversationState.showChannelMenu = true;
+            }
+        } else if (conversation.type === ConversationType.Group){
+            wfc.getGroupInfo(conversation.target, true);
+        }else if (conversation.type === ConversationType.Single){
+            wfc.getUserInfo(conversation.target, true);
+        }
         conversationState.quotedMessage = null;
         conversationState.currentVoiceMessage = null;
 
@@ -650,6 +675,13 @@ let store = {
             console.log('quit group error', err)
         })
     },
+    subscribeChannel(channelId, subscribe) {
+        wfc.listenChannel(channelId, subscribe, () => {
+            //this.setCurrentConversationInfo(null)
+        }, (err) => {
+            console.log('unsubscribe channel error', err)
+        })
+    },
 
     toggleMessageMultiSelection(message) {
         conversationState.enableMessageMultiSelection = !conversationState.enableMessageMultiSelection;
@@ -657,6 +689,10 @@ let store = {
         if (conversationState.enableMessageMultiSelection && message) {
             pickState.messages.push(message);
         }
+    },
+
+    toggleChannelMenu(toggle) {
+        conversationState.showChannelMenu = toggle;
     },
 
     selectOrDeselectMessage(message) {
@@ -953,7 +989,12 @@ let store = {
         conversationState.currentConversationMessageList = msgs;
         if (msgs.length) {
             conversationState.currentConversationOldestMessageId = msgs[0].messageId;
-            conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
+        }
+        for (let i = 0; i < msgs.length; i++) {
+            if (gt(msgs[i].messageUid, 0)) {
+                conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
+                break;
+            }
         }
     },
 
@@ -962,24 +1003,18 @@ let store = {
             return false;
         }
         let loadNewMsg = false;
-        if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
-            let lastTimestamp = 0;
-            let newMsgs = [];
-            conversationState.currentConversationOldestMessageUid = messages[0].messageUid;
-            messages.forEach(m => {
-                let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid))
-                if (index === -1) {
-                    this._patchMessage(m, lastTimestamp);
-                    lastTimestamp = m.timestamp;
-                    newMsgs.push(m);
-                    loadNewMsg = true;
-                }
-            });
-            conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
-            if (newMsgs.length) {
-                conversationState.currentConversationOldestMessageId = newMsgs[0].messageId;
+        let lastTimestamp = 0;
+        let newMsgs = [];
+        messages.forEach(m => {
+            let index = conversationState.currentConversationMessageList.findIndex(cm => cm.messageId === m.messageId)
+            if (index === -1) {
+                this._patchMessage(m, lastTimestamp);
+                lastTimestamp = m.timestamp;
+                newMsgs.push(m);
+                loadNewMsg = true;
             }
-        }
+        });
+        conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
         return loadNewMsg;
     },
 
@@ -991,6 +1026,10 @@ let store = {
         console.log('loadConversationHistoryMessage', conversation, conversationState.currentConversationOldestMessageId, stringValue(conversationState.currentConversationOldestMessageUid));
         let lmsgs = wfc.getMessages(conversation, conversationState.currentConversationOldestMessageId, true, 20);
         if (lmsgs.length > 0) {
+            conversationState.currentConversationOldestMessageId = lmsgs[0].messageId;
+            if (gt(lmsgs[0].messageUid, 0)) {
+                conversationState.currentConversationOldestMessageUid = lmsgs[0].messageUid;
+            }
             let loadNewMsg = this._onloadConversationMessages(conversation, lmsgs)
             if (!loadNewMsg) {
                 setTimeout(() => completeCB(), 200)
@@ -1003,8 +1042,12 @@ let store = {
                     if (msgs.length === 0) {
                         completeCB();
                     } else {
-                        msgs = msgs.filter(m => m.messageId !== 0);
-                        this._onloadConversationMessages(conversation, msgs);
+                        // 可能拉回来的时候，本地已经切换会话了
+                        if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
+                            conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
+                            msgs = msgs.filter(m => m.messageId !== 0);
+                            this._onloadConversationMessages(conversation, msgs);
+                        }
                         this._loadDefaultConversationList();
                         loadedCB();
                     }
@@ -1275,6 +1318,14 @@ let store = {
         contactState.favGroupList = wfc.getFavGroupList();
     },
 
+    _loadChannelList() {
+        let channelIds = wfc.getListenedChannels();
+        if (channelIds) {
+            contactState.channelList = channelIds.map(channleId => wfc.getChannelInfo(channleId, false));
+        }
+    },
+
+
     _loadFavContactList() {
         let favUserIds = wfc.getFavUsers();
         if (favUserIds.length > 0) {
@@ -1295,22 +1346,35 @@ let store = {
         contactState.currentFriendRequest = friendRequest;
         contactState.currentFriend = null;
         contactState.currentGroup = null;
+        contactState.currentChannel = null;
     },
 
     setCurrentFriend(friend) {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = friend;
         contactState.currentGroup = null;
+        contactState.currentChannel = null;
     },
 
     setCurrentGroup(group) {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = null;
         contactState.currentGroup = group;
+        contactState.currentChannel = null;
     },
 
+    setCurrentChannel(channel) {
+        contactState.currentFriendRequest = null;
+        contactState.currentFriend = null;
+        contactState.currentGroup = null;
+        contactState.currentChannel = channel;
+    },
     toggleGroupList() {
         contactState.expandGroup = !contactState.expandGroup;
+    },
+
+    toggleChannelList() {
+        contactState.expandChanel = !contactState.expandChanel;
     },
 
     toggleFriendRequestList() {

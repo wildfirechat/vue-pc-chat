@@ -3,20 +3,20 @@
         <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
                                           :maximizable="false"
                                           v-if="sharedMiscState.isElectronWindowsOrLinux"/>
-        <div class="qr-container">
-            <img v-if="qrCode" v-bind:src="qrCode" alt="">
-            <p v-else>{{ $t('misc.gen_qr_code') }}</p>
-            <ClipLoader v-if="loginStatus === 4" class="loading" :color="'white'" :height="'80px'" :width="'80px'"/>
-        </div>
-        <div class="drag-area"/>
 
-        <div class="login-action-container">
+        <div class="drag-area"/>
+        <div v-if="loginType === 0" class="qrcode-login-container">
+            <div class="qr-container">
+                <img v-if="qrCode" v-bind:src="qrCode" alt="">
+                <p v-else>{{ $t('misc.gen_qr_code') }}</p>
+                <ClipLoader v-if="loginStatus === 4" class="loading" :color="'white'" :height="'80px'" :width="'80px'"/>
+            </div>
             <!--    等待扫码-->
             <div v-if="loginStatus === 0" class="pending-scan">
-                <p>{{ this.count }}</p>
+                <p>{{ $t('login.desc') }}</p>
                 <p>{{ $t('login.tip') }}</p>
                 <p>{{ $t('login.warning') }}</p>
-                <a  target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
+                <a target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
             </div>
             <!--    已经扫码-->
             <div v-else-if="loginStatus === 1" class="scanned">
@@ -43,8 +43,39 @@
 
             <!--      开发调试时，自动登录-->
             <div v-else-if="loginStatus === 4">
-                <p @click="test">{{this.count}}</p>
+                <p>数据同步中...</p>
             </div>
+        </div>
+        <div v-else-if="loginType === 1" class="login-form-container">
+            <!--            密码登录-->
+            <p class="title">密码登录</p>
+            <div class="item">
+                <input v-model="mobile" class="text-input" type="number" placeholder="请输入手机号">
+            </div>
+            <div class="item">
+                <input v-model="password" class="text-input" @keydown.enter="loginWithPassword" type="text" placeholder="请输入密码">
+            </div>
+            <div style="display: flex; justify-content: space-between; width: 100%; ">
+                <p class="tip" @click="switchLoginType(2)">使用验证码登录</p>
+                <p class="tip" @click="register">注册</p>
+            </div>
+            <button class="login-button" :disabled="mobile.trim() === '' || password.trim() === ''" @click="loginWithPassword">登录</button>
+        </div>
+        <div v-else class="login-form-container">
+            <!--            验证码登录-->
+            <p class="title">验证码登录</p>
+            <div class="item">
+                <input v-model="mobile" class="text-input" type="number" placeholder="请输入手机号">
+            </div>
+            <div class="item">
+                <input v-model="authCode" class="text-input" type="number" placeholder="验证码">
+                <button :disabled="mobile.trim().length !== 11" class="request-auth-code-button" @keydown.enter="loginWithAuthCode" @click="requestAuthCode">获取验证码</button>
+            </div>
+            <p class="tip" @click="switchLoginType(1)">使用密码登录</p>
+            <button class="login-button" :disabled="mobile.trim() === '' || authCode.trim() === ''" @click="loginWithAuthCode">登录</button>
+        </div>
+        <div class="switch-login-type-container">
+            <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
         </div>
     </div>
 </template>
@@ -62,9 +93,6 @@ import {clear, getItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
-import TextMessageContent from "../../wfc/messages/textMessageContent";
-import Conversation from "../../wfc/model/conversation";
-import ConversationType from "../../wfc/model/conversationType";
 
 export default {
     name: 'App',
@@ -77,16 +105,15 @@ export default {
             qrCodeTimer: null,
             appToken: '',
             lastAppToken: '',
+            loginType: 0, // 0 扫码登录，1 密码登录，2 验证码登录
             enableAutoLogin: false,
-            testInternal: 0,
-            count: 0,
+            mobile: '',
+            password: '',
+            authCode: '',
         }
     },
     created() {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
-        axios.defaults.baseURL = Config.APP_SERVER;
-
-        axios.defaults.headers.common['authToken'] = getItem('authToken');
 
         let userId = getItem('userId');
         let token = getItem('token');
@@ -95,9 +122,8 @@ export default {
             this.qrCode = portrait ? portrait : Config.DEFAULT_PORTRAIT_URL;
 
             let autoLogin = getItem(userId + '-' + 'autoLogin') === '1'
-            if (token) {
+            if (autoLogin && token) {
                 wfc.connect(userId, token);
-                window.__wfc = wfc;
                 this.loginStatus = 4;
             } else {
                 this.loginStatus = 2;
@@ -107,25 +133,129 @@ export default {
         }
     },
 
-    mounted() {
-        setInterval(() => {
-            let heapStatistics = process.getHeapStatistics();
-            console.log('------------------renderer heap MemoryInfo', heapStatistics)
-            let blinkMemoryInfo = process.getBlinkMemoryInfo();
-            console.log('--------------- blinkMemoryInfo', blinkMemoryInfo);
-
-            process.getProcessMemoryInfo().then(info => {
-                console.log('-------------- processMemoryInfo', info)
-            })
-
-        }, 60 * 1000)
-    },
-
     beforeDestroy() {
         wfc.eventEmitter.removeListener(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
     },
 
     methods: {
+        register(){
+            this.$notify({
+                text: '使用短信验证码登录，将会为您创建账户，请使用短信验证码登录',
+                type: 'info'
+            });
+            this.switchLoginType(2);
+        },
+        switchLoginType(type) {
+            this.loginType = type;
+        },
+
+        async requestAuthCode() {
+            let response = await axios.post('/send_code/', {
+                mobile: this.mobile,
+            }, {withCredentials: true});
+            if (response.data) {
+                if (response.data.code === 0) {
+                    this.$notify({
+                        text: '发送验证码成功',
+                        type: 'info'
+                    });
+                } else {
+                    this.$notify({
+                        title: '发送验证码失败',
+                        text: response.data.message,
+                        type: 'error'
+                    });
+                }
+            } else {
+                this.mobile = '';
+                this.$notify({
+                    // title: '收藏成功',
+                    text: '发送验证码失败',
+                    type: 'error'
+                });
+            }
+        },
+
+        async loginWithPassword() {
+            if (!this.mobile || !this.password) {
+                return;
+            }
+
+            let response = await axios.post('/login_pwd/', {
+                mobile: this.mobile,
+                password: this.password,
+                platform: Config.getWFCPlatform(),
+                clientId: wfc.getClientId(),
+            }, {withCredentials: true});
+            if (response.data) {
+                if (response.data.code === 0) {
+                    const {userId, token, portrait} = response.data.result;
+                    wfc.connect(userId, token);
+                    setItem('userId', userId);
+                    setItem('token', token);
+                    setItem("userPortrait", portrait);
+                    let appAuthToken = response.headers['authtoken'];
+                    if (!appAuthToken) {
+                        appAuthToken = response.headers['authToken'];
+                    }
+
+                    if (appAuthToken) {
+                        setItem('authToken', appAuthToken);
+                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                    }
+                } else {
+                    this.password = '';
+                    this.$notify({
+                        title: '登录失败',
+                        text: response.data.message,
+                        type: 'error'
+                    });
+                }
+            } else {
+                console.error('loginWithPassword error', response);
+            }
+        },
+
+        async loginWithAuthCode() {
+            if (!this.mobile || !this.authCode) {
+                return;
+            }
+
+            let response = await axios.post('/login/', {
+                mobile: this.mobile,
+                code: this.authCode,
+                platform: Config.getWFCPlatform(),
+                clientId: wfc.getClientId(),
+            }, {withCredentials: true});
+            if (response.data) {
+                if (response.data.code === 0) {
+                    const {userId, token, portrait} = response.data.result;
+                    wfc.connect(userId, token);
+                    setItem('userId', userId);
+                    setItem('token', token);
+                    setItem("userPortrait", portrait);
+                    let appAuthToken = response.headers['authtoken'];
+                    if (!appAuthToken) {
+                        appAuthToken = response.headers['authToken'];
+                    }
+
+                    if (appAuthToken) {
+                        setItem('authToken', appAuthToken);
+                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                    }
+                } else {
+                    this.authCode = '';
+                    this.$notify({
+                        title: '登录失败',
+                        text: response.data.message,
+                        type: 'error'
+                    });
+                }
+            } else {
+                console.error('loginWithAuthCode error', response)
+            }
+        },
+
         async createPCLoginSession(userId) {
             let response = await axios.post('/pc_session', {
                 flag: 1,
@@ -140,7 +270,7 @@ export default {
                 this.appToken = session.token;
                 if (!userId || session.status === 0/*服务端pc login session不存在*/) {
                     this.qrCode = jrQRCode.getQrBase64(Config.QR_CODE_PREFIX_PC_SESSION + session.token);
-                    // this.refreshQrCode();
+                    this.refreshQrCode();
                 }
                 this.login();
             }
@@ -173,7 +303,6 @@ export default {
                             this.loginStatus = 4;
                             setItem('userId', userId);
                             setItem('token', imToken);
-                            console.log('user---------', userId, imToken)
                             let appAuthToken = response.headers['authtoken'];
                             if (!appAuthToken) {
                                 appAuthToken = response.headers['authToken'];
@@ -239,35 +368,15 @@ export default {
                 this.cancel();
             }
             if (status === ConnectionStatus.ConnectionStatusConnected) {
-                // this.$router.replace({path: "/home"});
-                // if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
-                //     isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
-                //     if (this.enableAutoLogin) {
-                //         store.setEnableAutoLogin(this.enableAutoLogin)
-                //     }
-                // }
-
-                // 不跳转了，免受 UI 影响
-
-                this.test();
+                this.$router.replace({path: "/home"});
+                if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
+                    isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+                    if (this.enableAutoLogin) {
+                        store.setEnableAutoLogin(this.enableAutoLogin)
+                    }
+                }
             }
         },
-        test(){
-            if (this.testInternal){
-                clearInterval(this.testInternal)
-                this.testInternal = 0;
-                let filePath = '/Users/jiangecho/bitbucket/wildfirechat/vue-pc-chat/';
-                let result = process.takeHeapSnapshot(filePath);
-                console.log('takeHeapSnapshot end', filePath, result)
-            }else {
-                this.testInternal = setInterval(() => {
-                    this.count ++;
-                    let msg = new TextMessageContent(new Date().toLocaleDateString() + '--' + this.count)
-                    let conversation = new Conversation(ConversationType.Single, "GNMtGtZZ", 0)
-                    wfc.sendConversationMessage(conversation, msg)
-                }, 200)
-            }
-        }
     },
 
     computed: {
@@ -335,25 +444,29 @@ export default {
 .pending-quick-login,
 .quick-logining {
     display: flex;
+    margin-top: 20px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     line-height: 25px;
 }
 
-.login-action-container {
+.qrcode-login-container {
     margin-top: 20px;
-    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-.login-action-container label {
+.qrcode-login-container label {
     margin-top: 5px;
     padding: 5px;
     font-size: 14px;
     color: gray;
 }
 
-.login-action-container button {
+.qrcode-login-container button {
     outline: none;
     font-size: 14px;
     border: none;
@@ -399,5 +512,84 @@ export default {
     z-index: -1;
     -webkit-app-region: drag;
 }
+
+.switch-login-type-container {
+    padding-top: 10px;
+    font-size: 14px;
+    color: #4168e0;
+}
+
+.login-form-container {
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-form-container .title {
+    align-self: flex-start;
+    font-size: 18px;
+}
+
+.login-form-container .item {
+    width: 100%;
+    font-size: 13px;
+    margin-top: 20px;
+    position: relative;
+}
+
+.login-form-container .text-input {
+    height: 40px;
+    width: 100%;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+    outline: none;
+    padding: 0 5px;
+    -moz-appearance: textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.login-form-container .text-input:active {
+    border: 1px solid #4168e0;
+}
+
+.login-form-container .text-input:focus {
+    border: 1px solid #4168e0;
+}
+
+.login-form-container .login-button {
+    height: 40px;
+    width: 100%;
+    margin-top: 20px;
+    border: 1px solid #e5e5e5;
+    border-radius: 3px;
+}
+
+.login-form-container .login-button:active {
+    border: 1px solid #4168e0;
+}
+
+.login-form-container .request-auth-code-button {
+    position: absolute;
+    font-size: 12px;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+    margin: 0 5px;
+}
+
+.tip {
+    align-self: flex-start;
+    font-size: 12px;
+    color: #4168e0;
+    margin-top: 10px;
+}
+
 
 </style>

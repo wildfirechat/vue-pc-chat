@@ -51,7 +51,11 @@
 
                             <NotificationMessageContentView :message="message" v-if="isNotificationMessage(message)"/>
                             <RecallNotificationMessageContentView :message="message" v-else-if="isRecallNotificationMessage(message)"/>
-                            <RichNotificationMessageContentView :message="message" v-else-if="isRichNotificationMessage(message)"/>
+                            <ContextableNotificationMessageContentContainerView
+                                v-else-if="isContextableNotificationMessage(message)"
+                                @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
+                                :message="message"
+                            />
                             <NormalOutMessageContentView
                                 @click.native.capture="sharedConversationState.enableMessageMultiSelection? clickMessageItem($event, message) : null"
                                 :message="message"
@@ -67,12 +71,11 @@
                     <img class="avatar" :src="sharedConversationState.inputtingUser.portrait"/>
                     <ScaleLoader :color="'#d2d2d2'" :height="'15px'" :width="'3px'"/>
                 </div>
-                <div v-show="!sharedConversationState.enableMessageMultiSelection" v-on:mousedown="dragStart"
+                <div v-show="!sharedConversationState.enableMessageMultiSelection && !sharedContactState.showChannelMenu" v-on:mousedown="dragStart"
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
                                   v-show="!sharedConversationState.enableMessageMultiSelection"
-                                  ref="messageInputView"
-                                  class="message-input-container"/>
+                                  ref="messageInputView"/>
                 <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection"/>
                 <SingleConversationInfoView
                     v-if="showConversationInfo &&  sharedConversationState.currentConversationInfo.conversation.type === 0"
@@ -91,6 +94,14 @@
 
                 <SecretConversationInfoView
                     v-if="showConversationInfo &&  sharedConversationState.currentConversationInfo.conversation.type === 5"
+                    v-click-outside="hideConversationInfo"
+                    :conversation-info="sharedConversationState.currentConversationInfo"
+                    v-bind:class="{ active: showConversationInfo }"
+                    class="conversation-info-container"
+                />
+
+                <ChannelConversationInfoView
+                    v-if="showConversationInfo &&  sharedConversationState.currentConversationInfo.conversation.type === 3"
                     v-click-outside="hideConversationInfo"
                     :conversation-info="sharedConversationState.currentConversationInfo"
                     v-bind:class="{ active: showConversationInfo }"
@@ -185,14 +196,17 @@ import EventType from "../../../wfc/client/wfcEvent";
 import MultiCallOngoingMessageContent from "../../../wfc/av/messages/multiCallOngoingMessageContent";
 import JoinCallRequestMessageContent from "../../../wfc/av/messages/joinCallRequestMessageContent";
 import RichNotificationMessageContent from "../../../wfc/messages/notification/richNotificationMessageContent";
-import RichNotificationMessageContentView from "./message/RichNotificationMessageContentView";
 import MessageStatus from "../../../wfc/messages/messageStatus";
 import MediaMessageContent from "../../../wfc/messages/mediaMessageContent";
+import ArticlesMessageContent from "../../../wfc/messages/articlesMessageContent";
+import ContextableNotificationMessageContentContainerView from "./message/ContextableNotificationMessageContentContainerView";
+import ChannelConversationInfoView from "./ChannelConversationInfoView";
 
 var amr;
 export default {
     components: {
-        RichNotificationMessageContentView,
+        ChannelConversationInfoView,
+        ContextableNotificationMessageContentContainerView,
         MultiSelectActionView,
         NotificationMessageContentView,
         RecallNotificationMessageContentView,
@@ -224,6 +238,7 @@ export default {
             fixTippy: false,
             ongoingCalls: null,
             ongoingCallTimer: 0,
+            messageInputViewResized: false,
         };
     },
 
@@ -321,8 +336,8 @@ export default {
                 && message.messageContent.type !== MessageContentType.Rich_Notification;
         },
 
-        isRichNotificationMessage(message) {
-            return message && message.messageContent instanceof RichNotificationMessageContent;
+        isContextableNotificationMessage(message) {
+            return message && (message.messageContent instanceof RichNotificationMessageContent || message.messageContent instanceof ArticlesMessageContent);
         },
 
         isRecallNotificationMessage(message) {
@@ -385,6 +400,7 @@ export default {
             // * Set flex-grow to 0 to prevent it from growing
             this.$refs['conversationMessageList'].style.height = (Math.max(boxAminHeight, pointerRelativeYpos)) + 'px';
             this.$refs['conversationMessageList'].style.flexGrow = 0;
+            this.messageInputViewResized = true;
 
         },
 
@@ -466,6 +482,7 @@ export default {
                 MessageContentType.Voice,
                 MessageContentType.Video,
                 MessageContentType.Composite_Message,
+                MessageContentType.Articles,
                 MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE].indexOf(message.messageContent.type) <= -1;
         },
 
@@ -505,9 +522,9 @@ export default {
         recallMessage(message) {
             wfc.recallMessage(message.messageUid, null, null);
         },
-        cancelMessage(message){
+        cancelMessage(message) {
             let canceled = wfc.cancelSendingMessage(message.messageId);
-            if (!canceled){
+            if (!canceled) {
                 this.$notify({
                     text: '取消失败',
                     type: 'warn',
@@ -713,6 +730,14 @@ export default {
             this.forward(message);
         });
 
+        if (!isElectron()) {
+            localStorageEmitter.on('inviteConferenceParticipant', (ev, args) => {
+                let payload = args.messagePayload;
+                let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
+                let message = new Message(null, messageContent);
+                this.forward(message);
+            });
+        }
         wfc.eventEmitter.on(EventType.ReceiveMessage, this.onReceiveMessage)
     },
 
@@ -967,11 +992,6 @@ export default {
 .user-online-status {
     color: gray;
     font-size: 10px;
-}
-
-.message-input-container {
-    height: 200px;
-    min-height: 200px;
 }
 
 .conversation-info-container {

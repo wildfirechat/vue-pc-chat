@@ -172,9 +172,8 @@ export class AvEngineKitProxy {
             if (this.callWin) {
                 if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START
                     || (content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT && content.participants.indexOf(wfc.getUserId()) >= 0)) {
-                    // 已在音视频通话中，其他的音视频通话，又邀请自己
+                    // 已在音视频通话中，其他的音视频通话，又邀请自己，这儿是只是让主界面提示一下，拒绝逻辑在 engine 里面
                     this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
-                    return;
                 }
             }
             if (!this.isSupportVoip || !this.hasMicrophone || !this.hasSpeaker || !this.hasWebcam) {

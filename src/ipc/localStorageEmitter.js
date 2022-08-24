@@ -23,6 +23,7 @@ class LocalStorageEmitter {
     invokes;
 
     constructor() {
+        window.__lse = this;
         window.addEventListener('storage', ev => {
             let key = ev.key;
             if (!key.startsWith(this.namespace + '$') || !key.endsWith('$')) {
@@ -38,6 +39,18 @@ class LocalStorageEmitter {
                 console.log('localStorageEmitter ignore null', key)
                 return;
             }
+            if (key.endsWith('$r$')) {
+                this.invokes.forEach((invoke, k) => {
+                    let invokeReturnValueKey = k + 'r' + '$';
+                    if (invokeReturnValueKey === key) {
+                        invoke.callback(value.r);
+                        let b = this.invokes.delete(k)
+
+                        localStorage.removeItem(invokeReturnValueKey)
+                        localStorage.removeItem(k)
+                    }
+                })
+            } else {
             this.subscriptions.forEach((subscription, k) => {
                 if (k === key) {
                     subscription.listener(new LocalStorageEvent(this), value.args);
@@ -71,7 +84,7 @@ class LocalStorageEmitter {
 
                     } else {
                         let r = {r: returnValue}
-                        console.log('handle res', returnValue)
+                            console.log('handle res', invokeId, returnValue)
                         localStorage.setItem(invokeReturnValueKey, JSON.stringify(r));
                         if (handle.once) {
                             this.handles.delete(k)
@@ -79,19 +92,9 @@ class LocalStorageEmitter {
                     }
                     localStorage.removeItem(invokeKey)
                 }
-            });
 
-            this.invokes.forEach((invoke, k) => {
-                let invokeReturnValueKey = k + 'r' + '$';
-                if (invokeReturnValueKey === key) {
-                    invoke.callback(value.r);
-                    this.invokes.delete(key)
-
-                    localStorage.removeItem(invokeReturnValueKey)
-                    localStorage.removeItem(k)
-                }
-            })
-
+                });
+            }
         })
         this.subscriptions = new Map();
         this.handles = new Map();

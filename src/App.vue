@@ -20,7 +20,7 @@
         </div>
         <!--用来实现视频缩略图-->
         <div id="styled_video_container" class="styled_video_container">
-            <video id="bgvid" playsinline autoplay muted loop>
+            <video id="bgvid" playsinline autoplay muted loop crossorigin="anonymous">
                 <!-- <source src="http://thenewcode.com/assets/videos/polina.webm" type="video/webm">
                 <source src="http://thenewcode.com/assets/videos/polina.mp4" type="video/mp4"> -->
             </video>
@@ -47,6 +47,9 @@ import './twemoji'
 import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
 import wfc from "./wfc/client/wfc";
+import axios from "axios";
+import Config from "./config";
+import {getItem} from "./ui/util/storageHelper";
 
 export default {
     name: 'App',
@@ -90,6 +93,9 @@ export default {
         if (isElectron()){
         		currentWindow.minimizable = this.sharedMiscState.enableMinimize;
         }
+        axios.defaults.baseURL = Config.APP_SERVER;
+
+        axios.defaults.headers.common['authToken'] = getItem('authToken');
     },
 
     mounted() {

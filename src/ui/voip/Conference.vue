@@ -52,12 +52,12 @@
 
                         <!--participants-->
                         <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
-                             :key="participant.uid + participant._isScreenSharing"
+                             :key="participant.uid + '-' + participant._isScreenSharing"
                              class="participant-video-item"
                              v-bind:class="{highlight: participant._volume > 0}"
                         >
                             <video v-if="!participant._isVideoMuted"
-                                   @click="setUseMainVideo(participant.uid, participant._isScreenSharing)"
+                                   @click="switchVideoType(participant.uid, participant._isScreenSharing)"
                                    class="video"
                                    v-bind:style="{objectFit:participant._isScreenSharing ? 'contain' : 'fit'}"
                                    :srcObject.prop="participant._stream"
@@ -71,7 +71,7 @@
                                 <img class="avatar" :src="participant.portrait" :alt="participant">
                             </div>
                             <div v-if="!participant._isVideoMuted" class="video-stream-tip-container">
-                                <p>点击视频，切换清晰度</p>
+                                <p>点击视频，切换视频流类型</p>
                             </div>
                             <div class="info-container">
                                 <i v-if="participant._isHost" class="icon-ion-person"></i>
@@ -229,6 +229,7 @@ import store from "../../store";
 import wfc from "../../wfc/client/wfc";
 import ForwardType from "../main/conversation/message/forward/ForwardType";
 import Message from "../../wfc/messages/message";
+import VideoType from "../../wfc/av/engine/videoType";
 
 export default {
     name: 'Conference',
@@ -257,13 +258,22 @@ export default {
     },
     components: {ScreenShareControlView, UserCardView, ElectronWindowsControlButtonView},
     methods: {
-        setUseMainVideo(userId, screenSharing) {
+        switchVideoType(userId, screenSharing) {
             if (!this.session) {
                 return
             }
             let subscriber = this.session.getSubscriber(userId, screenSharing);
             if (subscriber) {
-                subscriber.setUseMainVideo(!subscriber.useMainVideo);
+                let currentVideoType = subscriber.currentVideoType;
+                let videoType = VideoType.NONE;
+                if (currentVideoType === VideoType.NONE){
+                    videoType = VideoType.BIG_STREAM;
+                }else if (currentVideoType === VideoType.BIG_STREAM){
+                    videoType = VideoType.SMALL_STREAM;
+                }else if (videoType === VideoType.SMALL_STREAM){
+                    videoType = VideoType.NONE;
+                }
+                this.session.setParticipantVideoType(userId, screenSharing, videoType);
             }
         },
         setupSessionCallback() {
@@ -287,6 +297,7 @@ export default {
 
             sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo) => {
                 this.session = session;
+                //this.session.rotateAng = 90;
 
                 this.audioOnly = session.audioOnly;
                 this.selfUserInfo = selfUserInfo;
@@ -346,7 +357,7 @@ export default {
                     userInfo._volume = 0;
                     userInfo._isScreenSharing = screenSharing;
                     this.participantUserInfos.push(userInfo);
-                    console.log('joined', this.participantUserInfos.length);
+                    console.log('joined', userInfos, subscriber.audience, this.participantUserInfos.length);
                 })
             }
 
@@ -399,6 +410,8 @@ export default {
                 this.participantUserInfos.forEach(u => {
                     if (u.uid === userId && u._isScreenSharing === screenSharing) {
                         u._isAudience = audience;
+                        u._isAudioMuted = false;
+                        u._isVideoMuted = false;
                     }
                 })
             };
@@ -516,11 +529,16 @@ export default {
         invite() {
             let callSession = this.session;
             let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, callSession.host, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.defaultAudience, callSession.advance, callSession.pin)
-            let message = new Message(null, inviteMessageContent);
-            this.$forwardMessage({
-                forwardType: ForwardType.NORMAL,
-                messages: [message]
-            });
+            if (isElectron()) {
+                let message = new Message(null, inviteMessageContent);
+                this.$forwardMessage({
+                    forwardType: ForwardType.NORMAL,
+                    messages: [message]
+                });
+            } else {
+                console.log('invite----')
+                localStorageEmitter.send('inviteConferenceParticipant', {messagePayload: inviteMessageContent.encode()})
+            }
             this.showParticipantList = false;
         },
 
@@ -699,6 +717,7 @@ export default {
             });
 
             if (toRefreshUsers.length > 0) {
+                console.log('to refreshUsers', toRefreshUsers)
                 IpcSub.getUserInfos(toRefreshUsers, null, (userInfos) => {
                     userInfos.forEach(u => {
                         let index = this.participantUserInfos.findIndex(p => p.uid === u.uid);

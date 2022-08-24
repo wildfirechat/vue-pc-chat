@@ -4,7 +4,6 @@
 import NotificationMessageContent from "../../messages/notification/notificationMessageContent";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc"
-import {de, me} from "../../../vendor/pinyin/data/dict-zi-web";
 
 class ParticipantStatus {
     userId;
@@ -28,8 +27,26 @@ export default class AddParticipantsMessageContent extends NotificationMessageCo
     }
 
     formatNotification(message) {
-        // TODO
-        return "add participant";
+        let desc = '';
+        if (this.fromSelf){
+            desc = '您邀请'
+        }else {
+            desc = wfc.getGroupMemberDisplayName(message.conversation.target, this.initiator)
+            desc += "邀请"
+        }
+
+        if (this.participants){
+            this.participants.forEach(p => {
+                desc += ' ';
+                if (p === wfc.getUserId()){
+                    desc += '您';
+                }else {
+                    desc += wfc.getGroupMemberDisplayName(message.conversation.target, p);
+                }
+            })
+        }
+        desc += ' 加入了通话';
+        return desc;
     }
 
     encode() {
