@@ -72,6 +72,7 @@ i18n.configure({
 Locales.setLocale('ch');
 
 global.sharedObj = {proto: proto};
+app.commandLine.appendSwitch('js-flags', '--expose-gc')
 
 let forceQuit = false;
 let downloading = false;
