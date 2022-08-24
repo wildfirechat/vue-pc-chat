@@ -184,6 +184,18 @@
                 </div>
                 <ul>
                     <li v-for="user in computedParticipants" :key="user.uid">
+                        <tippy
+                            :to="'user-' + user.uid"
+                            interactive
+                            theme="light"
+                            :animate-fill="false"
+                            placement="left"
+                            distant="7"
+                            animation="fade"
+                            trigger="click"
+                        >
+                            <UserCardView :user-info="user" v-on:close="closeUserCard(user)"/>
+                        </tippy>
                         <div class="participant-user"
                              :ref="'userCardTippy-'+user.uid"
                              :name="'user-'+user.uid">

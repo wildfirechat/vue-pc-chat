@@ -6,6 +6,21 @@
             <section class="menu-container">
                 <div>
                     <!-- todo tippy example -->
+                    <tippy
+                        to="infoTrigger"
+                        interactive
+                        :animate-fill="false"
+                        placement="right"
+                        distant="7"
+                        theme="light"
+                        animation="fade"
+                        trigger="click"
+                        arrow
+                    >
+                        <UserCardView v-if="sharedContactState.selfUserInfo" v-on:close="closeUserCard"
+                                      :enable-update-portrait="true"
+                                      :user-info="sharedContactState.selfUserInfo"/>
+                    </tippy>
 
                     <a href="#"><img
                         v-if="sharedContactState.selfUserInfo"
