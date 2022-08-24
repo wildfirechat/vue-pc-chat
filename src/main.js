@@ -53,14 +53,14 @@ Vue.config.productionTip = false
             //     wfc.setBackupAddress('192.168.10.11', 80)
             // }
         }
-        // store.init(true);
+        store.init(true);
     } else {
         console.log('not home window, not init wfc')
         if (isElectron()) {
             let sharedObj = remote.getGlobal('sharedObj');
             wfc.attach(sharedObj.proto)
         }
-        // store.init(false);
+        store.init(false);
     }
 }
 // init end
