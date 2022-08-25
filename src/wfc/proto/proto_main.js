@@ -131,103 +131,45 @@ export function init(wfcProto) {
 
 function setupProtoListener() {
 
-    proto.setConnectionStatusListener((...args) => {
-        _forwardProtoEventToAllWindow('connectionStatus', args)
-    });
-    proto.setConnectToServerListener((...args) => {
-        _forwardProtoEventToAllWindow('connectToServer', args)
-    });
+    proto.setConnectionStatusListener(_genProtoEventListener('connectionStatus'));
+    proto.setConnectToServerListener(_genProtoEventListener('connectToServer'));
     //proto.setReceiveMessageListener(self.onReceiveMessage, self.onRecallMessage, self.onDeleteRemoteMessage, self.onUserReceivedMessage, self.onUserReadedMessage);
-    proto.setReceiveMessageListener((...args) => {
-        // onReceiveMessage
-        _forwardProtoEventToAllWindow('onReceiveMessage', args)
+    proto.setReceiveMessageListener(_genProtoEventListener('onReceiveMessage'),
+        _genProtoEventListener('onRecallMessage'),
+        _genProtoEventListener('onDeleteRemoteMessage'),
+        _genProtoEventListener('onUserReceivedMessage'),
+        _genProtoEventListener('onUserReadedMessage')
+    );
+    proto.setConferenceEventListener(_genProtoEventListener('conferenceEvent'));
+    proto.setOnlineEventListener(_genProtoEventListener('onlineEvent'));
+    proto.setUserInfoUpdateListener(_genProtoEventListener('userInfoUpdate'));
 
-    }, (...args) => {
-        // onRecallMessage
-        _forwardProtoEventToAllWindow('onRecallMessage', args)
+    proto.setFriendUpdateListener(_genProtoEventListener('friendUpdate'));
 
-    }, (...args) => {
-        // onDeleteRemoteMessage
-        _forwardProtoEventToAllWindow('onDeleteRemoteMessage', args)
+    proto.setFriendRequestListener(_genProtoEventListener('friendRequestUpdate'));
+    proto.setGroupInfoUpdateListener(_genProtoEventListener('groupInfoUpdate'));
+    proto.setSettingUpdateListener(_genProtoEventListener('settingUpdate'));
+    proto.setChannelInfoUpdateListener(_genProtoEventListener('channelInfoUpdate'));
+    proto.setGroupMemberUpdateListener(_genProtoEventListener('groupMemberUpdate'));
 
-    }, (...args) => {
-        // onUserReceivedMessage
-        _forwardProtoEventToAllWindow('onUserReceivedMessage', args)
-
-    }, (...args) => {
-        // onUserReadedMessage
-        _forwardProtoEventToAllWindow('onUserReadedMessage', args)
-
-    });
-    //proto.setConferenceEventListener(self.onConferenceEvent);
-    proto.setConferenceEventListener((...args) => {
-        _forwardProtoEventToAllWindow('conferenceEvent', args)
-    });
-    // proto.setOnlineEventListener(self.onOnlineEvent);
-    proto.setOnlineEventListener((...args) => {
-        _forwardProtoEventToAllWindow('onlineEvent', args)
-    });
-    // proto.setUserInfoUpdateListener(self.onUserInfoUpdate);
-    proto.setUserInfoUpdateListener((...args) => {
-        _forwardProtoEventToAllWindow('userInfoUpdate', args)
-    });
-
-    // proto.setFriendUpdateListener(self.onFriendListUpdate);
-    proto.setFriendUpdateListener((...args) => {
-        _forwardProtoEventToAllWindow('friendUpdate', args)
-    });
-
-    // proto.setFriendRequestListener(self.onFriendRequestUpdate);
-    proto.setFriendRequestListener((...args) => {
-        _forwardProtoEventToAllWindow('friendRequestUpdate', args)
-    });
-    // proto.setGroupInfoUpdateListener(self.onGroupInfoUpdate);
-    proto.setGroupInfoUpdateListener((...args) => {
-        _forwardProtoEventToAllWindow('groupInfoUpdate', args)
-    });
-    // proto.setSettingUpdateListener(self.onSettingUpdate);
-    proto.setSettingUpdateListener((...args) => {
-        _forwardProtoEventToAllWindow('settingUpdate', args)
-    });
-    // proto.setChannelInfoUpdateListener(self.onChannelInfoUpdate);
-    proto.setChannelInfoUpdateListener((...args) => {
-        _forwardProtoEventToAllWindow('channelInfoUpdate', args)
-    });
-    // proto.setGroupMemberUpdateListener(self.onGroupMemberUpdateListener);
-    proto.setGroupMemberUpdateListener((...args) => {
-        _forwardProtoEventToAllWindow('groupMemberUpdate', args)
-    });
-
-    proto.setSecretChatStateListener((...args) => {
-        _forwardProtoEventToAllWindow('secretChatStateChange', args)
-    });
-    proto.setSecretMessageBurnStateListener((...args) => {
-        _forwardProtoEventToAllWindow('secretMessageStartBurn', args)
-    }, (...args) => {
-        _forwardProtoEventToAllWindow('secretMessageBurned', args)
-    });
+    proto.setSecretChatStateListener(_genProtoEventListener('secretChatStateChange'));
+    proto.setSecretMessageBurnStateListener(_genProtoEventListener('secretMessageStartBurn'),
+        _genProtoEventListener('secretMessageBurned')
+    );
 }
 
-function _asyncCallback(event, reqId, cbIndex, done, args) {
-    let obj = {
-        reqId,
-        cbIndex,
-        done,
-        cbArgs: args
-    }
-    event.sender.send(ASYNC_CALLBACK, obj);
-}
-
-function _forwardProtoEventToAllWindow(protoEventName, args) {
-    let windows = BrowserWindow.getAllWindows();
-    if (windows) {
-        windows.forEach(win => {
-            win.webContents.send('protoEvent', {
-                eventName: protoEventName,
-                eventArgs: args,
+function _genProtoEventListener(protoEventName) {
+    return (...args) => {
+        //_forwardProtoEventToAllWindow('secretMessageStartBurn', args)
+        let windows = BrowserWindow.getAllWindows();
+        if (windows) {
+            windows.forEach(win => {
+                win.webContents.send('protoEvent', {
+                    eventName: protoEventName,
+                    eventArgs: args,
+                })
             })
-        })
+        }
     }
 }
-
 
