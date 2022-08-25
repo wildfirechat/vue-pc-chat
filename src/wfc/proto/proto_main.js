@@ -65,6 +65,7 @@ const asyncProtoMethods = {
     destroySecretChat: _asyncCall2('destroySecretChat'),
     getAuthCode: _asyncCall2('getAuthCode'),
     configApplication: _asyncCall2('configApplication'),
+    getRemoteMessage: _asyncCall2('getRemoteMessage'),
     sendConferenceRequest: (event, args) => {
         let methodArgs = args.methodArgs;
         proto.sendConferenceRequest(methodArgs[0], methodArgs[1], methodArgs[2], methodArgs[3],
