@@ -3,9 +3,10 @@ import {ipcRenderer} from "../../platform";
 export class ProtoRenderer {
     _requestId = 0;
     _requestCallbackMap = new Map();
+    _protoEventListeners = new Map();
 
     init() {
-        ipcRenderer.on('async-callback', (event, args) => {
+        ipcRenderer.on('protoAsyncCallback', (event, args) => {
             let reqId = args.reqId;
             console.log('xxx async-callback', args)
             let callbacks = this._requestCallbackMap.get(reqId);
@@ -15,6 +16,15 @@ export class ProtoRenderer {
                 if (args.done) {
                     this._requestCallbackMap.delete(reqId);
                 }
+            }
+        })
+
+        ipcRenderer.on('protoEvent', (event, args) => {
+            let listener = this._protoEventListeners.get(args.eventName);
+            if (listener) {
+                listener(...args.eventArgs);
+            } else {
+                console.log('not found listener for', args.eventName);
             }
         })
     }
@@ -49,7 +59,7 @@ export class ProtoRenderer {
     }
 
     invoke(methodName, ...args) {
-        let channel = 'invokeProto';
+        let channel = 'invokeProtoMethod';
         // invoke 是异步调用，返回的是 Promise，对应主进程是 handle
         // sendSync 是同步调用，返回的直接就是具体的返回值，对应主进程是 on
         return ipcRenderer.sendSync(channel, {
@@ -61,15 +71,18 @@ export class ProtoRenderer {
     invokeAsync(methodName, pArgs, ...callbacks) {
         let reqId = this.requestId();
         this._wrapCallback(reqId, ...callbacks);
-        ipcRenderer.send('invokeProtoAsync', {
+        ipcRenderer.send('invokeProtoMethodAsync', {
             reqId,
             methodName: methodName,
             methodArgs: pArgs,
         });
     }
 
+    setProtoEventListener(event, listener) {
+        this._protoEventListeners.set(event, listener);
+    }
+
     _wrapCallback(reqId, ...callbacks) {
-        console.log('xxxx_wrapCallback', callbacks);
         this._requestCallbackMap.set(reqId, [...callbacks]);
     }
 }
