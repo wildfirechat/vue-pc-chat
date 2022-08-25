@@ -43,16 +43,6 @@ crashReporter.start({
     }
 })
 
-function forwardWFCEventToSubWindow(wfcEvent, ...args) {
-    let windows = BrowserWindow.getAllWindows();
-    windows.forEach(w => {
-        if (w.webContents.getURL() === mainWindow.webContents.getURL()) {
-            return;
-        }
-        w.webContents.send('wfcEvent', wfcEvent, args);
-    })
-}
-
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
     {scheme: 'app', privileges: {secure: true, standard: true, bypassCSP: true}}
@@ -873,10 +863,6 @@ const createMainWindow = async () => {
     ipcMain.on('enable-close-window-to-exit', (event, enable) => {
         closeWindowToExit = enable;
     });
-
-    ipcMain.on('wfcEvent', (event, wfcEvent, args) => {
-        forwardWFCEventToSubWindow(wfcEvent, args);
-    })
 
     ipcMain.on('start-secret-server', (event, args) => {
         startSecretDecodeServer(args.port);
