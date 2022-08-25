@@ -26,7 +26,7 @@ import pkg from '../package.json';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
 import nodePath from 'path'
-import {init as initProtoMain} from "./wfc/proto/proto.main";
+import {init as initProtoMain} from "./wfc/proto/proto_main";
 
 console.log('start crash report', app.getPath('crashDumps'))
 //crashReporter.start({uploadToServer: false});
@@ -62,7 +62,6 @@ i18n.configure({
 });
 Locales.setLocale('ch');
 
-global.sharedObj = {proto: proto};
 app.commandLine.appendSwitch('js-flags', '--expose-gc')
 
 let forceQuit = false;
@@ -871,7 +870,7 @@ const createMainWindow = async () => {
         startOpenPlatformServer(args.port);
     })
 
-    initProtoMain();
+    initProtoMain(proto);
 
     powerMonitor.on('resume', () => {
         isSuspend = false;

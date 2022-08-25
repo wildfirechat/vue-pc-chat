@@ -1,14 +1,15 @@
-import {ipcRenderer} from "../../platform";
+import {ipcRenderer} from "electron";
 
-export class ProtoRenderer {
+export class ProtoRendererProxy {
     _requestId = 0;
     _requestCallbackMap = new Map();
     _protoEventListeners = new Map();
 
     init() {
+        window._rcm = this._requestCallbackMap;
+        window._pel = this._protoEventListeners;
         ipcRenderer.on('protoAsyncCallback', (event, args) => {
             let reqId = args.reqId;
-            console.log('xxx async-callback', args)
             let callbacks = this._requestCallbackMap.get(reqId);
             if (callbacks) {
                 let cbIndex = args.cbIndex;
@@ -24,34 +25,10 @@ export class ProtoRenderer {
             if (listener) {
                 listener(...args.eventArgs);
             } else {
-                console.log('not found listener for', args.eventName);
+                console.error('not found listener for', args.eventName);
             }
         })
     }
-
-    // getUserInfo(userId, refresh, groupId) {
-    //     return ipcRenderer.invoke('getUserInfo', userId, refresh, groupId);
-    // }
-    //
-    // updateMessage(messageId, messageContent) {
-    //     return ipcRenderer.invoke('updateMessage', [messageId, messageContent]);
-    // }
-    //
-    // insertMessage(conversation, messageContent, status, notify = false, serverTime = 0) {
-    //     return ipcRenderer.invoke('insertMessage', conversation, messageContent, status, notify, serverTime);
-    // }
-
-    // sendSavedMessage(messageId, expireDuration, successCB, failCB) {
-    //     let reqId = this.requestId();
-    //     this._wrapCallback(reqId, successCB, failCB);
-    //     ipcRenderer.send('sendSavedMessage', {reqId, messageId, expireDuration});
-    // }
-    //
-    // getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
-    //     let reqId = this.requestId();
-    //     this._wrapCallback(reqId, successCB, failCB);
-    //     ipcRenderer.send('getUploadMediaUrl', {reqId, fileName, mediaType, contentType});
-    // }
 
     requestId() {
         this._requestId++;
@@ -68,13 +45,14 @@ export class ProtoRenderer {
         });
     }
 
-    invokeAsync(methodName, pArgs, ...callbacks) {
+    invokeAsync(methodName, ...args) {
         let reqId = this.requestId();
-        this._wrapCallback(reqId, ...callbacks);
+        let parsedArgs = this._parseArgs(args);
+        this._wrapCallback(reqId, parsedArgs.funcArgs);
         ipcRenderer.send('invokeProtoMethodAsync', {
             reqId,
             methodName: methodName,
-            methodArgs: pArgs,
+            methodArgs: parsedArgs.pArgs,
         });
     }
 
@@ -82,11 +60,44 @@ export class ProtoRenderer {
         this._protoEventListeners.set(event, listener);
     }
 
-    _wrapCallback(reqId, ...callbacks) {
+    // 这个方法有点特殊
+    // 同步方法，但又有异步回调
+    sendMessage(...args) {
+        let reqId = this.requestId();
+        let parsedArgs = this._parseArgs(args);
+        this._wrapCallback(reqId, parsedArgs.funcArgs);
+        return ipcRenderer.sendSync('sendMessage', {
+            reqId,
+            methodArgs: parsedArgs.pArgs,
+        });
+    }
+
+    _parseArgs(args) {
+        let parsedArgs = {}
+        if (args) {
+            let pArgs = [];
+            let funcArgs = [];
+            args.forEach(arg => {
+                if (typeof arg === "function") {
+                    funcArgs.push(arg);
+                } else {
+                    pArgs.push(arg);
+                }
+            })
+            return {
+                pArgs,
+                funcArgs
+            }
+        }
+
+        return parsedArgs;
+    }
+
+    _wrapCallback(reqId, callbacks) {
         this._requestCallbackMap.set(reqId, [...callbacks]);
     }
 }
 
-const self = new ProtoRenderer();
+const self = new ProtoRendererProxy();
 export default self;
 
