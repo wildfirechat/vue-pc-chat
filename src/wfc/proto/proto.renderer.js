@@ -7,6 +7,7 @@ export class ProtoRenderer {
     init() {
         ipcRenderer.on('async-callback', (event, args) => {
             let reqId = args.reqId;
+            console.log('xxx async-callback', args)
             let callbacks = this._requestCallbackMap.get(reqId);
             if (callbacks) {
                 let cbIndex = args.cbIndex;
@@ -30,17 +31,17 @@ export class ProtoRenderer {
     //     return ipcRenderer.invoke('insertMessage', conversation, messageContent, status, notify, serverTime);
     // }
 
-    sendSavedMessage(messageId, expireDuration, successCB, failCB) {
-        let reqId = this.requestId();
-        this._wrapCallback(reqId, successCB, failCB);
-        ipcRenderer.send('sendSavedMessage', {reqId, messageId, expireDuration});
-    }
-
-    getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
-        let reqId = this.requestId();
-        this._wrapCallback(reqId, successCB, failCB);
-        ipcRenderer.send('getUploadMediaUrl', {reqId, fileName, mediaType, contentType});
-    }
+    // sendSavedMessage(messageId, expireDuration, successCB, failCB) {
+    //     let reqId = this.requestId();
+    //     this._wrapCallback(reqId, successCB, failCB);
+    //     ipcRenderer.send('sendSavedMessage', {reqId, messageId, expireDuration});
+    // }
+    //
+    // getUploadMediaUrl(fileName, mediaType, contentType, successCB, failCB) {
+    //     let reqId = this.requestId();
+    //     this._wrapCallback(reqId, successCB, failCB);
+    //     ipcRenderer.send('getUploadMediaUrl', {reqId, fileName, mediaType, contentType});
+    // }
 
     requestId() {
         this._requestId++;
@@ -57,11 +58,18 @@ export class ProtoRenderer {
         });
     }
 
-    invokeAsync(name, args, callbacks) {
-
+    invokeAsync(methodName, pArgs, ...callbacks) {
+        let reqId = this.requestId();
+        this._wrapCallback(reqId, ...callbacks);
+        ipcRenderer.send('invokeProtoAsync', {
+            reqId,
+            methodName: methodName,
+            methodArgs: pArgs,
+        });
     }
 
     _wrapCallback(reqId, ...callbacks) {
+        console.log('xxxx_wrapCallback', callbacks);
         this._requestCallbackMap.set(reqId, [...callbacks]);
     }
 }
