@@ -6,7 +6,7 @@
  * 3. client 和 server 之间的交互，通过 websocket 进行中转
  *
  */
-const remote = require('@electron/remote');
+const remote = require('electron').remote;
 
 let callbackMap = new Map();
 let eventListeners = {};

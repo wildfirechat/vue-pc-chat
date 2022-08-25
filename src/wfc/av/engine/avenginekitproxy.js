@@ -512,6 +512,7 @@ export class AvEngineKitProxy {
                     transparent: !!isConference,
                     frame: !isConference,
                     webPreferences: {
+                        enableRemoteModule: true,
                         scrollBounce: false,
                         nativeWindowOpen: true,
                         nodeIntegration: true,
@@ -520,8 +521,8 @@ export class AvEngineKitProxy {
                 }
             );
             // const remoteMain = require("@electron/remote").require("@electron/remote/main");
-            const remoteMain = remote.require("@electron/remote/main");
-            remoteMain.enable(win.webContents);
+            // const remoteMain = remote.require("@electron/remote/main");
+            // remoteMain.enable(win.webContents);
 
             win.webContents.on('did-finish-load', () => {
                 this.onVoipWindowReady(win);
