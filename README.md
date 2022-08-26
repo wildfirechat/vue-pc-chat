@@ -138,6 +138,7 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 17. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
 
 18. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
+19. 压力测试发现，Vue 内置的```keep-alive```组件，可能有缓慢的内存泄漏问题，可将```HomePage.vue```里面的```keep-alive```移除，由于```activated```和```deactivated```回调，要使用```keep-alive```组件才生效，需要妥善处理这两个回调里面的逻辑。
 
 ## 截图
 ![](./image/contact.png)
