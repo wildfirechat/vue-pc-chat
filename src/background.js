@@ -359,8 +359,8 @@ let trayMenu = [
         click() {
             forceQuit = true;
             mainWindow = null;
-            global.sharedObj.proto.disconnect(0);
-            console.log('--------------- disconnect', global.sharedObj.proto);
+            proto.disconnect(0);
+            console.log('--------------- disconnect', proto);
             setTimeout(() => {
                 app.exit(0);
             }, 1000);
@@ -875,12 +875,12 @@ const createMainWindow = async () => {
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
-        global.sharedObj.proto.onAppResume();
+        proto.onAppResume();
     });
 
     powerMonitor.on('suspend', () => {
         isSuspend = true;
-        global.sharedObj.proto.onAppSuspend();
+        proto.onAppSuspend();
     });
 
     if (isOsx) {
@@ -1075,11 +1075,11 @@ app.on('activate', e => {
 });
 
 function disconnectAndQuit() {
-    global.sharedObj.proto.setConnectionStatusListener(() => {
+    proto.setConnectionStatusListener(() => {
         // 仅仅是为了让渲染进程不收到 ConnectionStatusLogout
         // do nothing
     });
-    global.sharedObj.proto.disconnect(0);
+    proto.disconnect(0);
     setTimeout(() => {
         app.quit();
     }, 1000)
