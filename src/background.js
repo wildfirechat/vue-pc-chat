@@ -1010,6 +1010,15 @@ app.on('ready', () => {
             windows.forEach(win => win.openDevTools())
 
         });
+        globalShortcut.register('ctrl+shift+d', () => {
+            let heapdump = require('@nearform/heap-profiler');
+            console.log('generateHeapSnapshot dir', __dirname)
+            heapdump.generateHeapSnapshot({
+                destination:__dirname + "/" + Date.now() + ".heapsnapshot"
+            }, (err) => {
+                console.log('generateHeapSnapshot cb', err)
+            })
+        });
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
             if (isMainWindowFocusedWhenStartScreenshot) {
