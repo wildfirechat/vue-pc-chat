@@ -47,7 +47,6 @@
     "electron-windows-badge": "^1.1.0",
     "events": "^3.2.0",
     "file-system": "^2.2.2",
-    "heapdump": "^0.3.15",
     "i18n": "^0.13.2",
     "jr-qrcode": "^1.1.4",
     "js-base64": "^3.4.5",
