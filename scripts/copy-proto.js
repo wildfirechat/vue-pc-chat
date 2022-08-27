@@ -21,6 +21,8 @@ switch (platform) {
         protoName += '.linux'
         if (arch === 'arm64') {
             protoName += '.arm64'
+        } else if (arch === 'mips64el') {
+            protoName += '.mips64el'
         }
         break
     case "win32":
