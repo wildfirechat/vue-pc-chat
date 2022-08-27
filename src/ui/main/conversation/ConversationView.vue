@@ -182,7 +182,6 @@ import Message from "../../../wfc/messages/message";
 import {downloadFile} from "../../../platformHelper";
 import VideoMessageContent from "../../../wfc/messages/videoMessageContent";
 import localStorageEmitter from "../../../ipc/localStorageEmitter";
-import {remote} from "../../../platform";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import MessageContentType from "../../../wfc/messages/messageContentType";
 import BenzAMRRecorder from "benz-amr-recorder";
