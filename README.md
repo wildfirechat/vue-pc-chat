@@ -74,6 +74,31 @@ npm run cross-package-linux-arm64
 npm run cross-package-mac
 ```
 
+## 龙芯```mips64el```架构打包说明
+1. 设置ELECTRON_MIRROR环境变量
+   ```export ELECTRON_MIRROR=http://ftp.loongnix.cn/os/loongnix/1.0/electron/releases/mips/```
+2. 安装打包相关工具
+   ```
+   sudo npm install -g electron-packager@15.4.0
+   sudo npm install -g electron-installer-debian
+   sudo npm install -g asar
+   sudo apt install fakeroot dpkg
+   ```
+3. 生成项目打包工程
+    ```electron-packager . wf-pc-chat --platform linux --arch mips64el --out dist/```
+4. 非龙芯机器上，交叉打包Linux 系统 arm64架构，然后从```dist_electron/linux-arm64-unpacked/resources```目录替换```app.asar```文件
+5. 解包上一步提取到的```app.asar```，用```mips64el```版本的```marswrapper.node```文件替换原来的```arm64```版本，然后重新打包
+    ```
+   // 解包
+   npx asar extract app.asar tmpdir
+   // 替换tmpdir里面的marswrapper.node
+   // 打包
+   npx asar pack tempdir app.asar
+   ```
+6. 进入第3步生成的项目打包工程```dist/wf-pc-chat-linux-mips64el/resources/```目录，删除里面的 app 目录，并将第 5 步重新打包的```app.asar```文件移动到此
+7. 执行```electron-installer-debian --src dist/wf-pc-chat-linux-mips64el/ --dest dist-wf/installers/ --arch mips64el```进行打包
+8. 进入第7步生成的```dist/installers```，执行```sudo dpkg -i wf-pc-chat_{版本号}_mips64el.deb```进行安装
+
 ## 历史Electron版本
 目前master的使用的Electron版本是13.6.9。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8)。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。
 
