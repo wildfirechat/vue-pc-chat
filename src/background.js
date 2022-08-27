@@ -1010,6 +1010,10 @@ app.on('ready', () => {
             windows.forEach(win => win.openDevTools())
 
         });
+        globalShortcut.register('ctrl+shift+d', () => {
+            let heapdump = require('heapdump');
+            heapdump.writeSnapshot(__dirname + "/" + Date.now() + '.heapsnapshot');
+        });
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
             if (isMainWindowFocusedWhenStartScreenshot) {
