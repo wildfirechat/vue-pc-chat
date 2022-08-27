@@ -1838,7 +1838,7 @@ function _reset() {
 }
 
 function convert(p) {
-    return p;
+    return [p];
 }
 
 window.__store = store;
