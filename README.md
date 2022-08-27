@@ -86,7 +86,7 @@ npm run cross-package-mac
    ```
 3. 生成项目打包工程
     ```electron-packager . wf-pc-chat --platform linux --arch mips64el --out dist/```
-4. 非龙芯机器上，交叉打包Linux 系统 arm64架构，然后从```dist_electron/linux-arm64-unpacked/resources```目录替换```app.asar```文件
+4. 非龙芯机器上，交叉打包Linux 系统 arm64架构，然后从```dist_electron/linux-arm64-unpacked/resources```目录提取```app.asar```文件
 5. 解包上一步提取到的```app.asar```，用```mips64el```版本的```marswrapper.node```文件替换原来的```arm64```版本，然后重新打包
     ```
    // 解包
