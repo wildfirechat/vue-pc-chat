@@ -975,6 +975,10 @@ export class WfcManager {
         return impl.isEnableSecretChat();
     }
 
+    getAppPath(){
+        return impl.getAppPath();
+    }
+
     isUserEnableSecretChat() {
         return impl.isUserEnableSecretChat();
     }
