@@ -39,6 +39,7 @@ export default class Config {
     static RECALL_REEDIT_TIME_LIMIT = 60;
 
     static SECRET_CHAT_MEDIA_DECODE_SERVER_PORT = 7982;
+    // 如果不支持工作台，将其置空即可
     static OPEN_PLATFORM_WORK_SPACE_URL = 'https://open.wildfirechat.cn/work.html';
     static OPEN_PLATFORM_SERVE_PORT = 7983;
 

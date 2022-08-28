@@ -193,6 +193,7 @@ let store = {
             wfc: wfc,
             config: Config,
             userOnlineStateMap: new Map(),
+            enableOpenWorkSpace: !!(Config.OPEN_PLATFORM_WORK_SPACE_URL),
 
             _reset() {
                 this.connectionStatus = ConnectionStatus.ConnectionStatusUnconnected;
