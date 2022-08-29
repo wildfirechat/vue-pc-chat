@@ -462,6 +462,9 @@ function regShortcut() {
         mainWindow.webContents.toggleDevTools();
     })
     // }
+    globalShortcut.register('CommandOrControl+R', () => {
+        mainWindow.webContents.reload();
+    })
 }
 
 const downloadHandler = (event, item, webContents) => {
