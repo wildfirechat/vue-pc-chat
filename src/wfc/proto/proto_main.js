@@ -108,13 +108,29 @@ export function init(wfcProto) {
     setupProtoListener();
 
     ipcMain.on('invokeProtoMethod', (event, args) => {
-        event.returnValue = proto[args.methodName](...args.methodArgs);
+        try {
+            event.returnValue = proto[args.methodName](...args.methodArgs);
+        } catch (e) {
+            let msg = 'invokeProtoMethod ' + args.methodName + " error ";
+            console.log('invokeProtoMethod ' + args.methodName + ' error', args)
+            if (process.env.NODE_ENV !== 'production') {
+                throw new Error(msg);
+            }
+        }
     })
 
     ipcMain.on('invokeProtoMethodAsync', (event, args) => {
         let func = asyncProtoMethods[args.methodName];
         if (func) {
-            func(event, args);
+            try {
+                func(event, args);
+            } catch (e) {
+                let msg = 'invokeProtoMethodAsync ' + args.methodName + " error ";
+                console.log('invokeProtoMethodAsync ' + args.methodName + ' error', args)
+                if (process.env.NODE_ENV !== 'production') {
+                    throw new Error(msg);
+                }
+            }
         } else {
             console.error('invokeProtoAsync cannot found method', args.methodName);
         }
