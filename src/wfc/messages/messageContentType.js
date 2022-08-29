@@ -26,6 +26,11 @@ export default class MessageContentType {
 
     static StartSecretChat_Notification = 40;
 
+    //频道进出消息
+    static Enter_Channel_Chat = 71;
+    static Leave_Channel_Chat = 72;
+    static Channel_Menu_Event = 73
+
     // 提醒消息
     static RecallMessage_Notification = 80;
     static DeleteMessage_Notification = 81; //不存储的
