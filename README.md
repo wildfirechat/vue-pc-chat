@@ -44,6 +44,7 @@
 1. nodejs v14.18.X
 2. python2.7X
 3. git
+4. binutils
 
 ## 开发
 1. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
@@ -54,6 +55,10 @@
 ```
 npm run package
 ```
+
+## yarn
+1. ```yarn install --ignore-engines```
+2. ```yarn run package```
 
 ## 交叉打包
 打包为其它平台架构软件
