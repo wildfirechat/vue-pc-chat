@@ -28,7 +28,7 @@
     "cross-package-all": "node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
     "preinstall": "npx npm-force-resolutions"
   },
-  "main": "./src/background.js",
+  "main": "background.js",
   "dependencies": {
     "@imndx/v-emoji-picker": "^2.3.7",
     "anchorme": "^2.1.2",
