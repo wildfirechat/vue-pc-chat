@@ -49,6 +49,10 @@
         </div>
         <footer>
             <p class="proto-version-info">{{ protoRevision() }}</p>
+            <a v-if="sharedMiscState.isElectron" class="button" target="_blank" @click.prevent.stop="openLogDir">
+                打开日志目录
+                <!--        <i class="icon-ion-ios-email-outline"/>-->
+            </a>
             <a class="button" target="_blank" @click.prevent.stop="showChangePasswordContextMenu">
                 修改密码
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
@@ -113,6 +117,7 @@ import axios from "axios";
 import CreateConferenceView from "../../voip/CreateConferenceView";
 import ChangePasswordView from "./ChangePasswordView";
 import ResetPasswordView from "./ResetPasswordView";
+import {shell} from "../../../platform";
 
 export default {
     name: "SettingPage",
@@ -125,12 +130,15 @@ export default {
     },
     methods: {
 
+        openLogDir() {
+            let appPath = wfc.getAppPath();
+            shell.openPath(appPath);
+        },
         showChangePasswordContextMenu(event) {
             this.$refs.changePasswordContextMenu.open(event);
         },
 
         onChangePasswordContextMenuClose() {
-            console.log('yyyyyy')
         },
 
         showChangePasswordDialog() {
