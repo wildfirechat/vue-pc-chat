@@ -18,7 +18,6 @@
     "dev": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:serve --disable-background-timer-throttling",
     "validate": "node scripts/validate.js",
     "electron:dev": "vue-cli-service electron:serve",
-    "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "cross-package-win": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 x64 && vue-cli-service electron:build --win --x64 -p never",
     "cross-package-win32": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 ia32 && vue-cli-service electron:build --win --ia32 -p never",
@@ -29,7 +28,7 @@
     "cross-package-all": "node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
     "preinstall": "npx npm-force-resolutions"
   },
-  "main": "background.js",
+  "main": "./src/background.js",
   "dependencies": {
     "@imndx/v-emoji-picker": "^2.3.7",
     "anchorme": "^2.1.2",
