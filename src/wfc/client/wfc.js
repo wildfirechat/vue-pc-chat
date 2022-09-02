@@ -1587,6 +1587,15 @@ export class WfcManager {
     }
 
     /**
+     * 批量删除本地消息
+     * @param {[number]} messageUids 消息uid列表
+     * @returns {*}
+     */
+    batchDeleteMessages(messageUids) {
+        return impl.batchDeleteMessages(messageUids);
+    }
+
+    /**
      * 删除远程消息
      * @param {Long | string} msgUid 消息uid
      * @param {function ()} successCB
@@ -1616,6 +1625,17 @@ export class WfcManager {
      */
     async clearMessages(conversation) {
         impl.clearMessages(conversation);
+    }
+
+    /**
+     * 清除用户消息
+     * @param {string} userId 目标用户
+     * @param {number} startTime 开始时间，如果为0忽略开始时间
+     * @param {number} endTime 结束时间，如果为0忽略结束时间
+     * @returns {Promise<void>}
+     */
+    async clearUserMessages(userId, startTime, endTime) {
+        impl.clearUserMessages(userId, startTime, endTime);
     }
 
     /**
