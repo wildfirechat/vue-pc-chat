@@ -590,7 +590,7 @@ export default {
             let draft = Draft.getConversationDraftEx(this.conversationInfo);
             store.quoteMessage(draft.quotedMessage);
             let input = this.$refs['input'];
-            input.innerHTML = draft.text.replace(/ /g, '&nbsp');
+            input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
             this.moveCursorToEnd(input);
         },
 
@@ -600,7 +600,7 @@ export default {
             }
             let draftText = this.$refs['input'].innerHTML.trim();
             draftText = draftText
-                .replace(/<br>/g, '')
+                .replace(/<br>/g, '\n')
                 .replace(/<div>/g, '\n')
                 .replace(/<\/div>/g, '')
                 .replace(/<div><\/div>/g, ' ')
@@ -609,8 +609,7 @@ export default {
                 .replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')
                 .replace(/<img src="local-resource:.*">/g, '')
                 .trimStart()
-                .replace(/\s+$/g, ' ')
-            ;
+                .replace(/\s+$/g, ' ');
 
             let mentions = [];
             this.mentions.forEach(e => {
