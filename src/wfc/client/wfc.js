@@ -1601,7 +1601,7 @@ export class WfcManager {
 
     /**
      * 批量删除本地消息
-     * @param {[number]} messageUids 消息uid列表
+     * @param {[string]} messageUids 消息uid列表
      * @returns {*}
      */
     batchDeleteMessages(messageUids) {
