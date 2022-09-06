@@ -1316,6 +1316,19 @@ export class WfcManager {
     }
 
     /**
+     * 获取会话消息
+     * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
+     * @param {number} timestamp 时间戳
+     * @param {boolean} before true, 获取timestamp之前的消息，即更旧的消息；false，获取timestamp之后的消息，即更新的消息。都不包含timestamp对应的消息
+     * @param {number} count 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @return {[Message]} 会话消息列表，参考{@link Message}
+     */
+    getMessagesByTimestamp(conversation, contentTypes, timestamp, before = true, count = 20, withUser = '') {
+        return impl.getMessagesByTimestamp(conversation, contentTypes, timestamp, before, count, withUser);
+    }
+    /**
      * 获取用户会话消息
      * @param {string} userId 用户id
      * @param {Conversation} conversation 目标会话
