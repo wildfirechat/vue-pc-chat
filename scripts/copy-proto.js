@@ -24,6 +24,7 @@ switch (platform) {
         } else if (arch === 'mips64el') {
             protoName += '.mips64el'
         }
+
         break
     case "win32":
         if (arch === 'ia32') {

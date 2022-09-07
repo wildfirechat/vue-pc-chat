@@ -39,11 +39,15 @@ export default class Config {
     static RECALL_REEDIT_TIME_LIMIT = 60;
 
     static SECRET_CHAT_MEDIA_DECODE_SERVER_PORT = 7982;
+    // 如果不支持工作台，将其置空即可
     static OPEN_PLATFORM_WORK_SPACE_URL = 'https://open.wildfirechat.cn/work.html';
     static OPEN_PLATFORM_SERVE_PORT = 7983;
 
     // 允许主动加入多人音视频通话
     static ENABLE_MULTI_CALL_AUTO_JOIN = false;
+
+    // 发送日志命令，当发送此文本消息时，会把协议栈日志发送到当前会话中，为空时关闭此功能。
+    static SEND_LOG_COMMAND = '*#marslog#';
 
     // 龙芯系统暂时不支持音视频相关功能，故添加一个关闭开关
     static DISABLE_VOIP = true;

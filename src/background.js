@@ -26,6 +26,7 @@ import pkg from '../package.json';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
 import IPCRendererEventType from "./ipcRendererEventType";
 import nodePath from 'path'
+import {init as initProtoMain} from "./wfc/proto/proto_main";
 
 console.log('start crash report', app.getPath('crashDumps'))
 //crashReporter.start({uploadToServer: false});
@@ -41,16 +42,6 @@ crashReporter.start({
         'comments': 'comment'
     }
 })
-
-function forwardWFCEventToSubWindow(wfcEvent, ...args) {
-    let windows = BrowserWindow.getAllWindows();
-    windows.forEach(w => {
-        if (w.webContents.getURL() === mainWindow.webContents.getURL()) {
-            return;
-        }
-        w.webContents.send('wfcEvent', wfcEvent, args);
-    })
-}
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
@@ -71,7 +62,6 @@ i18n.configure({
 });
 Locales.setLocale('ch');
 
-global.sharedObj = {proto: proto};
 app.commandLine.appendSwitch('js-flags', '--expose-gc')
 
 let forceQuit = false;
@@ -369,8 +359,8 @@ let trayMenu = [
         click() {
             forceQuit = true;
             mainWindow = null;
-            global.sharedObj.proto.disconnect(0);
-            console.log('--------------- disconnect', global.sharedObj.proto);
+            proto.disconnect(0);
+            console.log('--------------- disconnect', proto);
             setTimeout(() => {
                 app.exit(0);
             }, 1000);
@@ -472,6 +462,9 @@ function regShortcut() {
         mainWindow.webContents.toggleDevTools();
     })
     // }
+    globalShortcut.register('CommandOrControl+R', () => {
+        mainWindow.webContents.reload();
+    })
 }
 
 const downloadHandler = (event, item, webContents) => {
@@ -874,10 +867,6 @@ const createMainWindow = async () => {
         closeWindowToExit = enable;
     });
 
-    ipcMain.on('wfcEvent', (event, wfcEvent, args) => {
-        forwardWFCEventToSubWindow(wfcEvent, args);
-    })
-
     ipcMain.on('start-secret-server', (event, args) => {
         startSecretDecodeServer(args.port);
     })
@@ -885,15 +874,17 @@ const createMainWindow = async () => {
         startOpenPlatformServer(args.port);
     })
 
+    initProtoMain(proto);
+
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
-        global.sharedObj.proto.onAppResume();
+        proto.onAppResume();
     });
 
     powerMonitor.on('suspend', () => {
         isSuspend = true;
-        global.sharedObj.proto.onAppSuspend();
+        proto.onAppSuspend();
     });
 
     if (isOsx) {
@@ -1024,6 +1015,15 @@ app.on('ready', () => {
             windows.forEach(win => win.openDevTools())
 
         });
+        globalShortcut.register('ctrl+shift+d', () => {
+            let heapdump = require('@nearform/heap-profiler');
+            console.log('generateHeapSnapshot dir', __dirname)
+            heapdump.generateHeapSnapshot({
+                destination:__dirname + "/" + Date.now() + ".heapsnapshot"
+            }, (err) => {
+                console.log('generateHeapSnapshot cb', err)
+            })
+        });
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
             if (isMainWindowFocusedWhenStartScreenshot) {
@@ -1089,11 +1089,11 @@ app.on('activate', e => {
 });
 
 function disconnectAndQuit() {
-    global.sharedObj.proto.setConnectionStatusListener(() => {
+    proto.setConnectionStatusListener(() => {
         // 仅仅是为了让渲染进程不收到 ConnectionStatusLogout
         // do nothing
     });
-    global.sharedObj.proto.disconnect(0);
+    proto.disconnect(0);
     setTimeout(() => {
         app.quit();
     }, 1000)

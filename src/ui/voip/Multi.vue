@@ -105,7 +105,7 @@
                                  src='@/assets/images/av_conference_video_mute.png'/>
                             <p>关闭摄像头</p>
                         </div>
-                        <div v-if="!audioOnly" class="action">
+                        <div v-if="!audioOnly && false" class="action">
                             <img @click="screenShare" class="action-img" src='@/assets/images/av_share.png'/>
                         </div>
                     </div>
@@ -278,7 +278,7 @@ export default {
                     this.initiatorUserInfo = userInfos[0];
                 })
                 if (!this.broadcastMultiCallOngoingTimer){
-                    setInterval(this.broadcastMultiCallOngoing, 200)
+                    this.broadcastMultiCallOngoingTimer = setInterval(this.broadcastMultiCallOngoing, 200)
                 }
             }
 

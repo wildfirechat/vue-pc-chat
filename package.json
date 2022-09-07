@@ -25,12 +25,14 @@
     "cross-package-linux-arm64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-linux-mips64el": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux mips64el && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-mac": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin && vue-cli-service electron:build --mac -p never",
+    "cross-package-linux-mips64el": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux mips64el && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-all": "node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
     "preinstall": "npx npm-force-resolutions"
   },
   "main": "background.js",
   "dependencies": {
     "@imndx/v-emoji-picker": "^2.3.7",
+    "@nearform/heap-profiler": "^2.0.0",
     "anchorme": "^2.1.2",
     "atob": "^2.1.2",
     "axios": "^0.20.0",
@@ -56,7 +58,7 @@
     "resize-image": "^0.1.0",
     "tributejs": "^5.1.3",
     "universal-emoji-parser": "^0.5.28",
-    "vue": "^2.6.11",
+    "vue": "2.6.14",
     "vue-click-outside": "^1.1.0",
     "vue-context": "^6.0.0",
     "vue-cool-lightbox": "^2.6.9",
@@ -90,7 +92,7 @@
     "npm-force-resolutions": "0.0.10",
     "shelljs": "^0.8.4",
     "vue-cli-plugin-electron-builder": "^2.0.0",
-    "vue-template-compiler": "^2.6.11"
+    "vue-template-compiler": "2.6.14"
   },
   "eslintConfig": {
     "root": false,

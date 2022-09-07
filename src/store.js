@@ -36,6 +36,8 @@ import QuitGroupNotification from "./wfc/messages/notification/quitGroupNotifica
 import avenginekitproxy from "./wfc/av/engine/avenginekitproxy";
 import MediaMessageContent from "./wfc/messages/mediaMessageContent";
 import UnreadCount from "./wfc/model/unreadCount";
+import LeaveChannelChatMessageContent from "./wfc/messages/leaveChannelChatMessageContent";
+import EnterChannelChatMessageContent from "./wfc/messages/enterChannelChatMessageContent";
 
 /**
  * 一些说明
@@ -193,6 +195,7 @@ let store = {
             wfc: wfc,
             config: Config,
             userOnlineStateMap: new Map(),
+            enableOpenWorkSpace: !!(Config.OPEN_PLATFORM_WORK_SPACE_URL),
 
             _reset() {
                 this.connectionStatus = ConnectionStatus.ConnectionStatusUnconnected;
@@ -611,6 +614,10 @@ let store = {
             if (conversationState.currentConversationInfo) {
                 let conversation = conversationState.currentConversationInfo.conversation;
                 wfc.unwatchOnlineState(conversation.type, [conversation.target]);
+                if (conversation.type === ConversationType.Channel) {
+                    let content = new LeaveChannelChatMessageContent();
+                    wfc.sendConversationMessage(conversation, content);
+                }
             }
             conversationState.currentConversationInfo = null;
             conversationState.shouldAutoScrollToBottom = false;
@@ -637,6 +644,10 @@ let store = {
         }, (err) => {
             console.log('watchOnlineState error', err);
         })
+        if (conversation.type === ConversationType.Channel) {
+            let content = new EnterChannelChatMessageContent();
+            wfc.sendConversationMessage(conversation, content);
+        }
         conversationState.currentConversationInfo = conversationInfo;
         conversationState.shouldAutoScrollToBottom = true;
         conversationState.currentConversationMessageList.length = 0;
@@ -654,9 +665,9 @@ let store = {
             if (channelInfo.menus && channelInfo.menus.length > 0) {
                 conversationState.showChannelMenu = true;
             }
-        } else if (conversation.type === ConversationType.Group){
+        } else if (conversation.type === ConversationType.Group) {
             wfc.getGroupInfo(conversation.target, true);
-        }else if (conversation.type === ConversationType.Single){
+        } else if (conversation.type === ConversationType.Single) {
             wfc.getUserInfo(conversation.target, true);
         }
         conversationState.quotedMessage = null;

@@ -33,11 +33,19 @@
 
 <script>
 
+import ChannelMenuEventMessageContent from "../../../wfc/messages/channelMenuEventMessageContent";
+import wfc from "../../../wfc/client/wfc";
+import Conversation from "../../../wfc/model/conversation";
+
 export default {
     name: "ChannelMenuView",
     props: {
         menus: {
             type: Array,
+            required: true,
+        },
+        conversation: {
+            type: Conversation,
             required: true,
         }
     },
@@ -69,6 +77,10 @@ export default {
                         //WfcWebViewActivity.loadUrl(getContext(), "", menu.url);
                         open(menu.url);
                     }
+                    break;
+                case "click":
+                    let content = new ChannelMenuEventMessageContent(menu);
+                    wfc.sendConversationMessage(this.conversation, content)
                     break;
                 case "miniprogram":
                     break;
