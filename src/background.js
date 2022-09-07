@@ -873,8 +873,6 @@ const createMainWindow = async () => {
         startOpenPlatformServer(args.port);
     })
 
-    initProtoMain(proto);
-
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
@@ -997,6 +995,8 @@ function registerLocalResourceProtocol() {
 }
 
 app.on('ready', () => {
+        initProtoMain(proto);
+
         createMainWindow();
 
         registerLocalResourceProtocol();
