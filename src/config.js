@@ -45,6 +45,9 @@ export default class Config {
     // 允许主动加入多人音视频通话
     static ENABLE_MULTI_CALL_AUTO_JOIN = false;
 
+    // 龙芯系统暂时不支持音视频相关功能，故添加一个关闭开关
+    static DISABLE_VOIP = true;
+
     static getWFCPlatform() {
         if (isElectron()) {
             if (window.process && window.process.platform === 'darwin') {

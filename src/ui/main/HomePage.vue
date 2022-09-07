@@ -124,7 +124,7 @@ export default {
             sharedContactState: store.state.contact,
             sharedMiscState: store.state.misc,
             shareConversationState: store.state.conversation,
-            supportConference: avenginekit.startConference !== undefined,
+            supportConference: !Config.DISABLE_VOIP && avenginekit.startConference !== undefined,
             isSetting: false,
             fileWindow: null,
             voipProxy: avenginekitproxy,

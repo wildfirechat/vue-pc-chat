@@ -32,7 +32,9 @@ export class WfcManager {
      */
     init(args = []) {
         impl.init(args);
+        if (!Config.DISABLE_VOIP) {
         avenginekit.setup(self);
+        }
         //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
     }
 

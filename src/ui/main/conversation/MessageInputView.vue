@@ -24,7 +24,7 @@
                     <li v-if="sharedMiscState.isElectron"><i id="messageHistory" @click="showMessageHistory"
                                                              class="icon-ion-android-chat"></i></li>
                 </ul>
-                <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
+                <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target && sharedMiscState.config.DISABLE_VOIP">
                     <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
                     <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
                     <li v-if="conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length"><i @click="toggleChannelMenu" class="icon-ion-android-menu"></i></li>
