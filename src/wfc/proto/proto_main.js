@@ -26,6 +26,7 @@ const asyncProtoMethods = {
     modifyGroupMemberExtra: _asyncCall2('modifyGroupMemberExtra'),
     transferGroup: _asyncCall2('transferGroup'),
     setFavGroup: _asyncCall2('setFavGroup'),
+    quitGroup: _asyncCall2('quitGroup'),
     setUserSetting: _asyncCall2('setUserSetting'),
     modifyMyInfo: _asyncCall2('modifyMyInfo'),
     setGlobalSlient: _asyncCall2('setGlobalSlient'),
