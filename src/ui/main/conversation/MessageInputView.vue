@@ -248,11 +248,12 @@ export default {
             if (e.ctrlKey) {
                 // e.preventDefault();
                 // this.refs.input.innerHTML = this.refs.input.innerHTML+ "<div><br></div>";
-                let nextChar = window.getSelection().focusNode.textContent.charAt(window.getSelection().focusOffset)
-                if (!nextChar) {
-                    document.execCommand('InsertHTML', true, '<br>');
-                }
                 if (window.getSelection) {
+                    let nextChar = window.getSelection().focusNode.textContent.charAt(window.getSelection().focusOffset)
+                    if (!nextChar) {
+                        document.execCommand('InsertHTML', true, '<br>');
+                    }
+
                     let selection = window.getSelection(),
                         range = selection.getRangeAt(0),
                         br = document.createElement("br");
