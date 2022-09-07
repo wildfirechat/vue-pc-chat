@@ -661,33 +661,30 @@ const createMainWindow = async () => {
     ipcMain.on('file-paste', (event) => {
         let args = {hasImage: false};
 
-        if (process.platform === 'linux') {
-            event.returnValue = args;
-            return;
-        }
-
-        const clipboardEx = require('electron-clipboard-ex')
-        // only support windows and mac
-        if (clipboardEx) {
-            const filePaths = clipboardEx.readFilePaths();
-            if (filePaths && filePaths.length > 0) {
-                args = {
-                    files: [],
-                };
-                filePaths.forEach(path => {
-                    let stat = fs.statSync(path);
-                    if (stat.isFile()) {
-                        args.files.push({
-                            path: path,
-                            name: nodePath.basename(path),
-                            size: stat.size,
-                        })
-                    }
-                })
+        if (process.platform !== 'linux') {
+            const clipboardEx = require('electron-clipboard-ex')
+            // only support windows and mac
+            if (clipboardEx) {
+                const filePaths = clipboardEx.readFilePaths();
+                if (filePaths && filePaths.length > 0) {
+                    args = {
+                        files: [],
+                    };
+                    filePaths.forEach(path => {
+                        let stat = fs.statSync(path);
+                        if (stat.isFile()) {
+                            args.files.push({
+                                path: path,
+                                name: nodePath.basename(path),
+                                size: stat.size,
+                            })
+                        }
+                    })
+                }
             }
-        }
 
-        args.hasFile = args.files && args.files.length > 0;
+            args.hasFile = args.files && args.files.length > 0;
+        }
 
         if (!args.hasFile) {
             let image = clipboard.readImage();
@@ -1017,7 +1014,7 @@ app.on('ready', () => {
             let heapdump = require('@nearform/heap-profiler');
             console.log('generateHeapSnapshot dir', __dirname)
             heapdump.generateHeapSnapshot({
-                destination:__dirname + "/" + Date.now() + ".heapsnapshot"
+                destination: __dirname + "/" + Date.now() + ".heapsnapshot"
             }, (err) => {
                 console.log('generateHeapSnapshot cb', err)
             })
