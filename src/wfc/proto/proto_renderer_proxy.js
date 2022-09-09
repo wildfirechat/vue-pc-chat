@@ -10,13 +10,19 @@ export class ProtoRendererProxy {
         window._pel = this._protoEventListeners;
         ipcRenderer.on('protoAsyncCallback', (event, args) => {
             let reqId = args.reqId;
-            let callbacks = this._requestCallbackMap.get(reqId);
-            if (callbacks) {
-                let cbIndex = args.cbIndex;
-                callbacks[cbIndex] && callbacks[cbIndex](...args.cbArgs);
-                if (args.done) {
-                    this._requestCallbackMap.delete(reqId);
+            let code = args.code;
+            if (code === 0) {
+                let callbacks = this._requestCallbackMap.get(reqId);
+                if (callbacks) {
+                    let cbIndex = args.cbIndex;
+                    callbacks[cbIndex] && callbacks[cbIndex](...args.cbArgs);
+                    if (args.done) {
+                        this._requestCallbackMap.delete(reqId);
+                    }
                 }
+            } else {
+                this._requestCallbackMap.delete(reqId);
+                throw new Error(args.message);
             }
         })
 
@@ -39,10 +45,15 @@ export class ProtoRendererProxy {
         let channel = 'invokeProtoMethod';
         // invoke 是异步调用，返回的是 Promise，对应主进程是 handle
         // sendSync 是同步调用，返回的直接就是具体的返回值，对应主进程是 on
-        return ipcRenderer.sendSync(channel, {
+        let ret = ipcRenderer.sendSync(channel, {
             methodName: methodName,
             methodArgs: [...args]
         });
+        if (ret.code === 0) {
+            return ret.value;
+        } else {
+            throw new Error(ret.message);
+        }
     }
 
     invokeAsync(methodName, ...args) {
@@ -66,10 +77,15 @@ export class ProtoRendererProxy {
         let reqId = this.requestId();
         let parsedArgs = this._parseArgs(args);
         this._wrapCallback(reqId, parsedArgs.funcArgs);
-        return ipcRenderer.sendSync('sendMessage', {
+        let ret = ipcRenderer.sendSync('sendMessage', {
             reqId,
             methodArgs: parsedArgs.pArgs,
         });
+        if (ret.code === 0) {
+            return ret.value;
+        } else {
+            throw new Error(ret.message)
+        }
     }
 
     _parseArgs(args) {

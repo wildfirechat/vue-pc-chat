@@ -94,6 +94,7 @@ function _genCallback(event, reqId, index, done) {
         // send back to renderer window
         //_asyncCallback(event, reqId, index, done, cbArgs);
         let obj = {
+            code: 0,
             reqId,
             cbIndex: index,
             done,
@@ -110,12 +111,18 @@ export function init(wfcProto) {
 
     ipcMain.on('invokeProtoMethod', (event, args) => {
         try {
-            event.returnValue = proto[args.methodName](...args.methodArgs);
+            event.returnValue = {
+                code: 0,
+                value: proto[args.methodName](...args.methodArgs)
+            };
         } catch (e) {
-            let msg = 'invokeProtoMethod ' + args.methodName + " error ";
-            console.log('invokeProtoMethod ' + args.methodName + ' error', args)
+            console.log('invokeProtoMethod ' + args.methodName + ' error', args, e.message)
+            event.returnValue = {
+                code: -1,
+                error: e.message
+            };
             if (process.env.NODE_ENV !== 'production') {
-                throw new Error(msg);
+                throw new Error(args.methodName + ' ' + e.message);
             }
         }
     })
@@ -126,10 +133,16 @@ export function init(wfcProto) {
             try {
                 func(event, args);
             } catch (e) {
-                let msg = 'invokeProtoMethodAsync ' + args.methodName + " error ";
                 console.log('invokeProtoMethodAsync ' + args.methodName + ' error', args)
+                let obj = {
+                    code: -1,
+                    reqId: args.reqId,
+                    message: e.message,
+                    done: true
+                }
+                event.sender.send(ASYNC_CALLBACK, obj);
                 if (process.env.NODE_ENV !== 'production') {
-                    throw new Error(msg);
+                    throw new Error(args.methodName + ' ' + e.message);
                 }
             }
         } else {
@@ -138,12 +151,27 @@ export function init(wfcProto) {
     })
 
     ipcMain.on('sendMessage', (event, args) => {
-        event.returnValue = proto.sendMessage(...args.methodArgs,
-            _genCallback(event, args.reqId, 0, false),
-            _genCallback(event, args.reqId, 1, false),
-            _genCallback(event, args.reqId, 2, true),
-            _genCallback(event, args.reqId, 3, false),
-        );
+        try {
+            let msg = proto.sendMessage(...args.methodArgs,
+                _genCallback(event, args.reqId, 0, false),
+                _genCallback(event, args.reqId, 1, false),
+                _genCallback(event, args.reqId, 2, true),
+                _genCallback(event, args.reqId, 3, false),
+            );
+            event.returnValue = {
+                code: 0,
+                value: msg,
+            };
+
+        } catch (e) {
+            event.returnValue = {
+                code: -1,
+                value: 'sendMessage ' + e.message,
+            };
+            if (process.env.NODE_ENV !== 'production') {
+                throw new Error('sendMessage ' + e.message);
+            }
+        }
     })
 }
 

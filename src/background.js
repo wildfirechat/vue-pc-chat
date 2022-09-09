@@ -64,6 +64,10 @@ Locales.setLocale('ch');
 
 app.commandLine.appendSwitch('js-flags', '--expose-gc')
 
+process.on('uncaughtException', (error) => {
+    console.log('--------uncaughtException-----------', error)
+})
+
 let forceQuit = false;
 let downloading = false;
 let mainWindow;
