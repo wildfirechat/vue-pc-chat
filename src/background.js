@@ -466,7 +466,7 @@ function regShortcut() {
         mainWindow.webContents.toggleDevTools();
     })
     // }
-    globalShortcut.register('CommandOrControl+R', () => {
+    globalShortcut.register('CommandOrControl+Shift+R', () => {
         mainWindow.webContents.reload();
     })
 }
