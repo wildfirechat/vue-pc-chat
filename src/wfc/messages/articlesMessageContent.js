@@ -11,7 +11,7 @@ export default class ArticlesMessageContent extends MessageContent {
     }
 
     digest(message) {
-        return super.digest(message);
+        return this.topArticle.title;
     }
 
     encode() {
