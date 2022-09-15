@@ -1114,7 +1114,7 @@ export class WfcManager {
     /**
      * 会话置顶或取消置顶
      * @param {Conversation} conversation 需要置顶或取消置顶的会话
-     * @param {boolean} top true，置顶；false，取消置顶
+     * @param {int} top 置顶优先级
      * @param {function ()} successCB
      * @param {function (number)} failCB
      */
