@@ -15,7 +15,7 @@ export default class ConversationInfo {
     timestamp = 0;
     draft = '';
     unreadCount = {};
-    isTop = 0;
+    top = 0;
     isSilent = false;
 
     // TODO cache, maybe userInfo, groupInfo
