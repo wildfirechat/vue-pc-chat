@@ -66,7 +66,7 @@ export default {
         },
 
         setConversationTop(conversationInfo) {
-            store.setConversationTop(conversationInfo.conversation, !conversationInfo.isTop);
+            store.setConversationTop(conversationInfo.conversation, conversationInfo.isTop>0?0:1);
         },
 
         setConversationSilent(conversationInfo) {
