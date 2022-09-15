@@ -466,9 +466,29 @@ function regShortcut() {
         mainWindow.webContents.toggleDevTools();
     })
     // }
-    globalShortcut.register('CommandOrControl+Shift+R', () => {
+    globalShortcut.register('Control+F5', () => {
         mainWindow.webContents.reload();
     })
+    globalShortcut.register('ctrl+shift+a', () => {
+        isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
+        screenshots.startCapture()
+    });
+    // 调试用，主要用于处理 windows 不能打开子窗口的控制台
+    // 打开所有窗口控制台
+    globalShortcut.register('ctrl+shift+i', () => {
+        let windows = BrowserWindow.getAllWindows();
+        windows.forEach(win => win.openDevTools())
+
+    });
+    globalShortcut.register('ctrl+shift+d', () => {
+        let heapdump = require('@nearform/heap-profiler');
+        console.log('generateHeapSnapshot dir', __dirname)
+        heapdump.generateHeapSnapshot({
+            destination: __dirname + "/" + Date.now() + ".heapsnapshot"
+        }, (err) => {
+            console.log('generateHeapSnapshot cb', err)
+        })
+    });
 }
 
 const downloadHandler = (event, item, webContents) => {
@@ -902,7 +922,6 @@ const createMainWindow = async () => {
 
     mainWindow.webContents.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8');
     createMenu();
-    regShortcut();
 };
 
 // TODO titleBarStyle
@@ -1000,29 +1019,11 @@ app.on('ready', () => {
 
         createMainWindow();
 
+        regShortcut();
+
         registerLocalResourceProtocol();
 
         screenshots = new Screenshots()
-        globalShortcut.register('ctrl+shift+a', () => {
-            isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
-            screenshots.startCapture()
-        });
-        // 调试用，主要用于处理 windows 不能打开子窗口的控制台
-        // 打开所有窗口控制台
-        globalShortcut.register('ctrl+shift+i', () => {
-            let windows = BrowserWindow.getAllWindows();
-            windows.forEach(win => win.openDevTools())
-
-        });
-        globalShortcut.register('ctrl+shift+d', () => {
-            let heapdump = require('@nearform/heap-profiler');
-            console.log('generateHeapSnapshot dir', __dirname)
-            heapdump.generateHeapSnapshot({
-                destination: __dirname + "/" + Date.now() + ".heapsnapshot"
-            }, (err) => {
-                console.log('generateHeapSnapshot cb', err)
-            })
-        });
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
             if (isMainWindowFocusedWhenStartScreenshot) {
