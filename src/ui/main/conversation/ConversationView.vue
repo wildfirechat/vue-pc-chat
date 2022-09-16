@@ -787,7 +787,11 @@ export default {
     computed: {
         conversationTitle() {
             let info = this.sharedConversationState.currentConversationInfo;
-            return info.conversation._target._displayName;
+            if (info.conversation.type === ConversationType.Group) {
+                return info.conversation._target._displayName + " (" + info.conversation._target.memberCount + ")";
+            } else {
+                return info.conversation._target._displayName;
+            }
         },
         targetUserOnlineStateDesc() {
             let info = this.sharedConversationState.currentConversationInfo;
@@ -799,8 +803,6 @@ export default {
                 }
             } else if (info.conversation.type === ConversationType.Channel) {
                 return info.conversation._target.desc;
-            } else if (info.conversation.type === ConversationType.Group) {
-                return '群成员数：' + info.conversation._target.memberCount;
             } else {
                 return '';
             }
