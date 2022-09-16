@@ -14,8 +14,8 @@
                     animation="fade"
                     trigger="click"
                 >
-<!--                    TODO ChanenlCarView-->
-                    <UserCardView v-on:close="closeUserCard" :user-info="message._from"/>
+                    <ChannelCardView v-if="message.conversation.type === 3" v-on:close="closeUserCard" :channel-id="message.conversation.target"/>
+                    <UserCardView v-else v-on:close="closeUserCard" :user-info="message._from"/>
                 </tippy>
                 <div class="avatar-container">
                     <input id="checkbox" v-if="sharedConversationState.enableMessageMultiSelection" type="checkbox"
@@ -61,6 +61,7 @@ import QuoteMessageView from "@/ui/main/conversation/message/QuoteMessageView";
 import store from "@/store";
 import wfc from "../../../../wfc/client/wfc";
 import ConversationType from "../../../../wfc/model/conversationType";
+import ChannelCardView from "../../contact/ChannelCardView";
 
 export default {
     name: "NormalInMessageContentView",
@@ -137,6 +138,7 @@ export default {
         }
     },
     components: {
+        ChannelCardView,
         MessageContentContainerView,
         UserCardView,
         QuoteMessageView,
