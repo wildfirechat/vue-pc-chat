@@ -34,7 +34,7 @@ export default class ArticlesMessageContent extends MessageContent {
         this.topArticle.fromJson(obj.top);
         if (obj.subArticles) {
             this.subArticles = [];
-            this.topArticle.forEach(article => {
+            obj.subArticles.forEach(article => {
                 let tmp = new Article();
                 tmp.fromJson(article);
                 this.subArticles.push(tmp);
