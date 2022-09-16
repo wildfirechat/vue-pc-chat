@@ -14,6 +14,7 @@
                     animation="fade"
                     trigger="click"
                 >
+<!--                    TODO ChanenlCarView-->
                     <UserCardView v-on:close="closeUserCard" :user-info="message._from"/>
                 </tippy>
                 <div class="avatar-container">
@@ -26,11 +27,11 @@
                          @contextmenu.prevent="openMessageSenderContextMenu($event, message)"
                          class="avatar"
                          draggable="false"
-                         :src="message._from.portrait">
+                         :src="messageSenderPortrait">
                 </div>
                 <!--消息内容 根据情况，if-else-->
                 <div class="message-name-content-container">
-                    <p class="name">{{ message._from._displayName }}</p>
+                    <p v-if="message.conversation.type !== 3" class="name">{{ message._from._displayName }}</p>
                     <div class="flex-column flex-align-start">
                         <div class="flex-row">
                             <MessageContentContainerView class="message-content-container"
@@ -59,6 +60,7 @@ import MessageContentContainerView from "@/ui/main/conversation/message/MessageC
 import QuoteMessageView from "@/ui/main/conversation/message/QuoteMessageView";
 import store from "@/store";
 import wfc from "../../../../wfc/client/wfc";
+import ConversationType from "../../../../wfc/model/conversationType";
 
 export default {
     name: "NormalInMessageContentView",
@@ -75,7 +77,11 @@ export default {
     },
     methods: {
         onClickUserPortrait(userId) {
-            wfc.getUserInfo(userId, true);
+            if (this.message.conversation.type === ConversationType.Channel) {
+                wfc.getChannelInfo(this.message.conversation.target, true);
+            } else {
+                wfc.getUserInfo(userId, true);
+            }
         },
         closeUserCard() {
             console.log('closeUserCard')
@@ -89,7 +95,7 @@ export default {
             this.$parent.$emit('openMessageSenderContextMenu', event, message)
         },
 
-        onContextMenuClosed(){
+        onContextMenuClosed() {
             this.highLight = false;
         }
     },
@@ -119,6 +125,15 @@ export default {
     computed: {
         isDownloading() {
             return store.isDownloadingMessage(this.message.messageId);
+        },
+
+        messageSenderPortrait() {
+            if (this.message.conversation.type === 3) {
+                let channelInfo = wfc.getChannelInfo(this.message.conversation.target, false);
+                return channelInfo.portrait;
+            } else {
+                return this.message._from.portrait;
+            }
         }
     },
     components: {
