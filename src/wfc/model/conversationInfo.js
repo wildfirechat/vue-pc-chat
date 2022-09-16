@@ -23,6 +23,8 @@ export default class ConversationInfo {
 
     static protoConversationToConversationInfo(obj) {
         let conversationInfo = Object.assign(new ConversationInfo(), obj);
+        conversationInfo.top = obj.isTop;
+        delete conversationInfo.isTop;
         if (obj.conversation) {
             conversationInfo.conversation = new Conversation(obj.conversation.type, obj.conversation.target, obj.conversation.line);
         } else {
