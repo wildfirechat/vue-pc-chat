@@ -149,13 +149,17 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 19. 压力测试发现，Vue 内置的```keep-alive```组件，可能有缓慢的内存泄漏问题，可将```HomePage.vue```里面的```keep-alive```移除，由于```activated```和```deactivated```回调，要使用```keep-alive```组件才生效，需要妥善处理这两个回调里面的逻辑。
 
 ## 截图
-![](./image/contact.png)
-![](./image/group-conversation-info.png)
-![](./image/home.png)
-![](./image/picker-user.png)
-![](./image/quote.png)
-![](./image/sticker.png)
-
+![](https://static.wildfirechat.cn/pc-home.png)
+![](https://static.wildfirechat.cn/pc-conversastion.png)
+![](https://static.wildfirechat.cn/pc-emoji.png)
+![](https://static.wildfirechat.cn/pc-contact.png)
+![](https://static.wildfirechat.cn/pc-channel.png)
+![](https://static.wildfirechat.cn/pc-fav.png)
+![](https://static.wildfirechat.cn/pc-file-history.png)
+![](https://static.wildfirechat.cn/pc-workspace.png)
+![](https://static.wildfirechat.cn/pc-setting.png)
+![](https://static.wildfirechat.cn/pc-multi-video-call.png)
+![](https://static.wildfirechat.cn/pc-multi-audio-call.png)
 
 ## License
 

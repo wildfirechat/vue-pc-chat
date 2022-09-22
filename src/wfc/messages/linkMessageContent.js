@@ -37,7 +37,7 @@ export default class LinkMessageContent extends MessageContent {
     }
 
     digest(message) {
-        let tmp = this.contentDigest ? this.contentDigest.trim() : null;
+        let tmp = this.title ? this.title.trim() : this.contentDigest ? this.contentDigest.trim() : null;
         return tmp ? tmp : this.url;
     }
 }
