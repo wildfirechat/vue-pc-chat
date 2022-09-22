@@ -38,6 +38,7 @@ import MediaMessageContent from "./wfc/messages/mediaMessageContent";
 import UnreadCount from "./wfc/model/unreadCount";
 import LeaveChannelChatMessageContent from "./wfc/messages/leaveChannelChatMessageContent";
 import EnterChannelChatMessageContent from "./wfc/messages/enterChannelChatMessageContent";
+import ArticlesMessageContent from "./wfc/messages/articlesMessageContent";
 
 /**
  * 一些说明
@@ -734,7 +735,15 @@ let store = {
             // 或者下面这种
             if (forwardType === ForwardType.NORMAL || forwardType === ForwardType.ONE_BY_ONE) {
                 messages.forEach(message => {
-                    wfc.sendConversationMessage(conversation, message.messageContent);
+                    if (message.messageContent instanceof ArticlesMessageContent) {
+                        let linkContents = message.messageContent.toLinkMessageContent();
+                        linkContents.forEach(lm => {
+                            wfc.sendConversationMessage(conversation, lm);
+                        })
+
+                    } else {
+                        wfc.sendConversationMessage(conversation, message.messageContent);
+                    }
                 });
             } else {
                 // 合并转发
@@ -748,7 +757,7 @@ let store = {
                     title = '群的聊天记录';
                 }
                 compositeMessageContent.title = title;
-                compositeMessageContent.messages = messages;
+                compositeMessageContent.setMessages(messages);
 
                 wfc.sendConversationMessage(conversation, compositeMessageContent);
             }
