@@ -297,6 +297,8 @@ export default {
             message = message.replace(/<br>/g, '\n')
                 .replace(/<div>/g, '\n')
                 .replace(/<\/div>/g, '')
+                .replace(/<b>/g, '')
+                .replace(/<\/b>/g, '')
                 .replace(/&nbsp;/g, ' ');
 
             // TODO 可以在此对文本消息进行处理，比如过滤掉 script，iframe 等标签
