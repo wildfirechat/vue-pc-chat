@@ -514,35 +514,35 @@ export default {
                 console.log('setVideoInputDeviceId', devices[this.videoInputDeviceIndex]);
             })
         },
-        muteAudio() {
+        async muteAudio() {
             let enable = this.session.audioMuted ? true : false;
             this.selfUserInfo._isAudioMuted = !enable;
-            this.session.setAudioEnabled(enable)
+            await this.session.setAudioEnabled(enable)
 
             if (enable) {
                 if (this.session.audience) {
-                    this.session.switchAudience(false);
+                    await this.session.switchAudience(false);
                 }
             } else {
                 if (this.session.videoMuted && !this.session.audience) {
-                    this.session.switchAudience(true);
+                    await this.session.switchAudience(true);
                 }
             }
         },
 
-        muteVideo() {
+        async muteVideo() {
             let enable = this.session.videoMuted ? true : false;
             this.selfUserInfo._isVideoMuted = !enable;
-            this.session.setVideoEnabled(enable)
+            await this.session.setVideoEnabled(enable)
 
             console.log('muteVideo----', enable)
             if (enable) {
                 if (this.session.audience) {
-                    this.session.switchAudience(false);
+                    await this.session.switchAudience(false);
                 }
             } else {
                 if (this.session.audioMuted && !this.session.audience) {
-                    this.session.switchAudience(true);
+                    await this.session.switchAudience(true);
                 }
             }
         },
