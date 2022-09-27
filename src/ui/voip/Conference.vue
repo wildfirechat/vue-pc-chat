@@ -129,16 +129,16 @@
                     <div class="duration-action-container">
                         <p>{{ duration }}</p>
                         <div class="action-container">
-                            <div class="action" v-if="!session.audience">
-                                <img v-if="!session.audioMuted" @click="mute" class="action-img"
+                            <div class="action">
+                                <img v-if="!session.audience && !session.audioMuted" @click="muteAudio" class="action-img"
                                      src='@/assets/images/av_conference_audio.png'/>
-                                <img v-else @click="mute" class="action-img"
+                                <img v-else @click="muteAudio" class="action-img"
                                      src='@/assets/images/av_conference_audio_mute.png'/>
                                 <p>静音</p>
                             </div>
                             <div class="action"
-                                 v-if="!session.audience && !session.audioOnly && !session.isScreenSharing()">
-                                <img v-if="!session.videoMuted" @click="muteVideo" class="action-img"
+                                 v-if="!session.audioOnly && !session.isScreenSharing()">
+                                <img v-if="!session.audience && !session.videoMuted" @click="muteVideo" class="action-img"
                                      src='@/assets/images/av_conference_video.png'/>
                                 <img v-else @click="muteVideo" class="action-img"
                                      src='@/assets/images/av_conference_video_mute.png'/>
@@ -278,11 +278,11 @@ export default {
             if (subscriber) {
                 let currentVideoType = subscriber.currentVideoType;
                 let videoType = VideoType.NONE;
-                if (currentVideoType === VideoType.NONE){
+                if (currentVideoType === VideoType.NONE) {
                     videoType = VideoType.BIG_STREAM;
-                }else if (currentVideoType === VideoType.BIG_STREAM){
+                } else if (currentVideoType === VideoType.BIG_STREAM) {
                     videoType = VideoType.SMALL_STREAM;
-                }else if (videoType === VideoType.SMALL_STREAM){
+                } else if (videoType === VideoType.SMALL_STREAM) {
                     videoType = VideoType.NONE;
                 }
                 this.session.setParticipantVideoType(userId, screenSharing, videoType);
@@ -514,16 +514,37 @@ export default {
                 console.log('setVideoInputDeviceId', devices[this.videoInputDeviceIndex]);
             })
         },
-        mute() {
+        muteAudio() {
             let enable = this.session.audioMuted ? true : false;
             this.selfUserInfo._isAudioMuted = !enable;
             this.session.setAudioEnabled(enable)
+
+            if (enable) {
+                if (this.session.audience) {
+                    this.session.switchAudience(false);
+                }
+            } else {
+                if (this.session.videoMuted && !this.session.audience) {
+                    this.session.switchAudience(true);
+                }
+            }
         },
 
         muteVideo() {
             let enable = this.session.videoMuted ? true : false;
             this.selfUserInfo._isVideoMuted = !enable;
             this.session.setVideoEnabled(enable)
+
+            console.log('muteVideo----', enable)
+            if (enable) {
+                if (this.session.audience) {
+                    this.session.switchAudience(false);
+                }
+            } else {
+                if (this.session.audioMuted && !this.session.audience) {
+                    this.session.switchAudience(true);
+                }
+            }
         },
 
         down2voice() {
@@ -636,7 +657,7 @@ export default {
             //     return;
             // }
 
-            if (this.session.audience){
+            if (this.session.audience) {
                 await this.session.switchAudience(false);
             }
 
