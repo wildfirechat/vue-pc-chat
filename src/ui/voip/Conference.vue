@@ -516,8 +516,11 @@ export default {
         },
         async muteAudio() {
             let enable = this.session.audioMuted ? true : false;
+            let result = await this.session.setAudioEnabled(enable)
+            if (!result){
+                return;
+            }
             this.selfUserInfo._isAudioMuted = !enable;
-            await this.session.setAudioEnabled(enable)
 
             if (enable) {
                 if (this.session.audience) {
@@ -532,8 +535,11 @@ export default {
 
         async muteVideo() {
             let enable = this.session.videoMuted ? true : false;
+            let result = await this.session.setVideoEnabled(enable)
+            if (!result){
+                return;
+            }
             this.selfUserInfo._isVideoMuted = !enable;
-            await this.session.setVideoEnabled(enable)
 
             console.log('muteVideo----', enable)
             if (enable) {
