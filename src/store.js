@@ -995,6 +995,17 @@ let store = {
         }
     },
 
+    getMessageInTypes(conversation, contentTypes, timestamp, before = true, withUser = '', callback) {
+        let lmsgs = wfc.getMessagesByTimestamp(conversation, contentTypes, timestamp, before, 20, withUser);
+        if (lmsgs.length > 0) {
+            lmsgs = lmsgs.map(m => this._patchMessage(m, 0));
+            setTimeout(() => callback && callback(lmsgs), 200)
+        } else {
+            callback && callback([]);
+        }
+
+    },
+
     _loadCurrentConversationMessages() {
         if (!conversationState.currentConversationInfo) {
             return;
@@ -1523,6 +1534,11 @@ let store = {
     searchMessage(conversation, query) {
         let msgs = wfc.searchMessage(conversation, query)
         msgs = msgs.reverse();
+        return msgs.map(m => this._patchMessage(m, 0));
+    },
+
+    searchMessageInTypes(conversation, contentTypes, query, offset) {
+        let msgs = wfc.searchMessageByTypes(conversation, query, contentTypes, true, 20, offset)
         return msgs.map(m => this._patchMessage(m, 0));
     },
 

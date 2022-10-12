@@ -11,7 +11,7 @@
                 <input id="searchInput"
                        ref="input"
                        autocomplete="off"
-                       v-model="query"
+                       v-model.trim="query"
                        @keydown.esc="cancel"
                        type="text" :placeholder="$t('common.search')"/>
                 <i class="icon-ion-ios-search"></i>
@@ -31,7 +31,7 @@
                 </div>
             </div>
             <div ref="conversationMessageList" class="message-list-container" infinite-wrapper>
-                <infinite-loading v-if="category==='all' && !this.query" identifier="historyMessageLoader"
+                <infinite-loading ref="infiniteLoader" :identifier="'historyMessageLoader-' + category"
                                   force-use-infinite-wrapper
                                   direction="top"
                                   @infinite="infiniteHandler">
@@ -83,6 +83,9 @@ export default {
         return {
             query: '',
             messages: [],
+            filesMessages: [],
+            mediaMessages: [],
+            linkMessages: [],
             searchResults: [],
             conversationInfo: null,
             autoScrollToBottom: true,
@@ -108,16 +111,50 @@ export default {
 
     methods: {
         infiniteHandler($state) {
-            let firstMessageId = this.messages.length > 0 ? this.messages[0].messageId : 0;
-            console.log('to load', stringValue(firstMessageId))
-            store.getMessages(this.conversationInfo.conversation, firstMessageId, true, '', (msgs) => {
-                if (msgs && msgs.length > 0) {
-                    this.messages = msgs.concat(this.messages);
-                    $state.loaded();
-                } else {
+            if (this.query) {
+                let contentTypes = this.categoryContentTypes();
+                let tmp = store.searchMessageInTypes(this.conversationInfo.conversation, contentTypes, this.query, this.searchResults.length);
+                console.log('to search', this.category, this.query, this.searchResults.length, tmp.length);
+                if (tmp.length === 0) {
                     $state.complete();
+                } else {
+                    this.searchResults.push(...tmp);
+                    $state.loaded();
                 }
-            })
+            } else {
+                console.log('to load conversation message', this.category)
+                let timestamp;
+                let targetMsgs;
+                let contentTypes = [];
+                switch (this.category) {
+                    case 'all':
+                        targetMsgs = this.messages;
+                        break;
+                    case 'file':
+                        targetMsgs = this.filesMessages;
+                        contentTypes = [MessageContentType.File];
+                        break;
+                    case 'media':
+                        targetMsgs = this.mediaMessages;
+                        contentTypes = [MessageContentType.Image, MessageContentType.Video];
+                        break;
+                    case 'link':
+                        targetMsgs = this.linkMessages;
+                        contentTypes = [MessageContentType.Link];
+                        break;
+                    default:
+                        break
+                }
+                timestamp = targetMsgs.length > 0 ? targetMsgs[0].timestamp : 0;
+                store.getMessageInTypes(this.conversationInfo.conversation, contentTypes, timestamp, true, '', (msgs) => {
+                    if (msgs && msgs.length > 0) {
+                        targetMsgs.push(...msgs)
+                        $state.loaded();
+                    } else {
+                        $state.complete();
+                    }
+                })
+            }
         },
         setCurrentCategory(category) {
             this.category = category;
@@ -128,24 +165,45 @@ export default {
         },
         openMessageContextMenu(event, msg) {
             // TODO
+        },
+
+        categoryContentTypes() {
+            let contentTypes = [];
+            switch (this.category) {
+                case 'file':
+                    contentTypes = [MessageContentType.File];
+                    break;
+                case 'media':
+                    contentTypes = [MessageContentType.Video, MessageContentType.Image];
+                    break;
+                case 'link':
+                    contentTypes = [MessageContentType.Link];
+                    break;
+                default:
+                    break;
+            }
+            return contentTypes;
         }
     },
 
     computed: {
         filteredMessages() {
-            let msgs = this.query ? this.searchResults : this.messages;
+            if (this.query && this.searchResults) {
+                return this.searchResults;
+            }
+            let msgs;
             switch (this.category) {
                 case 'file':
-                    msgs = msgs.filter(m => m.messageContent.type === MessageContentType.File);
+                    msgs = this.filesMessages;
                     break;
                 case 'media':
-                    msgs = msgs.filter(m => [MessageContentType.Image, MessageContentType.Video].indexOf(m.messageContent.type) >= 0);
+                    msgs = this.mediaMessages;
                     break;
                 case 'link':
-                    msgs = msgs.filter(m => m.messageContent.type === MessageContentType.Link);
+                    msgs = this.linkMessages;
                     break;
                 default:
-                    // do nothing
+                    msgs = this.messages;
                     break
 
             }
@@ -156,11 +214,19 @@ export default {
     watch: {
         query() {
             if (this.query) {
-                this.searchResults = store.searchMessage(this.conversationInfo.conversation, this.query);
+                this.$refs.infiniteLoader.stateChanger.reset();
+                let contentTypes = this.categoryContentTypes();
+                this.searchResults = store.searchMessageInTypes(this.conversationInfo.conversation, contentTypes, this.query, 0);
             } else {
                 this.searchResults = [];
             }
         },
+        category() {
+            if (this.query) {
+                let contentTypes = this.categoryContentTypes();
+                this.searchResults = store.searchMessageInTypes(this.conversationInfo.conversation, contentTypes, this.query, 0);
+            }
+        }
     },
 
     components: {
