@@ -8,7 +8,13 @@ const asyncProtoMethods = {
     searchUser: _asyncCall2('searchUser'),
     setFavUser: _asyncCall2('setFavUser'),
     deleteFriend: _asyncCall2('deleteFriend'),
-    handleFriendRequest: _asyncCall2('handleFriendRequest'),
+    handleFriendRequest: (event, args) => {
+        let methodArgs = args.methodArgs;
+        proto.handleFriendRequest(methodArgs[0], methodArgs[1],
+            _genCallback(event, args.reqId, 0, true),
+            _genCallback(event, args.reqId, 1, true),
+            methodArgs[2])
+    },
     setBlackList: _asyncCall2('setBlackList'),
     setFriendAlias: _asyncCall2('setFriendAlias'),
     createGroup: _asyncCall2('createGroup'),
