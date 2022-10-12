@@ -36,8 +36,8 @@
                                   direction="top"
                                   @infinite="infiniteHandler">
                     <!--            <template slot="spinner">加载中...</template>-->
-                    <template slot="no-more">{{ $t('fav.no_more') }}</template>
-                    <template slot="no-results">{{ $t('fav.all_fav_load') }}</template>
+                    <template slot="no-more">{{ $t('conversation.no_more_message') }}</template>
+                    <template slot="no-results">{{ $t('conversation.no_more_message') }}</template>
                 </infinite-loading>
                 <ul>
                     <li v-for="(message, index) in filteredMessages"
@@ -108,7 +108,7 @@ export default {
 
     methods: {
         infiniteHandler($state) {
-            let firstMessageId = this.messages.length > 0 ? this.messages[0].messageId: 0;
+            let firstMessageId = this.messages.length > 0 ? this.messages[0].messageId : 0;
             console.log('to load', stringValue(firstMessageId))
             store.getMessages(this.conversationInfo.conversation, firstMessageId, true, '', (msgs) => {
                 if (msgs && msgs.length > 0) {

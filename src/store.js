@@ -822,7 +822,7 @@ let store = {
     previewMessage(message, continuous) {
         conversationState.previewMediaItems.length = 0;
         conversationState.previewMediaIndex = 0;
-        if (continuous) {
+        if (continuous && conversationState.currentConversationMessageList.length > 0) {
             let mediaMsgs = conversationState.currentConversationMessageList.filter(m => [MessageContentType.Image, MessageContentType.Video].indexOf(m.messageContent.type) > -1)
             let msg;
             for (let i = 0; i < mediaMsgs.length; i++) {
