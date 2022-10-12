@@ -1436,7 +1436,7 @@ let store = {
         wfc.searchUser(query, SearchType.General, 0, ((keyword, userInfos) => {
             console.log('search user result', query, userInfos)
             if (searchState.query === keyword) {
-                searchState.userSearchResult = userInfos;
+                searchState.userSearchResult = userInfos.filter(u => !wfc.isMyFriend(u.uid));
             }
         }), (err) => {
             console.log('search user error', query, err)

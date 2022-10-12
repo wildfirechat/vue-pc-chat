@@ -18,7 +18,7 @@
   },
   "friend_request": {
     "request": "好友請求",
-    "send_request_tip": "向{0}發送好球請求",
+    "send_request_tip": "向{0}發送好友請求",
     "accepted": "已添加",
     "sent": "已發送",
     "denied": "已拒絕",

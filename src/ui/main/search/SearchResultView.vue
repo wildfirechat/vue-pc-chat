@@ -11,7 +11,7 @@
                     <label>{{ $t('search.new_user') }}</label>
                     <ul>
                         <li v-for="(user, index) in toShowUserList" :key="index">
-                            <div class="search-result-item contact">
+                            <div class="search-result-item contact" @click.stop="chatToContact(user)">
                                 <img :src="user.portrait">
                                 <span>{{ user.displayName }}</span>
                                 <button @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
@@ -75,6 +75,7 @@ import ConversationType from "@/wfc/model/conversationType";
 import FriendRequestView from "@/ui/main/contact/FriendRequestView";
 import IPCRendererEventType from "../../../ipcRendererEventType";
 import {ipcRenderer} from "../../../platform";
+import wfc from "../../../wfc/client/wfc";
 
 export default {
     name: "SearchResultView",
@@ -111,6 +112,9 @@ export default {
     },
 
     methods: {
+        isFriend(userId){
+            return wfc.isMyFriend(userId);
+        },
         addFriend(user) {
             this.$modal.show(
                 FriendRequestView,

@@ -8,7 +8,7 @@
                 <div class="title-container">
                     <div>
                         <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
-                        <p class="single-line user-online-status">{{ targetUserOnlineStateDesc }}</p>
+                        <p class="single-line user-online-status" @click="clickConversationDesc">{{ targetUserOnlineStateDesc }}</p>
                     </div>
                     <a href="#"><i class="icon-ion-ios-settings-strong"
                                    style="display: inline-block"
@@ -200,6 +200,7 @@ import MediaMessageContent from "../../../wfc/messages/mediaMessageContent";
 import ArticlesMessageContent from "../../../wfc/messages/articlesMessageContent";
 import ContextableNotificationMessageContentContainerView from "./message/ContextableNotificationMessageContentContainerView";
 import ChannelConversationInfoView from "./ChannelConversationInfoView";
+import FriendRequestView from "../contact/FriendRequestView";
 
 var amr;
 export default {
@@ -296,6 +297,22 @@ export default {
         },
         toggleConversationInfo() {
             this.showConversationInfo = !this.showConversationInfo;
+        },
+
+        clickConversationDesc() {
+            if (this.conversationInfo.conversation.type === ConversationType.Single && !wfc.isMyFriend(this.conversationInfo.conversation.target)) {
+                this.$modal.show(
+                    FriendRequestView,
+                    {
+                        userInfo: this.conversationInfo.conversation._target,
+                    },
+                    {
+                        name: 'friend-request-modal',
+                        width: 600,
+                        height: 250,
+                        clickToClose: false,
+                    }, {})
+            }
         },
 
         toggleMessageMultiSelectionActionView(message) {
@@ -796,6 +813,9 @@ export default {
         targetUserOnlineStateDesc() {
             let info = this.sharedConversationState.currentConversationInfo;
             if (info.conversation.type === ConversationType.Single) {
+                if (!wfc.isMyFriend(info.conversation.target)) {
+                    return '你们还不是好友，点击添加好友';
+                }
                 if (info.conversation._target.type === 0) {
                     return info.conversation._targetOnlineStateDesc;
                 } else if (info.conversation._target.type === 1) {
