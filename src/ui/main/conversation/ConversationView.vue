@@ -235,7 +235,7 @@ export default {
 
             dragAndDropEnterCount: 0,
             // FIXME 选中一个会话，然后切换到其他page，比如联系人，这时该会话收到新消息或发送消息，会导致新收到/发送的消息的界面错乱，尚不知道原因，但这么做能解决。
-            fixTippy: false,
+            fixTippy: true,
             ongoingCalls: null,
             ongoingCallTimer: 0,
             messageInputViewResized: false,
@@ -649,6 +649,7 @@ export default {
             console.log('to load more message');
             store.loadConversationHistoryMessages(() => {
                 console.log('loaded')
+                console.log('xxxx', this.fixTippy, this.sharedConversationState.currentConversationInfo, this.sharedConversationState.currentConversationMessageList)
                 $state.loaded();
             }, () => {
                 console.log('complete')

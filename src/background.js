@@ -76,6 +76,7 @@ let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
+let conversationWindowMap = new Map();
 let screenshots;
 let tray;
 let downloadFileMap = new Map()
@@ -659,9 +660,21 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('click-notification', (event, args) => {
-        if (!mainWindow.isVisible() || mainWindow.isMinimized()) {
-            mainWindow.show();
-            mainWindow.focus();
+        let targetMediaSourceId = args;
+        let targetWin = null;
+        if (mainWindow.getMediaSourceId() === targetMediaSourceId) {
+            targetWin = mainWindow;
+        } else {
+            for (let win of conversationWindowMap.values()) {
+                if (win.getMediaSourceId() === targetMediaSourceId) {
+                    targetWin = win;
+                    break;
+                }
+            }
+        }
+        if (targetWin && !targetWin.isVisible() || targetWin.isMinimized()) {
+            targetWin.show();
+            targetWin.focus();
         }
     });
 
@@ -833,6 +846,30 @@ const createMainWindow = async () => {
         } else {
             messageHistoryMessageWindow.show();
             messageHistoryMessageWindow.focus();
+        }
+    });
+
+    ipcMain.on(IPCRendererEventType.showConversationFloatPage, async (event, args) => {
+        console.log(`on ${IPCRendererEventType.showConversationFloatPage}`, messageHistoryMessageWindow, args)
+        let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
+        let key = args.type + '-' + args.target + '-' + args.line;
+        let win = conversationWindowMap.get(key);
+        if (!win) {
+            win = createWindow(url, 960, 600, 640, 400, true, true, true);
+            win.on('close', () => {
+                conversationWindowMap.delete(key);
+                mainWindow.send('floating-conversation-window-closed', {
+                        type: args.type,
+                        target: args.target,
+                        line: args.line
+                    }
+                );
+            });
+            win.show();
+            conversationWindowMap.set(key, win);
+        } else {
+            win.show();
+            win.focus();
         }
     });
 

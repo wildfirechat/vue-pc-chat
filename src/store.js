@@ -80,6 +80,7 @@ let store = {
             // map 里面的元素并不是 reactive 的
             downloadingMessages: [],
             sendingMessages: [],
+            floatingConversations: [],
 
             currentVoiceMessage: null,
 
@@ -102,6 +103,7 @@ let store = {
                 this.quotedMessage = null;
                 this.downloadingMessages = [];
                 this.sendingMessages = [];
+                this.floatingConversations = [];
                 this.currentVoiceMessage = null;
             }
         },
@@ -192,6 +194,7 @@ let store = {
             isElectron: isElectron(),
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
             isMainWindow: false,
+            isConversationWindow: false,
             linuxUpdateTitleInterval: 0,
             wfc: wfc,
             config: Config,
@@ -217,7 +220,7 @@ let store = {
         },
     },
 
-    init(isMainWindow) {
+    init(isMainWindow, isConversaitonWindow = false) {
         console.log('init store')
         // 目前，通知只可能在主窗口触发
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
@@ -290,6 +293,9 @@ let store = {
             if (miscState.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing) {
                 return;
             }
+            if (miscState.isMainWindow && !this.isConversationInCurrentWindow(msg.conversation)) {
+                return;
+            }
             if (!hasMore) {
                 this._loadDefaultConversationList();
             }
@@ -342,10 +348,12 @@ let store = {
                 conversationState.currentConversationMessageList.push(msg);
             }
 
-            if (msg.conversation.type !== 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
-                this.notify(msg);
+            if (miscState.isMainWindow && this.isConversationInCurrentWindow(msg.conversation)) {
+                if (msg.conversation.type !== 2 && miscState.isPageHidden && (miscState.enableNotification || msg.status === MessageStatus.AllMentioned || msg.status === MessageStatus.Mentioned)) {
+                    this.notify(msg);
+                }
+                this.updateTray();
             }
-            this.updateTray();
         });
 
         wfc.eventEmitter.on(EventType.RecallMessage, (operator, messageUid) => {
@@ -523,6 +531,15 @@ let store = {
                 // console.log('file download progress', messageId, receivedBytes, totalBytes);
             });
 
+            ipcRenderer.on('floating-conversation-window-closed', (event, args) => {
+                let type = args.type;
+                let target = args.target;
+                let line = args.line;
+
+                this.removeFloatingConversation(new Conversation(type, target, line))
+                this._loadDefaultConversationList();
+            });
+
             localStorageEmitter.on('wf-ipc-to-main', (events, args) => {
                 let type = args.type;
                 switch (type) {
@@ -544,6 +561,7 @@ let store = {
         miscState.connectionStatus = wfc.getConnectionStatus();
 
         miscState.isMainWindow = isMainWindow;
+        miscState.isConversationWindow = isConversaitonWindow;
         window.__wfc = wfc;
     },
 
@@ -1254,6 +1272,23 @@ let store = {
         return conversationState.sendingMessages.find(e => e.messageId === messageId);
     },
 
+    addFloatingConversation(conversation) {
+        conversationState.floatingConversations.push(conversation);
+    },
+
+    removeFloatingConversation(conversation) {
+        conversationState.floatingConversations = conversationState.floatingConversations.filter(c => !c.equal(conversation))
+    },
+
+    isConversationInCurrentWindow(conversation) {
+        if (miscState.isMainWindow) {
+            let index = conversationState.floatingConversations.findIndex(fc => fc.equal(conversation));
+            return index === -1;
+        } else {
+            return conversationState.currentConversationInfo.conversation.equal(conversation);
+        }
+    },
+
     // contact actions
 
     _loadSelfUserInfo() {
@@ -1802,7 +1837,7 @@ let store = {
                 timeout: 4000,
                 onClick: () => {
                     if (isElectron()) {
-                        ipcRenderer.send('click-notification')
+                        ipcRenderer.send('click-notification', currentWindow.getMediaSourceId())
                     } else {
                         window.focus();
                         this.close();

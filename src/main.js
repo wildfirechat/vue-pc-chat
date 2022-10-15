@@ -52,13 +52,13 @@ Vue.config.productionTip = false
             //     wfc.setBackupAddress('192.168.10.11', 80)
             // }
         }
-        store.init(true);
+        store.init(true, false);
     } else {
         console.log('not home window, not init wfc')
         if (isElectron()) {
             wfc.attach()
         }
-        store.init(false);
+        store.init(false, false, path.indexOf('/conversation-window') >= 0);
     }
 }
 // init end
