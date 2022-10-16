@@ -52,7 +52,34 @@ const asyncProtoMethods = {
     setConversationTop: _asyncCall2('setConversationTop'),
     setConversationSlient: _asyncCall2('setConversationSlient'),
     sendFriendRequest: _asyncCall2('sendFriendRequest'),
-    sendSavedMessage: _asyncCall2('sendSavedMessage'),
+    sendSavedMessage: (event, args) => {
+        proto.sendSavedMessage(...args.methodArgs,
+            (...cbArgs) => {
+                let obj = {
+                    code: 0,
+                    reqId: args.reqId,
+                    cbIndex: 0,
+                    done: true,
+                    cbArgs: cbArgs
+                }
+                let messageId = args.methodArgs[0];
+                _notifyMessageStatusUpdate(messageId);
+                event.sender.send(ASYNC_CALLBACK, obj);
+            },
+            (...cbArgs) => {
+                let obj = {
+                    code: 0,
+                    reqId: args.reqId,
+                    cbIndex: 1,
+                    done: true,
+                    cbArgs: cbArgs
+                }
+                let messageId = args.methodArgs[0];
+                _notifyMessageStatusUpdate(messageId);
+                event.sender.send(ASYNC_CALLBACK, obj);
+            },
+        )
+    },
     recall: _asyncCall2('recall'),
     deleteRemoteMessage: _asyncCall2('deleteRemoteMessage'),
     updateRemoteMessageContent: _asyncCall2('updateRemoteMessageContent'),
@@ -121,6 +148,9 @@ export function init(wfcProto) {
                 code: 0,
                 value: proto[args.methodName](...args.methodArgs)
             };
+            if (args.methodName === 'updateMessageStatus') {
+                _notifyMessageStatusUpdate(args.methodArgs[0])
+            }
         } catch (e) {
             console.log('invokeProtoMethod ' + args.methodName + ' error', args, e.message)
             event.returnValue = {
@@ -158,17 +188,60 @@ export function init(wfcProto) {
 
     ipcMain.on('sendMessage', (event, args) => {
         try {
+            let messageId;
             let msg = proto.sendMessage(...args.methodArgs,
-                _genCallback(event, args.reqId, 0, false),
-                _genCallback(event, args.reqId, 1, false),
-                _genCallback(event, args.reqId, 2, true),
-                _genCallback(event, args.reqId, 3, false),
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 0,
+                        done: false,
+                        cbArgs: cbArgs
+                    }
+                    messageId = cbArgs[0];
+                    _notifyMessageStatusUpdate(messageId)
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                },
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 1,
+                        done: false,
+                        cbArgs: cbArgs
+                    }
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                    // progress 更新太频繁了
+                    //_notifyMessageStatusUpdate(messageId)
+                },
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 2,
+                        done: true,
+                        cbArgs: cbArgs
+                    }
+                    _notifyMessageStatusUpdate(messageId)
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                },
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 3,
+                        done: true,
+                        cbArgs: cbArgs
+                    }
+                    _notifyMessageStatusUpdate(messageId)
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                },
             );
             event.returnValue = {
                 code: 0,
                 value: msg,
             };
-
+            _genProtoEventListener('onSendMessage')(msg);
         } catch (e) {
             event.returnValue = {
                 code: -1,
@@ -179,6 +252,11 @@ export function init(wfcProto) {
             }
         }
     })
+}
+
+function _notifyMessageStatusUpdate(messageId) {
+    let msg = proto.getMessage(messageId);
+    _genProtoEventListener('onMessageStatusUpdate')(msg);
 }
 
 function setupProtoListener() {
