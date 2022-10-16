@@ -423,6 +423,10 @@ let store = {
                 console.log('not current conv')
                 return;
             }
+            let index = conversationState.currentConversationMessageList.findIndex(m => m.messageId === message.messageId);
+            if (index !== -1){
+                return;
+            }
             let length = conversationState.currentConversationMessageList.length;
             let lastTimestamp = 0;
             if (length > 0) {
