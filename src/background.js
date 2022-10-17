@@ -824,7 +824,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false);
+            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
@@ -962,7 +962,7 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
-function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true) {
+function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = true) {
     let win = new BrowserWindow(
         {
             width: w,
@@ -979,7 +979,8 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
                 nativeWindowOpen: true,
                 nodeIntegration: true,
                 contextIsolation: false,
-                webviewTag: true
+                webviewTag: true,
+                webSecurity: webSecurity,
             },
             // frame:false
         }
