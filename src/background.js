@@ -83,6 +83,7 @@ let downloadFileMap = new Map()
 let settings = {};
 let isFullScreen = false;
 let isMainWindowFocusedWhenStartScreenshot = false;
+let screenShotWindow = null;
 let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
 
@@ -472,6 +473,7 @@ function regShortcut() {
     })
     globalShortcut.register('ctrl+shift+a', () => {
         isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
+        console.log('isMainWindowFocusedWhenStartScreenshot', mainWindow.isFocused());
         screenshots.startCapture()
     });
     // 调试用，主要用于处理 windows 不能打开子窗口的控制台
@@ -630,7 +632,7 @@ const createMainWindow = async () => {
 
     ipcMain.on('screenshots-start', (event, args) => {
         // console.log('main voip-message event', args);
-        isMainWindowFocusedWhenStartScreenshot = true;
+        screenShotWindow = event.sender;
         screenshots.startCapture();
     });
 
@@ -1064,29 +1066,35 @@ app.on('ready', () => {
         screenshots = new Screenshots()
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
-            if (isMainWindowFocusedWhenStartScreenshot) {
-                let filename = tmp.tmpNameSync() + '.png';
-                let image = NativeImage.createFromBuffer(buffer);
-                fs.writeFileSync(filename, image.toPNG());
+            let filename = tmp.tmpNameSync() + '.png';
+            let image = NativeImage.createFromBuffer(buffer);
+            fs.writeFileSync(filename, image.toPNG());
 
-                mainWindow.webContents.send('screenshots-ok', {filePath: filename});
-                mainWindow.focus();
+            if (screenShotWindow) {
+                screenShotWindow.send('screenshots-ok', {filePath: filename});
+                screenShotWindow.focus();
+                screenShotWindow = null;
+            } else {
+                if (isMainWindowFocusedWhenStartScreenshot) {
+                    mainWindow.webContents.send('screenshots-ok', {filePath: filename});
+                    mainWindow.focus();
+                    isMainWindowFocusedWhenStartScreenshot = false;
+                }
             }
-            console.log('capture')
+            console.log('capture', e)
         })
         // 点击取消按钮回调事件
-        screenshots.on('cancel', () => {
-            // console.log('capture', 'cancel1')
-        })
         screenshots.on('cancel', e => {
             // 执行了preventDefault
             // 点击取消不会关闭截图窗口
             // e.preventDefault()
             // console.log('capture', 'cancel2')
+            screenShotWindow = null;
         })
         // 点击保存按钮回调事件
         screenshots.on('save', (e, {viewer}) => {
             console.log('capture', viewer)
+            screenShotWindow = null;
         })
         session.defaultSession.webRequest.onBeforeSendHeaders(
             (details, callback) => {
