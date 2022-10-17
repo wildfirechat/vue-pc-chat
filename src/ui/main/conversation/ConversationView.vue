@@ -71,6 +71,9 @@
                     <img class="avatar" :src="sharedConversationState.inputtingUser.portrait"/>
                     <ScaleLoader :color="'#d2d2d2'" :height="'15px'" :width="'3px'"/>
                 </div>
+                <div v-if="unreadMessageCount > 0" class="unread-count-tip-container" @click="showUnreadMessage">
+                    {{ '' + this.unreadMessageCount + '条新消息' }}
+                </div>
                 <div v-show="!sharedConversationState.enableMessageMultiSelection && !sharedContactState.showChannelMenu" v-on:mousedown="dragStart"
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
@@ -239,6 +242,7 @@ export default {
             ongoingCalls: null,
             ongoingCallTimer: 0,
             messageInputViewResized: false,
+            unreadMessageCount: 0,
         };
     },
 
@@ -387,6 +391,7 @@ export default {
                 let info = this.sharedConversationState.currentConversationInfo;
                 if (info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll > 0) {
                     store.clearConversationUnreadStatus(info.conversation);
+                    // this.unreadMessageCount = 0;
                 }
             }
         },
@@ -715,8 +720,12 @@ export default {
         joinMultiCall(message) {
             let request = new JoinCallRequestMessageContent(message.messageContent.callId, wfc.getClientId());
             wfc.sendConversationMessage(this.conversationInfo.conversation, request);
-        }
+        },
 
+        showUnreadMessage() {
+            let messageListElement = this.$refs['conversationMessageList'];
+            messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
+        }
     },
 
     mounted() {
@@ -774,19 +783,21 @@ export default {
         }
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
-        console.log('conversationView updated', this.conversationInfo, this.sharedConversationState.currentConversationInfo, this.sharedConversationState.shouldAutoScrollToBottom)
-        if (this.sharedConversationState.shouldAutoScrollToBottom) {
+        console.log('conversationView updated', this.sharedConversationState.currentConversationInfo, this.sharedConversationState.shouldAutoScrollToBottom, this.sharedMiscState.isPageHidden)
+        if (this.sharedConversationState.shouldAutoScrollToBottom && !this.sharedMiscState.isPageHidden) {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
         } else {
             // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
         }
         if (this.sharedConversationState.currentConversationInfo) {
-            if (!this.sharedMiscState.isPageHidden) {
-                let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
-                if (unreadCount.unread > 0) {
-                    store.clearConversationUnreadStatus(this.sharedConversationState.currentConversationInfo.conversation);
+            let unreadCount = this.sharedConversationState.currentConversationInfo.unreadCount;
+            if (unreadCount.unread > 0) {
+                if (this.sharedMiscState.isPageHidden) {
+                    this.unreadMessageCount = unreadCount.unread;
                 }
+            } else {
+                this.unreadMessageCount = 0;
             }
         }
 
@@ -993,6 +1004,15 @@ export default {
 
 .conversation-message-list ul {
     list-style: none;
+}
+
+.unread-count-tip-container {
+    margin-left: auto;
+    padding: 4px 8px;
+    background: white;
+    width: auto;
+    color: #4168e0;
+    border-radius: 4px;
 }
 
 /*.handler {*/

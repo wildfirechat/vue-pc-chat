@@ -855,7 +855,7 @@ const createMainWindow = async () => {
         let key = args.type + '-' + args.target + '-' + args.line;
         let win = conversationWindowMap.get(key);
         if (!win) {
-            win = createWindow(url, 960, 600, 640, 400, true, true, true);
+            win = createWindow(url, 960, 600, 480, 320, true, true, true);
             win.on('close', () => {
                 conversationWindowMap.delete(key);
                 mainWindow.send('floating-conversation-window-closed', {

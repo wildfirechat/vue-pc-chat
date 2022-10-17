@@ -432,7 +432,7 @@ let store = {
                 return;
             }
             let index = conversationState.currentConversationMessageList.findIndex(m => m.messageId === message.messageId);
-            if (index !== -1){
+            if (index !== -1) {
                 return;
             }
             let length = conversationState.currentConversationMessageList.length;
@@ -1786,11 +1786,14 @@ let store = {
 
     setPageVisibility(visible) {
         miscState.isPageHidden = !visible;
-        if (visible) {
-            if (conversationState.currentConversationInfo) {
-                this.clearConversationUnreadStatus(conversationState.currentConversationInfo.conversation)
-            }
+        if (!visible){
+            conversationState.shouldAutoScrollToBottom = false;
         }
+        // if (visible) {
+        //     if (conversationState.currentConversationInfo) {
+        //         this.clearConversationUnreadStatus(conversationState.currentConversationInfo.conversation)
+        //     }
+        // }
     },
 
     clearConversationUnreadStatus(conversation) {
