@@ -16,8 +16,15 @@
                        ref="groupAnnouncementInput"
                        :disabled="!enableEditGroupNameOrAnnouncement"
                        @keyup.enter='updateGroupAnnouncement'
-                       v-model="newGroupAnnouncement"
+                       v-model.trim="newGroupAnnouncement"
                        :placeholder="groupAnnouncement">
+            </label>
+            <label>
+                {{ $t('group.alias') }}
+                <input type="text"
+                       @keyup.enter='updateGroupAlias'
+                       v-model.trim="newGroupAlias"
+                       :placeholder="groupAlias">
             </label>
             <label class="switch">
                 保存到通讯录
@@ -78,6 +85,8 @@ export default {
             groupAnnouncement: '',
             newGroupName: '',
             newGroupAnnouncement: '',
+            newGroupAlias: '',
+            groupAlias: '',
         }
     },
 
@@ -85,6 +94,8 @@ export default {
         wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onUserInfosUpdate)
         wfc.getGroupMembers(this.conversationInfo.conversation.target, true);
+
+        this.groupAlias = wfc.getUserInfo(wfc.getUserId(), false, this.conversationInfo.conversation.target).groupAlias;
     },
 
     beforeDestroy() {
@@ -94,7 +105,7 @@ export default {
 
     components: {UserListVue},
     methods: {
-        onUserInfosUpdate(){
+        onUserInfosUpdate() {
             this.groupMemberUserInfos = store.getConversationMemberUsrInfos(this.conversationInfo.conversation);
         },
         showCreateConversationModal() {
@@ -170,6 +181,14 @@ export default {
             }
         },
 
+        updateGroupAlias() {
+            if (this.newGroupAlias && this.newGroupAlias !== this.groupAlias) {
+                wfc.modifyGroupAlias(this.conversationInfo.conversation.target, this.newGroupAlias, [0], null, () => {
+                    this.groupAlias = this.newGroupAlias;
+                }, null);
+            }
+        },
+
         quitGroup() {
             store.quitGroup(this.conversationInfo.conversation.target)
         },
@@ -207,8 +226,8 @@ export default {
         enableRemoveGroupMember() {
             let selfUid = wfc.getUserId();
             let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
-            if (groupMember){
-            return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+            if (groupMember) {
+                return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
             }
             return false;
 
@@ -217,8 +236,8 @@ export default {
         enableEditGroupNameOrAnnouncement() {
             let selfUid = wfc.getUserId();
             let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
-            if (groupMember){
-            return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+            if (groupMember) {
+                return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
             }
             return false;
         },
