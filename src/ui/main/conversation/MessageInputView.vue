@@ -753,6 +753,8 @@ export default {
     computed: {
         quotedMessage() {
             lastQuotedMessage = this.sharedConversationState.quotedMessage;
+            // side affect
+            this.$refs.input && this.$refs.input.focus();
             return this.sharedConversationState.quotedMessage;
         },
 
