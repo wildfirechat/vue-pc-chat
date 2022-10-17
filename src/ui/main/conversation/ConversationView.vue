@@ -784,7 +784,8 @@ export default {
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
         console.log('conversationView updated', this.sharedConversationState.currentConversationInfo, this.sharedConversationState.shouldAutoScrollToBottom, this.sharedMiscState.isPageHidden)
-        if (this.sharedConversationState.shouldAutoScrollToBottom && !this.sharedMiscState.isPageHidden) {
+        let lastMessagee = this.sharedConversationState.currentConversationInfo.lastMessage;
+        if ((this.sharedConversationState.shouldAutoScrollToBottom || (lastMessagee && lastMessagee.direction === 0) )&& !this.sharedMiscState.isPageHidden) {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
         } else {
