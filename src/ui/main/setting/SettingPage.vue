@@ -46,12 +46,6 @@
                           :closeOnOutsideClick="true">
                 </dropdown>
             </div>
-
-            <div class="ad-container">
-                <p>
-                    私有部署，请联系: sales@wildfirechat.cn
-                </p>
-            </div>
         </div>
         <footer>
             <p class="proto-version-info">{{ protoRevision() }}</p>
@@ -81,6 +75,14 @@
                 target="_blank">
                 {{ $t('setting.feedback') }}
                 <i class="icon-ion-ios-email-outline"/>
+            </a>
+
+            <a
+                class="button"
+                href="https://github.com/wildfirechat/vue-pc-chat"
+                target="_blank">
+                Star on Github
+                <i class="icon-ion-social-github"/>
             </a>
 
             <a
@@ -279,7 +281,6 @@ export default {
 <style lang="css" scoped>
 .setting-container {
     height: 100%;
-    width: 100%;
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -288,7 +289,6 @@ export default {
 
 .setting-container .content {
     flex: 1;
-    width: 100%;
     margin-left: 20px;
     margin-top: 10px;
 }
@@ -341,14 +341,6 @@ export default {
     text-decoration: none;
     transform: translateY(0px);
     transition: .2s;
-}
-
-.ad-container p {
-    margin-top: 60px;
-    font-size: 30px;
-    text-align: center;
-    color: gray;
-    user-select: text;
 }
 
 .setting-container .button:hover {
