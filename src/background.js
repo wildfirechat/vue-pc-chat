@@ -76,12 +76,14 @@ let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
+let conversationWindowMap = new Map();
 let screenshots;
 let tray;
 let downloadFileMap = new Map()
 let settings = {};
 let isFullScreen = false;
 let isMainWindowFocusedWhenStartScreenshot = false;
+let screenShotWindow = null;
 let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
 
@@ -471,6 +473,7 @@ function regShortcut() {
     })
     globalShortcut.register('ctrl+shift+a', () => {
         isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
+        console.log('isMainWindowFocusedWhenStartScreenshot', mainWindow.isFocused());
         screenshots.startCapture()
     });
     // 调试用，主要用于处理 windows 不能打开子窗口的控制台
@@ -629,7 +632,7 @@ const createMainWindow = async () => {
 
     ipcMain.on('screenshots-start', (event, args) => {
         // console.log('main voip-message event', args);
-        isMainWindowFocusedWhenStartScreenshot = true;
+        screenShotWindow = event.sender;
         screenshots.startCapture();
     });
 
@@ -659,9 +662,21 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on('click-notification', (event, args) => {
-        if (!mainWindow.isVisible() || mainWindow.isMinimized()) {
-            mainWindow.show();
-            mainWindow.focus();
+        let targetMediaSourceId = args;
+        let targetWin = null;
+        if (mainWindow.getMediaSourceId() === targetMediaSourceId) {
+            targetWin = mainWindow;
+        } else {
+            for (let win of conversationWindowMap.values()) {
+                if (win.getMediaSourceId() === targetMediaSourceId) {
+                    targetWin = win;
+                    break;
+                }
+            }
+        }
+        if (targetWin && !targetWin.isVisible() || targetWin.isMinimized()) {
+            targetWin.show();
+            targetWin.focus();
         }
     });
 
@@ -811,7 +826,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false);
+            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
@@ -833,6 +848,30 @@ const createMainWindow = async () => {
         } else {
             messageHistoryMessageWindow.show();
             messageHistoryMessageWindow.focus();
+        }
+    });
+
+    ipcMain.on(IPCRendererEventType.showConversationFloatPage, async (event, args) => {
+        console.log(`on ${IPCRendererEventType.showConversationFloatPage}`, messageHistoryMessageWindow, args)
+        let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
+        let key = args.type + '-' + args.target + '-' + args.line;
+        let win = conversationWindowMap.get(key);
+        if (!win) {
+            win = createWindow(url, 960, 600, 480, 320, true, true, true);
+            win.on('close', () => {
+                conversationWindowMap.delete(key);
+                mainWindow.send('floating-conversation-window-closed', {
+                        type: args.type,
+                        target: args.target,
+                        line: args.line
+                    }
+                );
+            });
+            win.show();
+            conversationWindowMap.set(key, win);
+        } else {
+            win.show();
+            win.focus();
         }
     });
 
@@ -925,7 +964,7 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
-function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true) {
+function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = true) {
     let win = new BrowserWindow(
         {
             width: w,
@@ -942,7 +981,8 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
                 nativeWindowOpen: true,
                 nodeIntegration: true,
                 contextIsolation: false,
-                webviewTag: true
+                webviewTag: true,
+                webSecurity: webSecurity,
             },
             // frame:false
         }
@@ -1026,29 +1066,35 @@ app.on('ready', () => {
         screenshots = new Screenshots()
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
-            if (isMainWindowFocusedWhenStartScreenshot) {
-                let filename = tmp.tmpNameSync() + '.png';
-                let image = NativeImage.createFromBuffer(buffer);
-                fs.writeFileSync(filename, image.toPNG());
+            let filename = tmp.tmpNameSync() + '.png';
+            let image = NativeImage.createFromBuffer(buffer);
+            fs.writeFileSync(filename, image.toPNG());
 
-                mainWindow.webContents.send('screenshots-ok', {filePath: filename});
-                mainWindow.focus();
+            if (screenShotWindow) {
+                screenShotWindow.send('screenshots-ok', {filePath: filename});
+                screenShotWindow.focus();
+                screenShotWindow = null;
+            } else {
+                if (isMainWindowFocusedWhenStartScreenshot) {
+                    mainWindow.webContents.send('screenshots-ok', {filePath: filename});
+                    mainWindow.focus();
+                    isMainWindowFocusedWhenStartScreenshot = false;
+                }
             }
-            console.log('capture')
+            console.log('capture', e)
         })
         // 点击取消按钮回调事件
-        screenshots.on('cancel', () => {
-            // console.log('capture', 'cancel1')
-        })
         screenshots.on('cancel', e => {
             // 执行了preventDefault
             // 点击取消不会关闭截图窗口
             // e.preventDefault()
             // console.log('capture', 'cancel2')
+            screenShotWindow = null;
         })
         // 点击保存按钮回调事件
         screenshots.on('save', (e, {viewer}) => {
             console.log('capture', viewer)
+            screenShotWindow = null;
         })
         session.defaultSession.webRequest.onBeforeSendHeaders(
             (details, callback) => {

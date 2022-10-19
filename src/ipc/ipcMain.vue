@@ -7,12 +7,16 @@ import localStorageEmitter from "./localStorageEmitter";
 import wfc from "../wfc/client/wfc";
 import Message from "../wfc/messages/message";
 import Conversation from "../wfc/model/conversation";
+import store from "../store";
+import avenginekitproxy from "../wfc/av/engine/avenginekitproxy";
+import ConversationType from "../wfc/model/conversationType";
 
 export default {
     name: "ipcMain",
 
     mounted() {
 
+        // 一下 4 个 ipc 方法无效了，将被移除
         localStorageEmitter.handle('getUserInfos', (ev, args) => {
             console.log('getUserInfos', ev, args)
             let userIds = args.userIds;
@@ -41,6 +45,38 @@ export default {
             let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
             wfc.sendConversationMessage(conversation, messageContent);
         })
+
+        localStorageEmitter.on('startConversation', (ev, args) => {
+            let conversation = Object.assign(new Conversation(), args.conversation);
+            store.setCurrentConversation(conversation);
+        })
+
+        localStorageEmitter.on('startCall', (ev, args) => {
+            console.log('oooooooooooo startCall', args)
+            let conversation = Object.assign(new Conversation(), args.conversation);
+            let audioOnly = args.audioOnly;
+            if (conversation.type === ConversationType.Single) {
+                avenginekitproxy.startCall(conversation, audioOnly, [conversation.target], '')
+            } else {
+                this.startGroupVoip(conversation, audioOnly);
+            }
+        })
+    },
+    methods: {
+        startGroupVoip(conversation, isAudioOnly) {
+            let successCB = users => {
+                let participantIds = users.map(u => u.uid);
+                avenginekitproxy.startCall(conversation, isAudioOnly, participantIds, '')
+            };
+            this.$pickContact({
+                successCB,
+                users: store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, true, true),
+                initialCheckedUsers: [this.sharedContactState.selfUserInfo],
+                uncheckableUsers: [this.sharedContactState.selfUserInfo],
+                confirmTitle: this.$t('common.confirm'),
+            });
+        },
+
     }
 }
 </script>

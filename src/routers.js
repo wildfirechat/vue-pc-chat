@@ -12,6 +12,7 @@ import Conference from "./ui/voip/Conference";
 import CompositeMessagePage from "./ui/main/CompositeMessagePage";
 import MessageHistoryPage from "./ui/main/MessageHistoryPage";
 import ConversationMessageHistoryPage from "./ui/main/ConversationMessageHistoryPage";
+import ConversationFloatPage from "./ui/main/ConversationFloatPage";
 
 const routers = [
     {
@@ -88,6 +89,12 @@ const routers = [
         name: 'conversation-message-history',
         path: '/conversation-message-history',
         component: ConversationMessageHistoryPage,
+    },
+    {
+        name: 'conversation-window',
+        path: '/conversation-window',
+        component: ConversationFloatPage,
+
     }
 ]
 export default routers

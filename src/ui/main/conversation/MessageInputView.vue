@@ -98,6 +98,7 @@ import {copyText} from "../../util/clipboard";
 import EventType from "../../../wfc/client/wfcEvent";
 import IPCRendererEventType from "../../../ipcRendererEventType";
 import ChannelMenuView from "./ChannelMenuView";
+import IpcSub from "../../../ipc/ipcSub";
 
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
@@ -404,20 +405,28 @@ export default {
         },
 
         startAudioCall() {
-            let conversation = this.conversationInfo.conversation;
-            if (conversation.type === ConversationType.Single) {
-                avenginekitproxy.startCall(conversation, true, [conversation.target])
+            if (this.sharedMiscState.isMainWindow) {
+                let conversation = this.conversationInfo.conversation;
+                if (conversation.type === ConversationType.Single) {
+                    avenginekitproxy.startCall(conversation, true, [conversation.target])
+                } else {
+                    this.startGroupVoip(true);
+                }
             } else {
-                this.startGroupVoip(true);
+                IpcSub.startCall(this.conversationInfo.conversation, true);
             }
         },
 
         startVideoCall() {
-            let conversation = this.conversationInfo.conversation;
-            if (conversation.type === ConversationType.Single) {
-                avenginekitproxy.startCall(conversation, false, [conversation.target])
+            if (this.sharedMiscState.isMainWindow) {
+                let conversation = this.conversationInfo.conversation;
+                if (conversation.type === ConversationType.Single) {
+                    avenginekitproxy.startCall(conversation, false, [conversation.target])
+                } else {
+                    this.startGroupVoip(false);
+                }
             } else {
-                this.startGroupVoip(false);
+                IpcSub.startCall(this.conversationInfo.conversation, false);
             }
         },
 

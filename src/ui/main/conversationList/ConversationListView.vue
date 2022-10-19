@@ -3,7 +3,7 @@
         <ul>
             <li
                 @click="showConversation(conversationInfo)"
-                v-for="conversationInfo in sharedConversationState.conversationInfoList"
+                v-for="conversationInfo in conversationInfoList"
                 :key="conversationInfoKey(conversationInfo)"
                 v-bind:class="{active: sharedConversationState.currentConversationInfo && sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation),
                           top:conversationInfo.top,
@@ -19,6 +19,11 @@
             <li>
                 <a @click.prevent="setConversationTop(conversationInfo)">{{
                         conversationInfo && conversationInfo.top ? $t('conversation.cancel_sticky_top') : $t('conversation.sticky_top')
+                    }}</a>
+            </li>
+            <li v-if="sharedMiscState.isElectron">
+                <a @click.prevent="showConversationFloatPage(conversationInfo.conversation)">{{
+                        $t('conversation.show_in_float_window')
                     }}</a>
             </li>
             <li>
@@ -50,12 +55,15 @@
 import ConversationItemView from "@/ui/main/conversationList/ConversationItemView";
 import store from "@/store";
 import wfc from "../../../wfc/client/wfc";
+import IPCRendererEventType from "../../../ipcRendererEventType";
+import {ipcRenderer} from "../../../platform";
 
 export default {
     name: 'ConversationListView',
     data() {
         return {
             sharedConversationState: store.state.conversation,
+            sharedMiscState: store.state.misc,
             contextMenuConversationInfo: null,
         };
     },
@@ -101,10 +109,39 @@ export default {
 
         markConversationAsUnread(conversation) {
             wfc.markConversationAsUnread(conversation, true);
+        },
+
+        showConversationFloatPage(conversation) {
+            let hash = window.location.hash;
+            let url = window.location.origin;
+            if (hash) {
+                url = window.location.href.replace(hash, '#/conversation-window');
+            } else {
+                url += "/conversation-window"
+            }
+            ipcRenderer.send(IPCRendererEventType.showConversationFloatPage, {
+                url: url,
+                type: conversation.type,
+                target: conversation.target,
+                line: conversation.line,
+            });
+
+            store.addFloatingConversation(conversation);
+            if (this.sharedConversationState.currentConversationInfo && this.sharedConversationState.currentConversationInfo.conversation.equal(conversation)){
+                store.setCurrentConversation(null);
+            }
         }
     },
     activated() {
         this.scrollActiveElementCenter();
+    },
+    computed: {
+        conversationInfoList() {
+            return this.sharedConversationState.conversationInfoList.filter(ci => {
+                const index = this.sharedConversationState.floatingConversations.findIndex(c => c.equal(ci.conversation));
+                return index === -1;
+            })
+        }
     },
 
     components: {
