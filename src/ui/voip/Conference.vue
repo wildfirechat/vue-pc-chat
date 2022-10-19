@@ -242,6 +242,7 @@ import wfc from "../../wfc/client/wfc";
 import ForwardType from "../main/conversation/message/forward/ForwardType";
 import Message from "../../wfc/messages/message";
 import VideoType from "../../wfc/av/engine/videoType";
+import IpcEventType from "../../ipcEventType";
 
 export default {
     name: 'Conference',
@@ -688,7 +689,7 @@ export default {
                             }
 
                             this.session.startScreenShare(desktopShareOptions);
-                            avenginekitproxy.emitToMain('start-screen-share', {})
+                            avenginekitproxy.emitToMain(IpcEventType.START_SCREEN_SHARE, {})
                         }
                     };
                     this.$modal.show(

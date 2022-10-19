@@ -93,6 +93,7 @@ import {clear, getItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
+import IpcEventType from "../../ipcEventType";
 
 export default {
     name: 'App',
@@ -370,7 +371,7 @@ export default {
             if (status === ConnectionStatus.ConnectionStatusConnected) {
                 this.$router.replace({path: "/home"});
                 if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
-                    isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+                    isElectron() && ipcRenderer.send(IpcEventType.LOGINED, {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
                     if (this.enableAutoLogin) {
                         store.setEnableAutoLogin(this.enableAutoLogin)
                     }

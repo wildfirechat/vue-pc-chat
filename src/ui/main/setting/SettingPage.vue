@@ -118,6 +118,7 @@ import CreateConferenceView from "../../voip/CreateConferenceView";
 import ChangePasswordView from "./ChangePasswordView";
 import ResetPasswordView from "./ResetPasswordView";
 import {shell} from "../../../platform";
+import IpcEventType from "../../../ipcEventType";
 
 export default {
     name: "SettingPage",
@@ -193,7 +194,7 @@ export default {
             clear();
             wfc.disconnect();
             if (isElectron()) {
-                ipcRenderer.send('logouted');
+                ipcRenderer.send(IpcEventType.LOGOUT);
             }
         },
 

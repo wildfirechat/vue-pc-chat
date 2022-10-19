@@ -13,6 +13,7 @@ import Config from "../../../config";
 import {longValue, numberValue} from '../../util/longUtil'
 import Conversation from "../../../wfc/model/conversation";
 import store from "../../../store";
+import IPCEventType from "../../../ipcEventType";
 
 
 // main window renderer process -> voip window renderer process
@@ -639,7 +640,7 @@ export class AvEngineKitProxy {
             ipcRenderer.on('voip-message', this.sendVoipListener);
             ipcRenderer.on('conference-request', this.sendConferenceRequestListener);
             ipcRenderer.on('update-call-start-message', this.updateCallStartMessageContentListener)
-            ipcRenderer.on('start-screen-share', (event, args) => {
+            ipcRenderer.on(IPCEventType.START_SCREEN_SHARE, (event, args) => {
                 if (this.callWin) {
                     let screenWidth = args.width;
                     this.callWin.resizable = true;
@@ -652,7 +653,7 @@ export class AvEngineKitProxy {
                     this.callWin.setPosition((screenWidth - 800) / 2, 0, true);
                 }
             });
-            ipcRenderer.on('stop-screen-share', (event, args) => {
+            ipcRenderer.on(IPCEventType.STOP_SCREEN_SHARE, (event, args) => {
                 if (this.callWin) {
                     let type = args.type;
                     let width = 360;

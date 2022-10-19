@@ -26,7 +26,7 @@ import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
-import IPCEventType from "./ipc/ipcEventType";
+import LocalStorageIpcEventType from "./ipc/localStorageIpcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
 import {stringValue} from "./wfc/util/longUtil";
 import {getConversationPortrait} from "./ui/util/imageUtil";
@@ -39,6 +39,7 @@ import UnreadCount from "./wfc/model/unreadCount";
 import LeaveChannelChatMessageContent from "./wfc/messages/leaveChannelChatMessageContent";
 import EnterChannelChatMessageContent from "./wfc/messages/enterChannelChatMessageContent";
 import ArticlesMessageContent from "./wfc/messages/articlesMessageContent";
+import IPCEventType from "./ipcEventType";
 
 /**
  * 一些说明
@@ -547,7 +548,7 @@ let store = {
             localStorageEmitter.on('wf-ipc-to-main', (events, args) => {
                 let type = args.type;
                 switch (type) {
-                    case IPCEventType.openConversation:
+                    case LocalStorageIpcEventType.openConversation:
                         let conversation = args.value;
                         let win = remote.getCurrentWindow();
                         win.focus();
@@ -1681,7 +1682,7 @@ let store = {
     setEnableCloseWindowToExit(enable) {
         miscState.enableCloseWindowToExit = enable;
         setItem(contactState.selfUserInfo.uid + '-' + 'closeWindowToExit', enable ? '1' : '0')
-        ipcRenderer.send('enable-close-window-to-exit', enable)
+        ipcRenderer.send(IPCEventType.ENABLE_CLOSE_WINDOW_TO_EXIT, enable)
     },
 
     setEnableAutoLogin(enable) {
@@ -1786,7 +1787,7 @@ let store = {
 
     setPageVisibility(visible) {
         miscState.isPageHidden = !visible;
-        if (!visible){
+        if (!visible) {
             conversationState.shouldAutoScrollToBottom = false;
         }
         // if (visible) {
@@ -1844,7 +1845,7 @@ let store = {
                 timeout: 4000,
                 onClick: () => {
                     if (isElectron()) {
-                        ipcRenderer.send('click-notification', currentWindow.getMediaSourceId())
+                        ipcRenderer.send(IPCEventType.CLICK_NOTIFICATION, currentWindow.getMediaSourceId())
                     } else {
                         window.focus();
                         this.close();
@@ -1870,7 +1871,7 @@ let store = {
         if (process.platform === 'linux') {
             this.updateLinuxTitle(count);
         } else {
-            ipcRenderer.send('update-badge', count)
+            ipcRenderer.send(IPCEventType.UPDATE_BADGE, count)
         }
     },
 

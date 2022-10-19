@@ -96,7 +96,7 @@ import {config as emojiConfig} from "@/ui/main/conversation/EmojiAndStickerConfi
 import {ipcRenderer, isElectron} from "@/platform";
 import {copyText} from "../../util/clipboard";
 import EventType from "../../../wfc/client/wfcEvent";
-import IPCRendererEventType from "../../../ipcRendererEventType";
+import IpcEventType from "../../../ipcEventType";
 import ChannelMenuView from "./ChannelMenuView";
 import IpcSub from "../../../ipc/ipcSub";
 
@@ -163,7 +163,7 @@ export default {
                 text = await navigator.clipboard.readText();
             }
             if (isElectron()) {
-                let args = ipcRenderer.sendSync('file-paste');
+                let args = ipcRenderer.sendSync(IpcEventType.FILE_PASTE);
                 if (args.hasImage) {
                     document.execCommand('insertText', false, ' ');
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
@@ -332,7 +332,7 @@ export default {
         },
 
         screenShot() {
-            ipcRenderer.send('screenshots-start', {});
+            ipcRenderer.send(IpcEventType.START_SCREEN_SHOT, {});
         },
         showMessageHistory() {
             let hash = window.location.hash;
@@ -343,13 +343,13 @@ export default {
                 url += "/conversation-message-history"
             }
             let conversation = this.conversationInfo.conversation;
-            ipcRenderer.send(IPCRendererEventType.showConversationMessageHistoryPage, {
+            ipcRenderer.send(IpcEventType.showConversationMessageHistoryPage, {
                 url: url,
                 type: conversation.type,
                 target: conversation.target,
                 line: conversation.line,
             });
-            console.log(IPCRendererEventType.showConversationMessageHistoryPage, url)
+            console.log(IpcEventType.showConversationMessageHistoryPage, url)
         },
 
         hideEmojiView(e) {

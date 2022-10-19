@@ -105,6 +105,7 @@ import {isElectron} from "../../../platform";
 import {_reverseToJsLongString} from "../../../wfc/util/longUtil";
 import CompositeMessageContent from "../../../wfc/messages/compositeMessageContent";
 import Config from "../../../config";
+import IpcEventType from "../../../ipcEventType";
 
 export default {
     name: "FavListView",
@@ -220,7 +221,7 @@ export default {
                     store.previewMedia(favItem.url, favItem.thumbUrl, favItem.data && favItem.data.thumb ? favItem.data.thumb : 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==')
                     break;
                 case MessageContentType.File:
-                    ipcRenderer.send('file-download', {
+                    ipcRenderer.send(IpcEventType.DOWNLOAD_FILE, {
                         // TODO -1时，不通知进度
                         messageId: -1,
                         remotePath: favItem.url,
@@ -237,7 +238,7 @@ export default {
                             url += "/composite"
                         }
                         url += "?data=" + wfc.escape(wfc.utf8_to_b64(JSON.stringify(favItem)));
-                        ipcRenderer.send('show-composite-message-window', {
+                        ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
                             url: url,
                         });
                     }

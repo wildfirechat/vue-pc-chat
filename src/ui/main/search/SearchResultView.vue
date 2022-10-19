@@ -73,7 +73,7 @@ import store from "@/store";
 import Conversation from "@/wfc/model/conversation";
 import ConversationType from "@/wfc/model/conversationType";
 import FriendRequestView from "@/ui/main/contact/FriendRequestView";
-import IPCRendererEventType from "../../../ipcRendererEventType";
+import IpcEventType from "../../../ipcEventType";
 import {ipcRenderer} from "../../../platform";
 import wfc from "../../../wfc/client/wfc";
 
@@ -171,10 +171,10 @@ export default {
             } else {
                 url += "/message-history"
             }
-            ipcRenderer.send(IPCRendererEventType.showMessageHistoryPage, {
+            ipcRenderer.send(IpcEventType.showMessageHistoryPage, {
                 url: url,
             });
-            console.log(IPCRendererEventType.showMessageHistoryPage, url)
+            console.log(IpcEventType.showMessageHistoryPage, url)
         }
 
     },

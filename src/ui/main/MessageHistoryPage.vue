@@ -108,7 +108,7 @@
 import MessageContentContainerView from "./conversation/message/MessageContentContainerView";
 import store from "../../store";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
-import IPCEventType from "../../ipc/ipcEventType";
+import LocalStorageIpcEventType from "../../ipc/localStorageIpcEventType";
 import InfiniteLoading from "vue-infinite-loading";
 
 export default {
@@ -142,7 +142,7 @@ export default {
 
         openConversation() {
             let conversation = this.currentConversationSearchResult.conversation;
-            localStorageEmitter.send('wf-ipc-to-main', {type: IPCEventType.openConversation, value: conversation})
+            localStorageEmitter.send('wf-ipc-to-main', {type: LocalStorageIpcEventType.openConversation, value: conversation})
         },
 
         showContextMessages(message) {

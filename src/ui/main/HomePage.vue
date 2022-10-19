@@ -48,7 +48,7 @@
                                 <i class="icon-ion-android-contact"
                                    v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
                                    @click="go2Contact"></i>
-                                <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount}}</em>
+                                <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{ sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount }}</em>
                             </div>
                         </li>
                         <li v-if="sharedMiscState.isElectron">
@@ -117,6 +117,7 @@ import localStorageEmitter from "../../ipc/localStorageEmitter";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import {Draggable} from 'draggable-vue-directive'
+import IpcEventType from "../../ipcEventType";
 
 export default {
     data() {
@@ -169,7 +170,7 @@ export default {
             } else {
                 url += "/files"
             }
-            ipcRenderer.send('show-file-window', {
+            ipcRenderer.send(IpcEventType.SHOW_FILE_WINDOW, {
                 url: url,
                 source: 'file',
             });
