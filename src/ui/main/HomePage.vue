@@ -68,7 +68,7 @@
                         </li>
                         <li v-if="supportConference">
                             <i class="icon-ion-speakerphone"
-                               @click="createConference"></i>
+                               @click="go2Conference"></i>
                         </li>
                         <li>
                             <i class="icon-ion-android-settings"
@@ -183,11 +183,18 @@ export default {
             this.$router.replace("/home/workspace");
             this.isSetting = false;
         },
+        go2Conference() {
+            if (this.$router.currentRoute.path === '/home/conference') {
+                return;
+            }
+            this.$router.replace({path: "/home/conference"});
+            this.isSetting = true;
+        },
         go2Setting() {
             if (this.$router.currentRoute.path === '/home/setting') {
                 return;
             }
-            this.$router.push({path: "/home/setting"});
+            this.$router.replace({path: "/home/setting"});
             this.isSetting = true;
         },
 
@@ -229,7 +236,7 @@ export default {
                 || wfc.getUserId() === '') {
 
                 if (this.$router.currentRoute.path !== '/') {
-                    this.$router.push({path: "/"});
+                    this.$router.replace({path: "/"});
                 }
                 if (status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
                     || status === ConnectionStatus.ConnectionStatusLogout
