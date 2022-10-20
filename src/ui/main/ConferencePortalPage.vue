@@ -3,19 +3,19 @@
         <p class="title">在线会议</p>
         <div class="action-container">
             <div class="action">
-                <img :src="require(`@/assets/images/icon.png`)" alt="">
+                <img :src="require(`@/assets/images/av_join_conference.png`)" alt="">
                 <p>加入会议</p>
             </div>
-            <div class="action">
-                <img :src="require(`@/assets/images/icon.png`)" alt="">
+            <div class="action" @click="createConference">
+                <img :src="require(`@/assets/images/av_start_conference.png`)" alt="">
                 <p>发起会议</p>
             </div>
             <div class="action">
-                <img :src="require(`@/assets/images/icon.png`)" alt="">
+                <img :src="require(`@/assets/images/av_book_conference.png`)" alt="">
                 <p>预约会议</p>
             </div>
         </div>
-        <div class="history-container">
+        <div class="fav-container">
             <ul>
                 <li>
                     <div>
@@ -39,8 +39,35 @@
 </template>
 
 <script>
+import CreateConferenceView from "../voip/CreateConferenceView";
+
 export default {
-    name: "ConferencePortalPage"
+    name: "ConferencePortalPage",
+    methods: {
+        createConference() {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                CreateConferenceView,
+                {}, {
+                    name: 'create-conference-modal',
+                    width: 320,
+                    height: 400,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
+        },
+    }
 }
 </script>
 
@@ -55,20 +82,18 @@ export default {
 }
 
 .title {
-    margin-top: 40px;
+    margin-top: 30px;
     font-size: 20px;
 }
 
 .action-container {
     display: flex;
-    height: 200px;
     justify-content: center;
-    padding: 0 80px;
+    padding: 20px 80px;
 }
 
 .action {
     width: 200px;
-    height: 200px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -77,17 +102,19 @@ export default {
 }
 
 .action:hover {
-    background: lightgrey;
+    filter: contrast(200%);
 }
 
 .action img {
     width: 80px;
     height: 80px;
+    border-radius: 10px;
 }
 
-.history-container {
+.fav-container {
     width: calc(100% - 200px);
-    border-top: 1px red solid;
+    border-top: 1px lightgrey solid;
+    padding-top: 10px;
 }
 
 </style>

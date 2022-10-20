@@ -111,7 +111,6 @@ import ConnectionStatus from "@/wfc/client/connectionStatus";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 import {removeItem} from "@/ui/util/storageHelper";
 import {ipcRenderer} from "@/platform";
-import CreateConferenceView from "../voip/CreateConferenceView";
 import avenginekit from "../../wfc/av/internal/engine.min";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
@@ -201,29 +200,6 @@ export default {
         closeUserCard() {
             console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
-        },
-        createConference() {
-            let beforeOpen = () => {
-                console.log('Opening...')
-            };
-            let beforeClose = (event) => {
-                console.log('Closing...', event, event.params)
-            };
-            let closed = (event) => {
-                console.log('Close...', event)
-            };
-            this.$modal.show(
-                CreateConferenceView,
-                {}, {
-                    name: 'create-conference-modal',
-                    width: 320,
-                    height: 400,
-                    clickToClose: true,
-                }, {
-                    'before-open': beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': closed,
-                })
         },
 
         onConnectionStatusChange(status) {
