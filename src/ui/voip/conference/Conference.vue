@@ -223,26 +223,26 @@
 </template>
 
 <script>
-import avenginekit from "../../wfc/av/internal/engine.min";
-import CallSessionCallback from "../../wfc/av/engine/callSessionCallback";
+import avenginekit from "../../../wfc/av/internal/engine.min";
+import CallSessionCallback from "../../../wfc/av/engine/callSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
-import IpcSub from "../../ipc/ipcSub";
+import IpcSub from "../../../ipc/ipcSub";
 import ClickOutside from 'vue-click-outside'
-import UserCardView from "../main/user/UserCardView";
-import ConferenceInviteMessageContent from "../../wfc/av/messages/conferenceInviteMessageContent";
-import localStorageEmitter from "../../ipc/localStorageEmitter";
-import {currentWindow, isElectron, remote} from "../../platform";
-import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
-import CallEndReason from "../../wfc/av/engine/callEndReason";
-import ScreenShareControlView from "./ScreenShareControlView";
-import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
-import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView";
-import store from "../../store";
-import wfc from "../../wfc/client/wfc";
-import ForwardType from "../main/conversation/message/forward/ForwardType";
-import Message from "../../wfc/messages/message";
-import VideoType from "../../wfc/av/engine/videoType";
-import IpcEventType from "../../ipcEventType";
+import UserCardView from "../../main/user/UserCardView";
+import ConferenceInviteMessageContent from "../../../wfc/av/messages/conferenceInviteMessageContent";
+import localStorageEmitter from "../../../ipc/localStorageEmitter";
+import {currentWindow, isElectron, remote} from "../../../platform";
+import ScreenOrWindowPicker from "../ScreenOrWindowPicker";
+import CallEndReason from "../../../wfc/av/engine/callEndReason";
+import ScreenShareControlView from "../ScreenShareControlView";
+import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
+import ElectronWindowsControlButtonView from "../../common/ElectronWindowsControlButtonView";
+import store from "../../../store";
+import wfc from "../../../wfc/client/wfc";
+import ForwardType from "../../main/conversation/message/forward/ForwardType";
+import Message from "../../../wfc/messages/message";
+import VideoType from "../../../wfc/av/engine/videoType";
+import IpcEventType from "../../../ipcEventType";
 
 export default {
     name: 'Conference',

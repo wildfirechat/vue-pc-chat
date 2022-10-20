@@ -2,7 +2,7 @@
     <div class="conference-container">
         <p class="title">在线会议</p>
         <div class="action-container">
-            <div class="action">
+            <div class="action" @click="joinConference">
                 <img :src="require(`@/assets/images/av_join_conference.png`)" alt="">
                 <p>加入会议</p>
             </div>
@@ -10,7 +10,7 @@
                 <img :src="require(`@/assets/images/av_start_conference.png`)" alt="">
                 <p>发起会议</p>
             </div>
-            <div class="action">
+            <div class="action" @click="orderConference">
                 <img :src="require(`@/assets/images/av_book_conference.png`)" alt="">
                 <p>预约会议</p>
             </div>
@@ -39,11 +39,36 @@
 </template>
 
 <script>
-import CreateConferenceView from "../voip/CreateConferenceView";
+import CreateConferenceView from "./CreateConferenceView";
+import JoinConferenceView from "./JoinConferenceView";
+import OrderConferenceView from "./OrderConferenceView";
 
 export default {
     name: "ConferencePortalPage",
     methods: {
+        joinConference() {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                JoinConferenceView,
+                {}, {
+                    name: 'join-conference-modal',
+                    width: 320,
+                    height: 330,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
+        },
         createConference() {
             let beforeOpen = () => {
                 console.log('Opening...')
@@ -59,13 +84,37 @@ export default {
                 {}, {
                     name: 'create-conference-modal',
                     width: 320,
-                    height: 400,
+                    height: 480,
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,
                     'before-close': beforeClose,
                     'closed': closed,
                 })
+        },
+        orderConference() {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                OrderConferenceView,
+                {}, {
+                    name: 'order-conference-modal',
+                    width: 320,
+                    height: 520,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
+
         },
     }
 }
