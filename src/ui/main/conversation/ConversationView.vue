@@ -10,11 +10,25 @@
                         <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
                         <p class="single-line user-online-status" @click="clickConversationDesc">{{ targetUserOnlineStateDesc }}</p>
                     </div>
-                    <a href="#"><i class="icon-ion-ios-settings-strong"
-                                   style="display: inline-block"
-                                   v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
-                                   ref="setting"
-                                   @click="toggleConversationInfo"/></a>
+                    <div
+                        v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
+                    >
+                        <a href="#">
+                            <i class="icon-ion-pin"
+                               style="display: inline-block"
+                               v-bind:class="{active : isWindowAlwaysTop}"
+                               @click="setWindowAlwaysTop"
+                            />
+                        </a>
+                        <a href="#">
+                            <i class="icon-ion-ios-settings-strong"
+                               style="display: inline-block"
+                               ref="setting"
+                               v-bind:class="{active : showConversationInfo}"
+                               @click="toggleConversationInfo"
+                            />
+                        </a>
+                    </div>
                 </div>
             </header>
             <div ref="conversationContentContainer" class="conversation-content-container"
@@ -204,6 +218,7 @@ import ArticlesMessageContent from "../../../wfc/messages/articlesMessageContent
 import ContextableNotificationMessageContentContainerView from "./message/ContextableNotificationMessageContentContainerView";
 import ChannelConversationInfoView from "./ChannelConversationInfoView";
 import FriendRequestView from "../contact/FriendRequestView";
+import {currentWindow, ipcRenderer} from "../../../platform";
 
 var amr;
 export default {
@@ -243,6 +258,7 @@ export default {
             ongoingCallTimer: 0,
             messageInputViewResized: false,
             unreadMessageCount: 0,
+            isWindowAlwaysTop: currentWindow.isAlwaysOnTop(),
         };
     },
 
@@ -301,6 +317,11 @@ export default {
         },
         toggleConversationInfo() {
             this.showConversationInfo = !this.showConversationInfo;
+        },
+
+        setWindowAlwaysTop() {
+            this.isWindowAlwaysTop = !currentWindow.isAlwaysOnTop();
+            currentWindow.setAlwaysOnTop(this.isWindowAlwaysTop)
         },
 
         clickConversationDesc() {
@@ -785,7 +806,7 @@ export default {
         // refer to http://iamdustan.com/smoothscroll/
         console.log('conversationView updated', this.sharedConversationState.currentConversationInfo, this.sharedConversationState.shouldAutoScrollToBottom, this.sharedMiscState.isPageHidden)
         let lastMessagee = this.sharedConversationState.currentConversationInfo.lastMessage;
-        if ((this.sharedConversationState.shouldAutoScrollToBottom || (lastMessagee && lastMessagee.direction === 0) )&& !this.sharedMiscState.isPageHidden) {
+        if ((this.sharedConversationState.shouldAutoScrollToBottom || (lastMessagee && lastMessagee.direction === 0)) && !this.sharedMiscState.isPageHidden) {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
         } else {
@@ -1063,5 +1084,13 @@ export default {
 
 .conversation-info-container.active {
     display: flex;
+}
+
+i:hover {
+    color: deepskyblue;
+}
+
+i.active {
+    color: #34b7f1;
 }
 </style>
