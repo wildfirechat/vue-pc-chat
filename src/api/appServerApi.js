@@ -20,23 +20,59 @@ class AppServerApi {
 
     loinWithPassword(mobile, password) {
         return new Promise((resolve, reject) => {
-            this._interceptLoginResponse(this._post('/login_pwd', {
+            let responsePromise = this._post('/login_pwd', {
                 mobile,
                 password,
                 platform: Config.getWFCPlatform(),
                 clientId: wfc.getClientId()
-            }, true), resolve, reject)
+            }, true)
+            this._interceptLoginResponse(responsePromise, resolve, reject)
         })
     }
 
     loginWithAuthCode(mobile, authCode) {
         return new Promise((resolve, reject) => {
-            this._interceptLoginResponse(this._post('/login', {
+            let responsePromise = this._post('/login', {
                 mobile,
                 code: authCode,
                 platform: Config.getWFCPlatform(),
                 clientId: wfc.getClientId()
-            }, true), resolve, reject)
+            }, true);
+            this._interceptLoginResponse(responsePromise, resolve, reject)
+        })
+    }
+
+
+    createPCSession(userId) {
+        return this._post('/pc_session', {
+            flag: 1,
+            device_name: 'pc',
+            userId: userId,
+            clientId: wfc.getClientId(),
+            platform: Config.getWFCPlatform()
+        })
+    }
+
+    // 扫码登录
+    loginWithPCSession(appToken) {
+        return this._post('/session_login/' + appToken, '', true);
+    }
+
+    changePassword(oldPassword, newPassword) {
+        return this._post('/change_pwd', {
+            oldPassword,
+            newPassword
+        })
+    }
+
+    requestResetPasswordAuthCode() {
+        return this._post('/send_reset_code')
+    }
+
+    resetPassword(resetPasswordAuthCode, newPassword) {
+        return this._post('/reset_pwd', {
+            resetCode: resetPasswordAuthCode,
+            newPassword: newPassword,
         })
     }
 
@@ -73,19 +109,27 @@ class AppServerApi {
         return this._post('/fav/list', {id: startId, count: count}, false, true)
     }
 
-    _interceptLoginResponse(requestPromise, resolve, reject) {
-        requestPromise
-            .then(response => {
-                let appAuthToken = response.headers['authtoken'];
-                if (!appAuthToken) {
-                    appAuthToken = response.headers['authToken'];
-                }
+    delFav(favItemId) {
+        return this._post('/fav/del/' + favItemId, '')
+    }
 
-                if (appAuthToken) {
-                    setItem('authToken', appAuthToken);
-                    axios.defaults.headers.common['authToken'] = appAuthToken;
+    _interceptLoginResponse(responsePromise, resolve, reject) {
+        responsePromise
+            .then(response => {
+                if (response.data.code === 0) {
+                    let appAuthToken = response.headers['authtoken'];
+                    if (!appAuthToken) {
+                        appAuthToken = response.headers['authToken'];
+                    }
+
+                    if (appAuthToken) {
+                        setItem('authToken', appAuthToken);
+                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                    }
+                    resolve(response.data.result);
+                } else {
+                    reject(new AppServerError(response.data.code, response.data.message));
                 }
-                resolve(response.data);
             })
             .catch(err => {
                 reject(err);

@@ -175,7 +175,6 @@ export default {
 
             appServerApi.loinWithPassword(this.mobile, this.password)
                 .then(res => {
-                    console.log('xxx login', res)
                     const {userId, token, portrait} = res
                     wfc.connect(userId, token);
                     setItem('userId', userId);
@@ -205,15 +204,6 @@ export default {
                     setItem('userId', userId);
                     setItem('token', token);
                     setItem("userPortrait", portrait);
-                    let appAuthToken = response.headers['authtoken'];
-                    if (!appAuthToken) {
-                        appAuthToken = response.headers['authToken'];
-                    }
-
-                    if (appAuthToken) {
-                        setItem('authToken', appAuthToken);
-                        axios.defaults.headers.common['authToken'] = appAuthToken;
-                    }
                 })
                 .catch(err => {
                     this.authCode = '';
@@ -226,23 +216,19 @@ export default {
         },
 
         async createPCLoginSession(userId) {
-            let response = await axios.post('/pc_session', {
-                flag: 1,
-                device_name: 'pc',
-                userId: userId,
-                clientId: wfc.getClientId(),
-                platform: Config.getWFCPlatform()
-            }, {withCredentials: true});
-            console.log('----------- createPCLoginSession', response.data);
-            if (response.data) {
-                let session = Object.assign(new PCSession(), response.data.result);
-                this.appToken = session.token;
-                if (!userId || session.status === 0/*服务端pc login session不存在*/) {
-                    this.qrCode = jrQRCode.getQrBase64(Config.QR_CODE_PREFIX_PC_SESSION + session.token);
-                    this.refreshQrCode();
-                }
-                this.login();
-            }
+            appServerApi.createPCSession(userId)
+                .then(response => {
+                    let session = Object.assign(new PCSession(), response);
+                    this.appToken = session.token;
+                    if (!userId || session.status === 0/*服务端pc login session不存在*/) {
+                        this.qrCode = jrQRCode.getQrBase64(Config.QR_CODE_PREFIX_PC_SESSION + session.token);
+                        this.refreshQrCode();
+                    }
+                    this.login();
+                })
+                .catch(err => {
+                    console.log('createPCSession error', err);
+                })
         },
 
         async refreshQrCode() {
@@ -257,58 +243,58 @@ export default {
 
         async login() {
             this.lastAppToken = this.appToken;
-            let response = await axios.post('/session_login/' + this.appToken, "", {withCredentials: true});
-            console.log('---------- login', response.data);
-            if (this.lastAppToken !== this.appToken) {
-                return;
-            }
-            if (response.data) {
-                switch (response.data.code) {
-                    case 0:
-                        if (this.loginStatus === 1 || this.loginStatus === 3) {
-                            let userId = response.data.result.userId;
-                            let imToken = response.data.result.token;
-                            wfc.connect(userId, imToken);
-                            this.loginStatus = 4;
-                            setItem('userId', userId);
-                            setItem('token', imToken);
-                            let appAuthToken = response.headers['authtoken'];
-                            if (!appAuthToken) {
-                                appAuthToken = response.headers['authToken'];
-                            }
+            appServerApi.loginWithPCSession(this.appToken)
+                .then(response => {
+                    if (response.data) {
+                        switch (response.data.code) {
+                            case 0:
+                                if (this.loginStatus === 1 || this.loginStatus === 3) {
+                                    let userId = response.data.result.userId;
+                                    let imToken = response.data.result.token;
+                                    wfc.connect(userId, imToken);
+                                    this.loginStatus = 4;
+                                    setItem('userId', userId);
+                                    setItem('token', imToken);
+                                    let appAuthToken = response.headers['authtoken'];
+                                    if (!appAuthToken) {
+                                        appAuthToken = response.headers['authToken'];
+                                    }
 
-                            if (appAuthToken) {
-                                setItem('authToken', appAuthToken);
-                                axios.defaults.headers.common['authToken'] = appAuthToken;
-                            }
-                        }
-                        break;
-                    case 9:
-                        if (response.data.result.portrait) {
-                            this.qrCode = response.data.result.portrait;
-                        } else {
-                            this.qrCode = Config.DEFAULT_PORTRAIT_URL;
-                        }
-                        setItem("userName", response.data.result.userName);
-                        setItem("userPortrait", response.data.result.portrait);
+                                    if (appAuthToken) {
+                                        setItem('authToken', appAuthToken);
+                                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                                    }
+                                }
+                                break;
+                            case 9:
+                                if (response.data.result.portrait) {
+                                    this.qrCode = response.data.result.portrait;
+                                } else {
+                                    this.qrCode = Config.DEFAULT_PORTRAIT_URL;
+                                }
+                                setItem("userName", response.data.result.userName);
+                                setItem("userPortrait", response.data.result.portrait);
 
-                        if (this.loginStatus === 0) {
-                            this.loginStatus = 1;
-                        } else {
-                            this.loginStatus = 3;
+                                if (this.loginStatus === 0) {
+                                    this.loginStatus = 1;
+                                } else {
+                                    this.loginStatus = 3;
+                                }
+                                this.login();
+                                break;
+                            case 18:
+                                //session is canceled, need clear last time login status
+                                this.cancel();
+                                break;
+                            default:
+                                this.lastAppToken = '';
+                                console.log(response.data);
+                                break
                         }
-                        this.login();
-                        break;
-                    case 18:
-                        //session is canceled, need clear last time login status
-                        this.cancel();
-                        break;
-                    default:
-                        this.lastAppToken = '';
-                        console.log(response.data);
-                        break
-                }
-            }
+                    }
+                })
+                .catch(err => {
+                });
         },
 
         sendQuickLoginRequest() {

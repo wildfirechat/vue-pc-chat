@@ -270,11 +270,12 @@ export default {
         },
 
         deleteFav(favItem) {
-            axios.post('/fav/del/' + favItem.id, {}, {withCredentials: true})
+            appServerApi.delFav(favItem.id)
                 .then(response => {
-                    if (response.data.code === 0) {
-                        this.favItems = this.favItems.filter(fi => fi.id !== favItem.id);
-                    }
+                    this.favItems = this.favItems.filter(fi => fi.id !== favItem.id);
+                })
+                .catch(err => {
+                    console.log('delFav error', err);
                 })
         },
 
