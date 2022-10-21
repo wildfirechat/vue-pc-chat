@@ -28,3 +28,4 @@ pnpm-debug.log*
 /dist_electron
 release
 /src/wfc/av/internal/soundMeter.js
+crash.log
