@@ -30,6 +30,9 @@
                      @click="setCurrentCategory('link')">链接
                 </div>
             </div>
+            <div v-if="currentMessage" class="desc-action-container">
+                <i class="icon-ion-ios-arrow-back" @click="currentMessage = null">&nbsp;返回</i>
+            </div>
             <div ref="conversationMessageList" class="message-list-container" infinite-wrapper>
                 <infinite-loading ref="infiniteLoader" :identifier="'historyMessageLoader-' + category"
                                   force-use-infinite-wrapper
@@ -56,12 +59,22 @@
                                 <div class="content">
                                     <MessageContentContainerView :message="message"
                                                                  @contextmenu.prevent.native="openMessageContextMenu($event, message)"/>
+                                    <a v-if="!currentMessage" class="single-line action"
+                                       @click="showContextMessages(message)">查看上下文</a>
                                 </div>
                             </div>
 
                         </div>
                     </li>
                 </ul>
+                <infinite-loading v-if="currentMessage" identifier="newMessageLoader"
+                                  force-use-infinite-wrapper
+                                  direction="bottom"
+                                  @infinite="infiniteHandlerBottom">
+                    <!--            <template slot="spinner">加载中...</template>-->
+                    <template slot="no-more">{{ $t('fav.no_more') }}</template>
+                    <template slot="no-results">{{ $t('fav.all_fav_load') }}</template>
+                </infinite-loading>
             </div>
         </div>
         <div class="drag-area"/>
@@ -90,6 +103,8 @@ export default {
             conversationInfo: null,
             autoScrollToBottom: true,
             category: 'all',
+            currentMessage: null,
+            contextMessages: [],
         }
     },
 
@@ -111,6 +126,19 @@ export default {
 
     methods: {
         infiniteHandler($state) {
+            if (this.currentMessage) {
+                let firstMsg = this.contextMessages[0];
+                let conversation = this.conversationInfo.conversation;
+                store.getMessages(conversation, firstMsg.messageId, true, '', msgs => {
+                    if (msgs.length > 0) {
+                        this.contextMessages = msgs.concat(this.contextMessages);
+                        $state.loaded();
+                    } else {
+                        $state.complete();
+                    }
+                });
+                return;
+            }
             if (this.query) {
                 let contentTypes = this.categoryContentTypes();
                 let tmp = store.searchMessageInTypes(this.conversationInfo.conversation, contentTypes, this.query, this.searchResults.length);
@@ -148,7 +176,7 @@ export default {
                 timestamp = targetMsgs.length > 0 ? targetMsgs[0].timestamp : 0;
                 store.getMessageInTypes(this.conversationInfo.conversation, contentTypes, timestamp, true, '', (msgs) => {
                     if (msgs && msgs.length > 0) {
-                        targetMsgs.push(...msgs)
+                        targetMsgs.unshift(...msgs)
                         $state.loaded();
                     } else {
                         $state.complete();
@@ -156,9 +184,24 @@ export default {
                 })
             }
         },
+
+        infiniteHandlerBottom($state) {
+            let lastMsg = this.contextMessages[this.contextMessages.length - 1];
+            let conversation = this.conversationInfo.conversation;
+            store.getMessages(conversation, lastMsg.messageId, false, '', msgs => {
+                if (msgs.length > 0) {
+                    this.contextMessages = this.contextMessages.concat(msgs);
+                    $state.loaded();
+                } else {
+                    $state.complete();
+                }
+            });
+        },
         setCurrentCategory(category) {
             this.category = category;
             this.autoScrollToBottom = true;
+            this.currentMessage = null;
+            this.contextMessages = [];
         },
         cancel() {
             this.query = '';
@@ -183,11 +226,21 @@ export default {
                     break;
             }
             return contentTypes;
-        }
+        },
+
+        showContextMessages(message) {
+            this.currentMessage = message;
+            this.contextMessages = [message];
+            this.autoScrollToBottom = false;
+        },
     },
 
     computed: {
         filteredMessages() {
+            if (this.currentMessage) {
+                return this.contextMessages;
+            }
+
             if (this.query && this.searchResults) {
                 return this.searchResults;
             }
@@ -322,6 +375,8 @@ export default {
 }
 
 .message-list-container {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     padding: 0 40px 20px 40px;
     overflow: scroll;
@@ -329,13 +384,21 @@ export default {
 
 .message-list-container ul {
     width: 100%;
-    height: 100%;
+    flex: 1;
     list-style-position: inside;
 }
 
 .message-list-container ul li {
     position: relative;
     padding: 10px 0;
+}
+
+.desc-action-container {
+    width: 100%;
+    padding: 10px 40px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .message-list-container ul li:not(:last-child)::after {
@@ -372,6 +435,19 @@ export default {
     display: inline-block;
     margin-left: -20px;
     margin-right: 60px;
+}
+
+.name-time-content-container .content .action {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 40px;
+    font-size: 14px;
+    color: #637599;
+}
+
+.message-container:hover .action {
+    display: inline-block;
 }
 
 .portrait-container {

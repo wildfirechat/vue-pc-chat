@@ -367,6 +367,8 @@ export default {
 }
 
 .message-list-container {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     padding-bottom: 20px;
     margin-left: -10px;
@@ -375,7 +377,7 @@ export default {
 
 .message-list-container ul {
     width: 100%;
-    height: 100%;
+    flex: 1;
     list-style-position: inside;
 }
 
