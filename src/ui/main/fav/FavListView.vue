@@ -106,6 +106,7 @@ import {_reverseToJsLongString} from "../../../wfc/util/longUtil";
 import CompositeMessageContent from "../../../wfc/messages/compositeMessageContent";
 import Config from "../../../config";
 import IpcEventType from "../../../ipcEventType";
+import appServerApi from "../../../api/appServerApi";
 
 export default {
     name: "FavListView",
@@ -132,11 +133,8 @@ export default {
          */
         async loadFavList(category, cb) {
             let startId = this.favItems.length > 0 ? this.favItems[this.favItems.length - 1].id : 0
-            let response = await axios.post('/fav/list', {
-                id: startId,
-                count: 20,
-            }, {withCredentials: true, transformResponse: [data => data]});
-            let data = _reverseToJsLongString(response.data, 'messageUid');
+            let responseData = await appServerApi.getFavList(startId, 20);
+            let data = _reverseToJsLongString(responseData, 'messageUid');
             data = JSON.parse(data);
             if (data && data.result) {
                 let obj = data.result;

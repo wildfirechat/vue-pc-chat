@@ -94,6 +94,7 @@ import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 import IpcEventType from "../../ipcEventType";
+import appServerApi from "../../api/appServerApi";
 
 export default {
     name: 'App',
@@ -139,7 +140,7 @@ export default {
     },
 
     methods: {
-        register(){
+        register() {
             this.$notify({
                 text: '使用短信验证码登录，将会为您创建账户，请使用短信验证码登录',
                 type: 'info'
@@ -151,30 +152,20 @@ export default {
         },
 
         async requestAuthCode() {
-            let response = await axios.post('/send_code/', {
-                mobile: this.mobile,
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
+            appServerApi.requestAuthCode(this.mobile)
+                .then(response => {
                     this.$notify({
                         text: '发送验证码成功',
                         type: 'info'
                     });
-                } else {
+                })
+                .catch(err => {
                     this.$notify({
                         title: '发送验证码失败',
-                        text: response.data.message,
+                        text: err.message,
                         type: 'error'
                     });
-                }
-            } else {
-                this.mobile = '';
-                this.$notify({
-                    // title: '收藏成功',
-                    text: '发送验证码失败',
-                    type: 'error'
-                });
-            }
+                })
         },
 
         async loginWithPassword() {
@@ -182,39 +173,24 @@ export default {
                 return;
             }
 
-            let response = await axios.post('/login_pwd/', {
-                mobile: this.mobile,
-                password: this.password,
-                platform: Config.getWFCPlatform(),
-                clientId: wfc.getClientId(),
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
-                    const {userId, token, portrait} = response.data.result;
+            appServerApi.loinWithPassword(this.mobile, this.password)
+                .then(res => {
+                    console.log('xxx login', res)
+                    const {userId, token, portrait} = res
                     wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
                     setItem("userPortrait", portrait);
-                    let appAuthToken = response.headers['authtoken'];
-                    if (!appAuthToken) {
-                        appAuthToken = response.headers['authToken'];
-                    }
-
-                    if (appAuthToken) {
-                        setItem('authToken', appAuthToken);
-                        axios.defaults.headers.common['authToken'] = appAuthToken;
-                    }
-                } else {
+                })
+                .catch(err => {
+                    console.log('loginWithPassword err', err)
                     this.password = '';
                     this.$notify({
                         title: '登录失败',
-                        text: response.data.message,
+                        text: err.message,
                         type: 'error'
                     });
-                }
-            } else {
-                console.error('loginWithPassword error', response);
-            }
+                })
         },
 
         async loginWithAuthCode() {
@@ -222,15 +198,9 @@ export default {
                 return;
             }
 
-            let response = await axios.post('/login/', {
-                mobile: this.mobile,
-                code: this.authCode,
-                platform: Config.getWFCPlatform(),
-                clientId: wfc.getClientId(),
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
-                    const {userId, token, portrait} = response.data.result;
+            appServerApi.loginWithAuthCode(this.mobile, this.authCode)
+                .then(res => {
+                    const {userId, token, portrait} = res;
                     wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
@@ -244,17 +214,15 @@ export default {
                         setItem('authToken', appAuthToken);
                         axios.defaults.headers.common['authToken'] = appAuthToken;
                     }
-                } else {
+                })
+                .catch(err => {
                     this.authCode = '';
                     this.$notify({
                         title: '登录失败',
-                        text: response.data.message,
+                        text: err.message,
                         type: 'error'
                     });
-                }
-            } else {
-                console.error('loginWithAuthCode error', response)
-            }
+                })
         },
 
         async createPCLoginSession(userId) {

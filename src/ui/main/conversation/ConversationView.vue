@@ -204,6 +204,7 @@ import ArticlesMessageContent from "../../../wfc/messages/articlesMessageContent
 import ContextableNotificationMessageContentContainerView from "./message/ContextableNotificationMessageContentContainerView";
 import ChannelConversationInfoView from "./ChannelConversationInfoView";
 import FriendRequestView from "../contact/FriendRequestView";
+import appServerApi from "../../../api/appServerApi";
 
 var amr;
 export default {
@@ -607,42 +608,21 @@ export default {
         },
 
         favMessage(message) {
-            let favItem = FavItem.fromMessage(message);
-            axios.post('/fav/add', {
-                messageUid: stringValue(favItem.messageUid),
-                type: favItem.favType,
-                convType: favItem.conversation.type,
-                convTarget: favItem.conversation.target,
-                convLine: favItem.conversation.line,
-                origin: favItem.origin,
-                sender: favItem.sender,
-                title: favItem.title,
-                url: favItem.url,
-                thumbUrl: favItem.thumbUrl,
-                data: favItem.data,
-            }, {withCredentials: true})
-                .then(response => {
-                    if (response && response.data && response.data.code === 0) {
-                        this.$notify({
-                            // title: '收藏成功',
-                            text: '收藏成功',
-                            type: 'info'
-                        });
-                    } else {
-                        this.$notify({
-                            // title: '收藏成功',
-                            text: '收藏失败',
-                            type: 'error'
-                        });
-                    }
+            appServerApi.favMessage(message)
+                .then(data => {
+                    this.$notify({
+                        // title: '收藏成功',
+                        text: '收藏成功',
+                        type: 'info'
+                    });
                 })
                 .catch(err => {
+                    console.log('fav error', err)
                     this.$notify({
                         // title: '收藏失败',
                         text: '收藏失败',
                         type: 'error'
                     });
-
                 })
         },
 
@@ -785,7 +765,7 @@ export default {
         // refer to http://iamdustan.com/smoothscroll/
         console.log('conversationView updated', this.sharedConversationState.currentConversationInfo, this.sharedConversationState.shouldAutoScrollToBottom, this.sharedMiscState.isPageHidden)
         let lastMessagee = this.sharedConversationState.currentConversationInfo.lastMessage;
-        if ((this.sharedConversationState.shouldAutoScrollToBottom || (lastMessagee && lastMessagee.direction === 0) )&& !this.sharedMiscState.isPageHidden) {
+        if ((this.sharedConversationState.shouldAutoScrollToBottom || (lastMessagee && lastMessagee.direction === 0)) && !this.sharedMiscState.isPageHidden) {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
         } else {

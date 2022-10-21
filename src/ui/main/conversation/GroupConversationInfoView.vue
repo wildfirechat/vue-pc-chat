@@ -68,6 +68,8 @@ import GroupMemberType from "@/wfc/model/groupMemberType";
 import GroupType from "@/wfc/model/groupType";
 import ModifyGroupInfoType from "../../../wfc/model/modifyGroupInfoType";
 import EventType from "../../../wfc/client/wfcEvent";
+import appServerApi from "../../../api/appServerApi";
+import AppServerError from "../../../api/appServerError";
 
 export default {
     name: "GroupConversationInfoView",
@@ -140,16 +142,18 @@ export default {
         },
 
         async getGroupAnnouncement() {
-            let response = await axios.post('/get_group_announcement', {
-                groupId: this.conversationInfo.conversation.target,
-            }, {withCredentials: true});
-            if (response.data && response.data.result) {
-                this.groupAnnouncement = response.data.result.text;
-            } else {
-                if (this.enableEditGroupNameOrAnnouncement) {
-                    this.groupAnnouncement = this.$t('conversation.click_to_edit_group_announcement');
-                }
-            }
+            appServerApi.getGroupAnnouncement(this.conversationInfo.conversation.target)
+                .then(response => {
+                    if (response.text) {
+                        this.groupAnnouncement = response.text;
+                    }
+                })
+                .catch(err => {
+                    console.log('getGroupAnnouncement', err)
+                    if (this.enableEditGroupNameOrAnnouncement) {
+                        this.groupAnnouncement = this.$t('conversation.click_to_edit_group_announcement');
+                    }
+                })
         },
 
         updateGroupName() {
@@ -170,15 +174,9 @@ export default {
             if (!this.newGroupAnnouncement || this.newGroupAnnouncement === this.groupAnnouncement) {
                 return;
             }
-            let response = await axios.post('/put_group_announcement', {
-                author: wfc.getUserId(),
-                groupId: this.conversationInfo.conversation.target,
-                text: this.newGroupAnnouncement,
-            }, {withCredentials: true});
-            if (response.data && response.data.code === 0) {
-                this.groupAnnouncement = this.newGroupAnnouncement;
-                this.$refs.groupAnnouncementInput.blur();
-            }
+            await appServerApi.updateGroupAnnouncement(wfc.getUserId(), this.conversationInfo.conversation.target, this.newGroupAnnouncement)
+            this.groupAnnouncement = this.newGroupAnnouncement;
+            this.$refs.groupAnnouncementInput.blur();
         },
 
         updateGroupAlias() {
