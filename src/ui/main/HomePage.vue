@@ -68,6 +68,7 @@
                         </li>
                         <li v-if="supportConference">
                             <i class="icon-ion-speakerphone"
+                               v-bind:class="{active : this.$router.currentRoute.path === '/home/conference'}"
                                @click="go2Conference"></i>
                         </li>
                         <li>
