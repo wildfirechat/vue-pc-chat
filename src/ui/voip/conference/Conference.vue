@@ -25,60 +25,17 @@
                 <div v-if="!audioOnly" style="width: 100%; height: 100%">
                     <section class="content-container video">
                         <!--self-->
-                        <div v-if="!session.audience" class="participant-video-item"
-                             v-bind:class="{highlight: selfUserInfo._volume > 0}">
-                            <div
-                                v-if="!selfUserInfo._stream || (session.videoMuted && !session.isScreenSharing())"
-                                class="flex-column flex-justify-center flex-align-center">
-                                <img class="avatar" :src="selfUserInfo.portrait">
-                            </div>
-                            <video v-else
-                                   class="video"
-                                   v-bind:style="{transform:!session.isScreenSharing() ? 'scaleX(-1)' :'none','-webkit-transform': !session.isScreenSharing() ? 'scaleX(-1)' :'none'}"
-                                   ref="localVideo"
-                                   @click="switchCamera"
-                                   :srcObject.prop="selfUserInfo._stream"
-                                   playsInline
-                                   muted
-                                   autoPlay/>
-                            <div v-if="!selfUserInfo._isVideoMuted && !session.isScreenSharing()" class="video-stream-tip-container">
-                                <p>点击视频， 切换摄像头</p>
-                            </div>
-                            <div class="info-container">
-                                <i v-if="selfUserInfo._isHost" class="icon-ion-person"></i>
-                                <div>{{ userName(selfUserInfo) }}</div>
-                            </div>
-                        </div>
+                        <ConferenceParticipantVideoView
+                            :key="selfUserInfo.uid + '-' + session.isScreenSharing()"
+                            :session="session"
+                            :participant="selfUserInfo"/>
 
                         <!--participants-->
-                        <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
-                             :key="participant.uid + '-' + participant._isScreenSharing"
-                             class="participant-video-item"
-                             v-bind:class="{highlight: participant._volume > 0}"
-                        >
-                            <video v-if="!participant._isVideoMuted"
-                                   @click="switchVideoType(participant.uid, participant._isScreenSharing)"
-                                   class="video"
-                                   v-bind:style="{objectFit:participant._isScreenSharing ? 'contain' : 'fit'}"
-                                   :srcObject.prop="participant._stream"
-                                   playsInline
-                                   autoPlay/>
-                            <audio v-else
-                                   :srcObject.prop="participant._stream"
-                                   autoPlay/>
-                            <div v-if="status !== 4 || !participant._stream || participant._isVideoMuted"
-                                 class="avatar-container">
-                                <img class="avatar" :src="participant.portrait" :alt="participant">
-                            </div>
-                            <div v-if="!participant._isVideoMuted" class="video-stream-tip-container">
-                                <p>点击视频，切换视频流类型</p>
-                            </div>
-                            <div class="info-container">
-                                <i v-if="participant._isHost" class="icon-ion-person"></i>
-                                <i v-if="!participant._isVideoMuted" class="icon-ion-ios-videocam"></i>
-                                <div>{{ userName(participant) }}</div>
-                            </div>
-                        </div>
+                        <ConferenceParticipantVideoView v-for="(participant) in participantUserInfos"
+                                                        :key="participant.uid + '-' + participant._isScreenSharing"
+                                                        :participant="participant"
+                                                        :session="session">
+                        </ConferenceParticipantVideoView>
                     </section>
                 </div>
                 <!--audio-->
@@ -238,11 +195,11 @@ import ScreenShareControlView from "../ScreenShareControlView";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import ElectronWindowsControlButtonView from "../../common/ElectronWindowsControlButtonView";
 import store from "../../../store";
-import wfc from "../../../wfc/client/wfc";
 import ForwardType from "../../main/conversation/message/forward/ForwardType";
 import Message from "../../../wfc/messages/message";
 import VideoType from "../../../wfc/av/engine/videoType";
 import IpcEventType from "../../../ipcEventType";
+import ConferenceParticipantVideoView from "./ConferenceParticipantVideoView";
 
 export default {
     name: 'Conference',
@@ -255,6 +212,7 @@ export default {
             selfUserInfo: null,
             initiatorUserInfo: null,
             participantUserInfos: [],
+            test: [],
 
             startTimestamp: 0,
             currentTimestamp: 0,
@@ -269,7 +227,12 @@ export default {
             endReason: undefined,
         }
     },
-    components: {ScreenShareControlView, UserCardView, ElectronWindowsControlButtonView},
+    components: {
+        ConferenceParticipantVideoView,
+        ScreenShareControlView,
+        UserCardView,
+        ElectronWindowsControlButtonView
+    },
     methods: {
         switchVideoType(userId, screenSharing) {
             if (!this.session) {
@@ -309,22 +272,24 @@ export default {
             };
 
             sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo) => {
-                this.session = session;
                 //this.session.rotateAng = 90;
 
                 this.audioOnly = session.audioOnly;
+                selfUserInfo._isHost = session.host === selfUserInfo.uid;
+                selfUserInfo._isAudience = session.audience;
+                selfUserInfo._isVideoMuted = session.videoMuted;
+                selfUserInfo._volume = 0;
                 this.selfUserInfo = selfUserInfo;
-                this.selfUserInfo._isHost = session.host === selfUserInfo.uid;
-                this.selfUserInfo._isAudience = session.audience;
-                this.selfUserInfo._isVideoMuted = session.videoMuted;
-                this.selfUserInfo._volume = 0;
                 this.initiatorUserInfo = initiatorUserInfo;
                 this.participantUserInfos = [];
+                window.__participantUserInfos = this.participantUserInfos;
 
                 // pls refer to: https://vuejs.org/v2/guide/reactivity.html
-                this.$set(this.selfUserInfo, '_stream', null)
+                this.$set(this.selfUserInfo, '_stream', null);
+                this.participantUserInfos.push()
                 this.participantUserInfos.forEach(p => this.$set(p, "_stream", null))
 
+                this.session = session;
             };
 
             sessionCallback.didChangeMode = (audioOnly) => {
@@ -494,31 +459,10 @@ export default {
         hangup() {
             this.session.leaveConference(false);
         },
-
-        switchCamera() {
-            if (!this.session || this.session.isScreenSharing()) {
-                return;
-            }
-            // The order is significant - the default capture devices will be listed first.
-            // navigator.mediaDevices.enumerateDevices()
-            navigator.mediaDevices.enumerateDevices().then(devices => {
-                devices = devices.filter(d => d.kind === 'videoinput');
-                if (devices.length < 2) {
-                    console.log('switchCamera error, no more video input device')
-                    return;
-                }
-                this.videoInputDeviceIndex++;
-                if (this.videoInputDeviceIndex >= devices.length) {
-                    this.videoInputDeviceIndex = 0;
-                }
-                this.session.setVideoInputDeviceId(devices[this.videoInputDeviceIndex].deviceId)
-                console.log('setVideoInputDeviceId', devices[this.videoInputDeviceIndex]);
-            })
-        },
         async muteAudio() {
             let enable = this.session.audioMuted ? true : false;
             let result = await this.session.setAudioEnabled(enable)
-            if (!result){
+            if (!result) {
                 return;
             }
             this.selfUserInfo._isAudioMuted = !enable;
@@ -537,12 +481,12 @@ export default {
         async muteVideo() {
             let enable = this.session.videoMuted ? true : false;
             let result = await this.session.setVideoEnabled(enable)
-            if (!result){
+            if (!result) {
                 return;
             }
             this.selfUserInfo._isVideoMuted = !enable;
 
-            console.log('muteVideo----', enable)
+            console.log('muteVideo----', this.selfUserInfo._isVideoMuted)
             if (enable) {
                 if (this.session.audience) {
                     await this.session.switchAudience(false);
@@ -957,88 +901,6 @@ export default {
 .content-container.audio {
     background: white;
     height: calc(100% - 50px);
-}
-
-.participant-video-item {
-    display: flex;
-    position: relative;
-    width: var(--participant-video-item-width);
-    height: var(--participant-video-item-height);
-    /*background-color: rebeccapurple;*/
-
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid black;
-    background: #2d3033;
-}
-
-.participant-video-item.highlight {
-    border: 2px solid #1FCA6A;
-}
-
-.participant-video-item .video-stream-tip-container {
-    display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.participant-video-item .avatar-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #2d3033;
-}
-
-.participant-video-item:hover .video-stream-tip-container {
-    display: inline-block;
-}
-
-.participant-video-item .info-container {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    display: flex;
-    background: gray;
-    border-radius: 1px;
-    padding: 5px 10px;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-}
-
-.info-container * {
-    margin: 0 5px;
-}
-
-.info-container .name {
-    height: 20px;
-    line-height: 20px;
-    text-align: center;
-}
-
-.participant-video-item > video {
-    max-width: 100%;
-    max-height: 100%;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.hidden-video {
-    height: 0;
-}
-
-.participant-video-item p {
-    max-height: 20px;
-    color: white;
 }
 
 .participant-audio-item {
