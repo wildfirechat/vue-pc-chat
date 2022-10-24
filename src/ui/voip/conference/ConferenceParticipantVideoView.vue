@@ -51,6 +51,20 @@ export default {
             selfUserId: wfc.getUserId(),
         }
     },
+    created() {
+        if (this.selfUserId !== this.participant.uid) {
+            if (!this.participant._isVideoMuted) {
+                this.session.setParticipantVideoType(this.participant.uid, this.participant._isScreenSharing, VideoType.BIG_STREAM);
+            }
+        }
+    },
+    destroyed() {
+        if (this.selfUserId !== this.participant.uid) {
+            if (!this.participant._isVideoMuted) {
+                this.session.setParticipantVideoType(this.participant.uid, this.participant._isScreenSharing, VideoType.NONE);
+            }
+        }
+    },
     methods: {
         userName(user) {
             let name = '';
@@ -114,12 +128,6 @@ export default {
             })
         },
     },
-    watch: {
-        participant() {
-            console.log('changed', this.participant);
-        }
-    }
-
 }
 </script>
 

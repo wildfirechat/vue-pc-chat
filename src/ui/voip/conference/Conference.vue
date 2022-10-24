@@ -23,15 +23,17 @@
                 <!--main-->
                 <!--video-->
                 <div v-if="!audioOnly" style="width: 100%; height: 100%">
+                    <div style="background: white; height: 20px; display: flex; justify-content: space-between">
+                        <i class="icon-ion-information" style="padding: 0 10px"></i>
+                        <i class="icon-ion-grid" style="padding: 0 10px" @click="participantCountPerPage = 9"></i>
+                    </div>
+                    <i style="position: absolute; top: 50%; left: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                       @click="prePage"></i>
+                    <i style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                       @click="nextPage"></i>
                     <section class="content-container video">
-                        <!--self-->
-                        <ConferenceParticipantVideoView
-                            :key="selfUserInfo.uid + '-' + session.isScreenSharing()"
-                            :session="session"
-                            :participant="selfUserInfo"/>
-
-                        <!--participants-->
-                        <ConferenceParticipantVideoView v-for="(participant) in participantUserInfos"
+                        <!--participants include self-->
+                        <ConferenceParticipantVideoView v-for="(participant) in currentPageParticipants"
                                                         :key="participant.uid + '-' + participant._isScreenSharing"
                                                         :participant="participant"
                                                         :session="session">
@@ -212,11 +214,9 @@ export default {
             selfUserInfo: null,
             initiatorUserInfo: null,
             participantUserInfos: [],
-            test: [],
 
             startTimestamp: 0,
             currentTimestamp: 0,
-            testCount: 0,
 
             showParticipantList: false,
             sharedMiscState: store.state.misc,
@@ -225,6 +225,9 @@ export default {
             refreshUserInfoInternal: 0,
 
             endReason: undefined,
+
+            currentPageIndex: 0,
+            participantCountPerPage: 4,
         }
     },
     components: {
@@ -279,14 +282,19 @@ export default {
                 selfUserInfo._isAudience = session.audience;
                 selfUserInfo._isVideoMuted = session.videoMuted;
                 selfUserInfo._volume = 0;
+                // 修添加属性，在赋值，才能 reactive
                 this.selfUserInfo = selfUserInfo;
                 this.initiatorUserInfo = initiatorUserInfo;
-                this.participantUserInfos = [];
-                window.__participantUserInfos = this.participantUserInfos;
+                this.participantUserInfos = [selfUserInfo];
+                for (let i = 0; i < 12; i++) {
+                    let userInfo = Object.assign({}, selfUserInfo);
+                    userInfo.uid = 'test-' + i;
+                    userInfo.displayName = 'test-' + i;
+                    this.participantUserInfos.push(userInfo);
+                }
 
                 // pls refer to: https://vuejs.org/v2/guide/reactivity.html
                 this.$set(this.selfUserInfo, '_stream', null);
-                this.participantUserInfos.push()
                 this.participantUserInfos.forEach(p => this.$set(p, "_stream", null))
 
                 this.session = session;
@@ -555,10 +563,6 @@ export default {
             })
         },
 
-        test() {
-            alert('test alert')
-        },
-
         async screenShare() {
             if (this.session.audioOnly) {
                 return;
@@ -692,6 +696,7 @@ export default {
             return str;
         },
 
+        // TODO 删除，可以直接监听用户信息变化了
         refreshUserInfos() {
             let toRefreshUsers = [];
             this.participantUserInfos.forEach(pu => {
@@ -738,6 +743,24 @@ export default {
             });
             this.endReason = undefined;
         },
+
+        prePage() {
+            this.currentPageIndex--;
+            if (this.currentPageIndex < 0) {
+                this.currentPageIndex = Math.ceil(this.participantUserInfos.length / this.participantCountPerPage) - 1
+            }
+        },
+        nextPage() {
+            if (this.participantUserInfos.length / this.participantCountPerPage > (this.currentPageIndex + 1)) {
+                this.currentPageIndex++;
+            } else {
+                this.currentPageIndex = 0;
+            }
+        },
+
+        updateCountPerPage(count) {
+            this.participantCountPerPage = count;
+        }
     },
 
     computed: {
@@ -767,11 +790,17 @@ export default {
             }
 
             return this.userName(speakingUserInfo);
+        },
+
+        currentPageParticipants() {
+            let start = this.currentPageIndex * this.participantCountPerPage;
+            let end = start + this.participantCountPerPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerPage);
+            return this.participantUserInfos.slice(start, end);
         }
     },
 
     watch: {
-        participantUserInfos: {
+        currentPageParticipants: {
             deep: true,
             handler(infos) {
                 if (this.audioOnly) {
@@ -779,9 +808,6 @@ export default {
                 }
                 let videoParticipants = infos.filter(u => !u._isAudience)
                 let count = videoParticipants.length;
-                if (!this.selfUserInfo._isAudience) {
-                    count++;
-                }
                 let width = '100%';
                 let height = '100%';
                 if (count <= 1) {
@@ -883,7 +909,7 @@ export default {
 
 .content-container {
     width: 100%;
-    height: 100%;
+    height: calc(100% - 20px);
     position: relative;
     display: flex;
     flex: 1;
