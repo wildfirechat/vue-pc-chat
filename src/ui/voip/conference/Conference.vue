@@ -27,17 +27,38 @@
                         <i class="icon-ion-information" style="padding: 0 10px"></i>
                         <i class="icon-ion-grid" style="padding: 0 10px" @click="participantCountPerPage = 9"></i>
                     </div>
-                    <i style="position: absolute; top: 50%; left: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                    <i v-if="layoutMode === 0" style="position: absolute; top: 50%; left: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                        @click="prePage"></i>
-                    <i style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                    <i v-if="layoutMode === 0" style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
                        @click="nextPage"></i>
-                    <section class="content-container video">
+                    <!--                    宫格布局-->
+                    <section v-if="layoutMode === 0" class="content-container grid video">
                         <!--participants include self-->
                         <ConferenceParticipantVideoView v-for="(participant) in currentPageParticipants"
                                                         :key="participant.uid + '-' + participant._isScreenSharing"
                                                         :participant="participant"
                                                         :session="session">
                         </ConferenceParticipantVideoView>
+                    </section>
+
+                    <!--                    演讲者布局-->
+                    <section v-else class="content-container focus video">
+                        <div style="width: 100%; height: 100%">
+                            <video v-if=" focusParticipant && !focusParticipant._isAudience && !focusParticipant._isVideoMuted && focusParticipant._stream"
+                                   v-bind:style="{objectFit:focusParticipant._isScreenSharing ? 'contain' : 'fit'}"
+                                   style="width: 100%; height: 100%"
+                                   :srcObject.prop="focusParticipant._stream"
+                                   playsInline
+                                   autoPlay/>
+                        </div>
+                        <div v-if="!hideParticipantListViewInFocusMode" class="focus-mode-participant-list-container">
+                            <!--participants include self-->
+                            <ConferenceParticipantVideoView v-for="(participant) in participantUserInfos"
+                                                            :key="participant.uid + '-' + participant._isScreenSharing"
+                                                            :participant="participant"
+                                                            :session="session">
+                            </ConferenceParticipantVideoView>
+                        </div>
                     </section>
                 </div>
                 <!--audio-->
@@ -226,8 +247,16 @@ export default {
 
             endReason: undefined,
 
+            // 0, 宫格视图；1，演讲者视图
+            layoutMode: 1,
+
+            // 宫格视图
             currentPageIndex: 0,
             participantCountPerPage: 4,
+
+            // 演讲者视图
+            focusParticipant: null,
+            hideParticipantListViewInFocusMode: false,
         }
     },
     components: {
@@ -403,14 +432,23 @@ export default {
             };
 
             sessionCallback.didReportAudioVolume = (userId, volume) => {
+                let userInfo;
                 if (userId === this.selfUserInfo.uid) {
                     this.selfUserInfo._volume = volume;
+                    userInfo = this.selfUserInfo;
                 } else {
                     this.participantUserInfos.forEach(u => {
                         if (u.uid === userId && u._isScreenSharing === false) {
                             u._volume = volume;
+                            userInfo = u;
                         }
                     })
+                }
+
+                if (!this.focusParticipant) {
+                    this.focusParticipant = userInfo;
+                } else if (userInfo._volume > this.focusParticipant._volume) {
+                    this.focusParticipant = userInfo;
                 }
             };
 
@@ -806,6 +844,9 @@ export default {
                 if (this.audioOnly) {
                     return;
                 }
+                if (this.layoutMode === 1) {
+                    return;
+                }
                 let videoParticipants = infos.filter(u => !u._isAudience)
                 let count = videoParticipants.length;
                 let width = '100%';
@@ -883,8 +924,6 @@ export default {
 <style lang="css" scoped>
 
 .voip-container {
-    --participant-video-item-width: 100%;
-    --participant-video-item-height: 100%;
     --conference-container-margin-top: 30px;
     background: #00000000 !important;
     position: relative;
@@ -919,9 +958,29 @@ export default {
     align-content: center;
 }
 
+.conference-container .grid {
+    --participant-video-item-width: 100%;
+    --participant-video-item-height: 100%;
+}
+
+.conference-container .focus {
+    --participant-video-item-width: 200px;
+    --participant-video-item-height: 100px;
+    flex-direction: column;
+}
+
 .content-container.video {
     background: black;
     object-fit: contain;
+}
+
+.focus-mode-participant-list-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 200px;
+    height: 100%;
+    overflow: auto;
 }
 
 .content-container.audio {
