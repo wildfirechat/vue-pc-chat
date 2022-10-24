@@ -145,17 +145,11 @@ export default {
 <style scoped>
 .participant-list-container {
     display: none;
-    width: 250px;
     height: 100%;
     overflow: auto;
     background-color: #ffffffe5;
     backdrop-filter: blur(6px);
     border-left: 1px solid #e6e6e6;
-}
-
-.participant-list-container.active {
-    display: flex;
-    flex-direction: column;
 }
 
 .participant-list-container .action-item {
