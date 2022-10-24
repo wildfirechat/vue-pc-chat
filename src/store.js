@@ -1290,7 +1290,7 @@ let store = {
             let index = conversationState.floatingConversations.findIndex(fc => fc.equal(conversation));
             return index === -1;
         } else {
-            return conversationState.currentConversationInfo.conversation.equal(conversation);
+            return conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversation);
         }
     },
 
