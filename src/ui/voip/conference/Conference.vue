@@ -25,7 +25,8 @@
                 <div v-if="!audioOnly" style="width: 100%; height: 100%">
                     <div style="background: white; height: 20px; display: flex; justify-content: space-between">
                         <i class="icon-ion-information" style="padding: 0 10px"></i>
-                        <i class="icon-ion-grid" style="padding: 0 10px" @click="participantCountPerPage = 9"></i>
+                        <p>{{ duration }}</p>
+                        <i class="icon-ion-grid" style="padding: 0 10px" @click="updateLayoutMode"></i>
                     </div>
                     <i v-if="layoutMode === 0" style="position: absolute; top: 50%; left: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                        @click="prePage"></i>
@@ -43,15 +44,18 @@
 
                     <!--                    演讲者布局-->
                     <section v-else class="content-container focus video">
-                        <div style="width: 100%; height: 100%">
+                        <div :style="{width: hideParticipantListVideoView ? '100%' : 'calc(100% - 200px)', height: '100%', position: 'relative'}">
                             <video v-if=" focusParticipant && !focusParticipant._isAudience && !focusParticipant._isVideoMuted && focusParticipant._stream"
                                    v-bind:style="{objectFit:focusParticipant._isScreenSharing ? 'contain' : 'fit'}"
                                    style="width: 100%; height: 100%"
                                    :srcObject.prop="focusParticipant._stream"
                                    playsInline
                                    autoPlay/>
+                            <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px">
+                                <i :class="hideParticipantListVideoView ? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'"></i>
+                            </div>
                         </div>
-                        <div v-if="!hideParticipantListViewInFocusMode" class="focus-mode-participant-list-container">
+                        <div v-show="!hideParticipantListVideoView" class="focus-mode-participant-list-container">
                             <!--participants include self-->
                             <ConferenceParticipantVideoView v-for="(participant) in participantUserInfos"
                                                             :key="participant.uid + '-' + participant._isScreenSharing"
@@ -107,7 +111,7 @@
                 <!--actions-->
                 <footer>
                     <div class="duration-action-container">
-                        <p>{{ duration }}</p>
+                        <p v-if="false">{{ duration }}</p>
                         <div class="action-container">
                             <div class="action">
                                 <img v-if="!session.audience && !session.audioMuted" @click="muteAudio" class="action-img"
@@ -248,7 +252,7 @@ export default {
             endReason: undefined,
 
             // 0, 宫格视图；1，演讲者视图
-            layoutMode: 1,
+            layoutMode: 0,
 
             // 宫格视图
             currentPageIndex: 0,
@@ -256,7 +260,7 @@ export default {
 
             // 演讲者视图
             focusParticipant: null,
-            hideParticipantListViewInFocusMode: false,
+            hideParticipantListVideoView: false,
         }
     },
     components: {
@@ -327,6 +331,7 @@ export default {
                 this.participantUserInfos.forEach(p => this.$set(p, "_stream", null))
 
                 this.session = session;
+                document.title = session.title;
             };
 
             sessionCallback.didChangeMode = (audioOnly) => {
@@ -444,11 +449,17 @@ export default {
                         }
                     })
                 }
+                if (this.layoutMode === 0) {
+                    return;
+                }
 
                 if (!this.focusParticipant) {
                     this.focusParticipant = userInfo;
+                    this.session.setParticipantVideoType(userInfo.uid, userInfo._isScreenSharing, VideoType.BIG_STREAM);
                 } else if (userInfo._volume > this.focusParticipant._volume) {
+                    this.session.setParticipantVideoType(this.focusParticipant.uid, this.focusParticipant._isScreenSharing, VideoType.SMALL_STREAM);
                     this.focusParticipant = userInfo;
+                    this.session.setParticipantVideoType(this.focusParticipant.uid, this.focusParticipant._isScreenSharing, VideoType.BIG_STREAM);
                 }
             };
 
@@ -798,6 +809,29 @@ export default {
 
         updateCountPerPage(count) {
             this.participantCountPerPage = count;
+        },
+
+        updateLayoutMode() {
+            if (this.layoutMode === 0) {
+                this.layoutMode = 1;
+                // 切换为小流，然后焦点用户切换为大流
+                this.participantUserInfos.forEach(u => {
+                    if (u.uid !== this.selfUserInfo.uid && !u._isAudience && !u._isVideoMuted) {
+                        this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.SMALL_STREAM);
+                    }
+                })
+            } else {
+                this.layoutMode = 0;
+                // 切换为大流
+                this.participantUserInfos.forEach(u => {
+                    if (u.uid !== this.selfUserInfo.uid && !u._isAudience && !u._isVideoMuted) {
+                        this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.BIG_STREAM);
+                    }
+                })
+            }
+        },
+        toggleParticipantListVideoView() {
+            this.hideParticipantListVideoView = !this.hideParticipantListVideoView;
         }
     },
 
@@ -959,8 +993,7 @@ export default {
 }
 
 .conference-container .grid {
-    --participant-video-item-width: 100%;
-    --participant-video-item-height: 100%;
+    flex-direction: row;
 }
 
 .conference-container .focus {
@@ -975,10 +1008,11 @@ export default {
 }
 
 .focus-mode-participant-list-container {
-    position: absolute;
-    top: 0;
-    right: 0;
+    /*position: absolute;*/
+    /*top: 0;*/
+    /*right: 0;*/
     width: 200px;
+    background: red;
     height: 100%;
     overflow: auto;
 }
