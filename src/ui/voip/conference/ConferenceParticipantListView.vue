@@ -152,6 +152,11 @@ export default {
     border-left: 1px solid #e6e6e6;
 }
 
+.participant-list-container.active {
+    display: flex;
+    flex-direction: column;
+}
+
 .participant-list-container .action-item {
     height: 50px;
     display: flex;

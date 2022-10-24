@@ -78,6 +78,7 @@
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
                                   v-show="!sharedConversationState.enableMessageMultiSelection"
+                                  :input-options="inputOptions"
                                   ref="messageInputView"/>
                 <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection"/>
                 <SingleConversationInfoView
@@ -223,7 +224,12 @@ export default {
         InfiniteLoading,
         ScaleLoader,
     },
-    // props: ["conversation"],
+    props: {
+        inputOptions: {
+            type: Object,
+            required: false,
+        }
+    },
     data() {
         return {
             conversationInfo: null,

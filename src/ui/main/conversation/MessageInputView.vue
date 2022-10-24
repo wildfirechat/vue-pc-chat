@@ -14,20 +14,31 @@
                     @select="onSelectEmoji"
                 />
                 <ul>
-                    <li><i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"></i></li>
-                    <li><i @click="pickFile" class="icon-ion-android-attach"></i>
+                    <li v-if="!inputOptions['disableEmoji']">
+                        <i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"/>
+                    </li>
+                    <li v-if="!inputOptions['disableFile']">
+                        <i @click="pickFile" class="icon-ion-android-attach"/>
                         <input ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
                                style="display: none">
                     </li>
-                    <li v-if="sharedMiscState.isElectron"><i id="screenShot" @click="screenShot"
-                                                             class="icon-ion-scissors"></i></li>
-                    <li v-if="sharedMiscState.isElectron"><i id="messageHistory" @click="showMessageHistory"
-                                                             class="icon-ion-android-chat"></i></li>
+                    <li v-if="!inputOptions['disableScreenShot'] && sharedMiscState.isElectron">
+                        <i id="screenShot" @click="screenShot" class="icon-ion-scissors"/>
+                    </li>
+                    <li v-if="!inputOptions['disableHistory'] && sharedMiscState.isElectron">
+                        <i id="messageHistory" @click="showMessageHistory" class="icon-ion-android-chat"/>
+                    </li>
                 </ul>
-                <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
-                    <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
-                    <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
-                    <li v-if="conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length"><i @click="toggleChannelMenu" class="icon-ion-android-menu"></i></li>
+                <ul v-if="!inputOptions['disableVoip'] && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
+                    <li v-if="!inputOptions['disableAudioCall']">
+                        <i @click="startAudioCall" class="icon-ion-ios-telephone"/>
+                    </li>
+                    <li v-if="!inputOptions['disableVideoCall']">
+                        <i @click="startVideoCall" class="icon-ion-ios-videocam"/>
+                    </li>
+                    <li v-if="!inputOptions['disableChannelMenu'] && conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length">
+                        <i @click="toggleChannelMenu" class="icon-ion-android-menu"/>
+                    </li>
                 </ul>
             </section>
             <div @keydown.13="send($event)"
@@ -112,6 +123,11 @@ export default {
             required: true,
             default: null,
         },
+        inputOptions: {
+            type: Object,
+            required: false,
+            default: () => ({}),
+        }
     },
     data() {
         return {

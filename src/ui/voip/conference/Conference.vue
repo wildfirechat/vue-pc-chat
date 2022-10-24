@@ -159,6 +159,9 @@
 
             </div>
             <div class="slider">
+                <div class="title" style="display: none">
+                    TODO
+                </div>
                 <ConferenceParticipantListView
                     v-if="showParticipantList"
                     v-bind:class="{ active: showParticipantList}"
@@ -166,6 +169,10 @@
                     :participants="participantUserInfos"
                     :session="session"
                 />
+                <ConversationView v-if="showConversationView"
+                                  class="conversation-view"
+                                  style="height: 100%"
+                                  :input-options="{disableScreenShot:true, disableHistory:true, disableVoip:true, disableChannelMenu:true}"/>
             </div>
         </div>
     </div>
@@ -189,6 +196,9 @@ import VideoType from "../../../wfc/av/engine/videoType";
 import IpcEventType from "../../../ipcEventType";
 import ConferenceParticipantVideoView from "./ConferenceParticipantVideoView";
 import ConferenceParticipantListView from "./ConferenceParticipantListView";
+import ConversationView from "../../main/conversation/ConversationView";
+import Conversation from "../../../wfc/model/conversation";
+import ConversationType from "../../../wfc/model/conversationType";
 
 export default {
     name: 'Conference',
@@ -207,6 +217,7 @@ export default {
 
             showSlider: false,
             showParticipantList: false,
+            showConversationView: false,
             sharedMiscState: store.state.misc,
             videoInputDeviceIndex: 0,
 
@@ -230,7 +241,8 @@ export default {
         ConferenceParticipantListView,
         ConferenceParticipantVideoView,
         ScreenShareControlView,
-        ElectronWindowsControlButtonView
+        ElectronWindowsControlButtonView,
+        ConversationView
     },
     methods: {
         switchVideoType(userId, screenSharing) {
@@ -522,6 +534,14 @@ export default {
             this.toggleSliderView();
             this.showParticipantList = !this.showParticipantList;
         },
+
+        chat() {
+            // TODO
+            this.showConversationView = !this.showConversationView;
+            let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0);
+            store.setCurrentConversation(conversation)
+        },
+
         hideParticipantList() {
             this.showParticipantList && (this.showParticipantList = false);
             this.toggleSliderView();
@@ -910,6 +930,7 @@ export default {
 .main-slider-container .slider {
     width: var(--slider-width);
     height: 100%;
+    overflow: auto;
     background: white;
 }
 
