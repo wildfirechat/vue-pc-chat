@@ -845,7 +845,7 @@ export default {
         },
 
         computedParticipants() {
-            return [...this.participantUserInfos, this.selfUserInfo];
+            return [...this.participantUserInfos];
         },
 
         speakingUserName() {
@@ -1071,7 +1071,7 @@ footer {
 
 .duration-action-container p {
     color: white;
-    padding: 5px 0;
+    padding: 0 5px 0 0;
 }
 
 .action-container {
@@ -1109,6 +1109,7 @@ footer {
     display: none;
     width: 250px;
     height: 100%;
+    overflow: auto;
     background-color: #ffffffe5;
     backdrop-filter: blur(6px);
     border-left: 1px solid #e6e6e6;
