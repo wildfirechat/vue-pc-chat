@@ -142,6 +142,10 @@
                                          src='@/assets/images/av_conference_screen_sharing_hover.png'/>
                                     <p class="single-line">共享屏幕</p>
                                 </div>
+                                <div class="action" @click="chat">
+                                    <i class="icon-ion-ios-chatboxes" style="width: 40px; height: 40px; font-size: 40px; color: black"></i>
+                                    <p>聊天</p>
+                                </div>
                                 <div class="action">
                                     <img @click.stop="members" class="action-img"
                                          src='@/assets/images/av_conference_members.png'/>
@@ -536,7 +540,7 @@ export default {
         },
 
         chat() {
-            // TODO
+            this.toggleSliderView();
             this.showConversationView = !this.showConversationView;
             let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0);
             store.setCurrentConversation(conversation)
