@@ -54,6 +54,8 @@ export default class Config {
             if (window.process && window.process.platform === 'darwin') {
                 // osx
                 return 4;
+            } else if (window.process && window.process.platform === 'linux') {
+                return 7;
             } else {
                 // windows
                 return 3;
