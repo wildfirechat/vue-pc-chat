@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="send-message-container">
-            <input placeholder="说点说什么" @change="send" v-model.trim="text">
+            <input placeholder="说点说什么" @change="sendMessage" v-model.trim="text">
         </div>
     </div>
 </template>
@@ -21,7 +21,7 @@ import ConversationType from "../../../wfc/model/conversationType";
 import store from "../../../store";
 import wfc from "../../../wfc/client/wfc";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
-import {gt, lt, numberValue} from "../../../wfc/util/longUtil";
+import {gt} from "../../../wfc/util/longUtil";
 
 export default {
     name: "ConferenceConversationFloatingView",
@@ -40,7 +40,7 @@ export default {
         }
     },
     created() {
-        // TODO 会议聊天室
+        // TODO 加入聊天室，会议聊天室
         let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0);
         store.setCurrentConversation(conversation);
         this.filterInternal = setInterval(() => {
@@ -55,11 +55,12 @@ export default {
 
     destroyed() {
         store.setCurrentConversation(null);
+        // TODO 离开聊天室
         clearInterval(this.filterInternal)
     },
 
     methods: {
-        send() {
+        sendMessage() {
             let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0);
             wfc.sendConversationMessage(conversation, new TextMessageContent(this.text))
             this.text = '';

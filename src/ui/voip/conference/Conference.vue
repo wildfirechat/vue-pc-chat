@@ -29,7 +29,7 @@
                         <i :class="showSlider? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'" style="padding: 0 10px" @click="toggleSliderView"></i>
                     </div>
                 </div>
-                <div style="position: absolute; left: 10px; bottom: 50px; width: 300px; max-height: 300px; overflow: hidden; background: transparent; z-index: 1000">
+                <div style="position: absolute; left: 10px; bottom: 80px; width: 300px; max-height: 300px; overflow: hidden; background: transparent; z-index: 1000">
                     <ConferenceConversationFloatingView
                         :session="session"/>
                 </div>
