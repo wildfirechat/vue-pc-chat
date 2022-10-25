@@ -1978,11 +1978,10 @@ export class WfcManager {
 
 
     /**
-     * 内部使用，electron主窗口之外的，其他窗口，attach到主窗口初始化的proto上，可以调用get相关方法，但没有通知
-     * @param protoObj
+     * 内部使用，electron主窗口之外的，其他窗口调用，之后就可以使用wfc.js里面的所有接口了
      */
-    attach(protoObj) {
-        impl.attach(protoObj);
+    attach() {
+        impl.attach();
     }
 
     /**
