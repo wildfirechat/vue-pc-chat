@@ -29,7 +29,10 @@
                         <i :class="showSlider? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'" style="padding: 0 10px" @click="toggleSliderView"></i>
                     </div>
                 </div>
-
+                <div style="position: absolute; left: 10px; bottom: 50px; width: 300px; max-height: 300px; overflow: hidden; background: transparent; z-index: 1000">
+                    <ConferenceConversationFloatingView
+                        :session="session"/>
+                </div>
                 <div class="conference-main-content-container">
                     <!--main-->
                     <!--video-->
@@ -203,6 +206,7 @@ import ConferenceParticipantListView from "./ConferenceParticipantListView";
 import ConversationView from "../../main/conversation/ConversationView";
 import Conversation from "../../../wfc/model/conversation";
 import ConversationType from "../../../wfc/model/conversationType";
+import ConferenceConversationFloatingView from "./ConferenceConversationFloatingView";
 
 export default {
     name: 'Conference',
@@ -242,6 +246,7 @@ export default {
         }
     },
     components: {
+        ConferenceConversationFloatingView,
         ConferenceParticipantListView,
         ConferenceParticipantVideoView,
         ScreenShareControlView,
@@ -542,8 +547,6 @@ export default {
         chat() {
             this.toggleSliderView();
             this.showConversationView = !this.showConversationView;
-            let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0);
-            store.setCurrentConversation(conversation)
         },
 
         hideParticipantList() {
