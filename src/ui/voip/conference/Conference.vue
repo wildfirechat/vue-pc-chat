@@ -20,29 +20,49 @@
         <div v-if="session" class="main-slider-container"
              v-bind:style="{display: session.isScreenSharing() && sharedMiscState.isElectron ? 'none' : 'flex'}">
             <div class="main">
-                <div style="background: white; height: 20px; display: flex; justify-content: space-between">
-                    <i class="icon-ion-information" style="padding: 0 10px"></i>
+                <header style="background: white; height: 20px; display: flex; justify-content: space-between">
+                    <a href="#">
+                        <i class="icon-ion-information" style="padding: 0 10px"
+                           id="info-icon"
+                           v-bind:class="{active:showConferenceSimpleInfoView}"
+                           @click="showConferenceSimpleInfoView = !showConferenceSimpleInfoView"/>
+                    </a>
                     <p>{{ duration }}</p>
                     <div>
-                        <i class="icon-ion-grid" style="padding: 0 10px" @click="updateLayoutMode"></i>
+                        <a href="#">
+                            <i class="icon-ion-grid" style="padding: 0 10px"
+                               id="grid-icon"
+                               v-bind:class="{active:showChooseLayoutView}"
+                               @click="showChooseLayoutView = !showChooseLayoutView"/>
+                        </a>
                         <!--                        TODO 条件显示，展示聊天界面，或者参与者列表界面时，才展示-->
                         <i :class="showSlider? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'" style="padding: 0 10px" @click="toggleSliderView"></i>
                     </div>
+                </header>
+                <div v-if="showConferenceSimpleInfoView"
+                     v-click-outside="hideConferenceSimpleInfoView"
+                     style="position: absolute; left: 10px; top: 50px; z-index: 1000">
+                    <ConferenceSimpleInfoView
+                        :session="session"
+                    />
                 </div>
-                <div style="position: absolute; left: 10px; bottom: 80px; width: 300px; max-height: 300px; overflow: hidden; background: transparent; z-index: 1000">
-                    <ConferenceConversationFloatingView
+                <div v-if="showChooseLayoutView"
+                     v-click-outside="hideChooseLayoutView"
+                     style="position: absolute; right: 10px; top: 50px; z-index: 1000">
+                    <ChooseConferenceLayoutView
+                        :current-layout="currentLayout"
                         :session="session"/>
                 </div>
                 <div class="conference-main-content-container">
                     <!--main-->
                     <!--video-->
                     <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                        <i v-if="layoutMode === 0" style="position: absolute; top: 50%; left: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; left: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                            @click="prePage"></i>
-                        <i v-if="layoutMode === 0" style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
                            @click="nextPage"></i>
                         <!--                    宫格布局-->
-                        <section v-if="layoutMode === 0" class="content-container grid video">
+                        <section v-if="currentLayout === 0" class="content-container grid video">
                             <!--participants include self-->
                             <ConferenceParticipantVideoView v-for="(participant) in currentPageParticipants"
                                                             :key="participant.uid + '-' + participant._isScreenSharing"
@@ -204,9 +224,8 @@ import IpcEventType from "../../../ipcEventType";
 import ConferenceParticipantVideoView from "./ConferenceParticipantVideoView";
 import ConferenceParticipantListView from "./ConferenceParticipantListView";
 import ConversationView from "../../main/conversation/ConversationView";
-import Conversation from "../../../wfc/model/conversation";
-import ConversationType from "../../../wfc/model/conversationType";
-import ConferenceConversationFloatingView from "./ConferenceConversationFloatingView";
+import ConferenceSimpleInfoView from "./ConferenceSimpleInfoView";
+import ChooseConferenceLayoutView from "./ChooseConferenceLayoutView";
 
 export default {
     name: 'Conference',
@@ -234,7 +253,7 @@ export default {
             endReason: undefined,
 
             // 0, 宫格视图；1，演讲者视图
-            layoutMode: 0,
+            currentLayout: 0,
 
             // 宫格视图
             currentPageIndex: 0,
@@ -243,10 +262,14 @@ export default {
             // 演讲者视图
             focusParticipant: null,
             hideParticipantListVideoView: false,
+
+            showConferenceSimpleInfoView: false,
+            showChooseLayoutView: false,
         }
     },
     components: {
-        ConferenceConversationFloatingView,
+        ChooseConferenceLayoutView,
+        ConferenceSimpleInfoView,
         ConferenceParticipantListView,
         ConferenceParticipantVideoView,
         ScreenShareControlView,
@@ -433,7 +456,7 @@ export default {
                         }
                     })
                 }
-                if (this.layoutMode === 0) {
+                if (this.currentLayout === 0) {
                     return;
                 }
 
@@ -767,9 +790,11 @@ export default {
             this.participantCountPerPage = count;
         },
 
-        updateLayoutMode() {
-            if (this.layoutMode === 0) {
-                this.layoutMode = 1;
+        setCurrentLayout(layout) {
+            if (this.currentLayout === layout) {
+                return;
+            }
+            if (layout === 1) {
                 // 切换为小流，然后焦点用户切换为大流
                 this.participantUserInfos.forEach(u => {
                     if (u.uid !== this.selfUserInfo.uid && !u._isAudience && !u._isVideoMuted) {
@@ -777,7 +802,6 @@ export default {
                     }
                 })
             } else {
-                this.layoutMode = 0;
                 // 切换为大流
                 this.participantUserInfos.forEach(u => {
                     if (u.uid !== this.selfUserInfo.uid && !u._isAudience && !u._isVideoMuted) {
@@ -785,9 +809,25 @@ export default {
                     }
                 })
             }
+            this.currentLayout = layout;
+            this.showChooseLayoutView = false;
         },
         toggleParticipantListVideoView() {
             this.hideParticipantListVideoView = !this.hideParticipantListVideoView;
+        },
+
+        hideConferenceSimpleInfoView(event) {
+            if (event.target.id === 'info-icon') {
+                return;
+            }
+            this.showConferenceSimpleInfoView = false;
+        },
+
+        hideChooseLayoutView(event) {
+            if (event.target.id === 'grid-icon') {
+                return;
+            }
+            this.showChooseLayoutView = false;
         }
     },
 
@@ -834,7 +874,7 @@ export default {
                 if (this.audioOnly) {
                     return;
                 }
-                if (this.layoutMode === 1) {
+                if (this.currentLayout === 1) {
                     return;
                 }
                 let videoParticipants = infos.filter(u => !u._isAudience)
@@ -919,6 +959,14 @@ export default {
     --conference-container-margin-top: 30px;
     --slider-width: 0px;
     --main-width: 100%;
+}
+
+i:hover {
+    color: deepskyblue;
+}
+
+i.active {
+    color: #34b7f1;
 }
 
 .main-slider-container {
