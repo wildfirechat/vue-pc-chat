@@ -10,7 +10,7 @@
             </div>
         </div>
         <div class="send-message-container">
-            <input placeholder="说点说什么" @change="sendMessage" v-model.trim="text">
+            <input placeholder="说点说什么..." @change="sendMessage" v-model.trim="text">
         </div>
     </div>
 </template>

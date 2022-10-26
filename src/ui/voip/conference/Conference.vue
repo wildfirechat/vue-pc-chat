@@ -27,6 +27,7 @@
                            v-bind:class="{active:showConferenceSimpleInfoView}"
                            @click="showConferenceSimpleInfoView = !showConferenceSimpleInfoView"/>
                     </a>
+                    <p style="flex: 1"></p>
                     <p>{{ duration }}</p>
                     <div>
                         <a href="#">
@@ -36,7 +37,9 @@
                                @click="showChooseLayoutView = !showChooseLayoutView"/>
                         </a>
                         <!--                        TODO 条件显示，展示聊天界面，或者参与者列表界面时，才展示-->
-                        <i :class="showSlider? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'" style="padding: 0 10px" @click="toggleSliderView"></i>
+                        <a href="#" v-if="showSlider">
+                            <i :class="showSlider? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'" style="padding: 0 10px" @click="toggleSliderView"></i>
+                        </a>
                     </div>
                 </header>
                 <div v-if="showConferenceSimpleInfoView"
@@ -53,13 +56,18 @@
                         :current-layout="currentLayout"
                         :session="session"/>
                 </div>
+                <div style="position: absolute; left: 10px; bottom: 80px; width: 300px; max-height: 300px; overflow: hidden; background: transparent; z-index: 1000">
+                    <ConferenceConversationFloatingView
+                        :session="session"
+                    />
+                </div>
                 <div class="conference-main-content-container">
                     <!--main-->
                     <!--video-->
                     <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; left: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                            @click="prePage"></i>
-                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
                            @click="nextPage"></i>
                         <!--                    宫格布局-->
                         <section v-if="currentLayout === 0" class="content-container grid video">
@@ -80,7 +88,7 @@
                                        :srcObject.prop="focusParticipant._stream"
                                        playsInline
                                        autoPlay/>
-                                <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: red; z-index: 1000; font-size: 40px">
+                                <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px">
                                     <i :class="hideParticipantListVideoView ? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'"></i>
                                 </div>
                             </div>
@@ -226,6 +234,7 @@ import ConferenceParticipantListView from "./ConferenceParticipantListView";
 import ConversationView from "../../main/conversation/ConversationView";
 import ConferenceSimpleInfoView from "./ConferenceSimpleInfoView";
 import ChooseConferenceLayoutView from "./ChooseConferenceLayoutView";
+import ConferenceConversationFloatingView from "./ConferenceConversationFloatingView";
 
 export default {
     name: 'Conference',
@@ -268,6 +277,7 @@ export default {
         }
     },
     components: {
+        ConferenceConversationFloatingView,
         ChooseConferenceLayoutView,
         ConferenceSimpleInfoView,
         ConferenceParticipantListView,
@@ -959,6 +969,10 @@ export default {
     --conference-container-margin-top: 30px;
     --slider-width: 0px;
     --main-width: 100%;
+}
+
+a {
+    color: gray;
 }
 
 i:hover {
