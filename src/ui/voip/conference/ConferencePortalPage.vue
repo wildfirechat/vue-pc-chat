@@ -17,19 +17,11 @@
         </div>
         <div class="fav-container">
             <ul>
-                <li>
+                <li v-for="(conferenceInfo, index) in favConferenceInfos"
+                    :key="index"
+                >
                     <div>
-                        <p>xxx 发起的会议</p>
-                    </div>
-                </li>
-                <li>
-                    <div>
-                        <p>yyy 发起的会议</p>
-                    </div>
-                </li>
-                <li>
-                    <div>
-                        <p>zzz 发起的会议</p>
+                        <p>{{ conferenceInfo.conferenceTitle }}</p>
                     </div>
                 </li>
             </ul>
@@ -42,9 +34,24 @@
 import CreateConferenceView from "./CreateConferenceView";
 import JoinConferenceView from "./JoinConferenceView";
 import OrderConferenceView from "./OrderConferenceView";
+import conferenceApi from "../../../api/conferenceApi";
 
 export default {
     name: "ConferencePortalPage",
+    data() {
+        return {
+            favConferenceInfos: [],
+        }
+    },
+    mounted() {
+        conferenceApi.getFavConferences()
+            .then(favConferenceInfos => {
+                this.favConferenceInfos = favConferenceInfos;
+            })
+            .catch(err => {
+                console.log('getFavConferences error', err)
+            });
+    },
     methods: {
         joinConference() {
             let beforeOpen = () => {

@@ -6,7 +6,7 @@ import {stringValue} from "../wfc/util/longUtil";
 import AppServerError from "./appServerError";
 import wfc from "../wfc/client/wfc";
 
-class AppServerApi {
+export class AppServerApi {
     constructor() {
         axios.defaults.baseURL = Config.APP_SERVER;
 
@@ -136,7 +136,16 @@ class AppServerApi {
             })
     }
 
-    async _post(path, data, rawResponse = false, rawResponseData = false) {
+    /**
+     *
+     * @param path
+     * @param data
+     * @param rawResponse
+     * @param rawResponseData
+     * @return {Promise<string | AxiosResponse<any>|*|T>}
+     * @private
+     */
+    async _post(path, data = null, rawResponse = false, rawResponseData = false) {
         let response;
         response = await axios.post(path, data, {transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse})
         if (rawResponse) {
@@ -157,5 +166,5 @@ class AppServerApi {
     }
 }
 
-let appServerApi = new AppServerApi();
+const appServerApi = new AppServerApi();
 export default appServerApi;
