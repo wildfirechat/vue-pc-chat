@@ -4,7 +4,7 @@ export default class ConferenceInfo {
     password;
     pin;
     owner;
-    managers;
+    managers = [];
     focus;
     // 秒
     startTime;
@@ -13,8 +13,8 @@ export default class ConferenceInfo {
     advance;
     //@SerializedName("allowSwitchMode")
     allowSwitchMode; // 其实更新allowTurnOnMic;
-    noJoinBeforeStart;
-    recording;
+    noJoinBeforeStart = false;
+    recording = false;
 
 
     isAllowTurnOnMic() {

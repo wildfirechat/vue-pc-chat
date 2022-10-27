@@ -391,9 +391,9 @@ export class AvEngineKitProxy {
      * @param {boolean} advance 是否为高级会议，当预计参与人员很多的时候，开需要开启超级会议
      * @param {boolean} record 是否开启服务端录制
      * @param {Object} extra 一些额外信息，主要用于将信息传到音视频通话窗口，会议的其他参与者，无法看到该附加信息
-     * @param {string} callExtra  通话附件信息，会议的所有参与者都能看到该附加信息
+     * @param {Object} callExtra  通话附件信息，会议的所有参与者都能看到该附加信息
      */
-    startConference(callId, audioOnly, pin, host, title, desc, audience, advance, record = false, extra, callExtra) {
+    startConference(callId, audioOnly, pin, host, title, desc, audience, advance, record = false, extra = null, callExtra = null) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);

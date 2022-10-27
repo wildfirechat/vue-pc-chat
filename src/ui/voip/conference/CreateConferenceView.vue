@@ -14,9 +14,9 @@
         <div>
             <label>
                 启用密码
-                <input v-model="enablePin" type="checkbox">
+                <input v-model="enablePassword" type="checkbox">
             </label>
-            <input v-if="enablePin" v-model="pin" class="text-input" style="margin-top: 10px" type="tel" maxlength="4" placeholder="123456">
+            <input v-if="enablePassword" v-model="password" class="text-input" style="margin-top: 10px" type="tel" maxlength="4" placeholder="123456">
         </div>
         <div>
             <label>
@@ -33,14 +33,18 @@
             <p class="advance_desc">参会人数大于50人</p>
         </div>
 
-        <button :disabled="title.trim() === '' || desc.trim() === ''" @click="createConference">开始会议
-        </button>
+        <div class="action-container">
+            <button class="create-button" :disabled="title.trim() === '' || desc.trim() === ''" @click="createConference">创建会议</button>
+            <button class="join-button" :disabled="title.trim() === '' || desc.trim() === ''" @click="createAndJoinConference">进入会议</button>
+        </div>
     </div>
 </template>
 
 <script>
 import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
+import conferenceApi from "../../../api/conferenceApi";
+import ConferenceInfo from "../../../wfc/av/model/conferenceInfo";
 
 export default {
     name: "CreateConferenceView",
@@ -48,21 +52,71 @@ export default {
         return {
             title: '',
             desc: '',
-            audioOnly: false,
             audience: false,
             advance: false,
             allowTurnOnMic: false,
-            enablePin: false,
-            pin: '',
-            enableUserCallId: false,
-            callId: '1234567',
+            enablePassword: false,
+            password: '',
+            enableUserCallId: true,
+            callId: '',
         }
+    },
+    async mounted() {
+        this.callId = await conferenceApi.getMyPrivateConferenceId();
     },
 
     methods: {
+        async _createConference() {
+            let info = new ConferenceInfo();
+            if (this.enableUserCallId) {
+                info.conferenceId = this.callId;
+                info.conferenceTitle = this.title;
+            }
+            if (this.password) {
+                info.password = this.password;
+            }
+            info.pin = '' + Math.ceil((1 + Math.random() * 100000) / 10);
+
+            info.owner = wfc.getUserId();
+            info.startTime = Math.ceil(new Date().getTime() / 1000);
+            // TODO
+            info.endTime = 0;
+            info.audience = this.audience;
+            info.allowSwitchMode = this.allowTurnOnMic;
+            info.advance = this.advance;
+
+            info.conferenceId = await conferenceApi.createConference(info)
+            return info;
+        },
         createConference() {
-            let userId = wfc.getUserId();
-            avenginekitproxy.startConference(null, !this.audioOnly, '', userId, this.title, this.desc, !this.audience, this.advance);
+            this._createConference()
+                .then(info => {
+                    this.$notify({
+                        text: '创建会议 成功',
+                        type: 'info'
+                    });
+                })
+                .catch(err => {
+                    this.$notify({
+                        title: '创建会议失败',
+                        text: err.message,
+                        type: 'error'
+                    });
+                })
+            this.$modal.hide('create-conference-modal')
+        },
+        createAndJoinConference() {
+            this._createConference()
+                .then(info => {
+                    avenginekitproxy.startConference(info.conferenceId, false, info.pin, info.owner, info.conferenceTitle, this.desc, info.audience, info.advance);
+                })
+                .catch(err => {
+                    this.$notify({
+                        title: '创建会议失败',
+                        text: err.message,
+                        type: 'error'
+                    });
+                })
             this.$modal.hide('create-conference-modal')
         }
     },
@@ -134,6 +188,32 @@ export default {
 
 .create-conference-container > * {
     margin-top: 20px;
+}
+
+.action-container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.action-container button {
+    width: 50%;
+    border: none;
+}
+
+.create-button {
+    margin-right: 10px;
+}
+
+.create-button:enabled {
+    color: gray;
+}
+
+.join-button {
+    margin-left: 10px;
+}
+
+.join-button:enabled {
+    color: #4168e0;
 }
 
 </style>
