@@ -147,17 +147,17 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 20. 如果使用专业版IM服务且使用野火对象存储服务，需要使野火对象存储服务支持https，PC客户端和Web客户端需要使用HTTPS上传。
 
 ## 截图
-![](https://static.wildfirechat.cn/pc-home.png)
-![](https://static.wildfirechat.cn/pc-conversastion.png)
-![](https://static.wildfirechat.cn/pc-emoji.png)
-![](https://static.wildfirechat.cn/pc-contact.png)
-![](https://static.wildfirechat.cn/pc-channel.png)
-![](https://static.wildfirechat.cn/pc-fav.png)
-![](https://static.wildfirechat.cn/pc-file-history.png)
-![](https://static.wildfirechat.cn/pc-workspace.png)
-![](https://static.wildfirechat.cn/pc-setting.png)
-![](https://static.wildfirechat.cn/pc-multi-video-call.png)
-![](https://static.wildfirechat.cn/pc-multi-audio-call.png)
+![](http://static.wildfirechat.cn/pc-home.png)
+![](http://static.wildfirechat.cn/pc-conversastion.png)
+![](http://static.wildfirechat.cn/pc-emoji.png)
+![](http://static.wildfirechat.cn/pc-contact.png)
+![](http://static.wildfirechat.cn/pc-channel.png)
+![](http://static.wildfirechat.cn/pc-fav.png)
+![](http://static.wildfirechat.cn/pc-file-history.png)
+![](http://static.wildfirechat.cn/pc-workspace.png)
+![](http://static.wildfirechat.cn/pc-setting.png)
+![](http://static.wildfirechat.cn/pc-multi-video-call.png)
+![](http://static.wildfirechat.cn/pc-multi-audio-call.png)
 
 ## License
 
