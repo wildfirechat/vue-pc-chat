@@ -18,9 +18,8 @@
         <div class="fav-container">
             <ul>
                 <li v-for="(conferenceInfo, index) in favConferenceInfos"
-                    :key="index"
-                >
-                    <div>
+                    :key="index">
+                    <div @click="showConferenceInfo(conferenceInfo)">
                         <p>{{ conferenceInfo.conferenceTitle }}</p>
                     </div>
                 </li>
@@ -35,6 +34,7 @@ import CreateConferenceView from "./CreateConferenceView";
 import JoinConferenceView from "./JoinConferenceView";
 import OrderConferenceView from "./OrderConferenceView";
 import conferenceApi from "../../../api/conferenceApi";
+import ConferenceInfoView from "./ConferenceInfoView";
 
 export default {
     name: "ConferencePortalPage",
@@ -115,6 +115,32 @@ export default {
                     name: 'order-conference-modal',
                     width: 320,
                     height: 520,
+                    clickToClose: true,
+                }, {
+                    'before-open': beforeOpen,
+                    'before-close': beforeClose,
+                    'closed': closed,
+                })
+
+        },
+        showConferenceInfo(info) {
+            let beforeOpen = () => {
+                console.log('Opening...')
+            };
+            let beforeClose = (event) => {
+                console.log('Closing...', event, event.params)
+            };
+            let closed = (event) => {
+                console.log('Close...', event)
+            };
+            this.$modal.show(
+                ConferenceInfoView,
+                {
+                    conferenceInfo: info,
+                }, {
+                    name: 'conference-info-modal',
+                    width: 320,
+                    height: 600,
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,

@@ -4,15 +4,15 @@
         <div class="item-container">
             <div class="item">
                 <p class="title">会议主题</p>
-                <p class="desc">xxx 的会议</p>
+                <p class="desc">{{ conferenceInfo.conferenceTitle }}</p>
             </div>
             <div class="item">
-                <p class="title"> 发起人</p>
-                <p class="desc">xxx</p>
+                <p class="title">发起人</p>
+                <p class="desc">{{ ownerName }}</p>
             </div>
             <div class="item">
                 <p class="title">会议号</p>
-                <p class="desc">xxx</p>
+                <p class="desc">{{ conferenceInfo.conferenceId }}</p>
             </div>
             <div class="item">
                 <p class="title">二维码</p>
@@ -22,42 +22,84 @@
         <div class="item-container">
             <div class="item">
                 <p class="title">开始时间</p>
-                <p class="desc">2022-10-22 10:00</p>
+                <p class="desc">{{ startTime }}</p>
             </div>
             <div class="item">
                 <p class="title">结束时间</p>
-                <p class="desc">2022-10-22 11:00</p>
+                <p class="desc">{{ endTime }}</p>
             </div>
         </div>
         <div class="item-container">
             <div class="item">
                 <label>
                     开启视频
-                    <input type="checkbox">
+                    <input :disabled="audience" v-model="enableAudio" type="checkbox">
                 </label>
             </div>
             <div class="item">
                 <label>
                     开启音频
-                    <input type="checkbox">
+                    <input :disabled="audience" v-model="enableVideo" type="checkbox">
                 </label>
             </div>
         </div>
 
-        <div class="action-button">
-            加入会议
+        <div>
+            <button :disabled="ended" @click="joinConference">
+                加入会议
+            </button>
         </div>
     </div>
 </template>
 
 <script>
+import wfc from "../../../wfc/client/wfc";
+import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
+
 export default {
     name: "ConferenceInfoView",
+    props: {
+        conferenceInfo: {
+            type: Object,
+            required: true,
+        }
+    },
     data() {
         return {
-            conferenceInfo: null,
-            muteVideo: false,
-            muteAudio: false,
+            enableVideo: false,
+            enableAudio: false,
+        }
+    },
+    methods: {
+        joinConference() {
+            let info = this.conferenceInfo;
+            console.log('joinConference', info)
+            avenginekitproxy.joinConference(info.conferenceId, info.audience, info.pin, info.owner, info.conferenceTitle, '', info.audience, info.advance, !this.enableAudio, !this.enableVideo);
+            this.$modal.hide('conference-info-modal')
+        }
+    },
+    computed: {
+        ownerName() {
+            let userInfo = wfc.getUserDisplayName(this.conferenceInfo.ownner)
+            return userInfo.displayName;
+        },
+        startTime() {
+            let date = new Date(this.conferenceInfo.startTime * 1000)
+            return date.toString();
+        },
+        endTime() {
+            if (!this.conferenceInfo.endTime) {
+                return '-'
+            }
+
+            let date = new Date(this.conferenceInfo.endTime * 1000)
+            return date.toString();
+        },
+        audience() {
+            return this.conferenceInfo.audience && this.conferenceInfo.owner !== wfc.getUserId();
+        },
+        ended() {
+            return !!this.conferenceInfo.endTime && new Date().getTime() > this.conferenceInfo.endTime * 1000;
         }
     }
 }
@@ -92,7 +134,7 @@ export default {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    padding: 15px 20px;
+    padding: 12px 20px;
     border-spacing: 20px;
 }
 
@@ -115,16 +157,17 @@ export default {
     justify-content: space-between;
 }
 
-.action-button {
+button {
     background: white;
     width: 100%;
     text-align: center;
     vertical-align: middle;
     height: 50px;
     line-height: 50px;
+    border: none;
 }
 
-.action-button:active {
+button:active {
     background: lightgrey;
 }
 

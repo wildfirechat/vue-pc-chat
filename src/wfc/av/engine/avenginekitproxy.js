@@ -441,9 +441,9 @@ export class AvEngineKitProxy {
      * @param {boolean} muteAudio 是否是静音加入会议
      * @param {boolean} muteVideo 是否是关闭摄像头加入会议
      * @param {Object} extra 一些额外信息，主要用于将信息传到音视频通话窗口
-     * @param {string} callExtra 通话附加信息，会议的所有参与者都能看到该附加信息
+     * @param {Object} callExtra 通话附加信息，会议的所有参与者都能看到该附加信息
      */
-    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance, muteAudio, muteVideo, extra, callExtra) {
+    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance, muteAudio, muteVideo, extra = null, callExtra = null) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
