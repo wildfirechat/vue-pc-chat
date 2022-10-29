@@ -2,10 +2,14 @@
     <div class="create-conference-container">
         <h2>预定会议</h2>
         <input v-model="title" class="text-input" type="text" placeholder="会议标题">
-        <input v-model="desc" class="text-input" type="text" placeholder="会议描述">
+        <input v-if="false" v-model="desc" class="text-input" type="text" placeholder="会议描述">
         <label>
             开始时间
-            <input v-model="audience" type="datetime-local">
+            <input v-model="startTime" type="datetime-local">
+        </label>
+        <label>
+            结束时间
+            <input v-model="endTime" type="datetime-local">
         </label>
         <label>
             参与者开启摄像头、麦克风入会
@@ -37,7 +41,7 @@
             <p class="advance_desc">参会人数大于50人</p>
         </div>
 
-        <button :disabled="title.trim() === '' || desc.trim() === ''" @click="createConference">预定会议
+        <button :disabled="!actionEnable" @click="createConference">预定会议
         </button>
     </div>
 </template>
@@ -52,6 +56,8 @@ export default {
         return {
             title: '',
             desc: '',
+            startTime: '',
+            endTime: '',
             audioOnly: false,
             audience: false,
             advance: false,
@@ -70,12 +76,58 @@ export default {
             this.$modal.hide('create-conference-modal')
         }
     },
+    computed: {
+        actionEnable() {
+            if (this.title && this.title.trim() && this.startTime && this.endTime) {
+                let now = new Date().getTime();
+                let start = new Date(this.startTime).getTime();
+                let end = new Date(this.endTime).getTime();
+                return start > now && end > start;
+            }
+            return false;
+        }
+    },
     watch: {
         advance() {
             // 超级会议模式，一般参会人员会很多，但不需要所有人都能发言；互动模式，是允许每个人发言
             // 开启超级会之后，需要再次确认开启互动模式
             if (this.advance) {
                 this.audience = false;
+            }
+        },
+        startTime() {
+            if (this.startTime) {
+                let start = new Date(this.startTime).getTime();
+                if (start < new Date().getTime()) {
+                    this.$notify({
+                        text: '开始时间不能早于当前时间',
+                        type: 'warn'
+                    });
+                    this.startTime = '';
+                }
+            }
+        },
+        endTime() {
+            if (this.endTime) {
+                let end = new Date(this.endTime).getTime();
+                let now = new Date().getTime();
+                if (end < now) {
+                    this.$notify({
+                        text: '开始时间不能早于当前时间',
+                        type: 'warn'
+                    });
+                    this.endTime = '';
+                }
+                if (this.startTime) {
+                    let start = new Date(this.startTime).getTime();
+                    if (end < start) {
+                        this.$notify({
+                            text: '结束时间不能早于当前时间',
+                            type: 'warn'
+                        });
+                        this.endTime = '';
+                    }
+                }
             }
         }
     }
@@ -101,6 +153,7 @@ export default {
 .create-conference-container label {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 13px;
 }
 
@@ -122,9 +175,8 @@ export default {
 }
 
 .create-conference-container button {
-    height: 30px;
-    border: 1px solid #e5e5e5;
-    border-radius: 3px;
+    height: 40px;
+    border: none;
 }
 
 .create-conference-container button:active {

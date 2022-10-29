@@ -336,12 +336,6 @@ export default {
                 this.selfUserInfo = selfUserInfo;
                 this.initiatorUserInfo = initiatorUserInfo;
                 this.participantUserInfos = [selfUserInfo];
-                for (let i = 0; i < 12; i++) {
-                    let userInfo = Object.assign({}, selfUserInfo);
-                    userInfo.uid = 'test-' + i;
-                    userInfo.displayName = 'test-' + i;
-                    this.participantUserInfos.push(userInfo);
-                }
 
                 // pls refer to: https://vuejs.org/v2/guide/reactivity.html
                 this.$set(this.selfUserInfo, '_stream', null);

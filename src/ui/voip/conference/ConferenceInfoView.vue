@@ -33,20 +33,29 @@
             <div class="item">
                 <label>
                     开启视频
-                    <input :disabled="audience" v-model="enableAudio" type="checkbox">
+                    <input :disabled="audience" v-model="enableVideo" type="checkbox">
                 </label>
             </div>
             <div class="item">
                 <label>
                     开启音频
-                    <input :disabled="audience" v-model="enableVideo" type="checkbox">
+                    <input :disabled="audience" v-model="enableAudio" type="checkbox">
                 </label>
             </div>
         </div>
 
-        <div>
-            <button :disabled="ended" @click="joinConference">
+        <div class="action-container">
+            <button class="destroy" v-if="enableDestroy">
+                销毁会议
+            </button>
+            <button ref="favButton" v-if="new Date().getTime() < conferenceInfo.startTime * 1000" @click="favConference">
+                尚未开始，点击收藏会议
+            </button>
+            <button v-else-if="new Date().getTime() < conferenceInfo.endTime * 1000" @click="joinConference">
                 加入会议
+            </button>
+            <button v-else :disabled="true">
+                会议已结束
             </button>
         </div>
     </div>
@@ -55,6 +64,7 @@
 <script>
 import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
+import conferenceApi from "../../../api/conferenceApi";
 
 export default {
     name: "ConferenceInfoView",
@@ -70,21 +80,33 @@ export default {
             enableAudio: false,
         }
     },
+    mounted() {
+        console.log('conferenceInfo', this.conferenceInfo)
+    },
     methods: {
+        favConference() {
+            conferenceApi.favConference(this.conferenceInfo.conferenceId)
+                .then(r => {
+                    this.$refs.favButton.title = '已收藏';
+                    this.$refs.favButton.disabled = true;
+                })
+                .catch(err => {
+                    console.error('favConference error', err);
+                })
+        },
         joinConference() {
             let info = this.conferenceInfo;
-            console.log('joinConference', info)
-            avenginekitproxy.joinConference(info.conferenceId, info.audience, info.pin, info.owner, info.conferenceTitle, '', info.audience, info.advance, !this.enableAudio, !this.enableVideo);
-            this.$modal.hide('conference-info-modal')
-        }
+            console.log('joinConference', info);
+            avenginekitproxy.joinConference(info.conferenceId, false, info.pin, info.owner, info.conferenceTitle, '', info.audience, info.advance, !this.enableAudio, !this.enableVideo);
+            this.$modal.hide('conference-info-modal');
+        },
     },
     computed: {
         ownerName() {
-            let userInfo = wfc.getUserDisplayName(this.conferenceInfo.ownner)
-            return userInfo.displayName;
+            return wfc.getUserDisplayName(this.conferenceInfo.owner);
         },
         startTime() {
-            let date = new Date(this.conferenceInfo.startTime * 1000)
+            let date = new Date(this.conferenceInfo.startTime * 1000);
             return date.toString();
         },
         endTime() {
@@ -98,8 +120,8 @@ export default {
         audience() {
             return this.conferenceInfo.audience && this.conferenceInfo.owner !== wfc.getUserId();
         },
-        ended() {
-            return !!this.conferenceInfo.endTime && new Date().getTime() > this.conferenceInfo.endTime * 1000;
+        enableDestroy() {
+            return this.conferenceInfo.owner === wfc.getUserId() && new Date().getTime() < this.conferenceInfo.startTime * 1000;
         }
     }
 }
@@ -128,6 +150,7 @@ export default {
 .item-container {
     background: white;
     margin-bottom: 20px;
+    font-size: 14px;
 }
 
 .item {
@@ -157,18 +180,28 @@ export default {
     justify-content: space-between;
 }
 
+.action-container {
+    display: flex;
+    margin: 0 10px;
+}
+
 button {
     background: white;
     width: 100%;
     text-align: center;
     vertical-align: middle;
-    height: 50px;
-    line-height: 50px;
+    height: 40px;
+    line-height: 40px;
     border: none;
 }
 
 button:active {
     background: lightgrey;
+}
+
+button.destroy {
+    margin-right: 10px;
+    color: red;
 }
 
 </style>

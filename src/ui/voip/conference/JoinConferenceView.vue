@@ -9,12 +9,14 @@
             <p>会议密码</p>
             <input class="conf-item input" v-model="pin" type="text" placeholder="请输入会议密码，如果没有，忽略">
         </div>
-        <button :disabled="callId.trim() === '' " @click="joinConference">
-            加入会议
-        </button>
-        <button @click="cancel">
-            取消
-        </button>
+        <div class="action-container">
+            <button class="join" :disabled="callId.trim() === '' " @click="joinConference">
+                加入会议
+            </button>
+            <button @click="cancel">
+                取消
+            </button>
+        </div>
     </div>
 </template>
 
@@ -97,13 +99,22 @@ export default {
     border: 1px solid #4168e0;
 }
 
-.join-conference-container button {
-    height: 30px;
-    border: 1px solid #e5e5e5;
-    border-radius: 3px;
+.action-container {
+    display: flex;
 }
 
-.join-conference-container button:active {
+.action-container button {
+    height: 40px;
+    width: 50%;
+    border: none;
+}
+
+.action-container button.join {
+    margin-right: 10px;
+}
+
+.action-container button:active {
+    width: 50%;
     border: 1px solid #4168e0;
 }
 

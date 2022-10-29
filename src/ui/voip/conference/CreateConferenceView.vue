@@ -2,7 +2,15 @@
     <div class="create-conference-container">
         <h2>发起会议</h2>
         <input v-model="title" class="text-input" type="text" placeholder="会议标题">
-        <input v-model="desc" class="text-input" type="text" placeholder="会议描述">
+        <input v-if="false" v-model="desc" class="text-input" type="text" placeholder="会议描述">
+        <label>
+            开始时间
+            <span>现在</span>
+        </label>
+        <label>
+            结束时间
+            <input v-model="endTime" type="datetime-local">
+        </label>
         <label>
             参与者开启摄像头、麦克风入会
             <input v-model="audience" type="checkbox">
@@ -34,8 +42,8 @@
         </div>
 
         <div class="action-container">
-            <button class="create-button" :disabled="title.trim() === '' || desc.trim() === ''" @click="createConference">创建会议</button>
-            <button class="join-button" :disabled="title.trim() === '' || desc.trim() === ''" @click="createAndJoinConference">进入会议</button>
+            <button class="create-button" :disabled="!actionEnable" @click="createConference">创建会议</button>
+            <button class="join-button" :disabled="!actionEnable" @click="createAndJoinConference">进入会议</button>
         </div>
     </div>
 </template>
@@ -52,12 +60,13 @@ export default {
         return {
             title: '',
             desc: '',
+            endTime: '',
             audience: false,
             advance: false,
             allowTurnOnMic: false,
             enablePassword: false,
             password: '',
-            enableUserCallId: true,
+            enableUserCallId: false,
             callId: '',
         }
     },
@@ -68,9 +77,9 @@ export default {
     methods: {
         async _createConference() {
             let info = new ConferenceInfo();
+            info.conferenceTitle = this.title;
             if (this.enableUserCallId) {
                 info.conferenceId = this.callId;
-                info.conferenceTitle = this.title;
             }
             if (this.password) {
                 info.password = this.password;
@@ -79,8 +88,7 @@ export default {
 
             info.owner = wfc.getUserId();
             info.startTime = Math.ceil(new Date().getTime() / 1000);
-            // TODO
-            info.endTime = 0;
+            info.endTime = Math.ceil(new Date(this.endTime).getTime() / 1000);
             info.audience = this.audience;
             info.allowSwitchMode = this.allowTurnOnMic;
             info.advance = this.advance;
@@ -108,6 +116,7 @@ export default {
         createAndJoinConference() {
             this._createConference()
                 .then(info => {
+                    console.log('createAndJoin conference', info);
                     avenginekitproxy.startConference(info.conferenceId, false, info.pin, info.owner, info.conferenceTitle, this.desc, info.audience, info.advance);
                 })
                 .catch(err => {
@@ -120,12 +129,29 @@ export default {
             this.$modal.hide('create-conference-modal')
         }
     },
+    computed: {
+        actionEnable() {
+            let now = new Date().getTime();
+            return this.title && this.title.trim() && this.endTime && new Date(this.endTime).getTime() > now;
+        }
+    },
     watch: {
         advance() {
             // 超级会议模式，一般参会人员会很多，但不需要所有人都能发言；互动模式，是允许每个人发言
             // 开启超级会之后，需要再次确认开启互动模式
             if (this.advance) {
                 this.audience = false;
+            }
+        },
+        endTime() {
+            if (this.endTime) {
+                if (new Date(this.endTime).getTime() < new Date().getTime()) {
+                    this.endTime = '';
+                    this.$notify({
+                        text: '结束时间不能小于当前时间',
+                        type: 'warn'
+                    })
+                }
             }
         }
     }
@@ -197,6 +223,7 @@ export default {
 
 .action-container button {
     width: 50%;
+    height: 40px;
     border: none;
 }
 
@@ -206,10 +233,6 @@ export default {
 
 .create-button:enabled {
     color: gray;
-}
-
-.join-button {
-    margin-left: 10px;
 }
 
 .join-button:enabled {

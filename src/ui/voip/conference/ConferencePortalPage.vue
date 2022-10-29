@@ -1,6 +1,6 @@
 <template>
     <div class="conference-container">
-        <p class="title">在线会议</p>
+        <h2 class="title">在线会议</h2>
         <div class="action-container">
             <div class="action" @click="joinConference">
                 <img :src="require(`@/assets/images/av_join_conference.png`)" alt="">
@@ -19,8 +19,9 @@
             <ul>
                 <li v-for="(conferenceInfo, index) in favConferenceInfos"
                     :key="index">
-                    <div @click="showConferenceInfo(conferenceInfo)">
-                        <p>{{ conferenceInfo.conferenceTitle }}</p>
+                    <div class="fav-conference" @click="showConferenceInfo(conferenceInfo)">
+                        <p class="title single-line">{{ conferenceInfo.conferenceTitle }}</p>
+                        <p class="desc">{{ favConferenceDesc(conferenceInfo) }}</p>
                     </div>
                 </li>
             </ul>
@@ -44,15 +45,18 @@ export default {
         }
     },
     mounted() {
-        conferenceApi.getFavConferences()
-            .then(favConferenceInfos => {
-                this.favConferenceInfos = favConferenceInfos;
-            })
-            .catch(err => {
-                console.log('getFavConferences error', err)
-            });
+        this.loadFavConferences();
     },
     methods: {
+        loadFavConferences() {
+            conferenceApi.getFavConferences()
+                .then(favConferenceInfos => {
+                    this.favConferenceInfos = favConferenceInfos;
+                })
+                .catch(err => {
+                    console.log('getFavConferences error', err)
+                });
+        },
         joinConference() {
             let beforeOpen = () => {
                 console.log('Opening...')
@@ -68,7 +72,7 @@ export default {
                 {}, {
                     name: 'join-conference-modal',
                     width: 320,
-                    height: 330,
+                    height: 300,
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,
@@ -85,13 +89,14 @@ export default {
             };
             let closed = (event) => {
                 console.log('Close...', event)
+                this.loadFavConferences();
             };
             this.$modal.show(
                 CreateConferenceView,
                 {}, {
                     name: 'create-conference-modal',
                     width: 320,
-                    height: 480,
+                    height: 500,
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,
@@ -108,13 +113,14 @@ export default {
             };
             let closed = (event) => {
                 console.log('Close...', event)
+                this.loadFavConferences();
             };
             this.$modal.show(
                 OrderConferenceView,
                 {}, {
                     name: 'order-conference-modal',
                     width: 320,
-                    height: 520,
+                    height: 500,
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,
@@ -140,15 +146,26 @@ export default {
                 }, {
                     name: 'conference-info-modal',
                     width: 320,
-                    height: 600,
+                    height: 580,
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,
                     'before-close': beforeClose,
                     'closed': closed,
                 })
-
         },
+        favConferenceDesc(conferenceInfo) {
+            let start = new Date(conferenceInfo.startTime * 1000).getTime();
+            let end = new Date(conferenceInfo.endTime * 1000).getTime();
+            let now = new Date().getTime();
+            if (now < start) {
+                return '会议尚未开始';
+            } else if (start < end) {
+                return '会议已开始，请尽快加入';
+            } else {
+                return '会议已结束';
+            }
+        }
     }
 }
 </script>
@@ -163,7 +180,7 @@ export default {
     align-items: center;
 }
 
-.title {
+.conference-container > .title {
     margin-top: 30px;
     font-size: 20px;
 }
@@ -197,6 +214,20 @@ export default {
     width: calc(100% - 200px);
     border-top: 1px lightgrey solid;
     padding-top: 10px;
+}
+
+.fav-conference {
+    border-bottom: 1px solid #f1f1f1;
+    padding: 5px 0;
+}
+
+.fav-conference .title {
+
+}
+
+.fav-conference .desc {
+    color: gray;
+    font-size: 12px;
 }
 
 </style>
