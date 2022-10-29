@@ -53,7 +53,7 @@
                 <input v-model="mobile" class="text-input" type="number" placeholder="请输入手机号">
             </div>
             <div class="item">
-                <input v-model="password" class="text-input" @keydown.enter="loginWithPassword" type="text" placeholder="请输入密码">
+                <input v-model="password" class="text-input" @keydown.enter="loginWithPassword" type="password" placeholder="请输入密码">
             </div>
             <div style="display: flex; justify-content: space-between; width: 100%; ">
                 <p class="tip" @click="switchLoginType(2)">使用验证码登录</p>
