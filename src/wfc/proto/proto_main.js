@@ -33,6 +33,8 @@ const asyncProtoMethods = {
     transferGroup: _asyncCall2('transferGroup'),
     setFavGroup: _asyncCall2('setFavGroup'),
     quitGroup: _asyncCall2('quitGroup'),
+    getMyGroups: _asyncCall2('getMyGroups'),
+    getCommonGroups: _asyncCall2('getCommonGroups'),
     setUserSetting: _asyncCall2('setUserSetting'),
     modifyMyInfo: _asyncCall2('modifyMyInfo'),
     setGlobalSlient: _asyncCall2('setGlobalSlient'),
@@ -305,4 +307,3 @@ function _genProtoEventListener(protoEventName) {
         }
     }
 }
-

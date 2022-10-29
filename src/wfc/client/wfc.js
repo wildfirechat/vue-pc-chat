@@ -778,6 +778,29 @@ export class WfcManager {
     }
 
     /**
+     * 获取当前用户的所有群组ID
+     *
+     * @param {function ([string])} successCB
+     * @param {function (number)} failCB
+     * @returns {Promise<void>}
+     */
+    async getMyGroups(successCB, failCB) {
+      impl.getMyGroups(successCB, failCB);
+    }
+
+    /**
+     * 获取用户共同群组ID
+     *
+     * @param {string} userId
+     * @param {function ([string])} successCB
+     * @param {function (number)} failCB
+     * @returns {Promise<void>}
+     */
+    async getCommonGroups(userId, successCB, failCB) {
+      impl.getCommonGroups(userId, successCB, failCB);
+    }
+
+    /**
      * 获取用户设置，保存格式可以理解为：scope + key => value
      * @param {number} scope 命名空间，可选值参考{@link UserSettingScope}
      * @param {string} key key
