@@ -195,7 +195,6 @@ let store = {
             isElectron: isElectron(),
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
             isMainWindow: false,
-            isConversationWindow: false,
             linuxUpdateTitleInterval: 0,
             wfc: wfc,
             config: Config,
@@ -221,7 +220,7 @@ let store = {
         },
     },
 
-    init(isMainWindow, isConversaitonWindow = false) {
+    init(isMainWindow) {
         console.log('init store')
         // 目前，通知只可能在主窗口触发
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
@@ -566,7 +565,6 @@ let store = {
         miscState.connectionStatus = wfc.getConnectionStatus();
 
         miscState.isMainWindow = isMainWindow;
-        miscState.isConversationWindow = isConversaitonWindow;
         window.__wfc = wfc;
     },
 
