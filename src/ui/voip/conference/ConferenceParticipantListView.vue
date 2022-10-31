@@ -1,6 +1,5 @@
 <template>
-    <div class="participant-list-container"
-    >
+    <div class="participant-list-container" ref="rootContainer">
         <div v-if="true" @click="invite"
              class="action-item">
             <div class="icon">+</div>
@@ -12,40 +11,51 @@
             <p>移除参与者</p>
         </div>
         <ul>
-            <li v-for="user in participants" :key="user.uid">
+            <li v-for="participant in participants" :key="participant.uid">
                 <tippy
-                    :to="'user-' + user.uid"
+                    :to="'user-' + participant.uid"
                     interactive
                     theme="light"
                     :animate-fill="false"
                     placement="left"
                     distant="7"
                     animation="fade"
-                    trigger="click"
+                    trigger="manual"
                 >
-                    <UserCardView :user-info="user"/>
+                    <UserCardView :user-info="participant"/>
                 </tippy>
                 <div class="participant-user"
-                     :ref="'userCardTippy-'+user.uid"
-                     :name="'user-'+user.uid">
+                     @click.stop.prevent="showContextMenu($event, participant)"
+                     :ref="'userCardTippy-'+participant.uid"
+                     v-bind:class="{active: participant.uid === currentParticipant.uid}"
+                     :name="'user-'+participant.uid">
                     <div class="avatar-container">
-                        <img class="avatar" :src="user.portrait" alt="">
-                        <div v-if=" selfUserId === session.host && !user._isHost" @click.stop="kickoff(user)"
+                        <img class="avatar" :src="participant.portrait" alt="">
+                        <div v-if=" selfUserId === session.host && !participant._isHost" @click.stop="kickoff(participant)"
                              class="icon">
                             -
                         </div>
                     </div>
-                    <span class="single-line name"> {{ userName(user) }}</span>
-                    <span class="single-line label host"
-                          v-if="user._isHost">主持人</span>
-                    <span v-else class="single-line label"
-                          @click.stop="requestChangeMode(user)"
-                          v-bind:class="{audience: user._isAudience}">{{
-                            user._isAudience ? '听众' : '互动成员'
-                        }}</span>
+                    <div class="name-desc">
+                        <p class="single-line name"> {{ participantName(participant) }}</p>
+                        <p class="single-line desc">{{ participantDesc(participant) }}</p>
+                    </div>
+                    <div class="audio-video">
+                        <i v-if="participant._isAudience || participant._isAudioMuted" class="icon-ion-ios-mic-outline" style="color: gray"></i>
+                        <i v-else class="icon-ion-ios-mic"></i>
+                        <i v-if="participant._isAudience || participant._isVideoMuted" class="icon-ion-ios-videocam-outline" style="color: gray"></i>
+                        <i v-else class="icon-ion-ios-videocam"></i>
+                    </div>
                 </div>
             </li>
         </ul>
+
+        <vue-context ref="menu" v-slot="{data:participant}" :close-on-scroll="true">
+            <li v-for="(item,i) in buildParticipantContextMenu(participant)" :key="i">
+                <a @click.prevent="item.handler" v-bind:style="item.styleObject">{{ item.title }}</a>
+            </li>
+        </vue-context>
+
     </div>
 </template>
 
@@ -73,6 +83,8 @@ export default {
     data() {
         return {
             selfUserId: wfc.getUserId(),
+            isContextMenuShow: false,
+            currentParticipant: {},
         }
     },
     components: {
@@ -102,7 +114,7 @@ export default {
                 return;
             }
             this.$alert({
-                content: user._isAudience ? `邀请${this.userName(user)}参与互动?` : `取消${this.userName(user)}参与互动?`,
+                content: user._isAudience ? `邀请${this.participantName(user)}参与互动?` : `取消${this.participantName(user)}参与互动?`,
                 cancelCallback: () => {
                     // do nothing
                 },
@@ -114,7 +126,7 @@ export default {
 
         kickoff(user) {
             this.$alert({
-                content: `确认将${this.userName(user)}移除会议?`,
+                content: `确认将${this.participantName(user)}移除会议?`,
                 cancelCallback: () => {
                     // do nothing
                 },
@@ -124,7 +136,7 @@ export default {
             })
         },
 
-        userName(user) {
+        participantName(user) {
             let name = '';
             if (user.groupAlias) {
                 name = user.groupAlias;
@@ -137,7 +149,122 @@ export default {
             }
             return name;
         },
+        participantDesc(user) {
+            let desc = '';
+            if (user.uid === wfc.getUserId()) {
+                desc = "我"
+            }
+            // TODO
+            return desc;
+        },
 
+        buildParticipantContextMenu(participant) {
+            let items = [];
+            if (!participant) {
+                return items;
+            }
+
+            items.push({
+                title: '查看用户信息',
+                handler: () => {
+                    this.showUserCard(participant);
+                }
+            })
+            if (participant._isAudience || participant._isVideoMuted) {
+                items.push({
+                    title: '开启视频',
+                    handler: () => {
+                        // TODO
+                    }
+                })
+            }
+            if (participant._isAudience || participant._isAudioMuted) {
+                items.push({
+                    title: '开启音频',
+                    handler: () => {
+                        // TODO
+                    }
+                })
+            }
+
+            if (participant._isAudience) {
+                items.push({
+                    title: '开启音视频',
+                    handler: () => {
+                        // TODO
+                    }
+                })
+            }
+
+            if (!participant._isAudience) {
+                if (!participant._isAudioMuted) {
+                    items.push({
+                        title: '关闭音频',
+                        handler: () => {
+                            // TODO
+                        },
+                        styleObject: {
+                            color: 'red',
+                        }
+                    })
+                }
+                if (!participant._isVideoMuted) {
+                    items.push({
+                        title: '关闭视频',
+                        handler: () => {
+                            // TODO
+                        },
+                        styleObject: {
+                            color: 'red',
+                        }
+                    })
+                }
+                if (!participant._isVideoMuted && !participant._isAudioMuted) {
+                    items.push({
+                        title: '关闭音视频',
+                        handler: () => {
+                            // TODO
+                        },
+                        styleObject: {
+                            color: 'red',
+                        }
+                    })
+                }
+            }
+            // TODO more
+            return items;
+        },
+
+        showContextMenu(event, participant) {
+            if (this.isContextMenuShow) {
+                this.$refs.menu.close();
+                this.isContextMenuShow = false;
+                this.currentParticipant = {};
+                return;
+            }
+            let ne = {
+                type: 'contextmenu'
+            }
+
+            ne.clientX = event.clientX - this.$refs.rootContainer.offsetLeft;
+            // 160 menu width
+            // 360 slider width
+            if (ne.clientX + 160 > 350) {
+                ne.clientX = ne.clientX - 160;
+            }
+            ne.clientY = event.clientY - this.$refs.rootContainer.offsetTop;
+            this.$refs.menu.open(ne, participant);
+            this.$refs.menu.$once('close', () => {
+                this.isContextMenuShow = false;
+                this.currentParticipant = {};
+            })
+            this.isContextMenuShow = true;
+            this.currentParticipant = participant;
+        }
+        ,
+        showUserCard(p) {
+            this.$refs['userCardTippy-' + p.uid][0]._tippy.show();
+        }
     }
 }
 </script>
@@ -178,32 +305,30 @@ export default {
 .participant-user {
     display: flex;
     align-items: center;
-    padding: 5px 0 0 10px;
+    justify-content: center;
+    padding: 5px 0 5px 10px;
 }
 
-.participant-user .name {
+.participant-user.active {
+    background: #d6d6d6;
+}
+
+.participant-user .name-desc {
     flex: 1;
 }
 
-.participant-user .label {
-    color: green;
-    font-size: 12px;
-    border: 1px solid green;
-    border-radius: 2px;
-    padding: 2px 5px;
-    margin-right: 10px;
+.participant-user .name-desc .desc {
+    font-size: 13px;
 }
 
-.participant-user .audience {
-    color: gray;
-    border: 1px solid gray;
+.audio-video {
+    color: black;
+    padding: 0 10px;
 }
 
-.participant-user .host {
-    color: #4168e0;
-    border: 1px solid #4168e0;
+.audio-video i {
+    padding: 5px;
 }
-
 
 .participant-user .avatar {
     width: 40px;
@@ -214,6 +339,9 @@ export default {
 
 .avatar-container {
     position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .avatar-container .icon {

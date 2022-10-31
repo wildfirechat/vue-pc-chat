@@ -200,7 +200,6 @@
                 <ConferenceParticipantListView
                     v-if="showParticipantList"
                     v-bind:class="{ active: showParticipantList}"
-                    v-click-outside="hideParticipantList"
                     :participants="participantUserInfos"
                     :session="session"
                 />
