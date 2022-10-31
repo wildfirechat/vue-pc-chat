@@ -331,6 +331,7 @@ export default {
                 selfUserInfo._isHost = session.host === selfUserInfo.uid;
                 selfUserInfo._isAudience = session.audience;
                 selfUserInfo._isVideoMuted = session.videoMuted;
+                selfUserInfo._isAudioMuted = session.audioMuted;
                 selfUserInfo._volume = 0;
                 // 修添加属性，在赋值，才能 reactive
                 this.selfUserInfo = selfUserInfo;
@@ -385,6 +386,7 @@ export default {
                     userInfo._isAudience = subscriber.audience;
                     userInfo._isHost = this.session.host === userId;
                     userInfo._isVideoMuted = subscriber.videoMuted;
+                    userInfo._isAudioMuted = subscriber.audioMuted;
                     userInfo._volume = 0;
                     userInfo._isScreenSharing = screenSharing;
                     this.participantUserInfos.push(userInfo);
@@ -491,6 +493,7 @@ export default {
                         if (u.uid === p && u._isScreenSharing === false) {
                             let subscriber = this.session.getSubscriber(p);
                             u._isVideoMuted = subscriber.videoMuted;
+                            u._isAudioMuted = subscriber.audioMuted;
                         }
                     })
 
@@ -868,6 +871,8 @@ export default {
             let start = this.currentPageIndex * this.participantCountPerPage;
             let end = start + this.participantCountPerPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerPage);
             // side effect
+            // TODO 优化
+            // 相邻页切换时，不能理解取消订阅，可能还切换回去，那样的话，就会有一小段时间，不显示视频流
             for (let i = 0; i < this.participantUserInfos.length; i++) {
                 let u = this.participantUserInfos[i];
                 if (u.uid === this.selfUserInfo.uid || u._isAudience || u._isVideoMuted) {

@@ -21,7 +21,8 @@
         </div>
         <div class="info-container">
             <i v-if="participant._isHost" class="icon-ion-person"></i>
-            <i v-if="!participant._isVideoMuted" class="icon-ion-ios-videocam"></i>
+            <i v-if="participant._isAudioMuted" class="icon-ion-ios-mic-off" style="color: white"></i>
+            <i v-else class="icon-ion-ios-mic"></i>
             <div>{{ userName(participant) }}</div>
         </div>
     </div>
