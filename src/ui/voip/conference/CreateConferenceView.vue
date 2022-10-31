@@ -29,7 +29,8 @@
         <div>
             <label>
                 使用个人会议号
-                <input v-model="enableUserCallId" type="checkbox">
+                <!--                TODO -->
+                <input v-model="enableUserCallId" :disabled="true" type="checkbox">
             </label>
             <p style="font-size: 12px">{{ callId }}</p>
         </div>

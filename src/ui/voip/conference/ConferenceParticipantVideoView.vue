@@ -9,13 +9,13 @@
                playsInline
                :muted="participant.uid === selfUserId"
                autoPlay/>
-        <audio v-else-if="!participant._isAudience && participant.uid !== selfUserId && participant._stream"
-               :srcObject.prop="participant._stream"
-               autoPlay/>
         <div v-else
              class="avatar-container">
             <img class="avatar" :src="participant.portrait" :alt="participant">
         </div>
+        <audio v-if="!participant._isAudience && participant.uid !== selfUserId && participant._stream"
+               :srcObject.prop="participant._stream"
+               autoPlay/>
         <div v-if="!participant._isVideoMuted" class="video-stream-tip-container">
             <p>{{ participant.uid === selfUserId ? '点击视频，切换摄像头' : '点击视频，切换视频流类型' }}</p>
         </div>
@@ -51,20 +51,28 @@ export default {
             selfUserId: wfc.getUserId(),
         }
     },
-    created() {
-        if (this.selfUserId !== this.participant.uid) {
-            if (!this.participant._isVideoMuted) {
-                this.session.setParticipantVideoType(this.participant.uid, this.participant._isScreenSharing, VideoType.BIG_STREAM);
-            }
-        }
-    },
-    destroyed() {
-        if (this.selfUserId !== this.participant.uid) {
-            if (!this.participant._isVideoMuted) {
-                this.session.setParticipantVideoType(this.participant.uid, this.participant._isScreenSharing, VideoType.NONE);
-            }
-        }
-    },
+    // created() {
+    //     console.log('------------- videoView created', this.participant.uid);
+    //     if (this.selfUserId !== this.participant.uid) {
+    //         if (!this.participant._isVideoMuted) {
+    //             this.session.setParticipantVideoType(this.participant.uid, this.participant._isScreenSharing, VideoType.BIG_STREAM);
+    //         }
+    //     }
+    // },
+    // destroyed() {
+    //     console.log('------------- videoView destroyed', this.$parent.currentLayout, this.layoutMode, this.participant.uid);
+    //     // fixme
+    //     // 切换布局时，不取消订阅视频流
+    //     // 已知问题，演讲者模式时，会订阅所有的视频流；从演讲者模式，切换到宫格布局时，会保持订阅所有的视频流，直到切换宫格布局的页面时，才会取消订阅一些看不见的流
+    //     if (this.$parent.currentLayout !== this.currentLayout) {
+    //         return;
+    //     }
+    //     if (this.selfUserId !== this.participant.uid) {
+    //         if (!this.participant._isVideoMuted) {
+    //             this.session.setParticipantVideoType(this.participant.uid, this.participant._isScreenSharing, VideoType.NONE);
+    //         }
+    //     }
+    // },
     methods: {
         userName(user) {
             let name = '';

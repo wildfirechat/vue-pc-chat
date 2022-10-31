@@ -464,6 +464,10 @@ export default {
                     return;
                 }
 
+                if (userInfo._isVideoMuted) {
+                    return;
+                }
+
                 if (!this.focusParticipant) {
                     this.focusParticipant = userInfo;
                     this.session.setParticipantVideoType(userInfo.uid, userInfo._isScreenSharing, VideoType.BIG_STREAM);
@@ -798,20 +802,17 @@ export default {
             if (this.currentLayout === layout) {
                 return;
             }
+            // 演讲者布局
             if (layout === 1) {
-                // 切换为小流，然后焦点用户切换为大流
+                // 演讲者布局，切换为小流，然后焦点用户切换为大流
                 this.participantUserInfos.forEach(u => {
                     if (u.uid !== this.selfUserInfo.uid && !u._isAudience && !u._isVideoMuted) {
                         this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.SMALL_STREAM);
                     }
                 })
             } else {
-                // 切换为大流
-                this.participantUserInfos.forEach(u => {
-                    if (u.uid !== this.selfUserInfo.uid && !u._isAudience && !u._isVideoMuted) {
-                        this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.BIG_STREAM);
-                    }
-                })
+                //宫格布局， 当前页切换为大流，未显示的，取消订阅，由 currentPageParticipants 副作用触发
+                this.currentPageIndex = 0;
             }
             this.currentLayout = layout;
             this.showChooseLayoutView = false;
@@ -844,10 +845,6 @@ export default {
             return this.timestampFormat(escapeMillis)
         },
 
-        computedParticipants() {
-            return [...this.participantUserInfos];
-        },
-
         speakingUserName() {
             let maxVolume = this.selfUserInfo._volume;
             let speakingUserInfo = this.selfUserInfo;
@@ -865,43 +862,100 @@ export default {
         },
 
         currentPageParticipants() {
+            if (this.currentLayout === 1) {
+                return [];
+            }
             let start = this.currentPageIndex * this.participantCountPerPage;
             let end = start + this.participantCountPerPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerPage);
+            // side effect
+            for (let i = 0; i < this.participantUserInfos.length; i++) {
+                let u = this.participantUserInfos[i];
+                if (u.uid === this.selfUserInfo.uid || u._isAudience || u._isVideoMuted) {
+                    continue;
+                }
+                if (i >= start && i < end) {
+                    console.log('set video type big', u.uid)
+                    this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.BIG_STREAM);
+                } else {
+                    console.log('set video type none', u.uid)
+                    this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.NONE);
+                }
+            }
+            // side effect
             return this.participantUserInfos.slice(start, end);
         }
     },
 
     watch: {
-        currentPageParticipants: {
+        participantUserInfos: {
             deep: true,
             handler(infos) {
                 if (this.audioOnly) {
                     return;
                 }
                 if (this.currentLayout === 1) {
+                    this.participantUserInfos.forEach(u => {
+                        if (u.uid === this.selfUserInfo.uid || u._isAudience || u._isVideoMuted) {
+                            // ho nothing
+                        } else {
+                            this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.SMALL_STREAM);
+                        }
+                    })
+                } else {
+                    let start = this.currentPageIndex * this.participantCountPerPage;
+                    let end = start + this.participantCountPerPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerPage);
+                    let count = end - start;
+                    let width = '100%';
+                    let height = '100%';
+                    if (count <= 1) {
+                        width = '100%';
+                        height = '100%';
+                    } else if (count <= 4) {
+                        width = '50%';
+                        height = '45%';
+                    } else if (count <= 9) {
+                        width = '33%';
+                        height = '33%'
+                    } else {
+                        // max 16
+                        width = '25%';
+                        height = '25%'
+                    }
+                    if (this.$refs.rootContainer) {
+                        this.$refs.rootContainer.style.setProperty('--participant-video-item-width', width);
+                        this.$refs.rootContainer.style.setProperty('--participant-video-item-height', height);
+                    }
+                }
+            }
+        },
+        currentPageParticipants: {
+            deep: true,
+            handler(infos) {
+                if (this.audioOnly) {
                     return;
                 }
-                let videoParticipants = infos.filter(u => !u._isAudience)
-                let count = videoParticipants.length;
-                let width = '100%';
-                let height = '100%';
-                if (count <= 1) {
-                    width = '100%';
-                    height = '100%';
-                } else if (count <= 4) {
-                    width = '50%';
-                    height = '45%';
-                } else if (count <= 9) {
-                    width = '33%';
-                    height = '33%'
-                } else {
-                    // max 16
-                    width = '25%';
-                    height = '25%'
-                }
-                if (this.$refs.rootContainer) {
-                    this.$refs.rootContainer.style.setProperty('--participant-video-item-width', width);
-                    this.$refs.rootContainer.style.setProperty('--participant-video-item-height', height);
+                if (this.currentLayout === 0) {
+                    let count = this.currentPageParticipants.length;
+                    let width = '100%';
+                    let height = '100%';
+                    if (count <= 1) {
+                        width = '100%';
+                        height = '100%';
+                    } else if (count <= 4) {
+                        width = '50%';
+                        height = '45%';
+                    } else if (count <= 9) {
+                        width = '33%';
+                        height = '33%'
+                    } else {
+                        // max 16
+                        width = '25%';
+                        height = '25%'
+                    }
+                    if (this.$refs.rootContainer) {
+                        this.$refs.rootContainer.style.setProperty('--participant-video-item-width', width);
+                        this.$refs.rootContainer.style.setProperty('--participant-video-item-height', height);
+                    }
                 }
             }
         }
@@ -1039,7 +1093,6 @@ i.active {
     /*top: 0;*/
     /*right: 0;*/
     width: 200px;
-    background: red;
     height: 100%;
     overflow: auto;
 }
