@@ -9,7 +9,7 @@
         </label>
         <label>
             结束时间
-            <input v-model="endTime" type="datetime-local">
+            <input v-model="endTime" :min="new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('.')[0]" type="datetime-local">
         </label>
         <label>
             参与者开启摄像头、麦克风入会
@@ -61,7 +61,7 @@ export default {
         return {
             title: '',
             desc: '',
-            endTime: '',
+            endTime: new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000 + 1 * 60 * 60 * 1000).toISOString().split('.')[0],
             audience: false,
             advance: false,
             allowTurnOnMic: true,

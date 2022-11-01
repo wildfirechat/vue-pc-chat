@@ -167,6 +167,14 @@
                                     <p>聊天</p>
                                 </div>
                                 <div class="action">
+                                    <img v-if="!conferenceManager.isHandUp" @click="handup"
+                                         class="action-img"
+                                         src='@/assets/images/av_conference_handup.png'/>
+                                    <img v-else @click="handup" class="action-img"
+                                         src='@/assets/images/av_conference_handup_hover.png'/>
+                                    <p class="single-line">举手</p>
+                                </div>
+                                <div class="action">
                                     <img @click.stop="members" class="action-img"
                                          v-bind:style="{filter: showParticipantListView ? 'invert(100%)' : 'none'}"
                                          src='@/assets/images/av_conference_members.png'/>
@@ -224,6 +232,8 @@ import ConversationView from "../../main/conversation/ConversationView";
 import ConferenceSimpleInfoView from "./ConferenceSimpleInfoView";
 import ChooseConferenceLayoutView from "./ChooseConferenceLayoutView";
 import ConferenceConversationFloatingView from "./ConferenceConversationFloatingView";
+import conferenceManager from "./conferenceManager";
+import conferenceApi from "../../../api/conferenceApi";
 
 export default {
     name: 'Conference',
@@ -231,10 +241,8 @@ export default {
         return {
             session: null,
             audioOnly: false,
-            muted: false,
             status: 1,
             selfUserInfo: null,
-            initiatorUserInfo: null,
             participantUserInfos: [],
 
             startTimestamp: 0,
@@ -249,6 +257,8 @@ export default {
             refreshUserInfoInternal: 0,
 
             endReason: undefined,
+
+            conferenceManager: conferenceManager,
 
             // 0, 宫格视图；1，演讲者视图
             currentLayout: 0,
@@ -298,6 +308,7 @@ export default {
             let sessionCallback = new CallSessionCallback();
 
             sessionCallback.didChangeState = (state) => {
+                console.log('didChangeState', state)
                 this.status = state;
                 if (state === CallState.STATUS_CONNECTED) {
                     if (this.startTimestamp === 0) {
@@ -323,7 +334,6 @@ export default {
                 selfUserInfo._volume = 0;
                 // 修添加属性，在赋值，才能 reactive
                 this.selfUserInfo = selfUserInfo;
-                this.initiatorUserInfo = initiatorUserInfo;
                 this.participantUserInfos = [selfUserInfo];
 
                 // pls refer to: https://vuejs.org/v2/guide/reactivity.html
@@ -332,6 +342,8 @@ export default {
 
                 this.session = session;
                 document.title = session.title;
+
+                conferenceManager.getConferenceInfo(session.callId);
             };
 
             sessionCallback.didCreateLocalVideoTrack = (stream) => {
@@ -693,6 +705,10 @@ export default {
             for (const videoEl of videoEls) {
                 videoEl.setSinkId(deviceId);
             }
+        },
+
+        handup() {
+            conferenceManager.handup()
         },
 
         userName(user) {
