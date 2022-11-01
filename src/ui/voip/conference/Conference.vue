@@ -34,7 +34,7 @@
                             <i class="icon-ion-grid" style="padding: 0 10px"
                                id="grid-icon"
                                v-bind:class="{active:showChooseLayoutView}"
-                               @click="showChooseLayoutView = !showChooseLayoutView"/>
+                               @click="showChooseLayoutView = !showChooseLayoutView">宫格布局</i>
                         </a>
                         <!--                        TODO 条件显示，展示聊天界面，或者参与者列表界面时，才展示-->
                         <a href="#" v-if="showSlider">
@@ -65,9 +65,9 @@
                     <!--main-->
                     <!--video-->
                     <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                        <i v-if="currentLayout === 0 && currentPageIndex > 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                            @click="prePage"></i>
-                        <i v-if="currentLayout === 0" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                        <i v-if="currentLayout === 0 && currentPageIndex < gridPageCount - 1" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
                            @click="nextPage"></i>
                         <!--                    宫格布局-->
                         <section v-if="currentLayout === 0" class="content-container grid video">
@@ -268,7 +268,7 @@ export default {
 
             // 宫格视图
             currentPageIndex: 0,
-            participantCountPerPage: 9,
+            participantCountPerGridPage: 1,
 
             // 演讲者视图
             focusParticipant: null,
@@ -576,13 +576,13 @@ export default {
         },
 
         members() {
-            this.toggleSliderView();
             this.showParticipantListView = !this.showParticipantListView;
+            this.toggleSliderView();
         },
 
         chat() {
-            this.toggleSliderView();
             this.showConversationView = !this.showConversationView;
+            this.toggleSliderView();
         },
 
         hideParticipantList() {
@@ -791,11 +791,11 @@ export default {
         prePage() {
             this.currentPageIndex--;
             if (this.currentPageIndex < 0) {
-                this.currentPageIndex = Math.ceil(this.participantUserInfos.length / this.participantCountPerPage) - 1
+                this.currentPageIndex = Math.ceil(this.participantUserInfos.length / this.participantCountPerGridPage) - 1
             }
         },
         nextPage() {
-            if (this.participantUserInfos.length / this.participantCountPerPage > (this.currentPageIndex + 1)) {
+            if (this.participantUserInfos.length / this.participantCountPerGridPage > (this.currentPageIndex + 1)) {
                 this.currentPageIndex++;
             } else {
                 this.currentPageIndex = 0;
@@ -803,7 +803,7 @@ export default {
         },
 
         updateCountPerPage(count) {
-            this.participantCountPerPage = count;
+            this.participantCountPerGridPage = count;
         },
 
         setCurrentLayout(layout) {
@@ -873,8 +873,8 @@ export default {
             if (this.currentLayout === 1) {
                 return [];
             }
-            let start = this.currentPageIndex * this.participantCountPerPage;
-            let end = start + this.participantCountPerPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerPage);
+            let start = this.currentPageIndex * this.participantCountPerGridPage;
+            let end = start + this.participantCountPerGridPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerGridPage);
             // side effect
             // TODO 优化
             // 相邻页切换时，不能理解取消订阅，可能还切换回去，那样的话，就会有一小段时间，不显示视频流
@@ -893,6 +893,10 @@ export default {
             }
             // side effect
             return this.participantUserInfos.slice(start, end);
+        },
+
+        gridPageCount() {
+            return Math.ceil(this.participantUserInfos.length / this.participantCountPerGridPage);
         }
     },
 
@@ -912,8 +916,8 @@ export default {
                         }
                     })
                 } else {
-                    let start = this.currentPageIndex * this.participantCountPerPage;
-                    let end = start + this.participantCountPerPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerPage);
+                    let start = this.currentPageIndex * this.participantCountPerGridPage;
+                    let end = start + this.participantCountPerGridPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerGridPage);
                     let count = end - start;
                     let width = '100%';
                     let height = '100%';
@@ -1210,6 +1214,11 @@ footer {
     text-align: center;
     justify-content: center;
     color: red;
+}
+
+.icon-ion-grid:after {
+    padding-left: 5px;
+    content: "\f13f";
 }
 
 </style>
