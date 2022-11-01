@@ -219,10 +219,6 @@ export default {
     object-fit: cover;
 }
 
-.hidden-video {
-    height: 0;
-}
-
 .participant-video-item p {
     max-height: 20px;
     color: white;

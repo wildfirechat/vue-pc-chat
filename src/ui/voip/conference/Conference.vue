@@ -28,9 +28,9 @@
                            @click="showConferenceSimpleInfoView = !showConferenceSimpleInfoView"/>
                     </a>
                     <p style="flex: 1"></p>
-                    <p>{{ duration }}</p>
+                    <p style="padding-right: 10px">{{ duration }}</p>
                     <div>
-                        <a href="#">
+                        <a v-if="!audioOnly" href="#">
                             <i class="icon-ion-grid" style="padding: 0 10px"
                                id="grid-icon"
                                v-bind:class="{active:showChooseLayoutView}"
@@ -65,9 +65,9 @@
                     <!--main-->
                     <!--video-->
                     <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                        <i v-if="currentLayout === 0 && currentPageIndex > 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                        <i v-if="currentLayout === 0 && currentGridPageIndex > 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                            @click="prePage"></i>
-                        <i v-if="currentLayout === 0 && currentPageIndex < gridPageCount - 1" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                        <i v-if="currentLayout === 0 && currentGridPageIndex < gridPageCount - 1" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
                            @click="nextPage"></i>
                         <!--                    宫格布局-->
                         <section v-if="currentLayout === 0" class="content-container grid video">
@@ -113,20 +113,20 @@
                         </div>
                         <section class="content-container audio">
                             <!--self-->
-                            <div v-if="!session.audience" class="participant-audio-item">
-                                <video v-if="audioOnly && selfUserInfo._stream"
-                                       class="hidden-video"
-                                       :srcObject.prop="selfUserInfo._stream"
-                                       muted
-                                       playsInline autoPlay/>
-                                <div style="position: relative">
-                                    <img class="avatar"
-                                         v-bind:class="{highlight:selfUserInfo._volume > 0}"
-                                         :src="selfUserInfo.portrait">
-                                    <i v-if="selfUserInfo._isHost" class="host-indicator icon-ion-person"></i>
-                                </div>
-                                <p class="single-line">{{ userName(selfUserInfo) }}</p>
-                            </div>
+<!--                            <div v-if="!session.audience" class="participant-audio-item">-->
+<!--                                <video v-if="audioOnly && selfUserInfo._stream"-->
+<!--                                       class="hidden-video"-->
+<!--                                       :srcObject.prop="selfUserInfo._stream"-->
+<!--                                       muted-->
+<!--                                       playsInline autoPlay/>-->
+<!--                                <div style="position: relative">-->
+<!--                                    <img class="avatar"-->
+<!--                                         v-bind:class="{highlight:selfUserInfo._volume > 0}"-->
+<!--                                         :src="selfUserInfo.portrait">-->
+<!--                                    <i v-if="selfUserInfo._isHost" class="host-indicator icon-ion-person"></i>-->
+<!--                                </div>-->
+<!--                                <p class="single-line">{{ userName(selfUserInfo) }}</p>-->
+<!--                            </div>-->
                             <!--participants-->
                             <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
                                  :key="participant.uid"
@@ -134,6 +134,7 @@
                                 <video v-if="audioOnly && participant._stream"
                                        class="hidden-video"
                                        :srcObject.prop="participant._stream"
+                                       :muted="participant.uid === selfUserInfo.uid"
                                        playsInline autoPlay/>
                                 <div style="position: relative">
                                     <img class="avatar"
@@ -158,14 +159,14 @@
                                     <p>静音</p>
                                 </div>
                                 <div class="action"
-                                     v-if="!session.audioOnly && !session.isScreenSharing()">
+                                     v-if="!session.isScreenSharing()">
                                     <img v-if="!session.audience && !session.videoMuted" @click="muteVideo" class="action-img"
                                          src='@/assets/images/av_conference_video.png'/>
                                     <img v-else @click="muteVideo" class="action-img"
                                          src='@/assets/images/av_conference_video_mute.png'/>
                                     <p>视频</p>
                                 </div>
-                                <div v-if="!audioOnly" class="action">
+                                <div class="action">
                                     <img v-if="!session.screenSharing" @click="screenShare"
                                          class="action-img"
                                          src='@/assets/images/av_conference_screen_sharing.png'/>
@@ -267,7 +268,7 @@ export default {
             currentLayout: 0,
 
             // 宫格视图
-            currentPageIndex: 0,
+            currentGridPageIndex: 0,
             participantCountPerGridPage: 1,
 
             // 演讲者视图
@@ -329,7 +330,6 @@ export default {
             sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo) => {
                 //this.session.rotateAng = 90;
 
-                this.audioOnly = session.audioOnly;
                 selfUserInfo._isHost = session.host === selfUserInfo.uid;
                 selfUserInfo._isAudience = session.audience;
                 selfUserInfo._isVideoMuted = session.videoMuted;
@@ -346,10 +346,6 @@ export default {
 
                 this.session = session;
                 document.title = session.title;
-            };
-
-            sessionCallback.didChangeMode = (audioOnly) => {
-                this.audioOnly = audioOnly;
             };
 
             sessionCallback.didCreateLocalVideoTrack = (stream) => {
@@ -608,9 +604,6 @@ export default {
 
 
         async screenShare() {
-            if (this.session.audioOnly) {
-                return;
-            }
 
             // if (true) {
             //     navigator.mediaDevices.enumerateDevices().then(deviceInfos => {
@@ -789,16 +782,16 @@ export default {
         },
 
         prePage() {
-            this.currentPageIndex--;
-            if (this.currentPageIndex < 0) {
-                this.currentPageIndex = Math.ceil(this.participantUserInfos.length / this.participantCountPerGridPage) - 1
+            this.currentGridPageIndex--;
+            if (this.currentGridPageIndex < 0) {
+                this.currentGridPageIndex = Math.ceil(this.participantUserInfos.length / this.participantCountPerGridPage) - 1
             }
         },
         nextPage() {
-            if (this.participantUserInfos.length / this.participantCountPerGridPage > (this.currentPageIndex + 1)) {
-                this.currentPageIndex++;
+            if (this.participantUserInfos.length / this.participantCountPerGridPage > (this.currentGridPageIndex + 1)) {
+                this.currentGridPageIndex++;
             } else {
-                this.currentPageIndex = 0;
+                this.currentGridPageIndex = 0;
             }
         },
 
@@ -820,7 +813,7 @@ export default {
                 })
             } else {
                 //宫格布局， 当前页切换为大流，未显示的，取消订阅，由 currentPageParticipants 副作用触发
-                this.currentPageIndex = 0;
+                this.currentGridPageIndex = 0;
             }
             this.currentLayout = layout;
             this.showChooseLayoutView = false;
@@ -873,7 +866,7 @@ export default {
             if (this.currentLayout === 1) {
                 return [];
             }
-            let start = this.currentPageIndex * this.participantCountPerGridPage;
+            let start = this.currentGridPageIndex * this.participantCountPerGridPage;
             let end = start + this.participantCountPerGridPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerGridPage);
             // side effect
             // TODO 优化
@@ -904,6 +897,16 @@ export default {
         participantUserInfos: {
             deep: true,
             handler(infos) {
+                let audioOnly = true;
+                for (let i = 0; i < this.participantUserInfos.length; i++) {
+                    let u = this.participantUserInfos[i];
+                    if (!u._isAudience && !u._isVideoMuted) {
+                        audioOnly = false;
+                        break;
+                    }
+                }
+                this.audioOnly = audioOnly;
+
                 if (this.audioOnly) {
                     return;
                 }
@@ -916,7 +919,7 @@ export default {
                         }
                     })
                 } else {
-                    let start = this.currentPageIndex * this.participantCountPerGridPage;
+                    let start = this.currentGridPageIndex * this.participantCountPerGridPage;
                     let end = start + this.participantCountPerGridPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerGridPage);
                     let count = end - start;
                     let width = '100%';
@@ -1122,6 +1125,10 @@ i.active {
     padding: 20px 40px;
     justify-content: center;
     align-items: center;
+}
+
+.hidden-video {
+    height: 0;
 }
 
 .participant-audio-item .host-indicator {
