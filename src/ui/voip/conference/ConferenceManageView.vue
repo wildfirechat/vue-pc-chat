@@ -1,12 +1,24 @@
 <template>
     <div class="conference-manage-view-container" ref="rootContainer">
-        <div v-if="selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.applyingUnmuteMembers.length > 0" class="action-tip">xxx 正在申请解除静音</div>
-        <div v-if="selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.handUpMembers.length > 0" class="action-tip">xxx 正在举手</div>
+        <div v-if="!showApplyList && selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.applyingUnmuteMembers.length > 0"
+             @click="showParticipantList = false;showApplyList = true"
+             class="action-tip">xxx 正在申请解除静音
+        </div>
+        <div v-if="selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.handUpMembers.length > 0"
+             @click="showParticipantList = false; showHandUpList = true"
+             class="action-tip">xxx 正在举手
+        </div>
 
         <ConferenceParticipantListView
             v-if="showParticipantList"
             :participants="participants"
             :session="session"
+        />
+        <ConferenceApplyUnmuteListView
+            v-if="showApplyList"
+        />
+        <ConferenceHandUpListView
+            v-if="showHandUpList"
         />
     </div>
 </template>
@@ -15,6 +27,8 @@
 import wfc from "../../../wfc/client/wfc";
 import conferenceManager from "./conferenceManager";
 import ConferenceParticipantListView from "./ConferenceParticipantListView";
+import ConferenceApplyUnmuteListView from "./ConferenceApplyUnmuteListView";
+import ConferenceHandUpListView from "./ConferenceHandUpListView";
 
 export default {
     name: "ConferenceManageView",
@@ -35,9 +49,13 @@ export default {
             currentParticipant: {},
             conferenceManager: conferenceManager,
             showParticipantList: true,
+            showApplyList: false,
+            showHandUpList: false,
         }
     },
     components: {
+        ConferenceHandUpListView,
+        ConferenceApplyUnmuteListView,
         ConferenceParticipantListView,
     },
     methods: {}
