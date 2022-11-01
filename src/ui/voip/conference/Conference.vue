@@ -112,23 +112,8 @@
                             </div>
                         </div>
                         <section class="content-container audio">
-                            <!--self-->
-<!--                            <div v-if="!session.audience" class="participant-audio-item">-->
-<!--                                <video v-if="audioOnly && selfUserInfo._stream"-->
-<!--                                       class="hidden-video"-->
-<!--                                       :srcObject.prop="selfUserInfo._stream"-->
-<!--                                       muted-->
-<!--                                       playsInline autoPlay/>-->
-<!--                                <div style="position: relative">-->
-<!--                                    <img class="avatar"-->
-<!--                                         v-bind:class="{highlight:selfUserInfo._volume > 0}"-->
-<!--                                         :src="selfUserInfo.portrait">-->
-<!--                                    <i v-if="selfUserInfo._isHost" class="host-indicator icon-ion-person"></i>-->
-<!--                                </div>-->
-<!--                                <p class="single-line">{{ userName(selfUserInfo) }}</p>-->
-<!--                            </div>-->
                             <!--participants-->
-                            <div v-for="(participant) in participantUserInfos.filter(u => !u._isAudience)"
+                            <div v-for="(participant) in participantUserInfos"
                                  :key="participant.uid"
                                  class="participant-audio-item">
                                 <video v-if="audioOnly && participant._stream"
@@ -140,7 +125,8 @@
                                     <img class="avatar"
                                          v-bind:class="{highlight:participant._volume > 0}"
                                          :src="participant.portrait" :alt="participant">
-                                    <i v-if="participant._isHost" class="host-indicator icon-ion-person"></i>
+                                    <i v-if="participant._isHost" class="indicator icon-ion-person" style="background: #FD802E"></i>
+                                    <i v-if="participant._isAudience" class="indicator icon-ion-ios-mic-off" style="color: red"></i>
                                 </div>
                                 <p class="single-line">{{ userName(participant) }}</p>
                             </div>
@@ -269,7 +255,7 @@ export default {
 
             // 宫格视图
             currentGridPageIndex: 0,
-            participantCountPerGridPage: 1,
+            participantCountPerGridPage: 9,
 
             // 演讲者视图
             focusParticipant: null,
@@ -1117,6 +1103,8 @@ i.active {
 .content-container.audio {
     background: white;
     height: calc(100% - 50px);
+    overflow: auto;
+    padding: 10px 0 50px 0;
 }
 
 .participant-audio-item {
@@ -1131,7 +1119,7 @@ i.active {
     height: 0;
 }
 
-.participant-audio-item .host-indicator {
+.participant-audio-item .indicator {
     width: 18px;
     height: 18px;
     position: absolute;
@@ -1141,7 +1129,7 @@ i.active {
     vertical-align: center;
     border-radius: 9px;
     bottom: 0;
-    background: #FD802E;
+    background: #d6d6d6;
     transform: translateX(-50%) translateY(25%);
 }
 
