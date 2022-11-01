@@ -545,10 +545,12 @@ export default {
             if (enable) {
                 if (this.session.audience) {
                     await this.session.switchAudience(false);
+                    this.selfUserInfo._isAudience = false;
                 }
             } else {
                 if (this.session.audioMuted && !this.session.audience) {
                     await this.session.switchAudience(true);
+                    this.selfUserInfo._isAudience = true;
                 }
             }
         },
