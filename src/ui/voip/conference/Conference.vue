@@ -176,7 +176,7 @@
                                 </div>
                                 <div class="action">
                                     <img @click.stop="members" class="action-img"
-                                         v-bind:style="{filter: showParticipantListView ? 'invert(100%)' : 'none'}"
+                                         v-bind:style="{filter: showConferenceManageView ? 'invert(100%)' : 'none'}"
                                          src='@/assets/images/av_conference_members.png'/>
                                     <p>管理</p>
                                 </div>
@@ -195,9 +195,9 @@
                 <div class="title" style="display: none">
                     TODO
                 </div>
-                <ConferenceParticipantListView
-                    v-if="showParticipantListView"
-                    v-bind:class="{ active: showParticipantListView}"
+                <ConferenceManageView
+                    v-if="showConferenceManageView"
+                    v-bind:class="{ active: showConferenceManageView}"
                     :participants="participantUserInfos"
                     :session="session"
                 />
@@ -234,6 +234,7 @@ import ChooseConferenceLayoutView from "./ChooseConferenceLayoutView";
 import ConferenceConversationFloatingView from "./ConferenceConversationFloatingView";
 import conferenceManager from "./conferenceManager";
 import conferenceApi from "../../../api/conferenceApi";
+import ConferenceManageView from "./ConferenceManageView";
 
 export default {
     name: 'Conference',
@@ -249,7 +250,7 @@ export default {
             currentTimestamp: 0,
 
             showSlider: false,
-            showParticipantListView: false,
+            showConferenceManageView: false,
             showConversationView: false,
             sharedMiscState: store.state.misc,
             videoInputDeviceIndex: 0,
@@ -276,6 +277,7 @@ export default {
         }
     },
     components: {
+        ConferenceManageView,
         ConferenceConversationFloatingView,
         ChooseConferenceLayoutView,
         ConferenceSimpleInfoView,
@@ -572,7 +574,7 @@ export default {
         },
 
         members() {
-            this.showParticipantListView = !this.showParticipantListView;
+            this.showConferenceManageView = !this.showConferenceManageView;
             this.toggleSliderView();
         },
 
@@ -582,7 +584,7 @@ export default {
         },
 
         hideParticipantList() {
-            this.showParticipantListView && (this.showParticipantListView = false);
+            this.showConferenceManageView && (this.showConferenceManageView = false);
             this.toggleSliderView();
         },
 
@@ -596,7 +598,7 @@ export default {
                 this.$refs.rootContainer.style.setProperty('--slider-width', '0px');
                 currentWindow.setSize(size[0] - 350, size[1], false)
 
-                this.showParticipantListView = false;
+                this.showConferenceManageView = false;
                 this.showConversationView = false;
             }
             this.showSlider = !this.showSlider;

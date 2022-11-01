@@ -67,6 +67,7 @@ import ForwardType from "../../main/conversation/message/forward/ForwardType";
 import localStorageEmitter from "../../../ipc/localStorageEmitter";
 import wfc from "../../../wfc/client/wfc";
 import UserCardView from "../../main/user/UserCardView";
+import conferenceManager from "./conferenceManager";
 
 export default {
     name: "ConferenceParticipantListView",
@@ -85,6 +86,7 @@ export default {
             selfUserId: wfc.getUserId(),
             isContextMenuShow: false,
             currentParticipant: {},
+            conferenceManager: conferenceManager
         }
     },
     components: {
@@ -246,14 +248,14 @@ export default {
                 type: 'contextmenu'
             }
 
-            ne.clientX = event.clientX - this.$refs.rootContainer.offsetLeft;
+            ne.clientX = event.clientX - this.$refs.rootContainer.parentElement.offsetLeft;
             // 160 menu width
             // 360 slider width
             if (ne.clientX + 160 > 350) {
                 ne.clientX = ne.clientX - 160;
             }
             ne.clientY = event.clientY - this.$refs.rootContainer.offsetTop;
-            this.$refs.menu.open(ne, participant);
+            this.$refs.menu.open(ne,  participant);
             this.$refs.menu.$once('close', () => {
                 this.isContextMenuShow = false;
                 this.currentParticipant = {};
@@ -271,17 +273,13 @@ export default {
 
 <style scoped>
 .participant-list-container {
-    display: none;
+    display: flex;
+    flex-direction: column;
     height: 100%;
     overflow: auto;
     background-color: #ffffffe5;
     backdrop-filter: blur(6px);
     border-left: 1px solid #e6e6e6;
-}
-
-.participant-list-container.active {
-    display: flex;
-    flex-direction: column;
 }
 
 .participant-list-container .action-item {
