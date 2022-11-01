@@ -64,7 +64,7 @@ export default {
             endTime: '',
             audience: false,
             advance: false,
-            allowTurnOnMic: false,
+            allowTurnOnMic: true,
             enablePassword: false,
             password: '',
             enableUserCallId: false,

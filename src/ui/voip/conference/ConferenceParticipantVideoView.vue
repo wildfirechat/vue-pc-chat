@@ -168,10 +168,9 @@ export default {
 
 .participant-video-item .avatar-container {
     position: absolute;
-    top: 20px;
     left: 0;
     width: 100%;
-    height: calc(100% - 20px);
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -180,8 +179,8 @@ export default {
 }
 
 .avatar {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     border-radius: 50px;
 }
 

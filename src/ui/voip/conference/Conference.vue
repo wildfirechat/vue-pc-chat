@@ -81,7 +81,7 @@
 
                         <!--                    演讲者布局-->
                         <section v-else class="content-container focus video">
-                            <div :style="{width: hideParticipantListVideoView ? '100%' : 'calc(100% - 200px)', height: '100%', position: 'relative'}">
+                            <div :style="{width: hideFocusLayoutParticipantListVideoView ? '100%' : 'calc(100% - 200px)', height: '100%', position: 'relative'}">
                                 <video v-if=" focusParticipant && !focusParticipant._isAudience && !focusParticipant._isVideoMuted && focusParticipant._stream"
                                        v-bind:style="{objectFit:focusParticipant._isScreenSharing ? 'contain' : 'fit'}"
                                        style="width: 100%; height: 100%"
@@ -89,10 +89,10 @@
                                        playsInline
                                        autoPlay/>
                                 <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px">
-                                    <i :class="hideParticipantListVideoView ? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'"></i>
+                                    <i :class="hideFocusLayoutParticipantListVideoView ? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'"></i>
                                 </div>
                             </div>
-                            <div v-show="!hideParticipantListVideoView" class="focus-mode-participant-list-container">
+                            <div v-show="!hideFocusLayoutParticipantListVideoView" class="focus-mode-participant-list-container">
                                 <!--participants include self-->
                                 <ConferenceParticipantVideoView v-for="(participant) in participantUserInfos"
                                                                 :key="participant.uid + '-' + participant._isScreenSharing"
@@ -174,11 +174,14 @@
                                     <p class="single-line">共享屏幕</p>
                                 </div>
                                 <div class="action" @click="chat">
-                                    <i class="icon-ion-ios-chatboxes" style="width: 40px; height: 40px; font-size: 40px; color: black"></i>
+                                    <i class="icon-ion-ios-chatboxes"
+                                       style="width: 40px; height: 40px; font-size: 40px; color: black"
+                                       v-bind:style="{color: showConversationView ? 'white' : 'black'}"/>
                                     <p>聊天</p>
                                 </div>
                                 <div class="action">
                                     <img @click.stop="members" class="action-img"
+                                         v-bind:style="{filter: showParticipantListView ? 'invert(100%)' : 'none'}"
                                          src='@/assets/images/av_conference_members.png'/>
                                     <p>管理</p>
                                 </div>
@@ -198,8 +201,8 @@
                     TODO
                 </div>
                 <ConferenceParticipantListView
-                    v-if="showParticipantList"
-                    v-bind:class="{ active: showParticipantList}"
+                    v-if="showParticipantListView"
+                    v-bind:class="{ active: showParticipantListView}"
                     :participants="participantUserInfos"
                     :session="session"
                 />
@@ -251,7 +254,7 @@ export default {
             currentTimestamp: 0,
 
             showSlider: false,
-            showParticipantList: false,
+            showParticipantListView: false,
             showConversationView: false,
             sharedMiscState: store.state.misc,
             videoInputDeviceIndex: 0,
@@ -269,7 +272,7 @@ export default {
 
             // 演讲者视图
             focusParticipant: null,
-            hideParticipantListVideoView: false,
+            hideFocusLayoutParticipantListVideoView: false,
 
             showConferenceSimpleInfoView: false,
             showChooseLayoutView: false,
@@ -574,7 +577,7 @@ export default {
 
         members() {
             this.toggleSliderView();
-            this.showParticipantList = !this.showParticipantList;
+            this.showParticipantListView = !this.showParticipantListView;
         },
 
         chat() {
@@ -583,7 +586,7 @@ export default {
         },
 
         hideParticipantList() {
-            this.showParticipantList && (this.showParticipantList = false);
+            this.showParticipantListView && (this.showParticipantListView = false);
             this.toggleSliderView();
         },
 
@@ -596,6 +599,9 @@ export default {
                 let size = currentWindow.getSize();
                 this.$refs.rootContainer.style.setProperty('--slider-width', '0px');
                 currentWindow.setSize(size[0] - 350, size[1], false)
+
+                this.showParticipantListView = false;
+                this.showConversationView = false;
             }
             this.showSlider = !this.showSlider;
         },
@@ -820,7 +826,7 @@ export default {
             this.showChooseLayoutView = false;
         },
         toggleParticipantListVideoView() {
-            this.hideParticipantListVideoView = !this.hideParticipantListVideoView;
+            this.hideFocusLayoutParticipantListVideoView = !this.hideFocusLayoutParticipantListVideoView;
         },
 
         hideConferenceSimpleInfoView(event) {
