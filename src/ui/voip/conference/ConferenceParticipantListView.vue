@@ -68,6 +68,7 @@ import localStorageEmitter from "../../../ipc/localStorageEmitter";
 import wfc from "../../../wfc/client/wfc";
 import UserCardView from "../../main/user/UserCardView";
 import conferenceManager from "./conferenceManager";
+import conversationFloatPage from "../../main/ConversationFloatPage";
 
 export default {
     name: "ConferenceParticipantListView",
@@ -155,12 +156,17 @@ export default {
             let desc = '';
             if (user.uid === wfc.getUserId()) {
                 desc = "我"
+                if (user.uid === conferenceManager.conferenceInfo.owner) {
+                    desc += "、主持人"
+                }
+            } else if (user.uid === conferenceManager.conferenceInfo.owner) {
+                desc = "主持人"
             }
-            // TODO
             return desc;
         },
 
         buildParticipantContextMenu(participant) {
+            let selfUid = wfc.getUserId();
             let items = [];
             if (!participant) {
                 return items;
@@ -172,64 +178,98 @@ export default {
                     this.showUserCard(participant);
                 }
             })
-            if (participant._isAudience || participant._isVideoMuted) {
-                items.push({
-                    title: '开启视频',
-                    handler: () => {
-                        // TODO
-                    }
-                })
-            }
             if (participant._isAudience || participant._isAudioMuted) {
                 items.push({
                     title: '开启音频',
                     handler: () => {
-                        // TODO
+                        this.$eventBus.$emit('muteAudio')
                     }
                 })
             }
 
-            if (participant._isAudience) {
+            if (participant._isAudience || participant._isVideoMuted) {
                 items.push({
-                    title: '开启音视频',
+                    title: '开启视频',
+                    handler: () => {
+                        this.$eventBus.$emit('muteVideo')
+                    }
+                })
+            }
+
+            if (selfUid === participant.uid) {
+                if (participant._isAudience) {
+                    items.push({
+                        title: '开启音视频',
+                        handler: () => {
+                            this.$eventBus.$emit('muteAudio')
+                            this.$eventBus.$emit('muteVideo')
+                        }
+                    })
+                }
+
+                if (!participant._isAudience) {
+                    if (!participant._isAudioMuted) {
+                        items.push({
+                            title: '关闭音频',
+                            handler: () => {
+                                this.$eventBus.$emit('muteAudio')
+                            },
+                            styleObject: {
+                                color: 'red',
+                            }
+                        })
+                    }
+                    if (!participant._isVideoMuted) {
+                        items.push({
+                            title: '关闭视频',
+                            handler: () => {
+                                this.$eventBus.$emit('muteVideo')
+                            },
+                            styleObject: {
+                                color: 'red',
+                            }
+                        })
+                    }
+                    if (!participant._isVideoMuted && !participant._isAudioMuted) {
+                        items.push({
+                            title: '关闭音视频',
+                            handler: () => {
+                                this.$eventBus.$emit('muteAudio')
+                                this.$eventBus.$emit('muteVideo')
+                            },
+                            styleObject: {
+                                color: 'red',
+                            }
+                        })
+                    }
+                }
+            }
+            if (selfUid === conferenceManager.conferenceInfo.owner) {
+                items.push({
+                    title: '取消发言',
                     handler: () => {
                         // TODO
-                    }
+                    },
                 })
-            }
-
-            if (!participant._isAudience) {
-                if (!participant._isAudioMuted) {
+                items.push({
+                    title: ' 移除成员',
+                    handler: () => {
+                        // TODO
+                    },
+                })
+                if (conferenceManager.conferenceInfo.focus === participant.uid) {
                     items.push({
-                        title: '关闭音频',
+                        title: '取消为焦点用户',
                         handler: () => {
                             // TODO
                         },
-                        styleObject: {
-                            color: 'red',
-                        }
                     })
-                }
-                if (!participant._isVideoMuted) {
+                } else {
                     items.push({
-                        title: '关闭视频',
+                        title: '设置为焦点用户',
                         handler: () => {
                             // TODO
                         },
-                        styleObject: {
-                            color: 'red',
-                        }
-                    })
-                }
-                if (!participant._isVideoMuted && !participant._isAudioMuted) {
-                    items.push({
-                        title: '关闭音视频',
-                        handler: () => {
-                            // TODO
-                        },
-                        styleObject: {
-                            color: 'red',
-                        }
                     })
                 }
             }
@@ -255,7 +295,7 @@ export default {
                 ne.clientX = ne.clientX - 160;
             }
             ne.clientY = event.clientY - this.$refs.rootContainer.offsetTop;
-            this.$refs.menu.open(ne,  participant);
+            this.$refs.menu.open(ne, participant);
             this.$refs.menu.$once('close', () => {
                 this.isContextMenuShow = false;
                 this.currentParticipant = {};

@@ -993,6 +993,13 @@ export default {
         this.refreshUserInfoInternal = setInterval(() => {
             this.refreshUserInfos();
         }, 3 * 1000)
+
+        this.$eventBus.$on('muteVideo', () => {
+            this.muteVideo();
+        })
+        this.$eventBus.$on('muteAudio', () => {
+            this.muteAudio();
+        })
     },
 
     mounted() {
@@ -1028,6 +1035,8 @@ export default {
         this.$set(this.selfUserInfo, '_stream', null)
         this.participantUserInfos.forEach(m => this.$set(m, "_stream", null))
         clearInterval(this.refreshUserInfoInternal);
+        this.$eventBus.$off('muteVideo');
+        this.$eventBus.$off('muteAudio');
     }
 }
 </script>

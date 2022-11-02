@@ -1,7 +1,7 @@
 <template>
     <div class="conference-manage-view-container" ref="rootContainer">
         <div>
-            <div v-if="!showApplyList && selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.applyingUnmuteMembers.length > 0"
+            <div v-if="showParticipantList && selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.applyingUnmuteMembers.length > 0"
                  @click="showParticipantList = false;showApplyList = true"
                  class="action-tip">xxx 正在申请解除静音
             </div>
@@ -11,9 +11,15 @@
                 ></i>
                 <p>申请解除静音列表</p>
             </div>
-            <div v-if="selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.handUpMembers.length > 0"
+            <div v-if="showParticipantList && selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.handUpMembers.length > 0"
                  @click="showParticipantList = false; showHandUpList = true"
                  class="action-tip">xxx 正在举手
+            </div>
+            <div v-if="showHandUpList" class="title-container">
+                <i class="icon-ion-android-arrow-back"
+                   @click="showHandUpList = false; showParticipantList = true"
+                ></i>
+                <p>举手列表</p>
             </div>
         </div>
         <ConferenceParticipantListView
@@ -107,7 +113,7 @@ export default {
 }
 
 .title-container i:active {
-    background: #d6d6d6;
+    /*background: #d6d6d6;*/
 }
 
 </style>
