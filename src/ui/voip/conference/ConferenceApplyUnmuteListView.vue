@@ -1,9 +1,5 @@
 <template>
     <div class="apply-unmute-container">
-        <div class="title-container">
-            <i class="icon-ion-ios-arrow-back"></i>
-            <p style="display: inline-block">申请解除静音列表</p>
-        </div>
         <div class="apply-participant-list-container">
             <ul>
                 <li v-for="(participant, i) in applyUnmuteParticipantList" :key="i">
