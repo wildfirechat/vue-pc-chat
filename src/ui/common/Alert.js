@@ -23,6 +23,7 @@ export default {
             this.$modal.show(
                 AlertView,
                 {
+                    showIcon: options.showIcon,
                     title: options.title,
                     content: options.content,
                     cancelText: options.cancelText,
@@ -33,7 +34,7 @@ export default {
                     clickToClose: true,
                     adaptive: true,
                     width: 260,
-                    height: 200,
+                    height: options.showIcon ? 200 : 100,
                     borderRadius: 10,
                 }, {
                     'before-open': beforeOpen,

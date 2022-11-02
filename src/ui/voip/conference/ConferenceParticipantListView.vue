@@ -182,7 +182,7 @@ export default {
                 items.push({
                     title: '开启音频',
                     handler: () => {
-                        this.$eventBus.$emit('muteAudio')
+                        this.$eventBus.$emit('muteAudio', false)
                     }
                 })
             }
@@ -191,7 +191,7 @@ export default {
                 items.push({
                     title: '开启视频',
                     handler: () => {
-                        this.$eventBus.$emit('muteVideo')
+                        this.$eventBus.$emit('muteVideo', false)
                     }
                 })
             }
@@ -201,8 +201,8 @@ export default {
                     items.push({
                         title: '开启音视频',
                         handler: () => {
-                            this.$eventBus.$emit('muteAudio')
-                            this.$eventBus.$emit('muteVideo')
+                            this.$eventBus.$emit('muteAudio', false)
+                            this.$eventBus.$emit('muteVideo', false)
                         }
                     })
                 }
@@ -212,7 +212,7 @@ export default {
                         items.push({
                             title: '关闭音频',
                             handler: () => {
-                                this.$eventBus.$emit('muteAudio')
+                                this.$eventBus.$emit('muteAudio', true)
                             },
                             styleObject: {
                                 color: 'red',
@@ -223,7 +223,7 @@ export default {
                         items.push({
                             title: '关闭视频',
                             handler: () => {
-                                this.$eventBus.$emit('muteVideo')
+                                this.$eventBus.$emit('muteVideo', true)
                             },
                             styleObject: {
                                 color: 'red',
@@ -234,8 +234,8 @@ export default {
                         items.push({
                             title: '关闭音视频',
                             handler: () => {
-                                this.$eventBus.$emit('muteAudio')
-                                this.$eventBus.$emit('muteVideo')
+                                this.$eventBus.$emit('muteAudio', true)
+                                this.$eventBus.$emit('muteVideo', true)
                             },
                             styleObject: {
                                 color: 'red',

@@ -995,11 +995,15 @@ export default {
             this.refreshUserInfos();
         }, 3 * 1000)
 
-        this.$eventBus.$on('muteVideo', () => {
-            this.muteVideo();
+        this.$eventBus.$on('muteVideo', (mute) => {
+            if (this.session.videoMuted !== mute) {
+                this.muteVideo(mute);
+            }
         })
-        this.$eventBus.$on('muteAudio', () => {
-            this.muteAudio();
+        this.$eventBus.$on('muteAudio', (mute) => {
+            if (this.session.audioMuted !== mute) {
+                this.muteAudio(mute);
+            }
         })
     },
 

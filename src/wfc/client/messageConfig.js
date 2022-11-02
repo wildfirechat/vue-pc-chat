@@ -62,7 +62,7 @@ import MultiCallOngoingMessageContent from "../av/messages/multiCallOngoingMessa
 import JoinCallRequestMessageContent from "../av/messages/joinCallRequestMessageContent";
 import RichNotificationMessageContent from "../messages/notification/richNotificationMessageContent";
 import ArticlesMessageContent from "../messages/articlesMessageContent";
-import conferenceCommandMessageContent from "../av/messages/conferenceCommandMessageContent";
+import ConferenceCommandMessageContent from "../av/messages/conferenceCommandMessageContent";
 import ChannelMenuEventMessageContent from "../messages/channelMenuEventMessageContent";
 import EnterChannelChatMessageContent from "../messages/enterChannelChatMessageContent";
 import LeaveChannelChatMessageContent from "../messages/leaveChannelChatMessageContent";
@@ -472,7 +472,7 @@ export default class MessageConfig {
             name: 'leaveChannelChatMessageContent',
             flag: PersistFlag.Transparent,
             type: MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND,
-            contentClazz: conferenceCommandMessageContent,
+            contentClazz: ConferenceCommandMessageContent,
         }
 
     ];
