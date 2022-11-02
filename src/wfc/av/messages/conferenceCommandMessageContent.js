@@ -2,7 +2,7 @@ import MessageContent from "../../messages/messageContent";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
 
-export default class ConferenceInviteMessageContent extends MessageContent {
+export default class conferenceCommandMessageContent extends MessageContent {
     conferenceId;
     commandType;
     targetUserId;

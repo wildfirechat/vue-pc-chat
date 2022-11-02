@@ -990,6 +990,7 @@ export default {
 
     created() {
         document.title = '在线会议';
+        conferenceManager.setVueInstance(this);
         this.refreshUserInfoInternal = setInterval(() => {
             this.refreshUserInfos();
         }, 3 * 1000)

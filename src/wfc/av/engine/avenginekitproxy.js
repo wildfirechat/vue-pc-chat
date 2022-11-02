@@ -183,7 +183,7 @@ export class AvEngineKitProxy {
             }
         }
 
-        if ((msg.conversation.type === ConversationType.Single || msg.conversation.type === ConversationType.Group)) {
+        if ((msg.conversation.type === ConversationType.Single || msg.conversation.type === ConversationType.Group || (this.conference && msg.conversation.type === ConversationType.ChatRoom))) {
             if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_END
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
@@ -195,6 +195,7 @@ export class AvEngineKitProxy {
                 || content.type === MessageContentType.VOIP_Join_Call_Request
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE
+                || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND
             ) {
                 console.log("receive voip message", msg.messageContent.type, msg.messageUid.toString(), msg);
                 if (msg.direction === 0
@@ -410,6 +411,12 @@ export class AvEngineKitProxy {
         this.conversation = null;
         this.conference = true;
 
+        wfc.joinChatroom(callId, () => {
+            console.log('join conference chatRoom success')
+        }, (err) => {
+            console.error('join conference chatRoom fail', err);
+        });
+
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         this.showCallUI(null, true);
         this.emitToVoip('startConference', {
@@ -459,6 +466,11 @@ export class AvEngineKitProxy {
         this.conference = true;
         this.callId = callId;
 
+        wfc.joinChatroom(callId, () => {
+            console.log('join conference chatRoom success')
+        }, (err) => {
+            console.error('join conference chatRoom fail', err);
+        });
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         this.showCallUI(null, true);
         this.emitToVoip('joinConference', {
@@ -612,6 +624,10 @@ export class AvEngineKitProxy {
             store.updateVoipStatus(this.conversation, false)
             this.conversation = null;
             this.queueEvents = [];
+            if (this.conference) {
+                wfc.quitChatroom(this.callId);
+                this.conference = false;
+            }
             this.callId = null;
             this.participants = [];
             this.queueEvents = [];
