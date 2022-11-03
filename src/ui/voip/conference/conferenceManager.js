@@ -3,6 +3,8 @@ import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import MessageContentType from "../../../wfc/messages/messageContentType";
 import ConferenceCommandMessageContent from "../../../wfc/av/messages/conferenceCommandMessageContent";
 import wfc from "../../../wfc/client/wfc";
+import Conversation from "../../../wfc/model/conversation";
+import ConversationType from "../../../wfc/model/conversationType";
 
 class ConferenceManager {
 
@@ -48,6 +50,7 @@ class ConferenceManager {
         msg = this._fixLongSerializedIssue(msg)
         if (msg.messageContent.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND) {
             let command = msg.messageContent;
+            let senderName;
             switch (command.commandType) {
                 case ConferenceCommandMessageContent.ConferenceCommandType.MUTE_ALL:
                     this._reloadCurrentConferenceInfo();
@@ -69,12 +72,200 @@ class ConferenceManager {
                     });
                     break;
                 case ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE:
-                    // TODO
+                    senderName = wfc.getUserDisplayName(msg.from);
+                    this.vueInstance.$notify({
+                        text: senderName + '请求发言',
+                        type: 'info'
+                    });
+                    if (command.boolValue) {
+                        this.applyingUnmuteMembers.filter(uid => uid !== msg.from)
+                    } else {
+                        let index = this.applyingUnmuteMembers.findIndex(uid => uid === msg.from);
+                        if (index === -1) {
+                            this.applyingUnmuteMembers.push(msg.from);
+                        }
+                    }
+                    break;
+                case ConferenceCommandMessageContent.ConferenceCommandType.APPROVE_UNMUTE:
+                case ConferenceCommandMessageContent.ConferenceCommandType.APPROVE_ALL_UNMUTE:
+                    if (this.isApplyingUnmute) {
+                        this.isApplyingUnmute = false;
+                        if (command.boolValue) {
+                            this.vueInstance.$eventBus.$emit('muteAudio', false);
+                            this.vueInstance.$notify({
+                                text: '主持人已同意了你的发言请求',
+                                type: 'info'
+                            });
+                        }
+                    }
+                    break;
+                case ConferenceCommandMessageContent.ConferenceCommandType.HANDUP:
+                    if (command.boolValue) {
+                        let index = this.handUpMembers.findIndex(uid => uid === msg.from);
+                        if (index === -1) {
+                            this.handUpMembers.push(msg.from);
+                        }
+                    } else {
+                        this.handUpMembers = this.handUpMembers.filter(uid => uid !== msg.from);
+                    }
+                    senderName = wfc.getUserDisplayName(msg.from);
+                    this.vueInstance.$notify({
+                        text: command.boolValue ? senderName + '举手' : senderName + '放下举手',
+                        type: 'info'
+                    });
+                    break;
+                case ConferenceCommandMessageContent.ConferenceCommandType.PUT_HAND_DOWN:
+                case ConferenceCommandMessageContent.ConferenceCommandType.PUT_ALL_HAND_DOWN:
+                    if (this.isHandUp) {
+                        this.isHandUp = false;
+                        this.vueInstance.$notify({
+                            text: '主持人放下了你的举手',
+                            type: 'info'
+                        });
+                    }
+                    break
+                case ConferenceCommandMessageContent.ConferenceCommandType.RECORDING:
+                    this.conferenceInfo.recording = command.boolValue;
+                    this.vueInstance.$notify({
+                        text: command.boolValue ? '主持人开始录制' : '主持人结束录制',
+                        type: 'info'
+                    });
+                    break;
+                case ConferenceCommandMessageContent.ConferenceCommandType.FOCUS:
+                    this.conferenceInfo.focus = command.targetUserId;
+                    this.vueInstance.$notify({
+                        text: '主持人锁定焦点用户',
+                        type: 'info'
+                    });
+                    break;
+                case ConferenceCommandMessageContent.ConferenceCommandType.CANCEL_FOCUS:
+                    this.conferenceInfo.focus = null;
+                    this.vueInstance.$notify({
+                        text: '主持人取消锁定焦点用户',
+                        type: 'info'
+                    });
                     break;
                 default:
                     break;
             }
         }
+    }
+
+    applyUnmute(isCancel) {
+        this.isApplyingUnmute = !isCancel;
+        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE, null, isCancel);
+    }
+
+    approveUnmute(userId, isAllow) {
+        if (!this._isOwner()) {
+            return;
+        }
+        this.applyingUnmuteMembers = this.applyingUnmuteMembers.filter(uid => uid !== userId);
+        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE, userId, isAllow);
+    }
+
+    approveAllUnmute(isAllow) {
+        if (!this._isOwner()) {
+            return;
+        }
+        this.applyingUnmuteMembers.length = 0;
+        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.APPROVE_ALL_UNMUTE, null, isAllow);
+    }
+
+    requestMemberMute(userId, mute) {
+        if (!this._isOwner()) {
+            return;
+        }
+
+        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.REQUEST_MUTE, userId, mute);
+    }
+
+    requestMuteAll(allowMemberUnmute) {
+        if (!this._isOwner()) {
+            return;
+        }
+        this.isMuteAll = true;
+        this.conferenceInfo.audience = true;
+        this.conferenceInfo.allowTurnOnMic = allowMemberUnmute;
+        conferenceApi.updateConference(this.conferenceInfo)
+            .then(r => {
+                this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.MUTE_ALL, null, allowMemberUnmute);
+            })
+            .catch(err => {
+                console.log('updateConference error', err)
+            })
+    }
+
+    requestUnmuteAll(unmute) {
+        if (!this._isOwner()) {
+            return;
+        }
+
+        this.isMuteAll = false;
+        this.conferenceInfo.audience = false;
+        this.conferenceInfo.allowTurnOnMic = true;
+        conferenceApi.updateConference(this.conferenceInfo)
+            .then(r => {
+                this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.CANCEL_MUTE_ALL, null, unmute);
+            })
+            .catch(err => {
+                console.log('updateConference error', err)
+            })
+    }
+
+    handUp(isHandUp) {
+        this.isHandUp = isHandUp;
+        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.HANDUP, null, isHandUp);
+        this.vueInstance.$notify({
+            text: isHandUp ? "已举手，等待管理员处理" : "已放下举手",
+            type: 'info'
+        });
+    }
+
+    putMemberHnadDown(memberId) {
+        if (!this._isOwner()) {
+            return;
+        }
+        this.handUpMembers = this.handUpMembers.filter(uid !== memberId);
+        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.PUT_HAND_DOWN, memberId, false);
+    }
+
+    putAllHandDown() {
+        if (!this._isOwner()) {
+            return;
+        }
+        this.handUpMembers.length = 0;
+        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.PUT_ALL_HAND_DOWN, null, false);
+    }
+
+    requestRecord(record) {
+        if (!this._isOwner()) {
+            return;
+        }
+        conferenceApi.recordConference(this.conferenceInfo.conferenceId, record)
+            .then(r => {
+                this.conferenceInfo.isRecording = record;
+            })
+            .catch(err => {
+                console.log('recordConference error', err);
+            });
+    }
+
+    requestFocus(userId) {
+        if (!this._isOwner()) {
+            return;
+        }
+        conferenceApi.setConferenceFocusUserId(this.conferenceInfo.conferenceId, userId)
+            .then(r => {
+                this.conferenceInfo.focus = userId;
+            })
+            .catch(err => {
+                console.log('requesteFocus err', err);
+            })
+    }
+
+    requestCancelFocus() {
+        this.requestFocus(null);
     }
 
     onMuteAll() {
@@ -150,7 +341,16 @@ class ConferenceManager {
             .catch(err => {
                 console.log(err)
             })
+    }
 
+    _isOwner() {
+        return this.conferenceInfo.owner === wfc.getUserId();
+    }
+
+    _sendCommandMessag(commandType, targetUser, boolValue) {
+        let content = new ConferenceCommandMessageContent(this.conferenceInfo.conferenceId, commandType, targetUser, boolValue);
+        let conversation = new Conversation(ConversationType.ChatRoom, this.conferenceInfo.conferenceId, 0);
+        wfc.sendConversationMessage(conversation, content);
     }
 }
 

@@ -40,8 +40,7 @@ export default {
         }
     },
     created() {
-        // TODO 加入聊天室，会议聊天室
-        let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0);
+        let conversation = new Conversation(ConversationType.ChatRoom, this.session.callId, 0);
         store.setCurrentConversation(conversation);
         this.filterInternal = setInterval(() => {
             this.filterMessage();
@@ -61,7 +60,7 @@ export default {
 
     methods: {
         sendMessage() {
-            let conversation = new Conversation(ConversationType.Single, 'FireRobot', 0);
+            let conversation = new Conversation(ConversationType.ChatRoom, this.session.callId, 0);
             wfc.sendConversationMessage(conversation, new TextMessageContent(this.text))
             this.text = '';
         },
