@@ -53,7 +53,7 @@
                      v-click-outside="hideChooseLayoutView"
                      style="position: absolute; right: 10px; top: 50px; z-index: 1000">
                     <ChooseConferenceLayoutView
-                        :current-layout="currentLayout"
+                        :current-layout="computedCurrentLayout"
                         :session="session"/>
                 </div>
                 <div style="position: absolute; left: 10px; bottom: 80px; width: 300px; max-height: 300px; overflow: hidden; background: transparent; z-index: 1000">
@@ -65,12 +65,12 @@
                     <!--main-->
                     <!--video-->
                     <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                        <i v-if="currentLayout === 0 && currentGridPageIndex > 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                        <i v-if="computedCurrentLayout=== 0 && currentGridPageIndex > 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                            @click="prePage"></i>
-                        <i v-if="currentLayout === 0 && currentGridPageIndex < gridPageCount - 1" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                        <i v-if="computedCurrentLayout=== 0 && currentGridPageIndex < gridPageCount - 1" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
                            @click="nextPage"></i>
                         <!--                    宫格布局-->
-                        <section v-if="currentLayout === 0" class="content-container grid video">
+                        <section v-if="computedCurrentLayout=== 0" class="content-container grid video">
                             <!--participants include self-->
                             <ConferenceParticipantVideoView v-for="(participant) in currentPageParticipants"
                                                             :key="participant.uid + '-' + participant._isScreenSharing"
@@ -82,10 +82,10 @@
                         <!--                    演讲者布局-->
                         <section v-else class="content-container focus video">
                             <div :style="{width: hideFocusLayoutParticipantListVideoView ? '100%' : 'calc(100% - 200px)', height: '100%', position: 'relative'}">
-                                <video v-if=" focusParticipant && !focusParticipant._isAudience && !focusParticipant._isVideoMuted && focusParticipant._stream"
-                                       v-bind:style="{objectFit:focusParticipant._isScreenSharing ? 'contain' : 'fit'}"
+                                <video v-if=" computedSpeakingParticipant && !computedSpeakingParticipant._isAudience && !computedSpeakingParticipant._isVideoMuted && computedSpeakingParticipant._stream"
+                                       v-bind:style="{objectFit:computedSpeakingParticipant._isScreenSharing ? 'contain' : 'fit'}"
                                        style="width: 100%; height: 100%"
-                                       :srcObject.prop="focusParticipant._stream"
+                                       :srcObject.prop="computedSpeakingParticipant._stream"
                                        playsInline
                                        autoPlay/>
                                 <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px">
@@ -227,13 +227,11 @@ import store from "../../../store";
 import VideoType from "../../../wfc/av/engine/videoType";
 import IpcEventType from "../../../ipcEventType";
 import ConferenceParticipantVideoView from "./ConferenceParticipantVideoView";
-import ConferenceParticipantListView from "./ConferenceParticipantListView";
 import ConversationView from "../../main/conversation/ConversationView";
 import ConferenceSimpleInfoView from "./ConferenceSimpleInfoView";
 import ChooseConferenceLayoutView from "./ChooseConferenceLayoutView";
 import ConferenceConversationFloatingView from "./ConferenceConversationFloatingView";
 import conferenceManager from "./conferenceManager";
-import conferenceApi from "../../../api/conferenceApi";
 import ConferenceManageView from "./ConferenceManageView";
 
 export default {
@@ -261,15 +259,15 @@ export default {
 
             conferenceManager: conferenceManager,
 
-            // 0, 宫格视图；1，演讲者视图
-            currentLayout: 0,
+            // -1，默认布局，也就是宫格布局；0, 宫格视图；1，演讲者视图
+            currentLayout: -1,
 
             // 宫格视图
             currentGridPageIndex: 0,
             participantCountPerGridPage: 9,
 
             // 演讲者视图
-            focusParticipant: null,
+            speakingParticipant: null,
             hideFocusLayoutParticipantListVideoView: false,
 
             showConferenceSimpleInfoView: false,
@@ -281,7 +279,6 @@ export default {
         ConferenceConversationFloatingView,
         ChooseConferenceLayoutView,
         ConferenceSimpleInfoView,
-        ConferenceParticipantListView,
         ConferenceParticipantVideoView,
         ScreenShareControlView,
         ElectronWindowsControlButtonView,
@@ -468,13 +465,17 @@ export default {
                     return;
                 }
 
-                if (!this.focusParticipant) {
-                    this.focusParticipant = userInfo;
+                if (this.focusUser) {
+                    return this.focusUser;
+                }
+
+                if (!this.speakingParticipant) {
+                    this.speakingParticipant = userInfo;
                     this.session.setParticipantVideoType(userInfo.uid, userInfo._isScreenSharing, VideoType.BIG_STREAM);
-                } else if (userInfo._volume > this.focusParticipant._volume) {
-                    this.session.setParticipantVideoType(this.focusParticipant.uid, this.focusParticipant._isScreenSharing, VideoType.SMALL_STREAM);
-                    this.focusParticipant = userInfo;
-                    this.session.setParticipantVideoType(this.focusParticipant.uid, this.focusParticipant._isScreenSharing, VideoType.BIG_STREAM);
+                } else if (userInfo._volume > this.speakingParticipant._volume) {
+                    this.session.setParticipantVideoType(this.speakingParticipant.uid, this.speakingParticipant._isScreenSharing, VideoType.SMALL_STREAM);
+                    this.speakingParticipant = userInfo;
+                    this.session.setParticipantVideoType(this.speakingParticipant.uid, this.speakingParticipant._isScreenSharing, VideoType.BIG_STREAM);
                 }
             };
 
@@ -872,13 +873,49 @@ export default {
             if (this.currentLayout === 1) {
                 return [];
             }
+
+            let focusUser = this.focusUser;
+            // sort not in place，避免副作用
+            let sortedParticipantUserInfos = [...this.participantUserInfos].sort((o1, o2) => {
+                if (focusUser) {
+                    if (o1.uid === focusUser.uid && o1._isScreenSharing === focusUser._isScreenSharing) {
+                        return -1;
+                    }
+                    if (o2.uid === focusUser.uid && o2._isScreenSharing === focusUser._isScreenSharing) {
+                        return 1;
+                    }
+                }
+
+                if (o1._isAudience && !o2._isAudience) {
+                    return 1;
+                } else if (!o1._isAudience && o2._isAudience) {
+                    return -1;
+                } else if (o1._isAudience && o2._isAudience) {
+                    return o1.uid.localeCompare(o2.uid);
+                } else {
+                    if (o1._isScreenSharing && !o2._isScreenSharing) {
+                        return -1;
+                    }
+                    if (!o1._isScreenSharing && o2._isScreenSharing) {
+                        return 1;
+                    }
+                    if (!o1._isVideoMuted && o2._isVideoMuted) {
+                        return -1;
+                    }
+                    if (o1._isVideoMuted && !o2._isVideoMuted) {
+                        return 1;
+                    }
+                    return o1.uid.localeCompare(o2.uid);
+                }
+            })
+
             let start = this.currentGridPageIndex * this.participantCountPerGridPage;
-            let end = start + this.participantCountPerGridPage > this.participantUserInfos.length ? this.participantUserInfos.length : (start + this.participantCountPerGridPage);
+            let end = start + this.participantCountPerGridPage > sortedParticipantUserInfos.length ? sortedParticipantUserInfos.length : (start + this.participantCountPerGridPage);
             // side effect
             // TODO 优化
             // 相邻页切换时，不能理解取消订阅，可能还切换回去，那样的话，就会有一小段时间，不显示视频流
-            for (let i = 0; i < this.participantUserInfos.length; i++) {
-                let u = this.participantUserInfos[i];
+            for (let i = 0; i < sortedParticipantUserInfos.length; i++) {
+                let u = sortedParticipantUserInfos[i];
                 if (u.uid === this.selfUserInfo.uid || u._isAudience || u._isVideoMuted) {
                     continue;
                 }
@@ -891,11 +928,35 @@ export default {
                 }
             }
             // side effect
-            return this.participantUserInfos.slice(start, end);
+            return sortedParticipantUserInfos.slice(start, end);
         },
 
         gridPageCount() {
             return Math.ceil(this.participantUserInfos.length / this.participantCountPerGridPage);
+        },
+
+        focusUser() {
+            let focus = conferenceManager.conferenceInfo.focus;
+            let focusUser = this.participantUserInfos.find(u => u.uid === focus && u._isScreenSharing === true);
+            if (!focusUser) {
+                focusUser = this.participantUserInfos.find(u => u.uid === focus);
+            }
+            return focusUser;
+        },
+
+        // 以用户手动选择的为准
+        computedCurrentLayout() {
+            if (this.currentLayout === -1 && this.focusUser) {
+                return 1;
+            }
+            return this.currentLayout;
+        },
+
+        computedSpeakingParticipant() {
+            if (this.focusUser) {
+                return this.focusUser;
+            }
+            return this.speakingParticipant;
         }
     },
 
@@ -921,7 +982,11 @@ export default {
                         if (u.uid === this.selfUserInfo.uid || u._isAudience || u._isVideoMuted) {
                             // ho nothing
                         } else {
-                            this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.SMALL_STREAM);
+                            if (this.focusUser && u.uid === this.focusUser.uid && u._isScreenSharing === this.focusUser._isScreenSharing) {
+                                this.session.setParticipantVideoType(this.focusUser.uid, this.focusUser._isScreenSharing, VideoType.BIG_STREAM);
+                            } else {
+                                this.session.setParticipantVideoType(u.uid, u._isScreenSharing, VideoType.SMALL_STREAM);
+                            }
                         }
                     })
                 } else {
