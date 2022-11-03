@@ -7,14 +7,14 @@
                         <img class="avatar" :src="participant.portrait" alt="">
                         <p class="single-line name"> {{ participant._displayName }}</p>
                         <div class="action-container">
-                            <button>放下</button>
+                            <button @click="conferenceManager.putMemberHnadDown(participant.uid)">放下</button>
                         </div>
                     </div>
                 </li>
             </ul>
         </div>
         <div class="action-all-container">
-            <button>全部放下</button>
+            <button @click="conferenceManager.putAllHandDown()">全部放下</button>
         </div>
     </div>
 
@@ -35,12 +35,7 @@ export default {
     computed: {
         handUpParticipantList() {
             let applyList = this.conferenceManager.handUpMembers;
-            let test = store.getUserInfos(applyList)
-            for (let i = 0; i < 50; i++) {
-                test.push(test[0])
-            }
-            console.log('applyList', applyList, test);
-            return test;
+            return store.getUserInfos(applyList)
         }
     }
 }

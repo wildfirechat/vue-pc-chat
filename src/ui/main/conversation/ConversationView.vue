@@ -228,6 +228,10 @@ export default {
         inputOptions: {
             type: Object,
             required: false,
+        },
+        title: {
+            type: String,
+            required: false,
         }
     },
     data() {
@@ -802,11 +806,18 @@ export default {
 
     computed: {
         conversationTitle() {
+            if (this.title){
+                return  this.title;
+            }
             let info = this.sharedConversationState.currentConversationInfo;
-            if (info.conversation.type === ConversationType.Group) {
-                return info.conversation._target._displayName + " (" + info.conversation._target.memberCount + ")";
+            if (info.conversation._target) {
+                if (info.conversation.type === ConversationType.Group) {
+                    return info.conversation._target._displayName + " (" + info.conversation._target.memberCount + ")";
+                } else {
+                    return info.conversation._target._displayName;
+                }
             } else {
-                return info.conversation._target._displayName;
+                return '会话';
             }
         },
         targetUserOnlineStateDesc() {

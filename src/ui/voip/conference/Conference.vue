@@ -166,7 +166,7 @@
                                        v-bind:style="{color: showConversationView ? 'white' : 'black'}"/>
                                     <p>聊天</p>
                                 </div>
-                                <div class="action">
+                                <div v-if="selfUserInfo.uid !== conferenceManager.conferenceInfo.owner" class="action">
                                     <img v-if="!conferenceManager.isHandUp" @click="handup"
                                          class="action-img"
                                          src='@/assets/images/av_conference_handup.png'/>
@@ -204,6 +204,7 @@
                 <ConversationView v-if="showConversationView"
                                   class="conversation-view"
                                   style="height: 100%"
+                                  :title="conferenceManager.conferenceInfo.conferenceTitle"
                                   :input-options="{disableScreenShot:true, disableHistory:true, disableVoip:true, disableChannelMenu:true}"/>
             </div>
         </div>
@@ -529,8 +530,17 @@ export default {
         hangup() {
             this.session.leaveConference(false);
         },
-        async muteAudio() {
+
+        muteAudio() {
             let enable = this.session.audioMuted ? true : false;
+            if (enable && !conferenceManager.conferenceInfo.allowSwitchMode) {
+                this.requestUnmute(true);
+                return;
+            }
+            this._muteAudio(enable);
+        },
+
+        async _muteAudio(enable) {
             let result = await this.session.setAudioEnabled(enable)
             if (!result) {
                 return;
@@ -550,9 +560,16 @@ export default {
                 }
             }
         },
-
-        async muteVideo() {
+        muteVideo() {
             let enable = this.session.videoMuted ? true : false;
+            if (enable && !conferenceManager.conferenceInfo.allowSwitchMode) {
+                this.requestUnmute(false);
+                return;
+            }
+            this._muteVideo(enable);
+        },
+
+        async _muteVideo(enable) {
             let result = await this.session.setVideoEnabled(enable)
             if (!result) {
                 return;
@@ -571,6 +588,19 @@ export default {
                     this.selfUserInfo._isAudience = true;
                 }
             }
+        },
+
+        requestUnmute(audio) {
+            this.$alert({
+                content: '主持人不允许解除静音，您可以向主持人申请解除静音',
+                confirmText: '申请',
+                cancelCallback: () => {
+                    // do nothing
+                },
+                confirmCallback: () => {
+                    conferenceManager.applyUnmute(false);
+                }
+            })
         },
 
         down2voice() {
@@ -1065,12 +1095,14 @@ export default {
 
         this.$eventBus.$on('muteVideo', (mute) => {
             if (this.session.videoMuted !== mute) {
-                this.muteVideo();
+                let enable = this.session.videoMuted ? true : false;
+                this._muteVideo(enable);
             }
         })
         this.$eventBus.$on('muteAudio', (mute) => {
             if (this.session.audioMuted !== mute) {
-                this.muteAudio();
+                let enable = this.session.audioMuted ? true : false;
+                this._muteAudio(enable);
             }
         })
     },

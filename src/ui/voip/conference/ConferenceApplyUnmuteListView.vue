@@ -7,16 +7,16 @@
                         <img class="avatar" :src="participant.portrait" alt="">
                         <p class="single-line name"> {{ participant._displayName }}</p>
                         <div class="action-container">
-                            <button>同意</button>
-                            <button>拒绝</button>
+                            <button @click="conferenceManager.approveUnmute(participant.uid, true)">同意</button>
+                            <button @click="conferenceManager.approveUnmute(participant.uid, false)">拒绝</button>
                         </div>
                     </div>
                 </li>
             </ul>
         </div>
         <div class="action-all-container">
-            <button>全部同意</button>
-            <button>全部拒绝</button>
+            <button @click="conferenceManager.approveAllUnmute(true)">全部同意</button>
+            <button @click="conferenceManager.approveAllUnmute(false)">全部拒绝</button>
         </div>
     </div>
 

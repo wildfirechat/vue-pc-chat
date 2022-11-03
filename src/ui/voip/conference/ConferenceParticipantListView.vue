@@ -129,12 +129,13 @@ export default {
 
         kickoff(user) {
             this.$alert({
+                showIcon: true,
                 content: `确认将${this.participantName(user)}移除会议?`,
                 cancelCallback: () => {
                     // do nothing
                 },
                 confirmCallback: () => {
-                    this.session.kickoff(user.uid)
+                    this.session.kickoffParticipant(user.uid)
                 }
             })
         },
@@ -178,23 +179,6 @@ export default {
                     this.showUserCard(participant);
                 }
             })
-            if (participant._isAudience || participant._isAudioMuted) {
-                items.push({
-                    title: '开启音频',
-                    handler: () => {
-                        this.$eventBus.$emit('muteAudio', false)
-                    }
-                })
-            }
-
-            if (participant._isAudience || participant._isVideoMuted) {
-                items.push({
-                    title: '开启视频',
-                    handler: () => {
-                        this.$eventBus.$emit('muteVideo', false)
-                    }
-                })
-            }
 
             if (selfUid === participant.uid) {
                 // TODO 临时屏蔽，现在不支持同时开视频和音频
@@ -208,7 +192,26 @@ export default {
                 //     })
                 // }
 
-                if (!participant._isAudience) {
+                if (participant._isAudience) {
+                    if (participant._isAudioMuted) {
+                        items.push({
+                            title: '开启音频',
+                            handler: () => {
+                                this.$eventBus.$emit('muteAudio', false)
+                            }
+                        })
+                    }
+
+                    if (participant._isVideoMuted) {
+                        items.push({
+                            title: '开启视频',
+                            handler: () => {
+                                this.$eventBus.$emit('muteVideo', false)
+                            }
+                        })
+                    }
+
+                } else {
                     if (!participant._isAudioMuted) {
                         items.push({
                             title: '关闭音频',
@@ -246,35 +249,45 @@ export default {
                 }
             }
             if (selfUid === conferenceManager.conferenceInfo.owner) {
-                items.push({
-                    title: '取消发言',
-                    handler: () => {
-                        // TODO
-                    },
-                })
-                items.push({
-                    title: ' 移除成员',
-                    handler: () => {
-                        // TODO
-                    },
-                })
+                if (participant._isAudience) {
+                    items.push({
+                        title: '邀请发言',
+                        handler: () => {
+                            conferenceManager.requestMemberMute(participant.uid, false)
+                        },
+                    })
+                } else {
+                    items.push({
+                        title: '取消发言',
+                        handler: () => {
+                            conferenceManager.requestMemberMute(participant.uid, true)
+                        },
+                    })
+                }
+                if (participant.uid !== selfUid) {
+                    items.push({
+                        title: ' 移除成员',
+                        handler: () => {
+                            this.kickoff(participant);
+                        },
+                    })
+                }
                 if (conferenceManager.conferenceInfo.focus === participant.uid) {
                     items.push({
-                        title: '取消为焦点用户',
+                        title: '取消焦点用户',
                         handler: () => {
-                            // TODO
+                            conferenceManager.requestCancelFocus();
                         },
                     })
                 } else {
                     items.push({
                         title: '设置为焦点用户',
                         handler: () => {
-                            // TODO
+                            conferenceManager.requestFocus(participant.uid)
                         },
                     })
                 }
             }
-            // TODO more
             return items;
         },
 

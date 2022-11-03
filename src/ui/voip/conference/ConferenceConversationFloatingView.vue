@@ -41,6 +41,7 @@ export default {
     },
     created() {
         let conversation = new Conversation(ConversationType.ChatRoom, this.session.callId, 0);
+        console.log('xxx setCurrentConversation ', conversation)
         store.setCurrentConversation(conversation);
         this.filterInternal = setInterval(() => {
             this.filterMessage();
@@ -53,8 +54,8 @@ export default {
     },
 
     destroyed() {
+        console.log('xxx setCurrentConversation null')
         store.setCurrentConversation(null);
-        // TODO 离开聊天室
         clearInterval(this.filterInternal)
     },
 

@@ -34,12 +34,7 @@ class ConferenceManager {
             .catch(err => {
                 console.log(err)
             })
-        for (let i = 0; i < 50; i++) {
-            this.applyingUnmuteMembers.push('GNMtGtZZ');
-            this.handUpMembers.push('GNMtGtZZ');
-        }
     }
-
 
     onReceiveMessage = (event, msg) => {
         msg = this._fixLongSerializedIssue(msg)
@@ -181,7 +176,7 @@ class ConferenceManager {
         }
         this.isMuteAll = true;
         this.conferenceInfo.audience = true;
-        this.conferenceInfo.allowTurnOnMic = allowMemberUnmute;
+        this.conferenceInfo.allowSwitchMode = allowMemberUnmute;
         conferenceApi.updateConference(this.conferenceInfo)
             .then(r => {
                 this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.MUTE_ALL, null, allowMemberUnmute);
@@ -198,7 +193,7 @@ class ConferenceManager {
 
         this.isMuteAll = false;
         this.conferenceInfo.audience = false;
-        this.conferenceInfo.allowTurnOnMic = true;
+        this.conferenceInfo.allowSwitchMode = true;
         conferenceApi.updateConference(this.conferenceInfo)
             .then(r => {
                 this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.CANCEL_MUTE_ALL, null, unmute);
@@ -221,7 +216,7 @@ class ConferenceManager {
         if (!this._isOwner()) {
             return;
         }
-        this.handUpMembers = this.handUpMembers.filter(uid !== memberId);
+        this.handUpMembers = this.handUpMembers.filter(uid => uid !== memberId);
         this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.PUT_HAND_DOWN, memberId, false);
     }
 
@@ -255,7 +250,7 @@ class ConferenceManager {
                 this.conferenceInfo.focus = userId;
             })
             .catch(err => {
-                console.log('requesteFocus err', err);
+                console.log('requestFocus err', err);
             })
     }
 
@@ -273,7 +268,7 @@ class ConferenceManager {
     }
 
     onCancelMuteAll(requestUnmute) {
-        if (requestUnmute) {
+        if (requestUnmute && this.vueInstance.selfUserInfo._isAudience) {
             this.vueInstance.$alert({
                 showIcon: false,
                 content: '主持人关闭了全员静音，是否要打开麦克风',

@@ -3,7 +3,7 @@
         <div>
             <div v-if="showParticipantList && selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.applyingUnmuteMembers.length > 0"
                  @click="showParticipantList = false;showApplyList = true"
-                 class="action-tip">xxx 正在申请解除静音
+                 class="action-tip">{{ applyUnmuteTip }}
             </div>
             <div v-if="showApplyList" class="title-container">
                 <i class="icon-ion-android-arrow-back"
@@ -13,7 +13,7 @@
             </div>
             <div v-if="showParticipantList && selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.handUpMembers.length > 0"
                  @click="showParticipantList = false; showHandUpList = true"
-                 class="action-tip">xxx 正在举手
+                 class="action-tip">{{ handUpIip }}
             </div>
             <div v-if="showHandUpList" class="title-container">
                 <i class="icon-ion-android-arrow-back"
@@ -71,7 +71,30 @@ export default {
         ConferenceApplyUnmuteListView,
         ConferenceParticipantListView,
     },
-    methods: {}
+    methods: {},
+    computed: {
+        handUpIip() {
+            let ids = conferenceManager.handUpMembers;
+            let userInfos = wfc.getUserInfos(ids);
+            let desc = userInfos[0].displayName;
+            if (userInfos.length > 1) {
+                desc += ' 等'
+            }
+            desc += '正在举手'
+            return desc;
+        },
+        applyUnmuteTip() {
+            let ids = conferenceManager.applyingUnmuteMembers;
+            let userInfos = wfc.getUserInfos(ids);
+            let desc = userInfos[0].displayName;
+            if (userInfos.length > 1) {
+                desc += ' 等'
+            }
+            desc += '正在申请解除静音'
+            return desc;
+        }
+
+    }
 }
 </script>
 

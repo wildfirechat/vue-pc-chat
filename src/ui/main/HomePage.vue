@@ -265,6 +265,7 @@ export default {
             if (reason === CallEndReason.RoomNotExist) {
                 if (session.host === wfc.getUserId()) {
                     this.$alert({
+                        showIcon: false,
                         content: '会议已结束，是否重新开启会议？',
                         cancelCallback: () => {
                             // do nothing
