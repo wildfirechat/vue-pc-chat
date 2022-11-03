@@ -197,15 +197,16 @@ export default {
             }
 
             if (selfUid === participant.uid) {
-                if (participant._isAudience) {
-                    items.push({
-                        title: '开启音视频',
-                        handler: () => {
-                            this.$eventBus.$emit('muteAudio', false)
-                            this.$eventBus.$emit('muteVideo', false)
-                        }
-                    })
-                }
+                // TODO 临时屏蔽，现在不支持同时开视频和音频
+                // if (participant._isAudience) {
+                //     items.push({
+                //         title: '开启音视频',
+                //         handler: () => {
+                //             this.$eventBus.$emit('muteAudio', false)
+                //             this.$eventBus.$emit('muteVideo', false)
+                //         }
+                //     })
+                // }
 
                 if (!participant._isAudience) {
                     if (!participant._isAudioMuted) {

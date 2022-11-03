@@ -41,11 +41,6 @@ class ConferenceManager {
     }
 
 
-    handup() {
-        this.isHandUp = !this.isHandUp;
-        // TODO
-    }
-
     onReceiveMessage = (event, msg) => {
         msg = this._fixLongSerializedIssue(msg)
         if (msg.messageContent.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND) {

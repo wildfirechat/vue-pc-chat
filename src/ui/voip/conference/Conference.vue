@@ -537,13 +537,16 @@ export default {
             }
             this.selfUserInfo._isAudioMuted = !enable;
 
+            console.log('muteAudio', this.selfUserInfo._isAudioMuted, this.session.audience)
             if (enable) {
                 if (this.session.audience) {
                     await this.session.switchAudience(false);
+                    this.selfUserInfo._isAudience = false;
                 }
             } else {
                 if (this.session.videoMuted && !this.session.audience) {
                     await this.session.switchAudience(true);
+                    this.selfUserInfo._isAudience = true;
                 }
             }
         },
@@ -556,7 +559,7 @@ export default {
             }
             this.selfUserInfo._isVideoMuted = !enable;
 
-            console.log('muteVideo----', this.selfUserInfo._isVideoMuted)
+            console.log('muteVideo', this.selfUserInfo._isVideoMuted, this.session.audience)
             if (enable) {
                 if (this.session.audience) {
                     await this.session.switchAudience(false);
@@ -711,7 +714,7 @@ export default {
         },
 
         handup() {
-            conferenceManager.handup()
+            conferenceManager.handUp(!conferenceManager.isHandUp)
         },
 
         userName(user) {
@@ -953,7 +956,7 @@ export default {
         },
 
         computedSpeakingParticipant() {
-            if (this.focusUser) {
+            if (this.focusUser && !this.focusUser._isVideoMuted) {
                 return this.focusUser;
             }
             return this.speakingParticipant;
@@ -1062,12 +1065,12 @@ export default {
 
         this.$eventBus.$on('muteVideo', (mute) => {
             if (this.session.videoMuted !== mute) {
-                this.muteVideo(mute);
+                this.muteVideo();
             }
         })
         this.$eventBus.$on('muteAudio', (mute) => {
             if (this.session.audioMuted !== mute) {
-                this.muteAudio(mute);
+                this.muteAudio();
             }
         })
     },
