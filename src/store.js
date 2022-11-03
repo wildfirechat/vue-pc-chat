@@ -1218,8 +1218,14 @@ let store = {
             } else {
                 info.conversation._target = {};
             }
+        } else if (info.conversation.type === ConversationType.ChatRoom) {
+            wfc.getChatroomInfo(info.conversation.target, new Date().getTime(), (chatRoomInfo) => {
+                info.conversation._target = chatRoomInfo;
+            }, err => {
+                console.log('get chatRoomInfo error', err);
+            });
         }
-        if (!info.conversation._target.portrait) {
+        if (info.conversation._target && !info.conversation._target.portrait) {
             getConversationPortrait(info.conversation).then((portrait => {
                 info.conversation._target.portrait = portrait;
             }))
