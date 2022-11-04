@@ -224,19 +224,24 @@ let store = {
         console.log('init store')
         // 目前，通知只可能在主窗口触发
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
+            console.log('store ConnectionStatusChanged', status)
             miscState.connectionStatus = status;
-            if (status === ConnectionStatus.ConnectionStatusConnected) {
-                this._loadDefaultData();
+            try {
+                if (status === ConnectionStatus.ConnectionStatusConnected) {
+                    this._loadDefaultData();
 
-                this.updateTray();
-            } else if (status === ConnectionStatus.ConnectionStatusLogout) {
-                _reset();
-                this.updateTray();
+                    this.updateTray();
+                } else if (status === ConnectionStatus.ConnectionStatusLogout) {
+                    _reset();
+                    this.updateTray();
+                }
+            } catch (e) {
             }
         });
 
         wfc.eventEmitter.on(EventType.UserInfosUpdate, (userInfos) => {
             // TODO optimize
+            console.log('store UserInfosUpdate', userInfos, miscState.connectionStatus)
             this._loadDefaultConversationList();
             this._loadCurrentConversationMessages();
             this._loadFriendList();
@@ -246,6 +251,7 @@ let store = {
         });
 
         wfc.eventEmitter.on(EventType.SettingUpdate, () => {
+            console.log('store SettingUpdate')
             this._loadDefaultConversationList();
             this._loadFavContactList();
             this._loadFavGroupList();
@@ -271,6 +277,7 @@ let store = {
 
         wfc.eventEmitter.on(EventType.GroupInfosUpdate, (groupInfos) => {
             // TODO optimize
+            console.log('store GroupInfosUpdate', groupInfos)
             this._loadDefaultConversationList();
             this._loadFavGroupList();
             // TODO 其他相关逻辑
@@ -592,14 +599,42 @@ let store = {
     },
 
     _loadDefaultConversationList() {
+        console.log('store _loadDefaultConversationList');
         let conversationTypes = isElectron() ? [0, 1, 3, 5] : [0, 1, 3];
         this._loadConversationList(conversationTypes, [0])
     },
 
     _loadConversationList(conversationType = [0, 1, 3], lines = [0]) {
         let conversationList = wfc.getConversationList(conversationType, lines);
+        let toLoadUserIdSet = new Set();
+        let toLoadGroupIds = [];
         conversationList.forEach(info => {
-            this._patchConversationInfo(info);
+            if (info.conversation.type === ConversationType.Single) {
+                toLoadUserIdSet.add(info.conversation.target)
+                if (info.lastMessage) {
+                    toLoadUserIdSet.add(info.lastMessage.from);
+                }
+            } else if (info.conversation.type === ConversationType.Group) {
+                toLoadGroupIds.push(info.conversation.target)
+                if (info.lastMessage) {
+                    toLoadUserIdSet.add(info.lastMessage.from);
+                }
+            }
+        })
+        let userInfoMap = new Map();
+        let groupInfoMap = new Map();
+        console.log('to load userIds', [...toLoadUserIdSet]);
+        wfc.getUserInfos([...toLoadUserIdSet])
+            .forEach(u => {
+                userInfoMap.set(u.uid, u);
+            });
+        wfc.getGroupInfos(toLoadGroupIds)
+            .forEach(g => {
+                groupInfoMap.set(g.target, g);
+            });
+
+        conversationList.forEach(info => {
+            this._patchConversationInfo(info, true, userInfoMap, groupInfoMap);
             // side affect
             if (conversationState.currentConversationInfo
                 && conversationState.currentConversationInfo.conversation.equal(info.conversation)) {
@@ -1156,11 +1191,16 @@ let store = {
         return msg;
     },
 
-    _patchMessage(m, lastTimestamp = 0) {
+    _patchMessage(m, lastTimestamp = 0, userInfoMap) {
         // TODO
         // _from
         // _showTime
-        m._from = wfc.getUserInfo(m.from, false, m.conversation.type === ConversationType.Group ? m.conversation.target : '');
+        if (m.conversation.type === ConversationType.Single) {
+            m._from = userInfoMap ? userInfoMap.get(m.from) : wfc.getUserInfo(m.from, false, '');
+        }
+        if (!m._from) {
+            m._from = wfc.getUserInfo(m.from, false, m.conversation.type === ConversationType.Group ? m.conversation.target : '');
+        }
         if (m.conversation.type === ConversationType.Group) {
             m._from._displayName = wfc.getGroupMemberDisplayNameEx(m._from);
         } else {
@@ -1198,14 +1238,18 @@ let store = {
         })
     },
 
-    _patchConversationInfo(info, patchLastMessage = true) {
+    _patchConversationInfo(info, patchLastMessage = true, userInfoMap, groupInfoMap) {
         if (info.conversation.type === ConversationType.Single) {
-            info.conversation._target = wfc.getUserInfo(info.conversation.target, false);
-            info.conversation._target._displayName = wfc.getUserDisplayNameEx(info.conversation._target);
+            info.conversation._target = userInfoMap ? userInfoMap.get(info.conversation.target) : wfc.getUserInfo(info.conversation.target, false);
+            if (info.conversation._target) {
+                info.conversation._target._displayName = wfc.getUserDisplayNameEx(info.conversation._target);
+            }
         } else if (info.conversation.type === ConversationType.Group) {
-            info.conversation._target = wfc.getGroupInfo(info.conversation.target, false);
-            info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
-            info.conversation._target._displayName = info.conversation._target.remark ? info.conversation._target.remark : info.conversation._target.name;
+            info.conversation._target = groupInfoMap ? groupInfoMap.get(info.conversation.target) : wfc.getGroupInfo(info.conversation.target, false);
+            if (info.conversation._target) {
+                info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
+                info.conversation._target._displayName = info.conversation._target.remark ? info.conversation._target.remark : info.conversation._target.name;
+            }
         } else if (info.conversation.type === ConversationType.Channel) {
             info.conversation._target = wfc.getChannelInfo(info.conversation.target, false);
             info.conversation._target._displayName = info.conversation._target.name;
@@ -1221,7 +1265,7 @@ let store = {
             }
         }
         if (!info.conversation._target.portrait) {
-            getConversationPortrait(info.conversation).then((portrait => {
+            getConversationPortrait(info.conversation, userInfoMap, groupInfoMap).then((portrait => {
                 info.conversation._target.portrait = portrait;
             }))
         }
@@ -1232,7 +1276,7 @@ let store = {
         }
 
         if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
-            this._patchMessage(info.lastMessage, 0)
+            this._patchMessage(info.lastMessage, 0, userInfoMap)
         }
 
         if (info.unreadCount) {
@@ -1786,7 +1830,7 @@ let store = {
 
     setPageVisibility(visible) {
         miscState.isPageHidden = !visible;
-        if (!visible){
+        if (!visible) {
             conversationState.shouldAutoScrollToBottom = false;
         }
         // if (visible) {
