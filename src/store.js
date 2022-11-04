@@ -29,7 +29,6 @@ import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
 import IPCEventType from "./ipc/ipcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
 import {stringValue} from "./wfc/util/longUtil";
-import {getConversationPortrait} from "./ui/util/imageUtil";
 import DismissGroupNotification from "./wfc/messages/notification/dismissGroupNotification";
 import KickoffGroupMemberNotification from "./wfc/messages/notification/kickoffGroupMemberNotification";
 import QuitGroupNotification from "./wfc/messages/notification/quitGroupNotification";
@@ -41,6 +40,7 @@ import EnterChannelChatMessageContent from "./wfc/messages/enterChannelChatMessa
 import ArticlesMessageContent from "./wfc/messages/articlesMessageContent";
 import NullUserInfo from "./wfc/model/nullUserInfo";
 import NullGroupInfo from "./wfc/model/nullGroupInfo";
+import GroupInfo from "./wfc/model/groupInfo";
 
 /**
  * 一些说明
@@ -85,6 +85,7 @@ let store = {
             floatingConversations: [],
 
             currentVoiceMessage: null,
+            contextMenuConversationInfo: null,
 
             _reset() {
                 this.currentConversationInfo = null;
@@ -107,6 +108,7 @@ let store = {
                 this.sendingMessages = [];
                 this.floatingConversations = [];
                 this.currentVoiceMessage = null;
+                this.contextMenuConversationInfo = null;
             }
         },
 
@@ -285,6 +287,14 @@ let store = {
             // TODO 其他相关逻辑
 
         });
+
+        // wfc.eventEmitter.on(EventType.GroupMembersUpdate, (groupId, members) => {
+        //     // TODO optimize
+        //     console.log('store GroupMembersUpdate', groupId)
+        //     this._reloadGroupConversationIfExist([new NullGroupInfo(groupId)]);
+        //     this._loadFavGroupList();
+        //     // TODO 其他相关逻辑
+        // });
 
         wfc.eventEmitter.on(EventType.ChannelInfosUpdate, (groupInfos) => {
             this._loadDefaultConversationList();
@@ -1356,11 +1366,6 @@ let store = {
             } else {
                 info.conversation._target = {};
             }
-        }
-        if (!info.conversation._target.portrait) {
-            getConversationPortrait(info.conversation, userInfoMap, groupInfoMap).then((portrait => {
-                info.conversation._target.portrait = portrait;
-            }))
         }
         if (gt(info.timestamp, 0)) {
             info._timeStr = helper.dateFormat(info.timestamp);

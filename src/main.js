@@ -20,6 +20,7 @@ import Notifications from 'vue-notification'
 import Alert from "./ui/common/Alert.js";
 import Picker from "./ui/common/Picker";
 import Forward from "./ui/common/Forward";
+import VirtualList from "vue-virtual-scroll-list/src";
 
 Vue.config.productionTip = false
 
@@ -70,6 +71,7 @@ Vue.component("tippy", TippyComponent);
 
 Vue.use(VueContext);
 Vue.component("vue-context", VueContext)
+Vue.component('virtual-list', VirtualList);
 
 Vue.use(VModal);
 
