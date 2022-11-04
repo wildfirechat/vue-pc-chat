@@ -482,8 +482,12 @@ let store = {
                 return;
             }
             let msg = conversationState.currentConversationMessageList[index];
-
             Object.assign(msg, message)
+
+            if (conversationState.currentConversationInfo.lastMessage.messageId === message.messageId){
+                Object.assign(conversationState.currentConversationInfo.lastMessage, message);
+
+            }
         });
 
         wfc.eventEmitter.on(EventType.MessageReceived, (delivery) => {
