@@ -69,6 +69,9 @@ export default {
                 info.conversation._target.portrait = portrait;
             }))
         }
+        if (info.lastMessage && info.lastMessage.conversation !== undefined) {
+            store._patchMessage(info.lastMessage, 0)
+        }
     },
     methods: {
         dragEvent(e, v) {
@@ -119,7 +122,10 @@ export default {
     computed: {
         conversationTitle() {
             let info = this.source;
+            if (info.conversation._target) {
             return info.conversation._target._displayName;
+            }
+            return '';
         },
 
         shouldShowDraft() {
@@ -157,10 +163,13 @@ export default {
         lastMessageContent() {
             let conversationInfo = this.source;
             if (conversationInfo.lastMessage && conversationInfo.lastMessage.messageContent) {
-
                 let senderName = '';
                 if (conversationInfo.conversation.type === 1 && conversationInfo.lastMessage.direction === 1 && !(conversationInfo.lastMessage.messageContent instanceof NotificationMessageContent)) {
+                    if (conversationInfo.lastMessage._from) {
                     senderName = conversationInfo.lastMessage._from._displayName + ': ';
+                    } else {
+                       senderName = '<' + conversationInfo.lastMessage.from + '>';
+                    }
                 }
                 return senderName + conversationInfo.lastMessage.messageContent.digest(conversationInfo.lastMessage);
             } else {

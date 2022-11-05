@@ -405,7 +405,8 @@ let store = {
             userOnlineStatus.forEach(e => {
                 miscState.userOnlineStateMap.set(e.userId, e);
             })
-            this._loadFriendList();
+            // 更新在线状态
+            contactState.friendList = this._patchAndSortUserInfos(contactState.friendList, '');
         })
         // 服务端删除
         wfc.eventEmitter.on(EventType.MessageDeleted, (messageUid) => {
@@ -710,11 +711,12 @@ let store = {
     _reloadSingleConversationIfExist(userInfos) {
         if (userInfos.length > 10) {
             this._loadDefaultConversationList();
+        } else {
+            userInfos.forEach(ui => {
+                let conv = new Conversation(ConversationType.Single, ui.uid, 0);
+                this._reloadConversation(conv, false);
+            })
         }
-        userInfos.forEach(ui => {
-            let conv = new Conversation(ConversationType.Single, ui.uid, 0);
-            this._reloadConversation(conv, false);
-        })
     },
 
     _reloadGroupConversationIfExist(groupInfos) {
@@ -1383,9 +1385,10 @@ let store = {
             info._timeStr = '';
         }
 
-        if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
-            this._patchMessage(info.lastMessage, 0, userInfoMap)
-        }
+        // 显示的时候，再 patch
+        // if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
+        //     this._patchMessage(info.lastMessage, 0, userInfoMap)
+        // }
 
         if (info.unreadCount) {
             info._unread = info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll;
