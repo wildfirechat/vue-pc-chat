@@ -385,7 +385,7 @@ export default {
                     setTimeout(() => {
                         isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
                         this.$router.replace({path: "/home"});
-                    }, 10 * 1000)
+                    }, 5 * 1000)
                 } else {
                     if (isElectron()) {
                         ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})

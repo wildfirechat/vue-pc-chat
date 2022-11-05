@@ -2,7 +2,6 @@
     <section class="conversation-list">
         <virtual-list :data-component="conversationItemView" :data-sources="conversationInfoList" :data-key="conversationInfoKey"
                       :estimate-size="30"
-                      @contextmenu.prevent="showConversationItemContextMenu($event, null)"
                       style="height: 100%; overflow-y: auto;"/>
 
         <vue-context ref="menu" v-slot="{data:conversationInfo}" v-on:close="onConversationItemContextMenuClose">

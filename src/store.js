@@ -117,6 +117,7 @@ let store = {
             currentGroup: null,
             currentChannel: null,
             currentFriend: null,
+            currentUser: null,
 
             expandFriendRequestList: false,
             expandFriendList: true,
@@ -136,6 +137,7 @@ let store = {
                 this.currentGroup = null;
                 this.currentChannel = null;
                 this.currentFriend = null;
+                this.currentUser = null;
 
                 this.expandFriendRequestList = false;
                 this.expandFriendList = true;
