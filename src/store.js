@@ -705,6 +705,9 @@ let store = {
     },
 
     _reloadSingleConversationIfExist(userInfos) {
+        if (userInfos.length > 10){
+            this._loadDefaultConversationList();
+        }
         userInfos.forEach(ui => {
             let conv = new Conversation(ConversationType.Single, ui.uid, 0);
             this._reloadConversation(conv, false);
