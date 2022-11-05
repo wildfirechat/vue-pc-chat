@@ -41,6 +41,7 @@ import ArticlesMessageContent from "./wfc/messages/articlesMessageContent";
 import NullUserInfo from "./wfc/model/nullUserInfo";
 import NullGroupInfo from "./wfc/model/nullGroupInfo";
 import GroupInfo from "./wfc/model/groupInfo";
+import {genGroupPortrait} from "./ui/util/imageUtil";
 
 /**
  * 一些说明
@@ -486,7 +487,7 @@ let store = {
             let msg = conversationState.currentConversationMessageList[index];
             Object.assign(msg, message)
 
-            if (conversationState.currentConversationInfo.lastMessage.messageId === message.messageId){
+            if (conversationState.currentConversationInfo.lastMessage.messageId === message.messageId) {
                 Object.assign(conversationState.currentConversationInfo.lastMessage, message);
 
             }
@@ -707,7 +708,7 @@ let store = {
     },
 
     _reloadSingleConversationIfExist(userInfos) {
-        if (userInfos.length > 10){
+        if (userInfos.length > 10) {
             this._loadDefaultConversationList();
         }
         userInfos.forEach(ui => {
@@ -1788,15 +1789,22 @@ let store = {
         }
         groupName = groupName.substr(0, groupName.length - 1);
 
-        wfc.createGroup(null, GroupType.Restricted, groupName, null, null, groupMemberIds, null, [0], null,
-            (groupId) => {
-                let conversation = new Conversation(ConversationType.Group, groupId, 0)
-                this.setCurrentConversation(conversation);
-                successCB && successCB(conversation);
-            }, (error) => {
-                console.log('create group error', error)
-                failCB && failCB(error);
-            });
+        genGroupPortrait(users)
+            .then(portrait => {
+                wfc.uploadMedia(new Date().getTime() + '.png', portrait, MessageContentMediaType.Portrait, (remoteUrl) => {
+                    wfc.createGroup(null, GroupType.Restricted, groupName, remoteUrl, null, groupMemberIds, null, [0], null,
+                        (groupId) => {
+                            let conversation = new Conversation(ConversationType.Group, groupId, 0)
+                            this.setCurrentConversation(conversation);
+                            successCB && successCB(conversation);
+                        }, (error) => {
+                            console.log('create group error', error)
+                            failCB && failCB(error);
+                        });
+                }, err => {
+                    console.log('upload media err', err)
+                });
+            })
     },
 
     _loadUserLocalSettings() {
