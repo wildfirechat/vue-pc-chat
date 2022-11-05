@@ -21,6 +21,8 @@ import Alert from "./ui/common/Alert.js";
 import Picker from "./ui/common/Picker";
 import Forward from "./ui/common/Forward";
 import VirtualList from "vue-virtual-scroll-list/src";
+import xss from "xss";
+
 
 Vue.config.productionTip = false
 
@@ -101,6 +103,7 @@ const router = new VueRouter({
 })
 
 Vue.prototype.$eventBus = new Vue();
+Vue.prototype.xss = xss;
 
 var vm = new Vue({
     el: '#app',
