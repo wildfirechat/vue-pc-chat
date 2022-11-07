@@ -70,7 +70,7 @@ export default {
             }))
         }
         if (info.lastMessage && info.lastMessage.conversation !== undefined) {
-            store._patchMessage(info.lastMessage, 0)
+            info.lastMessage = store._patchMessage(info.lastMessage, 0)
         }
     },
     methods: {
@@ -123,7 +123,7 @@ export default {
         conversationTitle() {
             let info = this.source;
             if (info.conversation._target) {
-            return info.conversation._target._displayName;
+                return info.conversation._target._displayName;
             }
             return '';
         },
@@ -166,9 +166,9 @@ export default {
                 let senderName = '';
                 if (conversationInfo.conversation.type === 1 && conversationInfo.lastMessage.direction === 1 && !(conversationInfo.lastMessage.messageContent instanceof NotificationMessageContent)) {
                     if (conversationInfo.lastMessage._from) {
-                    senderName = conversationInfo.lastMessage._from._displayName + ': ';
+                        senderName = conversationInfo.lastMessage._from._displayName + ': ';
                     } else {
-                       senderName = '<' + conversationInfo.lastMessage.from + '>';
+                        senderName = '<' + conversationInfo.lastMessage.from + '>: ';
                     }
                 }
                 return senderName + conversationInfo.lastMessage.messageContent.digest(conversationInfo.lastMessage);

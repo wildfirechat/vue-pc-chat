@@ -1386,9 +1386,12 @@ let store = {
         }
 
         // 显示的时候，再 patch
-        // if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
-        //     this._patchMessage(info.lastMessage, 0, userInfoMap)
-        // }
+        if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
+            //this._patchMessage(info.lastMessage, 0, userInfoMap)
+            if (!info.lastMessage._from){
+                info.lastMessage._from = undefined;
+            }
+        }
 
         if (info.unreadCount) {
             info._unread = info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll;
