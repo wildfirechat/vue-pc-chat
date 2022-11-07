@@ -59,7 +59,7 @@
                 <p class="tip" @click="switchLoginType(2)">使用验证码登录</p>
                 <p class="tip" @click="register">注册</p>
             </div>
-            <button class="login-button" :disabled="mobile.trim() === '' || password.trim() === ''" @click="loginWithPassword">登录</button>
+            <button class="login-button" :disabled="mobile.trim() === '' || password.trim() === ''" ref="loginWithPasswordButton" @click="loginWithPassword">登录</button>
         </div>
         <div v-else class="login-form-container">
             <!--            验证码登录-->
@@ -72,7 +72,7 @@
                 <button :disabled="mobile.trim().length !== 11" class="request-auth-code-button" @keydown.enter="loginWithAuthCode" @click="requestAuthCode">获取验证码</button>
             </div>
             <p class="tip" @click="switchLoginType(1)">使用密码登录</p>
-            <button class="login-button" :disabled="mobile.trim() === '' || authCode.trim() === ''" @click="loginWithAuthCode">登录</button>
+            <button class="login-button" :disabled="mobile.trim() === '' || authCode.trim() === ''" ref="loginWithAuthCodeButton" @click="loginWithAuthCode">登录</button>
         </div>
         <div class="switch-login-type-container">
             <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
@@ -93,6 +93,7 @@ import {clear, getItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
+import ConversationType from "../../wfc/model/conversationType";
 
 export default {
     name: 'App',
@@ -110,6 +111,7 @@ export default {
             mobile: '',
             password: '',
             authCode: '',
+            firstTimeConnect: false,
         }
     },
     created() {
@@ -123,7 +125,7 @@ export default {
 
             let autoLogin = getItem(userId + '-' + 'autoLogin') === '1'
             if (autoLogin && token) {
-                wfc.connect(userId, token);
+                this.firstTimeConnect = wfc.connect(userId, token);
                 this.loginStatus = 4;
             } else {
                 this.loginStatus = 2;
@@ -138,7 +140,7 @@ export default {
     },
 
     methods: {
-        register(){
+        register() {
             this.$notify({
                 text: '使用短信验证码登录，将会为您创建账户，请使用短信验证码登录',
                 type: 'info'
@@ -181,6 +183,7 @@ export default {
                 return;
             }
 
+            this.$refs.loginWithPasswordButton.disabled = true;
             let response = await axios.post('/login_pwd/', {
                 mobile: this.mobile,
                 password: this.password,
@@ -190,7 +193,7 @@ export default {
             if (response.data) {
                 if (response.data.code === 0) {
                     const {userId, token, portrait} = response.data.result;
-                    wfc.connect(userId, token);
+                    this.firstTimeConnect = wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
                     setItem("userPortrait", portrait);
@@ -221,6 +224,7 @@ export default {
                 return;
             }
 
+            this.$refs.loginWithAuthCodeButton.disabled = true;
             let response = await axios.post('/login/', {
                 mobile: this.mobile,
                 code: this.authCode,
@@ -230,7 +234,7 @@ export default {
             if (response.data) {
                 if (response.data.code === 0) {
                     const {userId, token, portrait} = response.data.result;
-                    wfc.connect(userId, token);
+                    this.firstTimeConnect = wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
                     setItem("userPortrait", portrait);
@@ -299,7 +303,7 @@ export default {
                         if (this.loginStatus === 1 || this.loginStatus === 3) {
                             let userId = response.data.result.userId;
                             let imToken = response.data.result.token;
-                            wfc.connect(userId, imToken);
+                            this.firstTimeConnect = wfc.connect(userId, imToken);
                             this.loginStatus = 4;
                             setItem('userId', userId);
                             setItem('token', imToken);
@@ -368,9 +372,27 @@ export default {
                 this.cancel();
             }
             if (status === ConnectionStatus.ConnectionStatusConnected) {
-                this.$router.replace({path: "/home"});
+                // pc 端首次登录时，等待同步数据
+                // TODO 添加同步中动画
+                if (isElectron() && this.firstTimeConnect) {
+                    if (this.$refs.loginWithAuthCodeButton) {
+                        this.$refs.loginWithAuthCodeButton.textContent = '数据同步中...';
+                    }
+                    if (this.$refs.loginWithPasswordButton) {
+                        this.$refs.loginWithPasswordButton.textContent = '数据同步中...';
+                    }
+                    // 先等待加载数据
+                    setTimeout(() => {
+                        isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+                        this.$router.replace({path: "/home"});
+                    }, 5 * 1000)
+                } else {
+                    if (isElectron()) {
+                        ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+                    }
+                    this.$router.replace({path: "/home"});
+                }
                 if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
-                    isElectron() && ipcRenderer.send('logined', {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
                     if (this.enableAutoLogin) {
                         store.setEnableAutoLogin(this.enableAutoLogin)
                     }

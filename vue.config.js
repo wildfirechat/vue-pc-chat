@@ -44,6 +44,21 @@ module.exports = {
             },
             chainWebpackRendererProcess: (config) => {
                 // Chain webpack config for electron renderer process only (won't be applied to web builds)
+                config.module
+                    .rule("vue")
+                    .use("vue-loader")
+                    .loader("vue-loader")
+                    .tap(options => {
+                        options.compilerOptions.directives = {
+                            html(node, directiveMeta) {
+                                (node.props || (node.props = [])).push({
+                                    name: "innerHTML",
+                                    value: `xss(_s(${directiveMeta.value}))`
+                                });
+                            }
+                        };
+                        return options;
+                    });
             },
             // nodeIntegration: true,
             contextIsolation: false,

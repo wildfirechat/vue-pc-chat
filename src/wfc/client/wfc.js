@@ -73,9 +73,10 @@ export class WfcManager {
      * 连接服务器
      * @param {string} userId 用户id
      * @param {string} token 用户token，生成token时，所使用的clientId，一定要通过{@link getClientId}获取
+     * @return {boolean} true，首次登录，不是表示连接成功；false，非首次登录；这个返回值，只有 pc 端有效
      */
     connect(userId, token) {
-        impl.connect(userId, token);
+        return impl.connect(userId, token);
     }
 
     /**
