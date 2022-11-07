@@ -116,8 +116,15 @@
                             <div v-for="(participant) in participantUserInfos"
                                  :key="participant.uid"
                                  class="participant-audio-item">
-                                <video v-if="audioOnly && participant._stream"
+                                <video v-if="audioOnly && participant._stream && !participant._isVideoMuted"
                                        class="hidden-video"
+                                       controls
+                                       :srcObject.prop="participant._stream"
+                                       :muted="participant.uid === selfUserInfo.uid"
+                                       playsInline autoPlay/>
+                                <audio v-else-if="audioOnly && participant._stream && participant._isVideoMuted"
+                                       class="hidden-video"
+                                       controls
                                        :srcObject.prop="participant._stream"
                                        :muted="participant.uid === selfUserInfo.uid"
                                        playsInline autoPlay/>
@@ -373,6 +380,10 @@ export default {
                 }
             };
 
+            sessionCallback.didRemoveRemoteVideoTrack = (userId) => {
+
+            };
+
             sessionCallback.didParticipantJoined = (userId, screenSharing) => {
                 console.log('didParticipantJoined', userId, screenSharing)
                 IpcSub.getUserInfos([userId], null, (userInfos) => {
@@ -441,6 +452,9 @@ export default {
                         u._isAudience = audience;
                         u._isAudioMuted = false;
                         u._isVideoMuted = false;
+                        if (audience) {
+                            u._stream = null;
+                        }
                     }
                 })
             };
