@@ -21,6 +21,9 @@ class ConferenceManager {
     isHandUp = false;
     isMuteAll = false;
 
+    currentFocusUser = null;
+    localFocusUser = null;
+
     setVueInstance(eventBus) {
         this.vueInstance = eventBus;
     }

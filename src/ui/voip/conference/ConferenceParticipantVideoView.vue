@@ -2,7 +2,7 @@
     <div class="participant-video-item"
          v-bind:class="{highlight: participant._volume > 0}">
         <video v-if="!participant._isAudience && !participant._isVideoMuted && participant._stream"
-               @click="onClickVideo()"
+               @dblclick="onClickVideo"
                class="video"
                v-bind:style="{objectFit:participant._isScreenSharing ? 'contain' : 'fit'}"
                :srcObject.prop="participant._stream"
@@ -33,6 +33,7 @@
 import CallState from "../../../wfc/av/engine/callState";
 import VideoType from "../../../wfc/av/engine/videoType";
 import wfc from "../../../wfc/client/wfc";
+import conferenceManager from "./conferenceManager";
 
 export default {
     name: "ConferenceParticipantVideoView",
@@ -90,11 +91,7 @@ export default {
         },
 
         onClickVideo() {
-            if (this.selfUserId === this.participant.uid) {
-                this.switchCamera();
-            } else {
-                this.switchVideoType(this.participant.uid, this.participant._isScreenSharing);
-            }
+            conferenceManager.localFocusUser = this.participant;
         },
 
         switchVideoType(userId, screenSharing) {
