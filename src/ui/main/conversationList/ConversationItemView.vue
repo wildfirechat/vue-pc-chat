@@ -69,9 +69,6 @@ export default {
                 info.conversation._target.portrait = portrait;
             }))
         }
-        if (info.lastMessage && info.lastMessage.conversation !== undefined) {
-            info.lastMessage = store._patchMessage(info.lastMessage, 0)
-        }
     },
     methods: {
         dragEvent(e, v) {
@@ -168,7 +165,12 @@ export default {
                     if (conversationInfo.lastMessage._from) {
                         senderName = conversationInfo.lastMessage._from._displayName + ': ';
                     } else {
-                        senderName = '<' + conversationInfo.lastMessage.from + '>: ';
+                        conversationInfo.lastMessage = store._patchMessage(conversationInfo.lastMessage, 0)
+                        if (conversationInfo.lastMessage._from) {
+                            senderName = conversationInfo.lastMessage._from._displayName + ': ';
+                        } else {
+                            senderName = '<' + conversationInfo.lastMessage.from + '>: ';
+                        }
                     }
                 }
                 return senderName + conversationInfo.lastMessage.messageContent.digest(conversationInfo.lastMessage);
