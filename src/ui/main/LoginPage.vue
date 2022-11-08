@@ -55,11 +55,12 @@
             <div class="item">
                 <input v-model="password" class="text-input" @keydown.enter="loginWithPassword" type="password" placeholder="请输入密码">
             </div>
-            <div style="display: flex; justify-content: space-between; width: 100%; ">
+            <div v-if="loginStatus === 0" style="display: flex; justify-content: space-between; width: 100%; ">
                 <p class="tip" @click="switchLoginType(2)">使用验证码登录</p>
                 <p class="tip" @click="register">注册</p>
             </div>
-            <button class="login-button" :disabled="mobile.trim() === '' || password.trim() === ''" ref="loginWithPasswordButton" @click="loginWithPassword">登录</button>
+            <button class="login-button" :disabled="mobile.trim() === '' || password.trim() === ''" ref="loginWithPasswordButton" @click="loginWithPassword">{{ loginStatus === 3 ? '数据同步中...' : '登录' }}</button>
+            <ClipLoader v-if="loginStatus === 3" class="syncing" :color="'#4168e0'" :height="'80px'" :width="'80px'"/>
         </div>
         <div v-else class="login-form-container">
             <!--            验证码登录-->
@@ -71,10 +72,11 @@
                 <input v-model="authCode" class="text-input" type="number" placeholder="验证码">
                 <button :disabled="mobile.trim().length !== 11" class="request-auth-code-button" @keydown.enter="loginWithAuthCode" @click="requestAuthCode">获取验证码</button>
             </div>
-            <p class="tip" @click="switchLoginType(1)">使用密码登录</p>
-            <button class="login-button" :disabled="mobile.trim() === '' || authCode.trim() === ''" ref="loginWithAuthCodeButton" @click="loginWithAuthCode">登录</button>
+            <p v-if="loginStatus === 0" class="tip" @click="switchLoginType(1)">使用密码登录</p>
+            <button class="login-button" :disabled="mobile.trim() === '' || authCode.trim() === ''" ref="loginWithAuthCodeButton" @click="loginWithAuthCode">{{ loginStatus === 3 ? '数据同步中...' : '登录' }}</button>
+            <ClipLoader v-if="loginStatus === 3" style="margin-top: 10px" class="syncing" :color="'4168e0'" :height="'80px'" :width="'80px'"/>
         </div>
-        <div class="switch-login-type-container">
+        <div v-if="loginStatus === 0" class="switch-login-type-container">
             <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
         </div>
     </div>
@@ -102,7 +104,7 @@ export default {
             sharedMiscState: store.state.misc,
             qrCode: '',
             userName: '',
-            loginStatus: 0, //0 等待扫码； 1 已经扫码； 2 存在session，等待发送给客户端验证；3 已经发送登录请求 4 调试时，自动登录
+            loginStatus: 0, //0 等待扫码，密码登录或验证码登录时，表示等待登录； 1 已经扫码； 2 存在session，等待发送给客户端验证；3 已经发送登录请求，密码登录或验证码登录时，表示登录中 4 调试时，自动登录
             qrCodeTimer: null,
             appToken: '',
             lastAppToken: '',
@@ -184,6 +186,7 @@ export default {
             }
 
             this.$refs.loginWithPasswordButton.disabled = true;
+            this.loginStatus = 3;
             let response = await axios.post('/login_pwd/', {
                 mobile: this.mobile,
                 password: this.password,
@@ -208,6 +211,7 @@ export default {
                     }
                 } else {
                     this.password = '';
+                    this.loginStatus = 0;
                     this.$notify({
                         title: '登录失败',
                         text: response.data.message,
@@ -225,6 +229,7 @@ export default {
             }
 
             this.$refs.loginWithAuthCodeButton.disabled = true;
+            this.loginStatus = 3;
             let response = await axios.post('/login/', {
                 mobile: this.mobile,
                 code: this.authCode,
@@ -249,6 +254,7 @@ export default {
                     }
                 } else {
                     this.authCode = '';
+                    this.loginStatus = 0;
                     this.$notify({
                         title: '登录失败',
                         text: response.data.message,
@@ -547,6 +553,7 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
 
 .login-form-container .title {
@@ -604,6 +611,12 @@ input::-webkit-inner-spin-button {
     right: 0;
     transform: translateY(-50%);
     margin: 0 5px;
+}
+
+.login-form-container .syncing{
+    position: absolute;
+    bottom: 0;
+    color: #4168e0;
 }
 
 .tip {
