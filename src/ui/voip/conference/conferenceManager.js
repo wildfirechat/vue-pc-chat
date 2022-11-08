@@ -150,7 +150,7 @@ class ConferenceManager {
     }
 
     approveUnmute(userId, isAllow) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
         this.applyingUnmuteMembers = this.applyingUnmuteMembers.filter(uid => uid !== userId);
@@ -158,7 +158,7 @@ class ConferenceManager {
     }
 
     approveAllUnmute(isAllow) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
         this.applyingUnmuteMembers.length = 0;
@@ -166,7 +166,7 @@ class ConferenceManager {
     }
 
     requestMemberMute(userId, mute) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
 
@@ -174,7 +174,7 @@ class ConferenceManager {
     }
 
     requestMuteAll(allowMemberUnmute) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
         this.isMuteAll = true;
@@ -190,7 +190,7 @@ class ConferenceManager {
     }
 
     requestUnmuteAll(unmute) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
 
@@ -216,7 +216,7 @@ class ConferenceManager {
     }
 
     putMemberHnadDown(memberId) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
         this.handUpMembers = this.handUpMembers.filter(uid => uid !== memberId);
@@ -224,7 +224,7 @@ class ConferenceManager {
     }
 
     putAllHandDown() {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
         this.handUpMembers.length = 0;
@@ -232,7 +232,7 @@ class ConferenceManager {
     }
 
     requestRecord(record) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
         conferenceApi.recordConference(this.conferenceInfo.conferenceId, record)
@@ -245,7 +245,7 @@ class ConferenceManager {
     }
 
     requestFocus(userId) {
-        if (!this._isOwner()) {
+        if (!this.isOwner()) {
             return;
         }
         conferenceApi.setConferenceFocusUserId(this.conferenceInfo.conferenceId, userId)
@@ -336,7 +336,7 @@ class ConferenceManager {
             })
     }
 
-    _isOwner() {
+    isOwner() {
         return this.conferenceInfo.owner === wfc.getUserId();
     }
 

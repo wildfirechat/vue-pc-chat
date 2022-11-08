@@ -2,7 +2,7 @@
     <div class="participant-video-item"
          v-bind:class="{highlight: participant._volume > 0}">
         <video v-if="!participant._isAudience && !participant._isVideoMuted && participant._stream"
-               @dblclick="onClickVideo"
+               @dblclick="onDbClickVideo"
                class="video"
                v-bind:style="{objectFit:participant._isScreenSharing ? 'contain' : 'fit'}"
                :srcObject.prop="participant._stream"
@@ -90,8 +90,19 @@ export default {
             return name;
         },
 
-        onClickVideo() {
-            conferenceManager.localFocusUser = this.participant;
+        onDbClickVideo() {
+            if (conferenceManager.isOwner()) {
+                conferenceManager.requestFocus(this.participant.uid);
+            } else {
+                if (conferenceManager.conferenceInfo.focus) {
+                    this.$notify({
+                        text: '主持人已设置了焦点用户',
+                        type: 'warn'
+                    });
+                } else {
+                    conferenceManager.localFocusUser = this.participant;
+                }
+            }
         },
 
         switchVideoType(userId, screenSharing) {
