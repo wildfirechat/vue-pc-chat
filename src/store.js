@@ -309,6 +309,8 @@ let store = {
             if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation)) {
                 this._loadCurrentConversationMessages();
             }
+            // 标记已读未读
+            this.updateTray();
         });
 
         wfc.eventEmitter.on(EventType.ReceiveMessage, (msg, hasMore) => {
