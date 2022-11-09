@@ -12,7 +12,7 @@
             </div>
             <div class="action" @click="orderConference">
                 <img :src="require(`@/assets/images/av_book_conference.png`)" alt="">
-                <p>预约会议</p>
+                <p>预定会议</p>
             </div>
         </div>
         <div class="fav-container">

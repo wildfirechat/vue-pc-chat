@@ -41,7 +41,7 @@
             <p class="advance_desc">参会人数大于50人</p>
         </div>
 
-        <button :disabled="!actionEnable" @click="createConference">预定会议
+        <button :disabled="!actionEnable" @click="orderConference">预定会议
         </button>
     </div>
 </template>
@@ -49,6 +49,8 @@
 <script>
 import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
+import ConferenceInfo from "../../../wfc/av/model/conferenceInfo";
+import conferenceApi from "../../../api/conferenceApi";
 
 export default {
     name: "CreateConferenceView",
@@ -70,10 +72,33 @@ export default {
     },
 
     methods: {
-        createConference() {
-            let userId = wfc.getUserId();
-            avenginekitproxy.startConference(null, !this.audioOnly, '', userId, this.title, this.desc, !this.audience, this.advance);
-            this.$modal.hide('create-conference-modal')
+        orderConference() {
+            console.log('order Conference')
+            let info = new ConferenceInfo();
+            info.conferenceTitle = this.title;
+            if (this.enableUserCallId) {
+                info.conferenceId = this.callId;
+            }
+            if (this.password) {
+                info.password = this.password;
+            }
+            info.pin = '' + Math.ceil((1 + Math.random() * 100000) / 10);
+
+            info.owner = wfc.getUserId();
+            info.startTime = Math.ceil(new Date(this.startTime).getTime() / 1000);
+            info.endTime = Math.ceil(new Date(this.endTime).getTime() / 1000);
+            info.audience = this.audience;
+            info.allowSwitchMode = this.allowTurnOnMic;
+            info.advance = this.advance;
+
+            conferenceApi.createConference(info)
+                .then(r => {
+                    console.log('createConference success', r)
+                })
+                .catch(err => {
+                    console.log('createConference error', err)
+                })
+            this.$modal.hide('order-conference-modal')
         }
     },
     computed: {
