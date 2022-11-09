@@ -49,7 +49,7 @@
                 销毁会议
             </button>
             <button ref="favButton" v-if="new Date().getTime() < conferenceInfo.startTime * 1000" @click="favConference">
-                尚未开始，点击收藏会议
+                尚未开始，收藏会议
             </button>
             <button v-else-if="new Date().getTime() < conferenceInfo.endTime * 1000" @click="joinConference">
                 加入会议

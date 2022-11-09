@@ -1,30 +1,70 @@
 <template>
-    <div class="conference-container">
-        <h2 class="title">在线会议</h2>
-        <div class="action-container">
-            <div class="action" @click="joinConference">
-                <img :src="require(`@/assets/images/av_join_conference.png`)" alt="">
-                <p>加入会议</p>
-            </div>
-            <div class="action" @click="createConference">
-                <img :src="require(`@/assets/images/av_start_conference.png`)" alt="">
-                <p>发起会议</p>
-            </div>
-            <div class="action" @click="orderConference">
-                <img :src="require(`@/assets/images/av_book_conference.png`)" alt="">
-                <p>预定会议</p>
+    <div class="conference-portal-container">
+        <div class="left-slider">
+            <h2 class="title">视频会议</h2>
+            <div class="action-container">
+                <div class="action" style="background: #e1e9ff" @click="joinConference">
+                    <!--                    <img :src="require(`@/assets/images/av_join_conference.png`)" alt="">-->
+                    <div class="icon">
+                        <i class="icon-ion-android-add" style="color: #3570fe"></i>
+                    </div>
+                    <p class="title">加入会议</p>
+                </div>
+                <div class="action" style="background: #d9f3fe" @click="createConference">
+                    <div class="icon">
+                        <i class="icon-ion-ios-videocam" style="color: #3570fe"></i>
+                    </div>
+                    <!--                    <img :src="require(`@/assets/images/av_start_conference.png`)" alt="">-->
+                    <p class="title">发起会议</p>
+                </div>
+                <div class="action" style="background: #fee9d3" @click="orderConference">
+                    <div class="icon">
+                        <i class="icon-ion-android-calendar" style="color: #ff8700"></i>
+                    </div>
+                    <!--                    <img :src="require(`@/assets/images/av_book_conference.png`)" alt="">-->
+                    <p class="title">预定会议</p>
+                </div>
             </div>
         </div>
-        <div class="fav-container">
-            <ul>
-                <li v-for="(conferenceInfo, index) in favConferenceInfos"
-                    :key="index">
-                    <div class="fav-conference" @click="showConferenceInfo(conferenceInfo)">
-                        <p class="title single-line">{{ conferenceInfo.conferenceTitle }}</p>
-                        <p class="desc">{{ favConferenceDesc(conferenceInfo) }}</p>
+        <div class="right-slider">
+            <div class="fav-container">
+                <p>即将开始</p>
+                <div v-if="favConferenceInfos.length > 0" class="fav-list">
+                    <div class="fav-conference" @click="showConferenceInfo(conferenceInfo)"
+                         v-for="(conferenceInfo, index) in favConferenceInfos"
+                         :key="index">
+                        <div class="icon">
+                            <i class="icon-ion-ios-videocam" style="color:#5d7ce8 "></i>
+                        </div>
+                        <div>
+                            <p class="title single-line">{{ conferenceInfo.conferenceTitle }}</p>
+                            <p class="desc">{{ favConferenceDesc(conferenceInfo) }}</p>
+                        </div>
                     </div>
-                </li>
-            </ul>
+                </div>
+                <div v-else class="empty">
+                    没有即将开始的会议
+                </div>
+            </div>
+            <div class="history-container">
+                <p>历史记录</p>
+                <div v-if="historyConferenceInfos.length > 0" class="fav-list">
+                    <div class="fav-conference" @click="showConferenceInfo(conferenceInfo)"
+                         v-for="(conferenceInfo, index) in historyConferenceInfos"
+                         :key="index">
+                        <div class="icon">
+                            <i class="icon-ion-ios-videocam" style="color:#5d7ce8 "></i>
+                        </div>
+                        <div>
+                            <p class="title single-line">{{ conferenceInfo.conferenceTitle }}</p>
+                            <p class="desc">{{ favConferenceDesc(conferenceInfo) }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="empty">
+                    没有即将开始的会议
+                </div>
+            </div>
         </div>
     </div>
 
@@ -42,6 +82,7 @@ export default {
     data() {
         return {
             favConferenceInfos: [],
+            historyConferenceInfos: [],
         }
     },
     mounted() {
@@ -172,53 +213,113 @@ export default {
 
 <style scoped>
 
-.conference-container {
+.conference-portal-container {
     display: flex;
     flex: 1;
     height: 100%;
-    flex-direction: column;
     align-items: center;
 }
 
-.conference-container > .title {
-    margin-top: 30px;
+.left-slider {
+    height: 100%;
+    width: 30%;
+    background: white;
+    padding: 20px;
+}
+
+
+.left-slider > .title {
     font-size: 20px;
 }
 
 .action-container {
+    width: 100%;
     display: flex;
-    justify-content: center;
-    padding: 20px 80px;
+    flex-direction: column;
 }
 
 .action {
-    width: 200px;
+    width: 150px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 10px 10px 10px 0;
 }
 
 .action:hover {
-    filter: contrast(200%);
+    filter: invert(25%);
 }
 
-.action img {
-    width: 80px;
-    height: 80px;
+.action .icon {
+    width: 40px;
+    height: 40px;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     border-radius: 10px;
 }
 
+.action .icon i {
+    font-size: 20px;
+}
+
+.action .title {
+    margin-top: 15px;
+}
+
+.right-slider {
+    height: 100%;
+    background: #f8f9fb;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 20px;
+}
+
 .fav-container {
-    width: calc(100% - 200px);
-    border-top: 1px lightgrey solid;
-    padding-top: 10px;
+}
+
+.empty {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.fav-container .fav-list {
+    background: white;
+    border-radius: 10px;
 }
 
 .fav-conference {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    box-sizing: content-box;
+}
+
+.fav-conference:active {
+    background: #f1f1f1;
+}
+
+.fav-conference .icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 15px;
+    background: #e0e9fb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-right: 10px;
+}
+
+.fav-conference:not(:last-of-type) {
     border-bottom: 1px solid #f1f1f1;
-    padding: 5px 0;
 }
 
 .fav-conference .title {
@@ -227,7 +328,12 @@ export default {
 
 .fav-conference .desc {
     color: gray;
+    margin-top: 3px;
     font-size: 12px;
+}
+
+.history-container {
+    margin-top: 20px;
 }
 
 </style>
