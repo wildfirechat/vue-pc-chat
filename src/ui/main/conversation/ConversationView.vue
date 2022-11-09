@@ -92,6 +92,7 @@
                      class="divider-handler"></div>
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
                                   v-show="!sharedConversationState.enableMessageMultiSelection"
+                                  :input-options="inputOptions"
                                   ref="messageInputView"/>
                 <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection"/>
                 <SingleConversationInfoView
@@ -219,6 +220,7 @@ import ContextableNotificationMessageContentContainerView from "./message/Contex
 import ChannelConversationInfoView from "./ChannelConversationInfoView";
 import FriendRequestView from "../contact/FriendRequestView";
 import {currentWindow, ipcRenderer} from "../../../platform";
+import appServerApi from "../../../api/appServerApi";
 
 var amr;
 export default {
@@ -237,7 +239,16 @@ export default {
         InfiniteLoading,
         ScaleLoader,
     },
-    // props: ["conversation"],
+    props: {
+        inputOptions: {
+            type: Object,
+            required: false,
+        },
+        title: {
+            type: String,
+            required: false,
+        }
+    },
     data() {
         return {
             conversationInfo: null,
@@ -628,42 +639,21 @@ export default {
         },
 
         favMessage(message) {
-            let favItem = FavItem.fromMessage(message);
-            axios.post('/fav/add', {
-                messageUid: stringValue(favItem.messageUid),
-                type: favItem.favType,
-                convType: favItem.conversation.type,
-                convTarget: favItem.conversation.target,
-                convLine: favItem.conversation.line,
-                origin: favItem.origin,
-                sender: favItem.sender,
-                title: favItem.title,
-                url: favItem.url,
-                thumbUrl: favItem.thumbUrl,
-                data: favItem.data,
-            }, {withCredentials: true})
-                .then(response => {
-                    if (response && response.data && response.data.code === 0) {
-                        this.$notify({
-                            // title: '收藏成功',
-                            text: '收藏成功',
-                            type: 'info'
-                        });
-                    } else {
-                        this.$notify({
-                            // title: '收藏成功',
-                            text: '收藏失败',
-                            type: 'error'
-                        });
-                    }
+            appServerApi.favMessage(message)
+                .then(data => {
+                    this.$notify({
+                        // title: '收藏成功',
+                        text: '收藏成功',
+                        type: 'info'
+                    });
                 })
                 .catch(err => {
+                    console.log('fav error', err)
                     this.$notify({
                         // title: '收藏失败',
                         text: '收藏失败',
                         type: 'error'
                     });
-
                 })
         },
 
@@ -837,11 +827,18 @@ export default {
 
     computed: {
         conversationTitle() {
+            if (this.title){
+                return  this.title;
+            }
             let info = this.sharedConversationState.currentConversationInfo;
-            if (info.conversation.type === ConversationType.Group) {
-                return info.conversation._target._displayName + " (" + info.conversation._target.memberCount + ")";
+            if (info.conversation._target) {
+                if (info.conversation.type === ConversationType.Group) {
+                    return info.conversation._target._displayName + " (" + info.conversation._target.memberCount + ")";
+                } else {
+                    return info.conversation._target._displayName;
+                }
             } else {
-                return info.conversation._target._displayName;
+                return '会话';
             }
         },
         targetUserOnlineStateDesc() {

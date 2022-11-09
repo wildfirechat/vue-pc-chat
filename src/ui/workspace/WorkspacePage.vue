@@ -18,6 +18,7 @@ import {init} from './bridgeServerImpl'
 import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
 import {ipcRenderer, remote} from "../../platform";
+import IpcEventType from "../../ipcEventType";
 
 let tabGroup = null;
 
@@ -86,7 +87,7 @@ export default {
 
             url += '?url=' + encodeURIComponent(args.url);
 
-            ipcRenderer.send('open-h5-app-window', {url: url, hostUrl: args.hostUrl})
+            ipcRenderer.send(IpcEventType.OPEN_H5_APP_WINDOW, {url: url, hostUrl: args.hostUrl})
         },
 
         addTab(url, closable = true) {

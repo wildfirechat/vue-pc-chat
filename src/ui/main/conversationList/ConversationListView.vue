@@ -44,7 +44,7 @@
 import ConversationItemView from "@/ui/main/conversationList/ConversationItemView";
 import store from "@/store";
 import wfc from "../../../wfc/client/wfc";
-import IPCRendererEventType from "../../../ipcRendererEventType";
+import IpcEventType from "../../../ipcEventType";
 import {ipcRenderer} from "../../../platform";
 
 export default {
@@ -111,7 +111,7 @@ export default {
             } else {
                 url += "/conversation-window"
             }
-            ipcRenderer.send(IPCRendererEventType.showConversationFloatPage, {
+            ipcRenderer.send(IpcEventType.showConversationFloatPage, {
                 url: url,
                 type: conversation.type,
                 target: conversation.target,

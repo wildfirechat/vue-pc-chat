@@ -96,6 +96,8 @@ import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 import ConversationType from "../../wfc/model/conversationType";
+import IpcEventType from "../../ipcEventType";
+import appServerApi from "../../api/appServerApi";
 
 export default {
     name: 'App',
@@ -154,30 +156,20 @@ export default {
         },
 
         async requestAuthCode() {
-            let response = await axios.post('/send_code/', {
-                mobile: this.mobile,
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
+            appServerApi.requestAuthCode(this.mobile)
+                .then(response => {
                     this.$notify({
                         text: '发送验证码成功',
                         type: 'info'
                     });
-                } else {
+                })
+                .catch(err => {
                     this.$notify({
                         title: '发送验证码失败',
-                        text: response.data.message,
+                        text: err.message,
                         type: 'error'
                     });
-                }
-            } else {
-                this.mobile = '';
-                this.$notify({
-                    // title: '收藏成功',
-                    text: '发送验证码失败',
-                    type: 'error'
-                });
-            }
+                })
         },
 
         async loginWithPassword() {
@@ -187,40 +179,24 @@ export default {
 
             this.$refs.loginWithPasswordButton.disabled = true;
             this.loginStatus = 3;
-            let response = await axios.post('/login_pwd/', {
-                mobile: this.mobile,
-                password: this.password,
-                platform: Config.getWFCPlatform(),
-                clientId: wfc.getClientId(),
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
-                    const {userId, token, portrait} = response.data.result;
+            appServerApi.loinWithPassword(this.mobile, this.password)
+                .then(res => {
+                    const {userId, token, portrait} = res
                     this.firstTimeConnect = wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
                     setItem("userPortrait", portrait);
-                    let appAuthToken = response.headers['authtoken'];
-                    if (!appAuthToken) {
-                        appAuthToken = response.headers['authToken'];
-                    }
-
-                    if (appAuthToken) {
-                        setItem('authToken', appAuthToken);
-                        axios.defaults.headers.common['authToken'] = appAuthToken;
-                    }
-                } else {
+                })
+                .catch(err => {
+                    console.log('loginWithPassword err', err)
                     this.password = '';
                     this.loginStatus = 0;
                     this.$notify({
                         title: '登录失败',
-                        text: response.data.message,
+                        text: err.message,
                         type: 'error'
                     });
-                }
-            } else {
-                console.error('loginWithPassword error', response);
-            }
+                })
         },
 
         async loginWithAuthCode() {
@@ -230,60 +206,39 @@ export default {
 
             this.$refs.loginWithAuthCodeButton.disabled = true;
             this.loginStatus = 3;
-            let response = await axios.post('/login/', {
-                mobile: this.mobile,
-                code: this.authCode,
-                platform: Config.getWFCPlatform(),
-                clientId: wfc.getClientId(),
-            }, {withCredentials: true});
-            if (response.data) {
-                if (response.data.code === 0) {
-                    const {userId, token, portrait} = response.data.result;
+            appServerApi.loginWithAuthCode(this.mobile, this.authCode)
+                .then(res => {
+                    const {userId, token, portrait} = res;
                     this.firstTimeConnect = wfc.connect(userId, token);
                     setItem('userId', userId);
                     setItem('token', token);
                     setItem("userPortrait", portrait);
-                    let appAuthToken = response.headers['authtoken'];
-                    if (!appAuthToken) {
-                        appAuthToken = response.headers['authToken'];
-                    }
-
-                    if (appAuthToken) {
-                        setItem('authToken', appAuthToken);
-                        axios.defaults.headers.common['authToken'] = appAuthToken;
-                    }
-                } else {
+                })
+                .catch(err => {
                     this.authCode = '';
                     this.loginStatus = 0;
                     this.$notify({
                         title: '登录失败',
-                        text: response.data.message,
+                        text: err.message,
                         type: 'error'
                     });
-                }
-            } else {
-                console.error('loginWithAuthCode error', response)
-            }
+                })
         },
 
         async createPCLoginSession(userId) {
-            let response = await axios.post('/pc_session', {
-                flag: 1,
-                device_name: 'pc',
-                userId: userId,
-                clientId: wfc.getClientId(),
-                platform: Config.getWFCPlatform()
-            }, {withCredentials: true});
-            console.log('----------- createPCLoginSession', response.data);
-            if (response.data) {
-                let session = Object.assign(new PCSession(), response.data.result);
-                this.appToken = session.token;
-                if (!userId || session.status === 0/*服务端pc login session不存在*/) {
-                    this.qrCode = jrQRCode.getQrBase64(Config.QR_CODE_PREFIX_PC_SESSION + session.token);
-                    this.refreshQrCode();
-                }
-                this.login();
-            }
+            appServerApi.createPCSession(userId)
+                .then(response => {
+                    let session = Object.assign(new PCSession(), response);
+                    this.appToken = session.token;
+                    if (!userId || session.status === 0/*服务端pc login session不存在*/) {
+                        this.qrCode = jrQRCode.getQrBase64(Config.QR_CODE_PREFIX_PC_SESSION + session.token);
+                        this.refreshQrCode();
+                    }
+                    this.login();
+                })
+                .catch(err => {
+                    console.log('createPCSession error', err);
+                })
         },
 
         async refreshQrCode() {
@@ -298,58 +253,58 @@ export default {
 
         async login() {
             this.lastAppToken = this.appToken;
-            let response = await axios.post('/session_login/' + this.appToken, "", {withCredentials: true});
-            console.log('---------- login', response.data);
-            if (this.lastAppToken !== this.appToken) {
-                return;
-            }
-            if (response.data) {
-                switch (response.data.code) {
-                    case 0:
-                        if (this.loginStatus === 1 || this.loginStatus === 3) {
-                            let userId = response.data.result.userId;
-                            let imToken = response.data.result.token;
-                            this.firstTimeConnect = wfc.connect(userId, imToken);
-                            this.loginStatus = 4;
-                            setItem('userId', userId);
-                            setItem('token', imToken);
-                            let appAuthToken = response.headers['authtoken'];
-                            if (!appAuthToken) {
-                                appAuthToken = response.headers['authToken'];
-                            }
+            appServerApi.loginWithPCSession(this.appToken)
+                .then(response => {
+                    if (response.data) {
+                        switch (response.data.code) {
+                            case 0:
+                                if (this.loginStatus === 1 || this.loginStatus === 3) {
+                                    let userId = response.data.result.userId;
+                                    let imToken = response.data.result.token;
+                                    wfc.connect(userId, imToken);
+                                    this.loginStatus = 4;
+                                    setItem('userId', userId);
+                                    setItem('token', imToken);
+                                    let appAuthToken = response.headers['authtoken'];
+                                    if (!appAuthToken) {
+                                        appAuthToken = response.headers['authToken'];
+                                    }
 
-                            if (appAuthToken) {
-                                setItem('authToken', appAuthToken);
-                                axios.defaults.headers.common['authToken'] = appAuthToken;
-                            }
-                        }
-                        break;
-                    case 9:
-                        if (response.data.result.portrait) {
-                            this.qrCode = response.data.result.portrait;
-                        } else {
-                            this.qrCode = Config.DEFAULT_PORTRAIT_URL;
-                        }
-                        setItem("userName", response.data.result.userName);
-                        setItem("userPortrait", response.data.result.portrait);
+                                    if (appAuthToken) {
+                                        setItem('authToken', appAuthToken);
+                                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                                    }
+                                }
+                                break;
+                            case 9:
+                                if (response.data.result.portrait) {
+                                    this.qrCode = response.data.result.portrait;
+                                } else {
+                                    this.qrCode = Config.DEFAULT_PORTRAIT_URL;
+                                }
+                                setItem("userName", response.data.result.userName);
+                                setItem("userPortrait", response.data.result.portrait);
 
-                        if (this.loginStatus === 0) {
-                            this.loginStatus = 1;
-                        } else {
-                            this.loginStatus = 3;
+                                if (this.loginStatus === 0) {
+                                    this.loginStatus = 1;
+                                } else {
+                                    this.loginStatus = 3;
+                                }
+                                this.login();
+                                break;
+                            case 18:
+                                //session is canceled, need clear last time login status
+                                this.cancel();
+                                break;
+                            default:
+                                this.lastAppToken = '';
+                                console.log(response.data);
+                                break
                         }
-                        this.login();
-                        break;
-                    case 18:
-                        //session is canceled, need clear last time login status
-                        this.cancel();
-                        break;
-                    default:
-                        this.lastAppToken = '';
-                        console.log(response.data);
-                        break
-                }
-            }
+                    }
+                })
+                .catch(err => {
+                });
         },
 
         sendQuickLoginRequest() {
@@ -399,6 +354,7 @@ export default {
                     this.$router.replace({path: "/home"});
                 }
                 if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
+                    isElectron() && ipcRenderer.send(IpcEventType.LOGINED, {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
                     if (this.enableAutoLogin) {
                         store.setEnableAutoLogin(this.enableAutoLogin)
                     }

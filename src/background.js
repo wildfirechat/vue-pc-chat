@@ -24,7 +24,7 @@ import proto from '../marswrapper.node';
 
 import pkg from '../package.json';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
-import IPCRendererEventType from "./ipcRendererEventType";
+import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
 
@@ -630,7 +630,7 @@ const createMainWindow = async () => {
 
     mainWindow.webContents.session.on('will-download', downloadHandler);
 
-    ipcMain.on('screenshots-start', (event, args) => {
+    ipcMain.on(IPCEventType.START_SCREEN_SHOT, (event, args) => {
         // console.log('main voip-message event', args);
         screenShotWindow = event.sender;
         screenshots.startCapture();
@@ -651,17 +651,17 @@ const createMainWindow = async () => {
         mainWindow.webContents.send('conference-request', args);
     });
 
-    ipcMain.on('start-screen-share', (event, args) => {
+    ipcMain.on(IPCEventType.START_SCREEN_SHARE, (event, args) => {
         let pointer = screen.getCursorScreenPoint();
         let display = screen.getDisplayNearestPoint(pointer)
-        mainWindow.webContents.send('start-screen-share', {width: display.size.width});
+        mainWindow.webContents.send(IPCEventType.START_SCREEN_SHARE, {width: display.size.width});
     });
 
-    ipcMain.on('stop-screen-share', (event, args) => {
-        mainWindow.webContents.send('stop-screen-share', args);
+    ipcMain.on(IPCEventType.STOP_SCREEN_SHARE, (event, args) => {
+        mainWindow.webContents.send(IPCEventType.STOP_SCREEN_SHARE, args);
     });
 
-    ipcMain.on('click-notification', (event, args) => {
+    ipcMain.on(IPCEventType.CLICK_NOTIFICATION, (event, args) => {
         let targetMediaSourceId = args;
         let targetWin = null;
         if (mainWindow.getMediaSourceId() === targetMediaSourceId) {
@@ -685,7 +685,7 @@ const createMainWindow = async () => {
         execBlink(isBlink, args.interval);
     });
 
-    ipcMain.on('update-badge', (event, args) => {
+    ipcMain.on(IPCEventType.UPDATE_BADGE, (event, args) => {
         let count = args;
         //if (settings.showOnTray) {
         updateTray(count);
@@ -697,7 +697,7 @@ const createMainWindow = async () => {
         event.returnValue = require('@electron/remote/main');
     });
 
-    ipcMain.on('file-paste', (event) => {
+    ipcMain.on(IPCEventType.FILE_PASTE, (event) => {
         let args = {hasImage: false};
 
         if (process.platform !== 'linux') {
@@ -744,7 +744,7 @@ const createMainWindow = async () => {
         event.returnValue = args;
     });
 
-    ipcMain.on('file-download', async (event, args) => {
+    ipcMain.on(IPCEventType.DOWNLOAD_FILE, async (event, args) => {
         let remotePath = args.remotePath;
         let messageId = args.messageId;
         let windowId = args.windowId;
@@ -759,7 +759,7 @@ const createMainWindow = async () => {
         })
     });
 
-    ipcMain.on('show-file-window', async (event, args) => {
+    ipcMain.on(IPCEventType.SHOW_FILE_WINDOW, async (event, args) => {
         console.log('on show-file-window', fileWindow, args)
         if (!fileWindow) {
             let win = createWindow(args.url, 960, 600, 640, 400, true, true);
@@ -776,7 +776,7 @@ const createMainWindow = async () => {
             fileWindow.focus();
         }
     });
-    ipcMain.on('show-composite-message-window', async (event, args) => {
+    ipcMain.on(IPCEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, async (event, args) => {
         console.log('on show-composite-message-window', args)
         let messageUid = args.messageUid;
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
@@ -805,7 +805,7 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on('open-h5-app-window', async (event, args) => {
+    ipcMain.on(IPCEventType.OPEN_H5_APP_WINDOW, async (event, args) => {
         console.log('on open-h5-app-window', args)
         let win = openPlatformAppHostWindows.get(args.hostUrl);
         if (!win) {
@@ -822,8 +822,8 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on(IPCRendererEventType.showConversationMessageHistoryPage, async (event, args) => {
-        console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
+    ipcMain.on(IPCEventType.showConversationMessageHistoryPage, async (event, args) => {
+        console.log(`on ${IPCEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
             conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false, false);
@@ -837,8 +837,8 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on(IPCRendererEventType.showMessageHistoryPage, async (event, args) => {
-        console.log(`on ${IPCRendererEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
+    ipcMain.on(IPCEventType.showMessageHistoryPage, async (event, args) => {
+        console.log(`on ${IPCEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
         if (!messageHistoryMessageWindow) {
             messageHistoryMessageWindow = createWindow(args.url, 960, 600, 640, 400, false, false, true);
             messageHistoryMessageWindow.on('close', () => {
@@ -851,8 +851,8 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on(IPCRendererEventType.showConversationFloatPage, async (event, args) => {
-        console.log(`on ${IPCRendererEventType.showConversationFloatPage}`, messageHistoryMessageWindow, args)
+    ipcMain.on(IPCEventType.showConversationFloatPage, async (event, args) => {
+        console.log(`on ${IPCEventType.showConversationFloatPage}`, messageHistoryMessageWindow, args)
         let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
         let key = args.type + '-' + args.target + '-' + args.line;
         let win = conversationWindowMap.get(key);
@@ -889,11 +889,11 @@ const createMainWindow = async () => {
         shell.openExternal(args.map);
     });
 
-    ipcMain.on('is-suspend', (event, args) => {
+    ipcMain.on(IPCEventType.IS_SUSPEND, (event, args) => {
         event.returnValue = isSuspend;
     });
 
-    ipcMain.on('logined', (event, args) => {
+    ipcMain.on(IPCEventType.LOGINED, (event, args) => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.resizable = true;
         mainWindow.maximizable = true;
@@ -904,7 +904,7 @@ const createMainWindow = async () => {
         mainWindowState.manage(mainWindow);
     });
 
-    ipcMain.on('logouted', (event, args) => {
+    ipcMain.on(IPCEventType.LOGOUT, (event, args) => {
         mainWindowState.unmanage();
         mainWindow.resizable = false;
         mainWindow.maximizable = false;
@@ -922,7 +922,7 @@ const createMainWindow = async () => {
         session.defaultSession.clearStorageData();
     });
 
-    ipcMain.on('enable-close-window-to-exit', (event, enable) => {
+    ipcMain.on(IPCEventType.ENABLE_CLOSE_WINDOW_TO_EXIT, (event, enable) => {
         closeWindowToExit = enable;
     });
 

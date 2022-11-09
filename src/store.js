@@ -26,7 +26,7 @@ import SearchType from "@/wfc/model/searchType";
 import Config from "@/config";
 import {getItem, setItem} from "@/ui/util/storageHelper";
 import CompositeMessageContent from "@/wfc/messages/compositeMessageContent";
-import IPCEventType from "./ipc/ipcEventType";
+import LocalStorageIpcEventType from "./ipc/localStorageIpcEventType";
 import localStorageEmitter from "./ipc/localStorageEmitter";
 import {stringValue} from "./wfc/util/longUtil";
 import DismissGroupNotification from "./wfc/messages/notification/dismissGroupNotification";
@@ -42,6 +42,7 @@ import NullUserInfo from "./wfc/model/nullUserInfo";
 import NullGroupInfo from "./wfc/model/nullGroupInfo";
 import GroupInfo from "./wfc/model/groupInfo";
 import {genGroupPortrait} from "./ui/util/imageUtil";
+import IPCEventType from "./ipcEventType";
 
 /**
  * 一些说明
@@ -201,7 +202,6 @@ let store = {
             isElectron: isElectron(),
             isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
             isMainWindow: false,
-            isConversationWindow: false,
             linuxUpdateTitleInterval: 0,
             wfc: wfc,
             config: Config,
@@ -227,7 +227,7 @@ let store = {
         },
     },
 
-    init(isMainWindow, isConversaitonWindow = false) {
+    init(isMainWindow) {
         console.log('init store')
         // 目前，通知只可能在主窗口触发
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
@@ -576,7 +576,7 @@ let store = {
             localStorageEmitter.on('wf-ipc-to-main', (events, args) => {
                 let type = args.type;
                 switch (type) {
-                    case IPCEventType.openConversation:
+                    case LocalStorageIpcEventType.openConversation:
                         let conversation = args.value;
                         let win = remote.getCurrentWindow();
                         win.focus();
@@ -594,7 +594,6 @@ let store = {
         miscState.connectionStatus = wfc.getConnectionStatus();
 
         miscState.isMainWindow = isMainWindow;
-        miscState.isConversationWindow = isConversaitonWindow;
         window.__wfc = wfc;
     },
 
@@ -1378,6 +1377,12 @@ let store = {
             } else {
                 info.conversation._target = {};
             }
+        } else if (info.conversation.type === ConversationType.ChatRoom) {
+            wfc.getChatroomInfo(info.conversation.target, new Date().getTime(), (chatRoomInfo) => {
+                info.conversation._target = chatRoomInfo;
+            }, err => {
+                console.log('get chatRoomInfo error', err);
+            });
         }
         if (gt(info.timestamp, 0)) {
             info._timeStr = helper.dateFormat(info.timestamp);
@@ -1447,7 +1452,7 @@ let store = {
             let index = conversationState.floatingConversations.findIndex(fc => fc.equal(conversation));
             return index === -1;
         } else {
-            return conversationState.currentConversationInfo.conversation.equal(conversation);
+            return conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversation);
         }
     },
 
@@ -1845,7 +1850,7 @@ let store = {
     setEnableCloseWindowToExit(enable) {
         miscState.enableCloseWindowToExit = enable;
         setItem(contactState.selfUserInfo.uid + '-' + 'closeWindowToExit', enable ? '1' : '0')
-        ipcRenderer.send('enable-close-window-to-exit', enable)
+        ipcRenderer.send(IPCEventType.ENABLE_CLOSE_WINDOW_TO_EXIT, enable)
     },
 
     setEnableAutoLogin(enable) {
@@ -2009,7 +2014,7 @@ let store = {
                 timeout: 4000,
                 onClick: () => {
                     if (isElectron()) {
-                        ipcRenderer.send('click-notification', currentWindow.getMediaSourceId())
+                        ipcRenderer.send(IPCEventType.CLICK_NOTIFICATION, currentWindow.getMediaSourceId())
                     } else {
                         window.focus();
                         this.close();
@@ -2035,7 +2040,7 @@ let store = {
         if (process.platform === 'linux') {
             this.updateLinuxTitle(count);
         } else {
-            ipcRenderer.send('update-badge', count)
+            ipcRenderer.send(IPCEventType.UPDATE_BADGE, count)
         }
     },
 

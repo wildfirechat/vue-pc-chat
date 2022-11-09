@@ -48,7 +48,7 @@
                                 <i class="icon-ion-android-contact"
                                    v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
                                    @click="go2Contact"></i>
-                                <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount}}</em>
+                                <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{ sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount }}</em>
                             </div>
                         </li>
                         <li v-if="sharedMiscState.isElectron">
@@ -68,7 +68,8 @@
                         </li>
                         <li v-if="supportConference">
                             <i class="icon-ion-speakerphone"
-                               @click="createConference"></i>
+                               v-bind:class="{active : this.$router.currentRoute.path === '/home/conference'}"
+                               @click="go2Conference"></i>
                         </li>
                         <li>
                             <i class="icon-ion-android-settings"
@@ -111,12 +112,12 @@ import ConnectionStatus from "@/wfc/client/connectionStatus";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 import {removeItem} from "@/ui/util/storageHelper";
 import {ipcRenderer} from "@/platform";
-import CreateConferenceView from "../voip/CreateConferenceView";
 import avenginekit from "../../wfc/av/internal/engine.min";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import {Draggable} from 'draggable-vue-directive'
+import IpcEventType from "../../ipcEventType";
 
 export default {
     data() {
@@ -169,7 +170,7 @@ export default {
             } else {
                 url += "/files"
             }
-            ipcRenderer.send('show-file-window', {
+            ipcRenderer.send(IpcEventType.SHOW_FILE_WINDOW, {
                 url: url,
                 source: 'file',
             });
@@ -182,40 +183,24 @@ export default {
             this.$router.replace("/home/workspace");
             this.isSetting = false;
         },
+        go2Conference() {
+            if (this.$router.currentRoute.path === '/home/conference') {
+                return;
+            }
+            this.$router.replace({path: "/home/conference"});
+            this.isSetting = true;
+        },
         go2Setting() {
             if (this.$router.currentRoute.path === '/home/setting') {
                 return;
             }
-            this.$router.push({path: "/home/setting"});
+            this.$router.replace({path: "/home/setting"});
             this.isSetting = true;
         },
 
         closeUserCard() {
             console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
-        },
-        createConference() {
-            let beforeOpen = () => {
-                console.log('Opening...')
-            };
-            let beforeClose = (event) => {
-                console.log('Closing...', event, event.params)
-            };
-            let closed = (event) => {
-                console.log('Close...', event)
-            };
-            this.$modal.show(
-                CreateConferenceView,
-                {}, {
-                    name: 'create-conference-modal',
-                    width: 320,
-                    height: 400,
-                    clickToClose: true,
-                }, {
-                    'before-open': beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': closed,
-                })
         },
 
         onConnectionStatusChange(status) {
@@ -228,7 +213,7 @@ export default {
                 || wfc.getUserId() === '') {
 
                 if (this.$router.currentRoute.path !== '/') {
-                    this.$router.push({path: "/"});
+                    this.$router.replace({path: "/"});
                 }
                 if (status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
                     || status === ConnectionStatus.ConnectionStatusLogout
@@ -280,6 +265,7 @@ export default {
             if (reason === CallEndReason.RoomNotExist) {
                 if (session.host === wfc.getUserId()) {
                     this.$alert({
+                        showIcon: false,
                         content: '会议已结束，是否重新开启会议？',
                         cancelCallback: () => {
                             // do nothing

@@ -257,7 +257,8 @@ export function init(wfcProto) {
 }
 
 function _notifyMessageStatusUpdate(messageId) {
-    if (messageId === 0){
+    // 聊天室消息，本地不存储
+    if (messageId <= 0){
         return;
     }
     let msg = proto.getMessage(messageId);

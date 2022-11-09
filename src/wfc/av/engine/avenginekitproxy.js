@@ -13,6 +13,7 @@ import Config from "../../../config";
 import {longValue, numberValue} from '../../util/longUtil'
 import Conversation from "../../../wfc/model/conversation";
 import store from "../../../store";
+import IPCEventType from "../../../ipcEventType";
 
 
 // main window renderer process -> voip window renderer process
@@ -182,7 +183,7 @@ export class AvEngineKitProxy {
             }
         }
 
-        if ((msg.conversation.type === ConversationType.Single || msg.conversation.type === ConversationType.Group)) {
+        if ((msg.conversation.type === ConversationType.Single || msg.conversation.type === ConversationType.Group || (this.conference && msg.conversation.type === ConversationType.ChatRoom))) {
             if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_END
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
@@ -194,6 +195,7 @@ export class AvEngineKitProxy {
                 || content.type === MessageContentType.VOIP_Join_Call_Request
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE
+                || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND
             ) {
                 console.log("receive voip message", msg.messageContent.type, msg.messageUid.toString(), msg);
                 if (msg.direction === 0
@@ -390,9 +392,9 @@ export class AvEngineKitProxy {
      * @param {boolean} advance 是否为高级会议，当预计参与人员很多的时候，开需要开启超级会议
      * @param {boolean} record 是否开启服务端录制
      * @param {Object} extra 一些额外信息，主要用于将信息传到音视频通话窗口，会议的其他参与者，无法看到该附加信息
-     * @param {string} callExtra  通话附件信息，会议的所有参与者都能看到该附加信息
+     * @param {Object} callExtra  通话附件信息，会议的所有参与者都能看到该附加信息
      */
-    startConference(callId, audioOnly, pin, host, title, desc, audience, advance, record = false, extra, callExtra) {
+    startConference(callId, audioOnly, pin, host, title, desc, audience, advance, record = false, extra = null, callExtra = null) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
@@ -408,6 +410,12 @@ export class AvEngineKitProxy {
         this.callId = callId;
         this.conversation = null;
         this.conference = true;
+
+        wfc.joinChatroom(callId, () => {
+            console.log('join conference chatRoom success')
+        }, (err) => {
+            console.error('join conference chatRoom fail', err);
+        });
 
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         this.showCallUI(null, true);
@@ -440,9 +448,9 @@ export class AvEngineKitProxy {
      * @param {boolean} muteAudio 是否是静音加入会议
      * @param {boolean} muteVideo 是否是关闭摄像头加入会议
      * @param {Object} extra 一些额外信息，主要用于将信息传到音视频通话窗口
-     * @param {string} callExtra 通话附加信息，会议的所有参与者都能看到该附加信息
+     * @param {Object} callExtra 通话附加信息，会议的所有参与者都能看到该附加信息
      */
-    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance, muteAudio, muteVideo, extra, callExtra) {
+    joinConference(callId, audioOnly, pin, host, title, desc, audience, advance, muteAudio, muteVideo, extra = null, callExtra = null) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
@@ -458,6 +466,11 @@ export class AvEngineKitProxy {
         this.conference = true;
         this.callId = callId;
 
+        wfc.joinChatroom(callId, () => {
+            console.log('join conference chatRoom success')
+        }, (err) => {
+            console.error('join conference chatRoom fail', err);
+        });
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         this.showCallUI(null, true);
         this.emitToVoip('joinConference', {
@@ -611,6 +624,10 @@ export class AvEngineKitProxy {
             store.updateVoipStatus(this.conversation, false)
             this.conversation = null;
             this.queueEvents = [];
+            if (this.conference) {
+                wfc.quitChatroom(this.callId);
+                this.conference = false;
+            }
             this.callId = null;
             this.participants = [];
             this.queueEvents = [];
@@ -639,7 +656,7 @@ export class AvEngineKitProxy {
             ipcRenderer.on('voip-message', this.sendVoipListener);
             ipcRenderer.on('conference-request', this.sendConferenceRequestListener);
             ipcRenderer.on('update-call-start-message', this.updateCallStartMessageContentListener)
-            ipcRenderer.on('start-screen-share', (event, args) => {
+            ipcRenderer.on(IPCEventType.START_SCREEN_SHARE, (event, args) => {
                 if (this.callWin) {
                     let screenWidth = args.width;
                     this.callWin.resizable = true;
@@ -652,7 +669,7 @@ export class AvEngineKitProxy {
                     this.callWin.setPosition((screenWidth - 800) / 2, 0, true);
                 }
             });
-            ipcRenderer.on('stop-screen-share', (event, args) => {
+            ipcRenderer.on(IPCEventType.STOP_SCREEN_SHARE, (event, args) => {
                 if (this.callWin) {
                     let type = args.type;
                     let width = 360;

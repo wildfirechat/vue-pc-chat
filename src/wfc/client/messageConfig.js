@@ -62,6 +62,10 @@ import MultiCallOngoingMessageContent from "../av/messages/multiCallOngoingMessa
 import JoinCallRequestMessageContent from "../av/messages/joinCallRequestMessageContent";
 import RichNotificationMessageContent from "../messages/notification/richNotificationMessageContent";
 import ArticlesMessageContent from "../messages/articlesMessageContent";
+import ConferenceCommandMessageContent from "../av/messages/conferenceCommandMessageContent";
+import ChannelMenuEventMessageContent from "../messages/channelMenuEventMessageContent";
+import EnterChannelChatMessageContent from "../messages/enterChannelChatMessageContent";
+import LeaveChannelChatMessageContent from "../messages/leaveChannelChatMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -450,19 +454,25 @@ export default class MessageConfig {
             name: 'channelMenuEventMessageContent',
             flag: PersistFlag.Transparent,
             type: MessageContentType.Channel_Menu_Event,
-            contentClazz: ArticlesMessageContent,
+            contentClazz: ChannelMenuEventMessageContent,
         },
         {
             name: 'enterChannelChatMessageContent',
             flag: PersistFlag.Transparent,
             type: MessageContentType.Enter_Channel_Chat,
-            contentClazz: ArticlesMessageContent,
+            contentClazz: EnterChannelChatMessageContent,
         },
         {
             name: 'leaveChannelChatMessageContent',
             flag: PersistFlag.Transparent,
             type: MessageContentType.Leave_Channel_Chat,
-            contentClazz: ArticlesMessageContent,
+            contentClazz: LeaveChannelChatMessageContent,
+        },
+        {
+            name: 'leaveChannelChatMessageContent',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND,
+            contentClazz: ConferenceCommandMessageContent,
         }
 
     ];

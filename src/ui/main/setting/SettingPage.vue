@@ -113,11 +113,10 @@ import dropdown from 'vue-dropdowns';
 import {clear} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import {getItem, setItem} from "../../util/storageHelper";
-import axios from "axios";
-import CreateConferenceView from "../../voip/CreateConferenceView";
 import ChangePasswordView from "./ChangePasswordView";
 import ResetPasswordView from "./ResetPasswordView";
 import {shell} from "../../../platform";
+import IpcEventType from "../../../ipcEventType";
 
 export default {
     name: "SettingPage",
@@ -193,7 +192,7 @@ export default {
             clear();
             wfc.disconnect();
             if (isElectron()) {
-                ipcRenderer.send('logouted');
+                ipcRenderer.send(IpcEventType.LOGOUT);
             }
         },
 

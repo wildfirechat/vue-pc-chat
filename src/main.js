@@ -31,7 +31,7 @@ Vue.config.productionTip = false
     let href = window.location.href;
     let path = href.substring(href.indexOf('#') + 1)
     console.log('init', href, path)
-    if (path === '/'/*login*/ || path === '/home' || href.indexOf('#') === -1) {
+    if (path === '/'/*login*/ || path.startsWith('/home') || href.indexOf('#') === -1) {
         console.log('init wfc')
         if (isElectron()) {
             wfc.init()
@@ -61,7 +61,7 @@ Vue.config.productionTip = false
         if (isElectron()) {
             wfc.attach()
         }
-        store.init(false, false, path.indexOf('/conversation-window') >= 0);
+        store.init(false, false);
     }
 }
 // init end

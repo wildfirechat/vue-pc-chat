@@ -86,6 +86,7 @@ export default class MessageContentType {
     static CONFERENCE_CONTENT_TYPE_INVITE = 408;
     static CONFERENCE_CONTENT_TYPE_CHANGE_MODE = 410;
     static CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER = 411;
+    static CONFERENCE_CONTENT_TYPE_COMMAND = 412;
 
     static VOIP_Multi_Call_Ongoing = 416;
     static VOIP_Join_Call_Request = 417;

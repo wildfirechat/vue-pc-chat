@@ -8,11 +8,12 @@ import Multi from "@/ui/voip/Multi";
 import FileRecordPage from "@/ui/fileRecord/FileRecordPage";
 import FavPage from "@/ui/main/fav/FavPage";
 import WorkspacePage from "./ui/workspace/WorkspacePage";
-import Conference from "./ui/voip/Conference";
+import Conference from "./ui/voip/conference/Conference";
 import CompositeMessagePage from "./ui/main/CompositeMessagePage";
 import MessageHistoryPage from "./ui/main/MessageHistoryPage";
 import ConversationMessageHistoryPage from "./ui/main/ConversationMessageHistoryPage";
 import ConversationFloatPage from "./ui/main/ConversationFloatPage";
+import ConferencePortalPage from "./ui/voip/conference/ConferencePortalPage";
 
 const routers = [
     {
@@ -47,6 +48,11 @@ const routers = [
                 path: 'setting',
                 name: 'setting',
                 component: SettingPage,
+            },
+            {
+                path: 'conference',
+                name: 'conference',
+                component: ConferencePortalPage,
             },
         ]
     },
