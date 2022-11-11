@@ -684,10 +684,10 @@ let store = {
         if (index >= 0) {
             Object.assign(conversationState.conversationInfoList[index], conversationInfo);
         } else {
-            if (insertIfNoExist) {
+            if (insertIfNoExist && conversation.type !== ConversationType.ChatRoom) {
                 conversationState.conversationInfoList.push(conversationInfo);
             } else {
-                return;
+                return conversationInfo;
             }
         }
 
@@ -707,6 +707,7 @@ let store = {
                 }
             }
         })
+        return conversationInfo;
     },
 
     _reloadSingleConversationIfExist(userInfos) {
@@ -1384,6 +1385,7 @@ let store = {
                 info.conversation._target = chatRoomInfo;
             }, err => {
                 console.log('get chatRoomInfo error', err);
+                info.conversation._target = {};
             });
         }
         if (gt(info.timestamp, 0)) {
@@ -1395,7 +1397,7 @@ let store = {
         // 显示的时候，再 patch
         if (info.lastMessage && info.lastMessage.conversation !== undefined && patchLastMessage) {
             //this._patchMessage(info.lastMessage, 0, userInfoMap)
-            if (!info.lastMessage._from){
+            if (!info.lastMessage._from) {
                 info.lastMessage._from = undefined;
             }
         }
