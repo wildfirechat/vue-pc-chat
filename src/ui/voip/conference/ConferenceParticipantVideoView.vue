@@ -17,7 +17,7 @@
                :srcObject.prop="participant._stream"
                autoPlay/>
         <div v-if="!participant._isVideoMuted" class="video-stream-tip-container">
-            <p>{{ participant.uid === selfUserId ? '点击视频，切换摄像头' : '点击视频，切换视频流类型' }}</p>
+            <p>{{ '双击视频，将其设置为焦点' }}</p>
         </div>
         <div class="info-container">
             <i v-if="participant._isHost" class="icon-ion-person"></i>
