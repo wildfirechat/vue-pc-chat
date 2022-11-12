@@ -167,7 +167,7 @@
                                          src='@/assets/images/av_conference_screen_sharing_hover.png'/>
                                     <p class="single-line">共享屏幕</p>
                                 </div>
-                                <div class="action" @click="chat">
+                                <div v-if="sharedMiscState.isElectron" class="action" @click="chat">
                                     <i class="icon-ion-ios-chatboxes"
                                        style="width: 40px; height: 40px; font-size: 40px; color: black"
                                        v-bind:style="{color: showConversationView ? 'white' : 'black'}"/>
@@ -623,13 +623,23 @@ export default {
 
         toggleSliderView() {
             if (!this.showSlider) {
+                if (isElectron()) {
                 let size = currentWindow.getSize();
                 currentWindow.setSize(size[0] + 350, size[1], false)
+                } else {
+                    window.resizeTo(window.innerWidth + 360, window.outerHeight);
+                }
                 this.$refs.rootContainer.style.setProperty('--slider-width', '350px');
             } else {
+                if (isElectron()) {
                 let size = currentWindow.getSize();
                 this.$refs.rootContainer.style.setProperty('--slider-width', '0px');
                 currentWindow.setSize(size[0] - 350, size[1], false)
+                } else {
+                    this.$refs.rootContainer.style.setProperty('--slider-width', '0px');
+                    console.log('xxx resize to heigh', window.innerHeight);
+                    window.resizeTo(window.innerWidth - 350, window.outerHeight)
+                }
 
                 this.showConferenceManageView = false;
                 this.showConversationView = false;

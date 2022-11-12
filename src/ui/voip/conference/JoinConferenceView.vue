@@ -35,6 +35,7 @@ export default {
 
     methods: {
         joinConference() {
+            // TODO getConferenceInfo and then join
             // let userId = wfc.getUserId();
             // avenginekitproxy.startConference(null, !this.audioOnly, '', userId, this.title, this.desc, !this.audience, this.advance);
             // this.$modal.hide('join-conference-modal')

@@ -2,14 +2,14 @@ import conferenceApi from "../../../api/conferenceApi";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import MessageContentType from "../../../wfc/messages/messageContentType";
 import ConferenceCommandMessageContent from "../../../wfc/av/messages/conferenceCommandMessageContent";
-import wfc from "../../../wfc/client/wfc";
 import Conversation from "../../../wfc/model/conversation";
 import ConversationType from "../../../wfc/model/conversationType";
+import IpcSub from "../../../ipc/ipcSub";
 
 class ConferenceManager {
 
     constructor() {
-        avenginekitproxy.listenVoipEvent('message', this.onReceiveMessage);
+
     }
 
     vueInstance;
@@ -24,8 +24,14 @@ class ConferenceManager {
     currentFocusUser = null;
     localFocusUser = null;
 
+    selfUserId = null;
+
     setVueInstance(eventBus) {
         this.vueInstance = eventBus;
+        IpcSub.getUserId().then(userId => {
+            this.selfUserId = userId;
+        })
+        avenginekitproxy.listenVoipEvent('message', this.onReceiveMessage);
     }
 
     getConferenceInfo(conferenceId) {
@@ -39,7 +45,7 @@ class ConferenceManager {
             })
     }
 
-    onReceiveMessage = (event, msg) => {
+    onReceiveMessage = async (event, msg) => {
         msg = this._fixLongSerializedIssue(msg)
         if (msg.messageContent.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND) {
             let command = msg.messageContent;
@@ -54,7 +60,7 @@ class ConferenceManager {
                     this.onCancelMuteAll(command.boolValue);
                     break;
                 case ConferenceCommandMessageContent.ConferenceCommandType.REQUEST_MUTE:
-                    if (command.targetUserId === wfc.getUserId()) {
+                    if (command.targetUserId === this.selfUserId) {
                         this.onRequestMute(command.boolValue);
                     }
                     break;
@@ -65,7 +71,7 @@ class ConferenceManager {
                     });
                     break;
                 case ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE:
-                    senderName = wfc.getUserDisplayName(msg.from);
+                    senderName = await IpcSub.getUserDisplayName(msg.from);
                     this.vueInstance.$notify({
                         text: senderName + '请求发言',
                         type: 'info'
@@ -101,7 +107,7 @@ class ConferenceManager {
                     } else {
                         this.handUpMembers = this.handUpMembers.filter(uid => uid !== msg.from);
                     }
-                    senderName = wfc.getUserDisplayName(msg.from);
+                    senderName = await IpcSub.getUserDisplayName(msg.from);
                     this.vueInstance.$notify({
                         text: command.boolValue ? senderName + '举手' : senderName + '放下举手',
                         type: 'info'
@@ -146,7 +152,7 @@ class ConferenceManager {
 
     applyUnmute(isCancel) {
         this.isApplyingUnmute = !isCancel;
-        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE, null, isCancel);
+        this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE, null, isCancel);
     }
 
     approveUnmute(userId, isAllow) {
@@ -154,7 +160,7 @@ class ConferenceManager {
             return;
         }
         this.applyingUnmuteMembers = this.applyingUnmuteMembers.filter(uid => uid !== userId);
-        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE, userId, isAllow);
+        this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE, userId, isAllow);
     }
 
     approveAllUnmute(isAllow) {
@@ -162,7 +168,7 @@ class ConferenceManager {
             return;
         }
         this.applyingUnmuteMembers.length = 0;
-        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.APPROVE_ALL_UNMUTE, null, isAllow);
+        this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.APPROVE_ALL_UNMUTE, null, isAllow);
     }
 
     requestMemberMute(userId, mute) {
@@ -170,7 +176,7 @@ class ConferenceManager {
             return;
         }
 
-        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.REQUEST_MUTE, userId, mute);
+        this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.REQUEST_MUTE, userId, mute);
     }
 
     requestMuteAll(allowMemberUnmute) {
@@ -182,7 +188,7 @@ class ConferenceManager {
         this.conferenceInfo.allowSwitchMode = allowMemberUnmute;
         conferenceApi.updateConference(this.conferenceInfo)
             .then(r => {
-                this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.MUTE_ALL, null, allowMemberUnmute);
+                this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.MUTE_ALL, null, allowMemberUnmute);
             })
             .catch(err => {
                 console.log('updateConference error', err)
@@ -199,7 +205,7 @@ class ConferenceManager {
         this.conferenceInfo.allowSwitchMode = true;
         conferenceApi.updateConference(this.conferenceInfo)
             .then(r => {
-                this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.CANCEL_MUTE_ALL, null, unmute);
+                this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.CANCEL_MUTE_ALL, null, unmute);
             })
             .catch(err => {
                 console.log('updateConference error', err)
@@ -208,7 +214,7 @@ class ConferenceManager {
 
     handUp(isHandUp) {
         this.isHandUp = isHandUp;
-        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.HANDUP, null, isHandUp);
+        this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.HANDUP, null, isHandUp);
         this.vueInstance.$notify({
             text: isHandUp ? "已举手，等待管理员处理" : "已放下举手",
             type: 'info'
@@ -220,7 +226,7 @@ class ConferenceManager {
             return;
         }
         this.handUpMembers = this.handUpMembers.filter(uid => uid !== memberId);
-        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.PUT_HAND_DOWN, memberId, false);
+        this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.PUT_HAND_DOWN, memberId, false);
     }
 
     putAllHandDown() {
@@ -228,7 +234,7 @@ class ConferenceManager {
             return;
         }
         this.handUpMembers.length = 0;
-        this._sendCommandMessag(ConferenceCommandMessageContent.ConferenceCommandType.PUT_ALL_HAND_DOWN, null, false);
+        this._sendCommandMessage(ConferenceCommandMessageContent.ConferenceCommandType.PUT_ALL_HAND_DOWN, null, false);
     }
 
     requestRecord(record) {
@@ -337,13 +343,13 @@ class ConferenceManager {
     }
 
     isOwner() {
-        return this.conferenceInfo.owner === wfc.getUserId();
+        return this.conferenceInfo.owner === this.selfUserId;
     }
 
-    _sendCommandMessag(commandType, targetUser, boolValue) {
+    _sendCommandMessage(commandType, targetUser, boolValue) {
         let content = new ConferenceCommandMessageContent(this.conferenceInfo.conferenceId, commandType, targetUser, boolValue);
         let conversation = new Conversation(ConversationType.ChatRoom, this.conferenceInfo.conferenceId, 0);
-        wfc.sendConversationMessage(conversation, content);
+        IpcSub.sendMessage(conversation, content);
     }
 }
 

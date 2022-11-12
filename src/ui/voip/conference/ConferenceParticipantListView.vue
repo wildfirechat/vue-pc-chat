@@ -69,6 +69,7 @@ import wfc from "../../../wfc/client/wfc";
 import UserCardView from "../../main/user/UserCardView";
 import conferenceManager from "./conferenceManager";
 import conversationFloatPage from "../../main/ConversationFloatPage";
+import IpcSub from "../../../ipc/ipcSub";
 
 export default {
     name: "ConferenceParticipantListView",
@@ -84,10 +85,10 @@ export default {
     },
     data() {
         return {
-            selfUserId: wfc.getUserId(),
+            conferenceManager: conferenceManager,
+            selfUserId: conferenceManager.selfUserId,
             isContextMenuShow: false,
             currentParticipant: {},
-            conferenceManager: conferenceManager
         }
     },
     components: {
@@ -155,7 +156,7 @@ export default {
         },
         participantDesc(user) {
             let desc = '';
-            if (user.uid === wfc.getUserId()) {
+            if (user.uid === conferenceManager.selfUserId) {
                 desc = "我"
                 if (user.uid === conferenceManager.conferenceInfo.owner) {
                     desc += "、主持人"
@@ -167,7 +168,7 @@ export default {
         },
 
         buildParticipantContextMenu(participant) {
-            let selfUid = wfc.getUserId();
+            let selfUid = conferenceManager.selfUserId;
             let items = [];
             if (!participant) {
                 return items;

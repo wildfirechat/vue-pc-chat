@@ -16,7 +16,6 @@ export default {
 
     mounted() {
 
-        // 一下 4 个 ipc 方法无效了，将被移除
         localStorageEmitter.handle('getUserInfos', (ev, args) => {
             console.log('getUserInfos', ev, args)
             let userIds = args.userIds;
@@ -35,8 +34,13 @@ export default {
             console.log('getUserInfo result', userInfo)
             return userInfo;
         });
+
         localStorageEmitter.handle('getUserId', (ev, args) => {
             return wfc.getUserId();
+        });
+
+        localStorageEmitter.handle('getUserDisplayName', (ev, args) => {
+            return wfc.getUserDisplayName(args.userId);
         });
 
         localStorageEmitter.on('sendMessage', (ev, args) => {
@@ -52,7 +56,6 @@ export default {
         })
 
         localStorageEmitter.on('startCall', (ev, args) => {
-            console.log('oooooooooooo startCall', args)
             let conversation = Object.assign(new Conversation(), args.conversation);
             let audioOnly = args.audioOnly;
             if (conversation.type === ConversationType.Single) {

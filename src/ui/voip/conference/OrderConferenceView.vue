@@ -51,6 +51,8 @@ import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import ConferenceInfo from "../../../wfc/av/model/conferenceInfo";
 import conferenceApi from "../../../api/conferenceApi";
+import IpcSub from "../../../ipc/ipcSub";
+import conferenceManager from "./conferenceManager";
 
 export default {
     name: "CreateConferenceView",
@@ -84,7 +86,7 @@ export default {
             }
             info.pin = '' + Math.ceil((1 + Math.random() * 100000) / 10);
 
-            info.owner = wfc.getUserId();
+            info.owner = conferenceManager.selfUserId;
             info.startTime = Math.ceil(new Date(this.startTime).getTime() / 1000);
             info.endTime = Math.ceil(new Date(this.endTime).getTime() / 1000);
             info.audience = this.audience;

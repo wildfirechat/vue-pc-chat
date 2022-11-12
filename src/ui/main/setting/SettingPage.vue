@@ -69,13 +69,6 @@
                 {{ $t('setting.exit_switch_user') }}
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
             </a>
-            <a
-                class="button"
-                href="mailto:imndxx@gmail.com?Subject=WildfireChat%20Feedback"
-                target="_blank">
-                {{ $t('setting.feedback') }}
-                <i class="icon-ion-ios-email-outline"/>
-            </a>
 
             <a
                 class="button"
@@ -117,6 +110,7 @@ import ChangePasswordView from "./ChangePasswordView";
 import ResetPasswordView from "./ResetPasswordView";
 import {shell} from "../../../platform";
 import IpcEventType from "../../../ipcEventType";
+import avenginekit from "../../../wfc/av/internal/engine.min";
 
 export default {
     name: "SettingPage",
@@ -245,20 +239,18 @@ export default {
                 version = 'unknown proto version'
                 console.log(e)
             }
-            return version;
+            let supportConference = avenginekit.startConference !== undefined
+            return version + (supportConference ? ' av-conference' : ' av-multi');
         }
 
-    }
-    ,
+    },
 
     mounted() {
         window.addEventListener('blur', this.blurListener)
-    }
-    ,
+    },
     beforeDestroy() {
         window.removeEventListener('blur', this.blurListener)
-    }
-    ,
+    },
     computed: {
         currentLang() {
             let lang = getItem('lang')
@@ -267,13 +259,11 @@ export default {
             index = index >= 0 ? index : 0;
             return this.langs[index];
         }
-    }
-    ,
+    },
     components: {
         'dropdown':
         dropdown,
-    }
-    ,
+    },
 }
 </script>
 

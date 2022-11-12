@@ -13,7 +13,7 @@
             </div>
             <div v-if="showParticipantList && selfUserId === conferenceManager.conferenceInfo.owner && conferenceManager.handUpMembers.length > 0"
                  @click="showParticipantList = false; showHandUpList = true"
-                 class="action-tip">{{ handUpIip }}
+                 class="action-tip">{{ handUpTip }}
             </div>
             <div v-if="showHandUpList" class="title-container">
                 <i class="icon-ion-android-arrow-back"
@@ -42,6 +42,7 @@ import conferenceManager from "./conferenceManager";
 import ConferenceParticipantListView from "./ConferenceParticipantListView";
 import ConferenceApplyUnmuteListView from "./ConferenceApplyUnmuteListView";
 import ConferenceHandUpListView from "./ConferenceHandUpListView";
+import IpcSub from "../../../ipc/ipcSub";
 
 export default {
     name: "ConferenceManageView",
@@ -57,13 +58,15 @@ export default {
     },
     data() {
         return {
-            selfUserId: wfc.getUserId(),
+            conferenceManager: conferenceManager,
+            selfUserId: conferenceManager.selfUserId,
             isContextMenuShow: false,
             currentParticipant: {},
-            conferenceManager: conferenceManager,
             showParticipantList: true,
             showApplyList: false,
             showHandUpList: false,
+            handUpTip: '',
+            applyUnmuteTip: '',
         }
     },
     components: {
@@ -71,30 +74,49 @@ export default {
         ConferenceApplyUnmuteListView,
         ConferenceParticipantListView,
     },
-    methods: {},
-    computed: {
-        handUpIip() {
+    methods: {
+        updateHandUpTip() {
             let ids = conferenceManager.handUpMembers;
-            let userInfos = wfc.getUserInfos(ids);
-            let desc = userInfos[0].displayName;
-            if (userInfos.length > 1) {
-                desc += ' 等'
-            }
-            desc += '正在举手'
-            return desc;
+            IpcSub.getUserInfos(ids, '', (userInfos) => {
+                let desc = userInfos[0].displayName;
+                if (userInfos.length > 1) {
+                    desc += ' 等'
+                }
+                desc += '正在举手'
+                this.handUpTip = desc;
+            });
         },
-        applyUnmuteTip() {
+        updateapplyUnmuteTip() {
             let ids = conferenceManager.applyingUnmuteMembers;
-            let userInfos = wfc.getUserInfos(ids);
-            let desc = userInfos[0].displayName;
-            if (userInfos.length > 1) {
-                desc += ' 等'
-            }
-            desc += '正在申请解除静音'
-            return desc;
+            IpcSub.getUserInfos(ids, '', (userInfos) => {
+                let desc = userInfos[0].displayName;
+                if (userInfos.length > 1) {
+                    desc += ' 等'
+                }
+                desc += '正在申请解除静音'
+                this.applyUnmuteTip = desc;
+            });
         }
 
-    }
+    },
+    computed: {
+        handUpMembers() {
+            return this.conferenceManager.handUpMembers;
+        },
+
+        applyingUnmuteMembers() {
+            return this.conferenceManager.applyingUnmuteMembers;
+        }
+    },
+    watch: {
+        handUpMembers() {
+            this.updateHandUpTip();
+        },
+        applyingUnmuteMembers() {
+            this.updateapplyUnmuteTip();
+        }
+    },
+
 }
 </script>
 

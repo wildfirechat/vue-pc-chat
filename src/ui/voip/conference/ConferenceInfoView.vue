@@ -65,6 +65,8 @@
 import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import conferenceApi from "../../../api/conferenceApi";
+import IpcSub from "../../../ipc/ipcSub";
+import conferenceManager from "./conferenceManager";
 
 export default {
     name: "ConferenceInfoView",
@@ -78,10 +80,14 @@ export default {
         return {
             enableVideo: false,
             enableAudio: false,
+            ownerName: '',
         }
     },
     mounted() {
         console.log('conferenceInfo', this.conferenceInfo)
+        IpcSub.getUserDisplayName(this.conferenceInfo.owner).then(name => {
+            this.ownerName = name;
+        });
     },
     methods: {
         favConference() {
@@ -102,9 +108,6 @@ export default {
         },
     },
     computed: {
-        ownerName() {
-            return wfc.getUserDisplayName(this.conferenceInfo.owner);
-        },
         startTime() {
             let date = new Date(this.conferenceInfo.startTime * 1000);
             return date.toString();
@@ -118,10 +121,10 @@ export default {
             return date.toString();
         },
         audience() {
-            return this.conferenceInfo.audience && this.conferenceInfo.owner !== wfc.getUserId();
+            return this.conferenceInfo.audience && this.conferenceInfo.owner !== conferenceManager.selfUserId;
         },
         enableDestroy() {
-            return this.conferenceInfo.owner === wfc.getUserId() && new Date().getTime() < this.conferenceInfo.startTime * 1000;
+            return this.conferenceInfo.owner === conferenceManager.selfUserId && new Date().getTime() < this.conferenceInfo.startTime * 1000;
         }
     }
 }
