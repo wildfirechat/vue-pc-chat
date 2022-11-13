@@ -443,7 +443,7 @@ export class AvEngineKitProxy {
      * @param {string} host 会议主持人
      * @param {string} title 会议标题
      * @param {string} desc 会议描述
-     * @param {string} audience 是否是以观众角色入会
+     * @param {boolean} audience 是否是以观众角色入会
      * @param {string} advance 是否是高级会议
      * @param {boolean} muteAudio 是否是静音加入会议
      * @param {boolean} muteVideo 是否是关闭摄像头加入会议
