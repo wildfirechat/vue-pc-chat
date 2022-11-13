@@ -412,9 +412,9 @@ export class AvEngineKitProxy {
         this.conference = true;
 
         wfc.joinChatroom(callId, () => {
-            console.log('join conference chatRoom success')
+            console.log('join conference chatRoom success', callId)
         }, (err) => {
-            console.error('join conference chatRoom fail', err);
+            console.error('join conference chatRoom fail', callId, err);
         });
 
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
@@ -467,9 +467,9 @@ export class AvEngineKitProxy {
         this.callId = callId;
 
         wfc.joinChatroom(callId, () => {
-            console.log('join conference chatRoom success')
+            console.log('join conference chatRoom success', callId)
         }, (err) => {
-            console.error('join conference chatRoom fail', err);
+            console.error('join conference chatRoom fail', callId, err);
         });
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
         this.showCallUI(null, true);
