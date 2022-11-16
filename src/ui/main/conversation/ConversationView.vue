@@ -420,11 +420,7 @@ export default {
                 store.setShouldAutoScrollToBottom(false)
             } else {
                 store.setShouldAutoScrollToBottom(true)
-                let info = this.sharedConversationState.currentConversationInfo;
-                if (info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll > 0) {
-                    store.clearConversationUnreadStatus(info.conversation);
-                    // this.unreadMessageCount = 0;
-                }
+                this.clearConversationUnreadStatus();
             }
         },
 
@@ -665,7 +661,6 @@ export default {
             console.log('to load more message');
             store.loadConversationHistoryMessages(() => {
                 console.log('loaded')
-                console.log('xxxx', this.fixTippy, this.sharedConversationState.currentConversationInfo, this.sharedConversationState.currentConversationMessageList)
                 $state.loaded();
             }, () => {
                 console.log('complete')
@@ -736,6 +731,14 @@ export default {
         showUnreadMessage() {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
+        },
+
+        clearConversationUnreadStatus(){
+            let info = this.sharedConversationState.currentConversationInfo;
+            if (info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll > 0) {
+                store.clearConversationUnreadStatus(info.conversation);
+                // this.unreadMessageCount = 0;
+            }
         }
     },
 
@@ -799,6 +802,7 @@ export default {
         if ((this.sharedConversationState.shouldAutoScrollToBottom || (lastMessagee && lastMessagee.direction === 0)) && !this.sharedMiscState.isPageHidden) {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
+            this.clearConversationUnreadStatus();
         } else {
             // 用户滑动到上面之后，收到新消息，不自动滑动到最下面
         }

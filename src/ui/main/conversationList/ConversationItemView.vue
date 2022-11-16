@@ -111,6 +111,7 @@ export default {
 
         showConversation() {
             store.setCurrentConversationInfo(this.source);
+            wfc.clearConversationUnreadStatus(this.source.conversation);
         },
         showConversationInfoContextMenu(event) {
             this.$eventBus.$emit('showConversationContextMenu', event, this.source);

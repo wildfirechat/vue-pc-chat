@@ -1961,12 +1961,9 @@ let store = {
         miscState.isPageHidden = !visible;
         if (!visible) {
             conversationState.shouldAutoScrollToBottom = false;
+        } else if (conversationState.currentConversationInfo) {
+            conversationState.shouldAutoScrollToBottom = true;
         }
-        // if (visible) {
-        //     if (conversationState.currentConversationInfo) {
-        //         this.clearConversationUnreadStatus(conversationState.currentConversationInfo.conversation)
-        //     }
-        // }
     },
 
     clearConversationUnreadStatus(conversation) {
