@@ -14,4 +14,8 @@ export default class Subscriber {
     stream;
     audience = false;
     currentVideoType;
+
+    constructor(userId) {
+        this.userId = userId;
+    }
 }
