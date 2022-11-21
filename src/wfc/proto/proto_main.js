@@ -87,6 +87,7 @@ const asyncProtoMethods = {
     updateRemoteMessageContent: _asyncCall2('updateRemoteMessageContent'),
     watchOnlineState: _asyncCall2('watchOnlineState'),
     unwatchOnlineState: _asyncCall2('unwatchOnlineState'),
+    getAuthorizedMediaUrl:_asyncCall2('getAuthorizedMediaUrl'),
     getUploadMediaUrl: _asyncCall2('getUploadMediaUrl'),
     getConversationFiles: _asyncCall2('getConversationFiles'),
     getMyFiles: _asyncCall2('getMyFiles'),
