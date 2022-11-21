@@ -964,7 +964,7 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
-function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = true) {
+function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false) {
     let win = new BrowserWindow(
         {
             width: w,
