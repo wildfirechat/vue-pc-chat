@@ -413,7 +413,6 @@ export default {
         broadcastMultiCallOngoing(){
             let participants = this.participantUserInfos.map(pu => pu.uid).filter(uid => uid !== this.selfUserInfo.uid)
             let ongoing = new MultiCallOngoingMessageContent(this.session.callId, this.session.initiatorId, this.session.audioOnly, participants);
-            console.log('broadcast ongoing', ongoing);
             IpcSub.sendMessage(this.session.conversation, ongoing);
         }
     },

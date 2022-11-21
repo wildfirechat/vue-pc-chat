@@ -265,7 +265,7 @@ export default {
             dragAndDropEnterCount: 0,
             // FIXME 选中一个会话，然后切换到其他page，比如联系人，这时该会话收到新消息或发送消息，会导致新收到/发送的消息的界面错乱，尚不知道原因，但这么做能解决。
             fixTippy: true,
-            ongoingCalls: null,
+            ongoingCalls: [],
             ongoingCallTimer: 0,
             messageInputViewResized: false,
             unreadMessageCount: 0,
@@ -697,20 +697,8 @@ export default {
 
         onReceiveMessage(message, hasMore) {
             if (this.conversationInfo && this.conversationInfo.conversation.equal(message.conversation) && message.messageContent instanceof MultiCallOngoingMessageContent) {
-                if (!this.ongoingCalls) {
-                    this.ongoingCalls = [];
-                    this.ongoingCallTimer = setInterval(() => {
-                        this.ongoingCalls = this.ongoingCalls.filter(call => {
-                            return new Date().getTime() - (numberValue(call.timestamp) - numberValue(wfc.getServerDeltaTime())) < 3 * 1000;
-                        })
-                        if (this.ongoingCalls.length === 0) {
-                            clearInterval(this.ongoingCallTimer);
-                            this.ongoingCallTimer = 0;
-                        }
-                        console.log('ongoing calls', this.ongoingCalls.length);
-                    }, 1000)
-                }
                 // 自己是不是已经在通话中
+                console.log('MultiCallOngoingMessageContent', message.messageContent)
                 if (message.messageContent.targets.indexOf(wfc.getUserId()) >= 0) {
                     return;
                 }
@@ -719,6 +707,18 @@ export default {
                     this.ongoingCalls[index] = message;
                 } else {
                     this.ongoingCalls.push(message);
+                }
+                if (!this.ongoingCallTimer) {
+                    this.ongoingCallTimer = setInterval(() => {
+                        this.ongoingCalls = this.ongoingCalls.filter(call => {
+                            return (new Date().getTime() - (numberValue(call.timestamp) - numberValue(wfc.getServerDeltaTime()))) < 3 * 1000;
+                        })
+                        if (this.ongoingCalls.length === 0) {
+                            clearInterval(this.ongoingCallTimer);
+                            this.ongoingCallTimer = 0;
+                        }
+                        console.log('ongoing calls', this.ongoingCalls.length);
+                    }, 1000)
                 }
             }
         },
@@ -733,7 +733,7 @@ export default {
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
         },
 
-        clearConversationUnreadStatus(){
+        clearConversationUnreadStatus() {
             let info = this.sharedConversationState.currentConversationInfo;
             if (info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll > 0) {
                 store.clearConversationUnreadStatus(info.conversation);
@@ -831,8 +831,8 @@ export default {
 
     computed: {
         conversationTitle() {
-            if (this.title){
-                return  this.title;
+            if (this.title) {
+                return this.title;
             }
             let info = this.sharedConversationState.currentConversationInfo;
             if (info.conversation._target) {
