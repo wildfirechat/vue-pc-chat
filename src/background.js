@@ -471,7 +471,7 @@ function regShortcut() {
     globalShortcut.register('Control+F5', () => {
         mainWindow.webContents.reload();
     })
-    globalShortcut.register('ctrl+shift+a', () => {
+    globalShortcut.register('CommandOrControl+shift+a', () => {
         isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
         console.log('isMainWindowFocusedWhenStartScreenshot', mainWindow.isFocused());
         screenshots.startCapture()
