@@ -221,6 +221,7 @@ import ChannelConversationInfoView from "./ChannelConversationInfoView";
 import FriendRequestView from "../contact/FriendRequestView";
 import {currentWindow, ipcRenderer} from "../../../platform";
 import appServerApi from "../../../api/appServerApi";
+import Config from "../../../config";
 
 var amr;
 export default {
@@ -847,7 +848,7 @@ export default {
         },
         targetUserOnlineStateDesc() {
             let info = this.sharedConversationState.currentConversationInfo;
-            if (info.conversation.type === ConversationType.Single) {
+            if (info.conversation.type === ConversationType.Single && info.conversation.target !== Config.FILE_HELPER_ID) {
                 if (!wfc.isMyFriend(info.conversation.target)) {
                     return '你们还不是好友，点击添加好友';
                 }
