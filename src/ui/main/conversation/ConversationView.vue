@@ -291,22 +291,23 @@ export default {
             } else if (v === 'drop') {
                 this.dragAndDropEnterCount--;
                 let isFile;
-                if (e.dataTransfer.items) {
-                    if (typeof (e.dataTransfer.items[0].webkitGetAsEntry) == "function") {
-                        isFile = e.dataTransfer.items[0].webkitGetAsEntry().isFile;
-                    } else if (typeof (e.dataTransfer.items[0].getAsEntry) == "function") {
-                        isFile = e.dataTransfer.items[0].getAsEntry().isFile;
+                if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+                    if (e.dataTransfer.items[0].kind === 'file') {
+                        if (typeof (e.dataTransfer.items[0].webkitGetAsEntry) == "function") {
+                            isFile = e.dataTransfer.items[0].webkitGetAsEntry().isFile;
+                        } else if (typeof (e.dataTransfer.items[0].getAsEntry) == "function") {
+                            isFile = e.dataTransfer.items[0].getAsEntry().isFile;
+                        }
+
+                        if (!isFile) {
+                            this.$notify({
+                                // title: '不支持',
+                                text: this.$t('conversation.not_support_send_folder'),
+                                type: 'warn'
+                            });
+                            return true;
+                        }
                     }
-                } else {
-                    return true;
-                }
-                if (!isFile) {
-                    this.$notify({
-                        // title: '不支持',
-                        text: this.$t('conversation.not_support_send_folder'),
-                        type: 'warn'
-                    });
-                    return true;
                 }
 
                 let length = e.dataTransfer.files.length;
@@ -315,13 +316,26 @@ export default {
                         this.$eventBus.$emit('uploadFile', e.dataTransfer.files[i])
                         store.sendFile(this.sharedConversationState.currentConversationInfo.conversation, e.dataTransfer.files[i]);
                     }
-                } else {
+                } else if (length > 5) {
                     this.$notify({
                         // title: '大文件提示',
                         text: this.$t('conversation.drag_to_send_limit_tip'),
                         type: 'warn'
                     });
                 }
+
+                let dragUrl = e.dataTransfer.getData('URL');
+                if (dragUrl) {
+                    // 根据后缀判断类型
+                    if (dragUrl.endsWith('.png') || dragUrl.endsWith('.jpg') || dragUrl.endsWith('jpeg')) {
+                        //constructor(fileOrLocalPath, remotePath, thumbnail) {
+                        let content = new ImageMessageContent(null, dragUrl, null);
+                        wfc.sendConversationMessage(this.conversationInfo.conversation, content);
+                    } else {
+                        // TODO
+                    }
+                }
+                console.log('drag Url', dragUrl);
             } else if (v === 'dragover') {
                 // If not st as 'copy', electron will open the drop file
                 e.dataTransfer.dropEffect = 'copy';
