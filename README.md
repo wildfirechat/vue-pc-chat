@@ -47,8 +47,9 @@
 4. binutils
 
 ## 开发
-1. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
-2. ```npm run dev```
+1. ```npm config set electron_mirror https://repo.huaweicloud.com/electron/```设置electron镜像，建议使用华为镜像，也可以使用其他镜像。
+2. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
+3. ```npm run dev```
 
 ## 打包
 打包为当前平台架构软件
