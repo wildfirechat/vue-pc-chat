@@ -51,6 +51,8 @@
 2. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
 3. ```npm run dev```
 
+注意避免使用```cnpm```，我们使用```cnpm```出现过一些奇怪问题的情况。如果您使用```cnpm```当遇到问题时请切换到```npm```试一下。
+
 ## 打包
 打包为当前平台架构软件
 ```
@@ -109,43 +111,41 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 
 8. MAC应用截屏时只能截屏空白桌面，无法截图窗口内容。这是因为没有通过mac系统的安全许可，在设置-》安全与隐私-》切换到隐私那个标签-》屏幕录制-》在野火IM PC应用前打勾，并重启应用。
 
-9. 使用```cnpm```后打包失败，在某些平台```cnpm```是会出现问题的，请使用npm。
-
-10. ```npm install``` 报```Unexpected end of JSON input while parsing near...```错误
+9. ```npm install``` 报```Unexpected end of JSON input while parsing near...```错误
 
     如果常见问题4解决不了，可以尝试```　 npm config set registry http://registry.npm.taobao.org/ ```，然后在按常见问题4的步骤进行
 
-11. 音视频相关问题，请参考以下文档
+10. 音视频相关问题，请参考以下文档
     1. [av readme](src/wfc/av/internal/README.MD)
     2. [音视频常见问题](https://docs.wildfirechat.cn/faq/webrtc.html?h=webrtc)
 
-12. 纯内网环境，不能显示表情
+11. 纯内网环境，不能显示表情
     1. 将```src/assets/twemoji```目录上传到一个内网能访问的服务器，比如部署```app server```的服务器
     2. 确保通过```http(s)://base_twemoji_url/72x72/1f1e6.png```能访问到对应表情，此处```1f1e6.png```蓝底白字大写字母A
     3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/```替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
     4. 修改```MessageInputView.vue```， 根据新部署的服务器地址，修改正则表达式```replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')```
 
-13. 想自己部署表情图片
+12. 想自己部署表情图片
     请常见问题12
 
-14. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
+13. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
     1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
     2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
 
-15. windows 7 无法正常启动，显示黑屏或白屏
+14. windows 7 无法正常启动，显示黑屏或白屏
     1. ```background.js``` 里面找到下面代码，并取消```//app.disableHardwareAcceleration();```前面的注释
     ```
        // pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
        // windows 7 下面，如果启动黑屏，请将下面注释打开
        //app.disableHardwareAcceleration();
     ```
-16. MAC打包的版本是Universal版本，可以同时支持x64架构和arm64架构。Universal版本比单架构版本要大一下，如果想要打包单架构的版本，可以把野火SDK瘦身到对应单一架构，然后打包对应平台。具体实现方法请自行查找。
+15. MAC打包的版本是Universal版本，可以同时支持x64架构和arm64架构。Universal版本比单架构版本要大一下，如果想要打包单架构的版本，可以把野火SDK瘦身到对应单一架构，然后打包对应平台。具体实现方法请自行查找。
 
-17. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
+16. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
 
-18. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
-19. 压力测试发现，Vue 内置的```keep-alive```组件，可能有缓慢的内存泄漏问题，可将```HomePage.vue```里面的```keep-alive```移除，由于```activated```和```deactivated```回调，要使用```keep-alive```组件才生效，需要妥善处理这两个回调里面的逻辑。
-20. 如果使用专业版IM服务且使用野火对象存储服务，需要使野火对象存储服务支持https，PC客户端和Web客户端需要使用HTTPS上传。
+17. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
+18. 压力测试发现，Vue 内置的```keep-alive```组件，可能有缓慢的内存泄漏问题，可将```HomePage.vue```里面的```keep-alive```移除，由于```activated```和```deactivated```回调，要使用```keep-alive```组件才生效，需要妥善处理这两个回调里面的逻辑。
+19. 如果使用专业版IM服务且使用野火对象存储服务，需要使野火对象存储服务支持https，PC客户端和Web客户端需要使用HTTPS上传。
 
 ## 截图
 ![](http://static.wildfirechat.cn/pc-home.png)
