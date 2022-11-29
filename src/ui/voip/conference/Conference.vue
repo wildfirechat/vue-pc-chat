@@ -86,6 +86,7 @@
                                        v-bind:style="{objectFit:computedFocusVideoParticipant._isScreenSharing ? 'contain' : 'fit'}"
                                        style="width: 100%; height: 100%"
                                        :srcObject.prop="computedFocusVideoParticipant._stream"
+                                       :muted="computedFocusVideoParticipant.uid === selfUserInfo.uid"
                                        playsInline
                                        autoPlay/>
                                 <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px">
@@ -126,6 +127,7 @@
                                        class="hidden-video"
                                        controls
                                        :srcObject.prop="participant._stream"
+                                       :ref="participant.uid + '-audio'"
                                        :muted="participant.uid === selfUserInfo.uid"
                                        playsInline autoPlay/>
                                 <div style="position: relative">
@@ -625,20 +627,19 @@ export default {
         toggleSliderView() {
             if (!this.showSlider) {
                 if (isElectron()) {
-                let size = currentWindow.getSize();
-                currentWindow.setSize(size[0] + 350, size[1], false)
+                    let size = currentWindow.getSize();
+                    currentWindow.setSize(size[0] + 350, size[1], false)
                 } else {
                     window.resizeTo(window.innerWidth + 360, window.outerHeight);
                 }
                 this.$refs.rootContainer.style.setProperty('--slider-width', '350px');
             } else {
                 if (isElectron()) {
-                let size = currentWindow.getSize();
-                this.$refs.rootContainer.style.setProperty('--slider-width', '0px');
-                currentWindow.setSize(size[0] - 350, size[1], false)
+                    let size = currentWindow.getSize();
+                    this.$refs.rootContainer.style.setProperty('--slider-width', '0px');
+                    currentWindow.setSize(size[0] - 350, size[1], false)
                 } else {
                     this.$refs.rootContainer.style.setProperty('--slider-width', '0px');
-                    console.log('xxx resize to heigh', window.innerHeight);
                     window.resizeTo(window.innerWidth - 350, window.outerHeight)
                 }
 
@@ -1046,6 +1047,10 @@ export default {
                 this.audioOnly = audioOnly;
 
                 if (this.audioOnly) {
+                    let ref = this.$refs[this.selfUserInfo.uid + '-audio'];
+                    if (ref && ref.length > 0) {
+                        this.$refs[this.selfUserInfo.uid + '-audio'][0].muted = true;
+                    }
                     return;
                 }
                 // 宫格布局
@@ -1073,6 +1078,12 @@ export default {
                         this.$refs.rootContainer.style.setProperty('--participant-video-item-width', width);
                         this.$refs.rootContainer.style.setProperty('--participant-video-item-height', height);
                     }
+                }
+
+                // mute self audio
+                let ref = this.$refs[this.selfUserInfo.uid + '-audio'];
+                if (ref && ref.length > 0) {
+                    this.$refs[this.selfUserInfo.uid + '-audio'][0].muted = true;
                 }
             }
         },
