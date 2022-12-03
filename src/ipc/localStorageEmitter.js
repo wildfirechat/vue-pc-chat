@@ -26,6 +26,9 @@ class LocalStorageEmitter {
         window.__lse = this;
         window.addEventListener('storage', ev => {
             let key = ev.key;
+            if (!key) {
+                return;
+            }
             if (!key.startsWith(this.namespace + '$') || !key.endsWith('$')) {
                 return;
             }
@@ -51,47 +54,47 @@ class LocalStorageEmitter {
                     }
                 })
             } else {
-            this.subscriptions.forEach((subscription, k) => {
-                if (k === key) {
-                    subscription.listener(new LocalStorageEvent(this), value.args);
-                    if (subscription.once) {
-                        this.subscriptions.delete(k);
-                    }
-                    localStorage.removeItem(k)
-                }
-            });
-
-            this.handles.forEach((handle, k) => {
-                if (key.indexOf('$$') === -1 || key.indexOf('$r$') > -1) {
-                    return;
-                }
-                let index = key.indexOf('$$');
-                let invokeKey = key.substr(0, index + 1)
-                if (k === invokeKey) {
-                    let invokeId = value.invokeId;
-                    let returnValue = handle.listener(new LocalStorageEvent(this), value.args);
-                    let invokeReturnValueKey = k + '$' + invokeId + '$' + 'r' + '$';
-                    if (returnValue instanceof Promise) {
-                        returnValue.then(v => {
-                            let r = {r: v}
-                            localStorage.setItem(invokeReturnValueKey, JSON.stringify(r));
-                        }).catch(reason => {
-                            console.log('handle failed', reason)
-                        });
-                        if (handle.once) {
-                            this.handles.delete(k)
+                this.subscriptions.forEach((subscription, k) => {
+                    if (k === key) {
+                        subscription.listener(new LocalStorageEvent(this), value.args);
+                        if (subscription.once) {
+                            this.subscriptions.delete(k);
                         }
+                        localStorage.removeItem(k)
+                    }
+                });
 
-                    } else {
-                        let r = {r: returnValue}
+                this.handles.forEach((handle, k) => {
+                    if (key.indexOf('$$') === -1 || key.indexOf('$r$') > -1) {
+                        return;
+                    }
+                    let index = key.indexOf('$$');
+                    let invokeKey = key.substr(0, index + 1)
+                    if (k === invokeKey) {
+                        let invokeId = value.invokeId;
+                        let returnValue = handle.listener(new LocalStorageEvent(this), value.args);
+                        let invokeReturnValueKey = k + '$' + invokeId + '$' + 'r' + '$';
+                        if (returnValue instanceof Promise) {
+                            returnValue.then(v => {
+                                let r = {r: v}
+                                localStorage.setItem(invokeReturnValueKey, JSON.stringify(r));
+                            }).catch(reason => {
+                                console.log('handle failed', reason)
+                            });
+                            if (handle.once) {
+                                this.handles.delete(k)
+                            }
+
+                        } else {
+                            let r = {r: returnValue}
                             console.log('handle res', invokeId, returnValue)
-                        localStorage.setItem(invokeReturnValueKey, JSON.stringify(r));
-                        if (handle.once) {
-                            this.handles.delete(k)
+                            localStorage.setItem(invokeReturnValueKey, JSON.stringify(r));
+                            if (handle.once) {
+                                this.handles.delete(k)
+                            }
                         }
+                        localStorage.removeItem(invokeKey)
                     }
-                    localStorage.removeItem(invokeKey)
-                }
 
                 });
             }

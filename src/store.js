@@ -89,8 +89,6 @@ let store = {
             currentVoiceMessage: null,
             contextMenuConversationInfo: null,
 
-            groupPortraitMap: new Map(),
-
             _reset() {
                 this.currentConversationInfo = null;
                 this.conversationInfoList = []
@@ -113,7 +111,6 @@ let store = {
                 this.floatingConversations = [];
                 this.currentVoiceMessage = null;
                 this.contextMenuConversationInfo = null;
-                this.groupPortraitMap.clear();
             }
         },
 
@@ -294,13 +291,13 @@ let store = {
 
         });
 
-        // wfc.eventEmitter.on(EventType.GroupMembersUpdate, (groupId, members) => {
-        //     // TODO optimize
-        //     console.log('store GroupMembersUpdate', groupId)
-        //     this._reloadGroupConversationIfExist([new NullGroupInfo(groupId)]);
-        //     this._loadFavGroupList();
-        //     // TODO 其他相关逻辑
-        // });
+        wfc.eventEmitter.on(EventType.GroupMembersUpdate, (groupId, members) => {
+            // TODO optimize
+            console.log('store GroupMembersUpdate', groupId)
+            this._reloadGroupConversationIfExist([new NullGroupInfo(groupId)]);
+            // this._loadFavGroupList();
+            // TODO 其他相关逻辑
+        });
 
         wfc.eventEmitter.on(EventType.ChannelInfosUpdate, (groupInfos) => {
             this._loadDefaultConversationList();
@@ -1368,9 +1365,6 @@ let store = {
             if (info.conversation._target) {
                 info.conversation._target._isFav = wfc.isFavGroup(info.conversation.target);
                 info.conversation._target._displayName = info.conversation._target.remark ? info.conversation._target.remark : info.conversation._target.name;
-                if (!info.conversation._target.portrait){
-                    info.conversation._target.portrait =  conversationState.groupPortraitMap.get(info.conversation.target);
-                }
             }
         } else if (info.conversation.type === ConversationType.Channel) {
             info.conversation._target = wfc.getChannelInfo(info.conversation.target, false);
@@ -2076,9 +2070,6 @@ let store = {
         })
     },
 
-    setGroupPortrait(groupId, portrait){
-        conversationState.groupPortraitMap.set(groupId, portrait);
-    }
 }
 
 let conversationState = store.state.conversation;
