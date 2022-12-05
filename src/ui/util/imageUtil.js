@@ -253,6 +253,7 @@ function mergeImages(sources = [], options = {}) {
 
 
 let groupPortraitMap = new Map();
+window.__groupPortraitMap = groupPortraitMap;
 
 async function getConversationPortrait(conversation, userInfoMap, groupInfoMap) {
     let portrait = '';

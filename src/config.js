@@ -22,7 +22,7 @@ export default class Config {
     // turn server 配置，可以添加多个
     // !!! 我们提供的服务仅供用户测试和体验，为了保证测试可用，我们会不定期的更改密码. !!!
     // 上线时，请一定要切换为你们自己部署的服务
-    static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.net:3478', userName: 'wfchat', password: 'wfchat'}];
+    static ICE_SERVERS = [{uri: 'turn:turn.wildfirechat.net:3478', userName: 'wfchat', password: 'wfchat1'}];
     static LANGUAGE = 'zh_CN';
 
     static SDK_PLATFORM_WINDOWS = 3;
