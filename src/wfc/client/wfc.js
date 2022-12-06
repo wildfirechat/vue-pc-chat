@@ -2016,8 +2016,8 @@ export class WfcManager {
         return impl.commitTransaction();
     }
 
-    roolbackTransaction() {
-        return impl.roolbackTransaction();
+    rollbackTransaction() {
+        return impl.rollbackTransaction();
     }
 
     _getStore() {
