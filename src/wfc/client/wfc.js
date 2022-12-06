@@ -2007,6 +2007,19 @@ export class WfcManager {
     configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB){
         impl.configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB);
     }
+
+    beginTransaction() {
+        return impl.beginTransaction();
+    }
+
+    commitTransaction() {
+        return impl.commitTransaction();
+    }
+
+    roolbackTransaction() {
+        return impl.roolbackTransaction();
+    }
+
     _getStore() {
         return impl._getStore();
     }
