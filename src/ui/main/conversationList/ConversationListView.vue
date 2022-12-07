@@ -63,6 +63,10 @@ export default {
         });
     },
 
+    destroyed() {
+        this.$eventBus.$off('showConversationContextMenu');
+    },
+
     methods: {
 
         setConversationTop(conversationInfo) {
