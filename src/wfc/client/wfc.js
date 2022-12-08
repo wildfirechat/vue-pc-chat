@@ -1719,6 +1719,22 @@ export class WfcManager {
         return impl.insertMessage(conversation, messageContent, status, notify, serverTime);
     }
 
+
+    /**
+     * 插入消息
+     * @param {Long} messageUid
+     * @param {Conversation} conversation 目标会话
+     * @param {string} fromUser 发送者
+     * @param {MessageContent} messageContent 具体的消息内容，一定要求是{@link MessageContent} 的子类，不能是普通的object
+     * @param {number} status 消息状态，可选值参考{@link MessageStatus}
+     * @param {Number} serverTime 服务器时间，精度到毫秒
+     * @param {string} localExtra 附加信息
+     *
+     * @return {Message} 插入的消息
+     */
+    insertMessageEx(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra) {
+        return impl.insertMessage(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra);
+    }
     /**
      * 更新消息
      * @param {number} messageId 消息id
