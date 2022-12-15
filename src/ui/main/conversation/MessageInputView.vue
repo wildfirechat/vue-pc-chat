@@ -28,7 +28,7 @@
                     <li v-if="!inputOptions['disableHistory'] && sharedMiscState.isElectron">
                         <i id="messageHistory" @click="showMessageHistory" class="icon-ion-android-chat"/>
                     </li>
-                    <li v-if="!inputOptions['disablePTT'] && sharedMiscState.isElectron">
+                    <li v-if="enablePtt">
                         <i id="ptt" @mousedown="requestTalk(true)" @mouseup="requestTalk(false)" class="icon-ion-record"/>
                     </li>
                 </ul>
@@ -115,6 +115,7 @@ import ChannelMenuView from "./ChannelMenuView";
 import IpcSub from "../../../ipc/ipcSub";
 import pttClient from "../../../wfc/ptt/client/pttClient";
 import TalkingCallback from "../../../wfc/ptt/client/talkingCallback";
+import Config from "../../../config";
 
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
@@ -147,7 +148,7 @@ export default {
             lastConversationInfo: null,
             storeDraftIntervalId: 0,
             tributeReplaced: false,
-            pttClient: pttClient,
+            enablePtt: Config.ENABLE_PTT,
         }
     },
     methods: {
@@ -703,9 +704,9 @@ export default {
 
         requestTalk(request) {
             if (request) {
-                this.pttClient.requestTalk(this.conversationInfo.conversation, new TalkingCallback())
+                pttClient.requestTalk(this.conversationInfo.conversation, new TalkingCallback())
             } else {
-                this.pttClient.releaseTalk(this.conversationInfo.conversation);
+                pttClient.releaseTalk(this.conversationInfo.conversation);
             }
         }
     },

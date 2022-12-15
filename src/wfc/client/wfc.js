@@ -34,7 +34,9 @@ export class WfcManager {
     init(args = []) {
         impl.init(args);
         avenginekit.setup(self);
-        pttClient.init();
+        if (Config.ENABLE_PTT){
+            pttClient.init();
+        }
         //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
     }
 
