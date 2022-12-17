@@ -31,6 +31,8 @@
                     <li v-if="enablePtt">
                         <i id="ptt" @mousedown="requestPttTalk(true)" @mouseup="requestPttTalk(false)" class="icon-ion-android-radio-button-on"/>
                     </li>
+                    <li>
+                        <i id="voice" @mousedown="recordAudio(true)" @mouseup="recordAudio(false)" class="icon-ion-android-microphone"/>
                     </li>
                 </ul>
                 <ul v-if="!inputOptions['disableVoip'] && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
@@ -117,6 +119,8 @@ import IpcSub from "../../../ipc/ipcSub";
 import pttClient from "../../../wfc/ptt/client/pttClient";
 import TalkingCallback from "../../../wfc/ptt/client/talkingCallback";
 import Config from "../../../config";
+import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
+import BenzAMRRecorder from "benz-amr-recorder";
 
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
@@ -150,6 +154,7 @@ export default {
             storeDraftIntervalId: 0,
             tributeReplaced: false,
             enablePtt: wfc.isCommercialServer() && Config.ENABLE_PTT,
+            amrRecorder: null,
         }
     },
     methods: {
@@ -718,7 +723,36 @@ export default {
                 pttClient.releaseTalk(this.conversationInfo.conversation);
             }
         },
-        }
+
+        recordAudio(start) {
+            if (start) {
+                if (!this.amrRecorder) {
+                    this.amrRecorder = new BenzAMRRecorder();
+                    this.amrRecorder.initWithRecord().then(() => {
+                        this.amrRecorder.startRecord();
+                    });
+                }
+            } else {
+                if (this.amrRecorder) {
+                    this.amrRecorder.finishRecord().then(() => {
+                        let duration = this.amrRecorder.getDuration();
+                        if (duration > 1) {
+                            let blob = this.amrRecorder.getBlob();
+                            let file = new File([blob], new Date().getTime() + '.amr');
+                            let content = new SoundMessageContent(file, null, Math.ceil(duration));
+                            wfc.sendConversationMessage(this.conversationInfo.conversation, content);
+                        } else {
+                            this.$notify({
+                                text: '录音时间太短',
+                                type: 'warn'
+                            });
+                        }
+                        this.amrRecorder.stop();
+                        this.amrRecorder = null;
+                    });
+                }
+            }
+        },
     },
 
     activated() {
