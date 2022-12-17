@@ -747,7 +747,6 @@ export default {
                                 type: 'warn'
                             });
                         }
-                        this.amrRecorder.stop();
                         this.amrRecorder = null;
                     });
                 }
