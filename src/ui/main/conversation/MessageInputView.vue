@@ -29,7 +29,8 @@
                         <i id="messageHistory" @click="showMessageHistory" class="icon-ion-android-chat"/>
                     </li>
                     <li v-if="enablePtt">
-                        <i id="ptt" @mousedown="requestTalk(true)" @mouseup="requestTalk(false)" class="icon-ion-record"/>
+                        <i id="ptt" @mousedown="requestPttTalk(true)" @mouseup="requestPttTalk(false)" class="icon-ion-android-radio-button-on"/>
+                    </li>
                     </li>
                 </ul>
                 <ul v-if="!inputOptions['disableVoip'] && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
@@ -148,7 +149,7 @@ export default {
             lastConversationInfo: null,
             storeDraftIntervalId: 0,
             tributeReplaced: false,
-            enablePtt: Config.ENABLE_PTT,
+            enablePtt: wfc.isCommercialServer() && Config.ENABLE_PTT,
         }
     },
     methods: {
@@ -702,12 +703,21 @@ export default {
             }
         },
 
-        requestTalk(request) {
+        requestPttTalk(request) {
             if (request) {
-                pttClient.requestTalk(this.conversationInfo.conversation, new TalkingCallback())
+                let talkingCallback = new TalkingCallback();
+                talkingCallback.onStartTalking = (conversation) => {
+                    console.log('onStartTalking', conversation)
+                    this.$notify({
+                        text: '请开始说话',
+                        type: 'info'
+                    });
+                }
+                pttClient.requestTalk(this.conversationInfo.conversation, talkingCallback)
             } else {
                 pttClient.releaseTalk(this.conversationInfo.conversation);
             }
+        },
         }
     },
 
