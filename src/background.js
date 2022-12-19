@@ -624,7 +624,12 @@ const createMainWindow = async () => {
             disconnectAndQuit();
         } else {
             e.preventDefault();
-            mainWindow.hide();
+            if (mainWindow.isFullScreen()) {
+                mainWindow.setFullScreen(false);
+                mainWindow.once('leave-full-screen', () => mainWindow.hide())
+            }else {
+                mainWindow.hide();
+            }
         }
     });
 
