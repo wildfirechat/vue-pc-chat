@@ -9,6 +9,7 @@ import Long from 'long';
 import impl from '../proto/proto.min';
 import Config from "../../config";
 import avenginekit from "../av/engine/avenginekitproxy";
+import pttClient from "../ptt/client/pttClient";
 
 
 export class WfcManager {
@@ -26,13 +27,15 @@ export class WfcManager {
 
     /**
      * 初始化，请参考本demo的用法
-     * 只可以在主窗口调用，其他窗口调用之后，会导致主窗口通知失效。
-     * 如果其他窗口想调用wfc里面的非通知方法，可以参考{@link attach}
+     * 只可以在主窗口调用，其他窗口调用应当调用{@link attach}
      * @param {[]} args，pc 时，传入[node实例]; web 时，可以传入Config配置对象，配置项，请参考{@link Config}
      */
     init(args = []) {
         impl.init(args);
         avenginekit.setup(self);
+        if (Config.ENABLE_PTT){
+            pttClient.init();
+        }
         //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
     }
 
@@ -2036,6 +2039,13 @@ export class WfcManager {
         return impl.rollbackTransaction();
     }
 
+    requireLock(lockId, duration, successCB, failCB){
+        impl.requireLock(lockId, duration, successCB, failCB);
+    }
+
+    releaseLock(lockId, successCB, failCB){
+        impl.releaseLock(lockId, successCB, failCB);
+    }
     _getStore() {
         return impl._getStore();
     }
@@ -2066,6 +2076,19 @@ export class WfcManager {
         return decodeURIComponent(escape(atob(str)));
     }
 
+    b64_to_arrayBuffer(str) {
+        let binary_string = atob(str);
+        let len = binary_string.length;
+        let bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+    arrayBuffer_to_b64(data){
+        return Buffer.from(data).toString('base64');
+    }
     unescape(str) {
         return (str + '==='.slice((str.length + 3) % 4))
             .replace(/-/g, '+')

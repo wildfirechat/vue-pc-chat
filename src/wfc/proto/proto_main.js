@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain, } from 'electron';
+import {BrowserWindow, ipcMain,} from 'electron';
 
 let proto;
 const ASYNC_CALLBACK = 'protoAsyncCallback';
@@ -54,6 +54,8 @@ const asyncProtoMethods = {
     setConversationTop: _asyncCall2('setConversationTop'),
     setConversationSlient: _asyncCall2('setConversationSlient'),
     sendFriendRequest: _asyncCall2('sendFriendRequest'),
+    requireLock: _asyncCall2('requireLock'),
+    releaseLock: _asyncCall2('releaseLock'),
     sendSavedMessage: (event, args) => {
         proto.sendSavedMessage(...args.methodArgs,
             (...cbArgs) => {
@@ -65,6 +67,8 @@ const asyncProtoMethods = {
                     cbArgs: cbArgs
                 }
                 let messageId = args.methodArgs[0];
+                let msg = proto.getMessage(messageId);
+                _genProtoEventListener('onSendMessage')(msg);
                 _notifyMessageStatusUpdate(messageId);
                 event.sender.send(ASYNC_CALLBACK, obj);
             },
@@ -87,7 +91,7 @@ const asyncProtoMethods = {
     updateRemoteMessageContent: _asyncCall2('updateRemoteMessageContent'),
     watchOnlineState: _asyncCall2('watchOnlineState'),
     unwatchOnlineState: _asyncCall2('unwatchOnlineState'),
-    getAuthorizedMediaUrl:_asyncCall2('getAuthorizedMediaUrl'),
+    getAuthorizedMediaUrl: _asyncCall2('getAuthorizedMediaUrl'),
     getUploadMediaUrl: _asyncCall2('getUploadMediaUrl'),
     getConversationFiles: _asyncCall2('getConversationFiles'),
     getMyFiles: _asyncCall2('getMyFiles'),
@@ -259,7 +263,7 @@ export function init(wfcProto) {
 
 function _notifyMessageStatusUpdate(messageId) {
     // 聊天室消息，本地不存储
-    if (messageId <= 0){
+    if (messageId <= 0) {
         return;
     }
     let msg = proto.getMessage(messageId);
