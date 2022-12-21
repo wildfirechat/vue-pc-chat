@@ -1,4 +1,4 @@
-name: 打包
+name: package vue-pc-chat
 
 on: workflow_dispatch
 
