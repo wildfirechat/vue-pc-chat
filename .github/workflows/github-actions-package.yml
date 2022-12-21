@@ -1,10 +1,6 @@
-name: Package vue-pc-chat
+name: 打包
 
-on:
-  push:
-    branches: [ package ]
-  pull_request:
-    branches: [ package ]
+on: workflow_dispatch
 
 jobs:
   build:
@@ -19,8 +15,15 @@ jobs:
           node-version: 14.18.x
       - run: npm install node-gyp@8.3.0
       - run: npm ci
-      - run: npm run cross-package-all
+      # 根据实际情况，进行打包，没有linux版本的时候，不需要打包
+      - run: npm run package
+      - run: npm run cross-package-win
+      - run: npm run cross-package-win32
+      # 没有linux版本的时候，不需要进行打包
+      #- run: npm run cross-package-linux
+      #- run: npm run cross-package-linux-arm64
 
+      # 打包完成之后进行上传
       - uses: actions/upload-artifact@v3
         with:
           path: |
