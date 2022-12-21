@@ -17,6 +17,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.18.x
-      - run: npm install -g node-gyp@8.3.0
+      - run: npm install node-gyp@8.3.0
       - run: npm ci
       - run: npm run cross-package-all
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: |
+            dist_electron/*.dmg
+            dist_electron/*.exe
+            dist_electron/*.AppImage
+            dist_electron/*.deb
