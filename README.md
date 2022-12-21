@@ -83,7 +83,7 @@ npm run cross-package-mac
 ```
 
 ## 历史Electron版本
-目前master的使用的Electron版本是13.6.9。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8)。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。
+目前master的使用的Electron版本是13.6.9。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8) 。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。
 
 ## 常见开发问题
 1. 如何调试？PC使用了Electron，内嵌Chrome浏览器，跟在浏览器上开发调试是一样的。快捷键Ctrl
@@ -104,7 +104,7 @@ npm run cross-package-mac
 
 5. 有些杀毒软件会对electron打包的软件报病毒，详情请参考[electron报病毒](https://www.baidu.com/s?wd=electron%20360%E6%8A%A5%E7%97%85%E6%AF%92&pn=0&oq=electron%20360%E6%8A%A5%E7%97%85%E6%AF%92&tn=84053098_3_dg&ie=utf-8&rsv_pq=ec2a876200198701&rsv_t=e981739vB2ZMksgGv8ZOV%2Fb4WIhJDXXzLTfMv24NmIN0itMzRiGjMNnh1qARt19Uzf1s%2FA) 。安装时可能被杀毒软件限制安装，这时候可以让用户使用绿色免安装版（打包后release目录下的unpacked目录）。如果运行时报错，请在杀毒软件里加上例外。另外有条件的公司可以考虑去[360官方](https://open.soft.360.cn)或其他杀软的官方提交检测。
 
-6. ubuntu下，启动时，若提示，```A JavaScript error occurred in the main process Uncaught Exception:Error: Cannot open /opt/wildfirechat/resources/app.asar/marswrapper.node: Error: libdouble-conversion.so.1: cannot open shared object file: No such file or directory```，可安装[libdouble-conversion1](https://packages.debian.org/buster/libdouble-conversion1)解决
+6. ubuntu下，启动时，若提示，```A JavaScript error occurred in the main process Uncaught Exception:Error: Cannot open /opt/wildfirechat/resources/app.asar/marswrapper.node: Error: libdouble-conversion.so.1: cannot open shared object file: No such file or directory```，可安装[libdouble-conversion1](https://packages.debian.org/buster/libdouble-conversion1) 解决
 
 7. win平台野火客户端依赖Visual C++ Redistributable Package runtime。如果用户PC上没有安装就需要安装之后才能运行，请从微软官方下载安装
 https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个安装包是有32位/64位区分的，需要安装对应架构的版本。
@@ -122,7 +122,7 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 11. 纯内网环境，不能显示表情
     1. 将```src/assets/twemoji```目录上传到一个内网能访问的服务器，比如部署```app server```的服务器
     2. 确保通过```http(s)://base_twemoji_url/72x72/1f1e6.png```能访问到对应表情，此处```1f1e6.png```蓝底白字大写字母A
-    3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/```替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
+    3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/``` 替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
     4. 修改```MessageInputView.vue```， 根据新部署的服务器地址，修改正则表达式```replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')```
 
 12. 想自己部署表情图片
