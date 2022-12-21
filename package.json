@@ -14,7 +14,7 @@
     "name": "imndx"
   },
   "scripts": {
-    "package": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:build",
+    "package": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:build -p never",
     "dev": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:serve --disable-background-timer-throttling",
     "validate": "node scripts/validate.js",
     "electron:dev": "vue-cli-service electron:serve",

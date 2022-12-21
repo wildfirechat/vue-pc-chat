@@ -19,7 +19,7 @@ jobs:
       - run: npm run package
       - run: npm run cross-package-win
       - run: npm run cross-package-win32
-      # 没有linux版本的时候，不需要进行打包
+      # 没有linux版本的时候，不需要进行打包，需要打包时，将下面的注释取消
       #- run: npm run cross-package-linux
       #- run: npm run cross-package-linux-arm64
 

@@ -63,6 +63,12 @@ npm run package
 1. ```yarn install --ignore-engines```
 2. ```yarn run package```
 
+## GitHub 在线打包
+1. fork 本仓库
+2. 新增、修改功能等
+3. 阅读```.github/workflows/github-actions-package.yml```里面的注释，并根据实际情况修改，比如是否打包Linux版本等
+4. 浏览器访问 GitHub fork后的仓库， actions -> 打包 vue-pc-chat -> run workflow -> 选择分支等 -> Run workflow，具体可以参考[这儿](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) 
+
 ## 交叉打包
 打包为其它平台架构软件
 ```
