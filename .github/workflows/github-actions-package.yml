@@ -11,16 +11,12 @@ jobs:
 
     runs-on: macos-latest
 
-    strategy:
-      matrix:
-        node-version: [14.18.x]
-
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 14.18.x
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-      - run: npm ci
+          node-version: 14.18.x
       - run: npm install -g node-gyp@8.3.0
-      - run: npm cross-package-all
+      - run: npm ci
+      - run: npm run cross-package-all
