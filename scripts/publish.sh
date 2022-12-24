@@ -1,10 +1,14 @@
 #!/bin/sh
+echo ''
+echo '-------'
+echo '请在script目录执行'
+echo '-------'
+echo ''
 
-#if [ -z "$GH_TOKEN" ]; then
-#    echo "You must set the GH_TOKEN environment variable."
-#    echo "See README.md for more details."
-#    exit 1
-#fi
+cd ..
+sed -i '' 's/ENABLE_PTT = false/ENABLE_PTT = true/' src/config.js
+cp src/wfc/av/internal/engine-conference.min.js src/wfc/av/internal/engine.min.js
 
-# This will build, package and upload the app to GitHub.
-npm run build && node_modules/.bin/build --projectDir ./dist --win --mac --linux -p always
+# 打包所有
+/bin/rm -rf dist_electron
+npm run cross-package-all
