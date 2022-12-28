@@ -1490,10 +1490,11 @@ export class WfcManager {
      * 搜索消息
      * @param {Conversation} conversation 目标会话
      * @param {string} keyword 关键字
+     * @param {string} withUser 目标用户
      * @returns {[Message]}
      */
-    searchMessage(conversation, keyword) {
-        return impl.searchMessage(conversation, keyword);
+    searchMessage(conversation, keyword, withUser='') {
+        return impl.searchMessage(conversation, keyword, withUser);
     }
 
     /**
@@ -1503,10 +1504,11 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
+     * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageEx(conversation, keyword, desc, limit, offset) {
-        return impl.searchMessageEx(conversation, keyword, desc, limit, offset);
+    searchMessageEx(conversation, keyword, desc, limit, offset, withUser='') {
+        return impl.searchMessageEx(conversation, keyword, desc, limit, offset, withUser);
     }
 
     /**
@@ -1517,10 +1519,11 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
+     * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset) {
-        return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset);
+    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser='') {
+        return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser);
     }
 
     /**
@@ -1533,10 +1536,11 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
+     * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset) {
-        return impl.searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset);
+    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset, withUser='') {
+        return impl.searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset, withUser);
     }
 
     /**
@@ -1548,10 +1552,11 @@ export class WfcManager {
      * @param {number} fromIndex messageId，表示从那一条消息开始获取
      * @param {boolean} desc 逆序排列
      * @param {number} count 最大数量
+     * @param {string} withUser 目标用户
      * @returns {[Message]}
      */
-    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count) {
-        return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count);
+    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser='') {
+        return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser);
     }
 
     /**
