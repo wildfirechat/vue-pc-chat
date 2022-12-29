@@ -83,7 +83,6 @@ let downloadFileMap = new Map()
 let settings = {};
 let isFullScreen = false;
 let isMainWindowFocusedWhenStartScreenshot = false;
-let screenShotWindow = null;
 let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
 
@@ -627,7 +626,7 @@ const createMainWindow = async () => {
             if (mainWindow.isFullScreen()) {
                 mainWindow.setFullScreen(false);
                 mainWindow.once('leave-full-screen', () => mainWindow.hide())
-            }else {
+            } else {
                 mainWindow.hide();
             }
         }
@@ -637,7 +636,7 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.START_SCREEN_SHOT, (event, args) => {
         // console.log('main voip-message event', args);
-        screenShotWindow = event.sender;
+        isMainWindowFocusedWhenStartScreenshot = true;
         screenshots.startCapture();
     });
 
@@ -1068,23 +1067,20 @@ app.on('ready', () => {
 
         registerLocalResourceProtocol();
 
-        screenshots = new Screenshots()
+        screenshots = new Screenshots({
+            // logger: console.log
+            singleWindow: true,
+        })
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
             let filename = tmp.tmpNameSync() + '.png';
             let image = NativeImage.createFromBuffer(buffer);
             fs.writeFileSync(filename, image.toPNG());
 
-            if (screenShotWindow) {
-                screenShotWindow.send('screenshots-ok', {filePath: filename});
-                screenShotWindow.focus();
-                screenShotWindow = null;
-            } else {
-                if (isMainWindowFocusedWhenStartScreenshot) {
-                    mainWindow.webContents.send('screenshots-ok', {filePath: filename});
-                    mainWindow.focus();
-                    isMainWindowFocusedWhenStartScreenshot = false;
-                }
+            if (isMainWindowFocusedWhenStartScreenshot) {
+                mainWindow.webContents.send('screenshots-ok', {filePath: filename});
+                mainWindow.show();
+                isMainWindowFocusedWhenStartScreenshot = false;
             }
             console.log('capture', e)
         })
@@ -1094,12 +1090,19 @@ app.on('ready', () => {
             // 点击取消不会关闭截图窗口
             // e.preventDefault()
             // console.log('capture', 'cancel2')
-            screenShotWindow = null;
+            if (isMainWindowFocusedWhenStartScreenshot) {
+                mainWindow.show();
+                isMainWindowFocusedWhenStartScreenshot = false;
+            }
         })
         // 点击保存按钮回调事件
         screenshots.on('save', (e, {viewer}) => {
             console.log('capture', viewer)
-            screenShotWindow = null;
+            if (isMainWindowFocusedWhenStartScreenshot) {
+                mainWindow.show();
+                // 点了保存按钮，还可能取消保存
+                // isMainWindowFocusedWhenStartScreenshot = false;
+            }
         })
         session.defaultSession.webRequest.onBeforeSendHeaders(
             (details, callback) => {
