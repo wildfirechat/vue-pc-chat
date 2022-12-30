@@ -4,6 +4,7 @@ import {
     app,
     BrowserWindow,
     clipboard,
+    crashReporter,
     dialog,
     globalShortcut,
     ipcMain,
@@ -11,11 +12,10 @@ import {
     nativeImage as NativeImage,
     powerMonitor,
     protocol,
+    screen,
     session,
     shell,
-    screen,
-    Tray,
-    crashReporter
+    Tray
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -83,6 +83,7 @@ let downloadFileMap = new Map()
 let settings = {};
 let isFullScreen = false;
 let isMainWindowFocusedWhenStartScreenshot = false;
+let screenShotWindowId = 0;
 let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
 
@@ -636,7 +637,7 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.START_SCREEN_SHOT, (event, args) => {
         // console.log('main voip-message event', args);
-        isMainWindowFocusedWhenStartScreenshot = true;
+        screenShotWindowId = event.sender.id;
         screenshots.startCapture();
     });
 
@@ -1071,38 +1072,51 @@ app.on('ready', () => {
             // logger: console.log
             singleWindow: true,
         })
+
+        const onScreenShotEnd = (result) => {
+            console.log('onScreenShotEnd', isMainWindowFocusedWhenStartScreenshot, screenShotWindowId);
+            if (isMainWindowFocusedWhenStartScreenshot) {
+                if (result) {
+                    mainWindow.webContents.send('screenshots-ok', result);
+                }
+                mainWindow.show();
+                isMainWindowFocusedWhenStartScreenshot = false;
+            } else if (screenShotWindowId) {
+                let windows = BrowserWindow.getAllWindows();
+                let tms = windows.filter(win => win.webContents.id === screenShotWindowId);
+                if (tms.length > 0) {
+                    if (result) {
+                        tms[0].webContents.send('screenshots-ok', result);
+                    }
+                    tms[0].show();
+                }
+                screenShotWindowId = 0;
+            }
+        }
+
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
             let filename = tmp.tmpNameSync() + '.png';
             let image = NativeImage.createFromBuffer(buffer);
             fs.writeFileSync(filename, image.toPNG());
 
-            if (isMainWindowFocusedWhenStartScreenshot) {
-                mainWindow.webContents.send('screenshots-ok', {filePath: filename});
-                mainWindow.show();
-                isMainWindowFocusedWhenStartScreenshot = false;
-            }
-            console.log('capture', e)
+            console.log('screenshots ok', e)
+            onScreenShotEnd({filePath: filename});
         })
+
         // 点击取消按钮回调事件
         screenshots.on('cancel', e => {
             // 执行了preventDefault
             // 点击取消不会关闭截图窗口
             // e.preventDefault()
             // console.log('capture', 'cancel2')
-            if (isMainWindowFocusedWhenStartScreenshot) {
-                mainWindow.show();
-                isMainWindowFocusedWhenStartScreenshot = false;
-            }
+            console.log('screenshots cancel', e)
+            onScreenShotEnd()
         })
         // 点击保存按钮回调事件
         screenshots.on('save', (e, {viewer}) => {
-            console.log('capture', viewer)
-            if (isMainWindowFocusedWhenStartScreenshot) {
-                mainWindow.show();
-                // 点了保存按钮，还可能取消保存
-                // isMainWindowFocusedWhenStartScreenshot = false;
-            }
+            console.log('screenshots save', e)
+            onScreenShotEnd()
         })
         session.defaultSession.webRequest.onBeforeSendHeaders(
             (details, callback) => {
