@@ -225,6 +225,8 @@ export default {
                     removeItem('token')
 
                     avenginekitproxy.forceCloseVoipWindow();
+
+                    console.error('连接失败', ConnectionStatus.desc(status));
                 }
             }
         },
