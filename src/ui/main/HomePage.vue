@@ -245,14 +245,14 @@ export default {
             return count;
         },
         dragAreaLeft() {
-            // 68为左边菜单栏的宽度，250为会话列表的宽度
+            // 60为左边菜单栏的宽度，261为会话列表的宽度
             if (this.isSetting) {
                 return {
-                    left: '68px'
+                    left: '60px'
                 }
             } else {
                 return {
-                    left: 'calc(68px + 250px)'
+                    left: 'calc(60px + 261px)'
                 }
             }
         }
@@ -351,13 +351,14 @@ export default {
 }
 
 .menu-container {
-    width: 68px;
-    min-width: 68px;
+    width: 60px;
+    min-width: 60px;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: linear-gradient(180deg, #292a2c 0%, #483a3a 100%);
+    /*background: linear-gradient(180deg, #292a2c 0%, #483a3a 100%);*/
+    background: #e9e4e0;
     border-top-left-radius: var(--main-border-radius);
     border-bottom-left-radius: var(--main-border-radius);
     padding: var(--home-menu-padding-top) 0 20px 0;
@@ -417,16 +418,15 @@ export default {
 i {
     font-size: 26px;
     color: #868686;
-    outline-color: red;
     cursor: pointer;
 }
 
 i:hover {
-    color: deepskyblue;
+    color: #1f64e4;
 }
 
 i.active {
-    color: #34b7f1;
+    color: #3f64e4;
 }
 
 .drag-area {
@@ -441,7 +441,7 @@ i.active {
 .unconnected {
     position: absolute;
     top: 0;
-    left: 68px;
+    left: 60px;
     right: 0;
     color: red;
     padding: 15px 0;

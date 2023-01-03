@@ -511,7 +511,7 @@ export default {
 
 .fav-item-video i {
     position: absolute;
-    left: 68px;
+    left: 60px;
     right: 0;
     width: 10px;
     margin-right: auto;

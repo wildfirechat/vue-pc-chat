@@ -561,6 +561,7 @@ const createMainWindow = async () => {
         minHeight: 600,
         opacity: 0,
         titleBarStyle: 'hidden',
+        trafficLightPosition: { x: 4, y: 8 },
         maximizable: false,
         resizable: false,
         backgroundColor: 'none',
