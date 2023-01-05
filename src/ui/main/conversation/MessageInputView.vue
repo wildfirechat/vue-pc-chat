@@ -646,7 +646,7 @@ export default {
         },
 
         storeDraft(conversationInfo, quotedMessage) {
-            if (!this.$refs['input'] && !conversationInfo.draft) {
+            if (!this.$refs['input']) {
                 return;
             }
             let draftText = this.$refs['input'].innerHTML.trim();
@@ -855,6 +855,9 @@ export default {
                     this.focusInput();
                     this.initEmojiPicker()
                 })
+            } else {
+                // 其他端更新了草稿
+                this.restoreDraft();
             }
         },
     },
