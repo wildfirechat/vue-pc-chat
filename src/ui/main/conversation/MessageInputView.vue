@@ -635,6 +635,10 @@ export default {
 
         restoreDraft() {
             let draft = Draft.getConversationDraftEx(this.conversationInfo);
+            if (!draft){
+                return;
+            }
+            console.log('restore draft', this.conversationInfo, draft);
             store.quoteMessage(draft.quotedMessage);
             let input = this.$refs['input'];
             input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
@@ -642,7 +646,7 @@ export default {
         },
 
         storeDraft(conversationInfo, quotedMessage) {
-            if (!this.$refs['input']) {
+            if (!this.$refs['input'] && !conversationInfo.draft) {
                 return;
             }
             let draftText = this.$refs['input'].innerHTML.trim();
