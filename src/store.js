@@ -238,11 +238,16 @@ let store = {
                     this._loadDefaultData();
 
                     this.updateTray();
-                } else if (status === ConnectionStatus.ConnectionStatusLogout) {
+                } else if (status === ConnectionStatus.ConnectionStatusLogout
+                    || status === ConnectionStatus.ConnectionStatusRejected
+                    || status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
+                    || status === ConnectionStatus.kConnectionStatusKickedOff
+                    || status === ConnectionStatus.ConnectionStatusTokenIncorrect) {
                     _reset();
                     this.updateTray();
                 }
-            } catch (e) {
+                } catch (e) {
+                // do nothing
             }
         });
 
