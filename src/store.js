@@ -1088,11 +1088,16 @@ let store = {
         let messageContent;
         switch (messageContentmediaType) {
             case MessageContentMediaType.Image:
-                let iThumbnail = await imageThumbnail(file);
-                if (iThumbnail === null) {
-                    return false;
+                let iThumbnail;
+                if (file.size > 15 * 1024){
+                    iThumbnail = await imageThumbnail(file);
+                    iThumbnail = iThumbnail ? iThumbnail : '';
                 }
-                // let img64 = self.imgDataUriToBase64(imageThumbnail);
+                console.log('image file', file)
+                if (iThumbnail.length > 15 * 1024){
+                    console.warn('generated thumbnail is too large, just ignore', iThumbnail.length);
+                    iThumbnail = '';
+                }
                 messageContent = new ImageMessageContent(fileOrLocalPath, remotePath, iThumbnail.split(',')[1]);
                 break;
             case MessageContentMediaType.Video:
@@ -1102,7 +1107,10 @@ let store = {
                 if (vThumbnail === null) {
                     return false;
                 }
-                // let video64 = self.imgDataUriToBase64(videoThumbnail);
+                if (vThumbnail.length > 15 * 1024){
+                    console.warn('generated thumbnail is too large, just ignore', vThumbnail.length);
+                    vThumbnail = '';
+                }
                 messageContent = new VideoMessageContent(fileOrLocalPath, remotePath, vThumbnail.split(',')[1]);
                 break;
             case MessageContentMediaType.File:
