@@ -221,6 +221,18 @@ export default {
 
 .content ul li .alias > input {
     width: 100%;
+    outline: none;
+    border: none;
+    background-color: #fcfcfc;
+    padding: 2px 5px;
+}
+
+.content ul li .alias > input:focus {
+    border: 1px solid #4168e0;
+}
+
+.content ul li .alias > input:active {
+    border: 1px solid #4168e0;
 }
 
 .content ul li > div {
