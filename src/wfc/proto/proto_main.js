@@ -24,6 +24,7 @@ const asyncProtoMethods = {
     setGroupRemark: _asyncCall2('setGroupRemark'),
     addMembers: _asyncCall2('addMembers'),
     getGroupMembersEx: _asyncCall2('getGroupMembersEx'),
+    getGroupInfoEx: _asyncCall2('getGroupInfoEx'),
     kickoffMembers: _asyncCall2('kickoffMembers'),
     dismissGroup: _asyncCall2('dismissGroup'),
     modifyGroupInfo: _asyncCall2('modifyGroupInfo'),
