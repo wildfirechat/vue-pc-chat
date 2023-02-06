@@ -371,7 +371,7 @@ export default {
 
 .content .last-message-desc {
     color: #b8b8b8;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .content .last-message-desc i {

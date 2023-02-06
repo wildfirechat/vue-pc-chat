@@ -1,6 +1,6 @@
 <template>
     <div>
-        <section class="message-input-container" v-if="!sharedConversationState.showChannelMenu">
+        <section ref="message-input-container" class="message-input-container" v-if="!sharedConversationState.showChannelMenu">
             <section class="input-action-container">
                 <VEmojiPicker
                     id="emoji"
@@ -922,8 +922,8 @@ export default {
 
 <style lang='css' scoped>
 .message-input-container {
-    height: 200px;
-    min-height: 200px;
+    height: 180px;
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     position: relative;
