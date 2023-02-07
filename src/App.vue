@@ -189,6 +189,7 @@ export default {
     z-index: -999;
     background-size: cover;
     transition: 1s opacity;
+    opacity: 0;
 }
 
 .main-content-container {
