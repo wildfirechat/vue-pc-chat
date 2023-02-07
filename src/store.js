@@ -454,6 +454,11 @@ let store = {
         });
 
         wfc.eventEmitter.on(EventType.SendMessage, (message) => {
+            // 删除频道，或者从频道会话切到其他会话时，会发送一条离开频道的消息
+            if (message.messageContent instanceof LeaveChannelChatMessageContent){
+                return;
+            }
+
             this._reloadConversation(message.conversation);
             if (!this._isDisplayMessage(message)) {
                 return;
