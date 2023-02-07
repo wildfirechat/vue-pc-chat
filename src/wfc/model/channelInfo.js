@@ -29,5 +29,5 @@ export default class ChannelInfo {
     static StatusMaskDeleted = 0x40;
 
     //第8位表示是否全局频道，全局平道发送消息时，会广播给系统所有人
-    static StatusMaskDeleted = 0x80;
+    static StatusMaskGlobal = 0x80;
 }
