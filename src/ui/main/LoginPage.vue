@@ -265,15 +265,6 @@ export default {
                                     this.loginStatus = 4;
                                     setItem('userId', userId);
                                     setItem('token', imToken);
-                                    let appAuthToken = response.headers['authtoken'];
-                                    if (!appAuthToken) {
-                                        appAuthToken = response.headers['authToken'];
-                                    }
-
-                                    if (appAuthToken) {
-                                        setItem('authToken', appAuthToken);
-                                        axios.defaults.headers.common['authToken'] = appAuthToken;
-                                    }
                                 }
                                 break;
                             case 9:
