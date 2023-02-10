@@ -98,6 +98,7 @@ import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControl
 import ConversationType from "../../wfc/model/conversationType";
 import IpcEventType from "../../ipcEventType";
 import appServerApi from "../../api/appServerApi";
+import organizationServerApi from "../../api/organizationServerApi";
 
 export default {
     name: 'App',
@@ -265,6 +266,7 @@ export default {
                                     this.loginStatus = 4;
                                     setItem('userId', userId);
                                     setItem('token', imToken);
+                                    organizationServerApi.login();
                                 }
                                 break;
                             case 9:
@@ -562,7 +564,7 @@ input::-webkit-inner-spin-button {
     margin: 0 5px;
 }
 
-.login-form-container .syncing{
+.login-form-container .syncing {
     position: absolute;
     bottom: 0;
     color: #4168e0;
