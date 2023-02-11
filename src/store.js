@@ -119,18 +119,21 @@ let store = {
             currentGroup: null,
             currentChannel: null,
             currentFriend: null,
+            currentOrganization: null,
             currentUser: null,
 
             expandFriendRequestList: false,
             expandFriendList: true,
             expandGroup: false,
             expandChanel: false,
+            expandOrganization: false,
 
             unreadFriendRequestCount: 0,
             friendList: [],
             friendRequestList: [],
             favGroupList: [],
             channelList: [],
+            organizationList: [],
             favContactList: [],
 
             selfUserInfo: null,
@@ -139,6 +142,7 @@ let store = {
                 this.currentGroup = null;
                 this.currentChannel = null;
                 this.currentFriend = null;
+                this.currentOrganization = null;
                 this.currentUser = null;
 
                 this.expandFriendRequestList = false;
@@ -151,6 +155,7 @@ let store = {
                 this.friendRequestList = [];
                 this.favGroupList = [];
                 this.channelList = [];
+                this.organizationList = [];
                 this.favContactList = [];
 
                 this.selfUserInfo = null;
@@ -455,7 +460,7 @@ let store = {
 
         wfc.eventEmitter.on(EventType.SendMessage, (message) => {
             // 删除频道，或者从频道会话切到其他会话时，会发送一条离开频道的消息
-            if (message.messageContent instanceof LeaveChannelChatMessageContent){
+            if (message.messageContent instanceof LeaveChannelChatMessageContent) {
                 return;
             }
 
@@ -1094,12 +1099,12 @@ let store = {
         switch (messageContentmediaType) {
             case MessageContentMediaType.Image:
                 let iThumbnail = '';
-                if (file.size > 15 * 1024){
+                if (file.size > 15 * 1024) {
                     iThumbnail = await imageThumbnail(file);
                     iThumbnail = iThumbnail ? iThumbnail : '';
                 }
                 console.log('image file', file)
-                if (iThumbnail.length > 15 * 1024){
+                if (iThumbnail.length > 15 * 1024) {
                     console.warn('generated thumbnail is too large, just ignore', iThumbnail.length);
                     iThumbnail = '';
                 }
@@ -1112,7 +1117,7 @@ let store = {
                 if (vThumbnail === null) {
                     return false;
                 }
-                if (vThumbnail.length > 15 * 1024){
+                if (vThumbnail.length > 15 * 1024) {
                     console.warn('generated thumbnail is too large, just ignore', vThumbnail.length);
                     vThumbnail = '';
                 }
@@ -1250,7 +1255,7 @@ let store = {
         let loadRemoteHistoryMessageFunc = () => {
             wfc.loadRemoteConversationMessages(conversation, [], conversationState.currentConversationOldestMessageUid, 20,
                 (msgs) => {
-                console.log('loadRemoteConversationMessages response', msgs.length);
+                    console.log('loadRemoteConversationMessages response', msgs.length);
                     if (msgs.length === 0) {
                         completeCB();
                     } else {
@@ -1603,6 +1608,7 @@ let store = {
     setCurrentFriendRequest(friendRequest) {
         contactState.currentFriendRequest = friendRequest;
         contactState.currentFriend = null;
+        contactState.currentOrganization = null;
         contactState.currentGroup = null;
         contactState.currentChannel = null;
     },
@@ -1610,6 +1616,7 @@ let store = {
     setCurrentFriend(friend) {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = friend;
+        contactState.currentOrganization = null;
         contactState.currentGroup = null;
         contactState.currentChannel = null;
     },
@@ -1617,6 +1624,7 @@ let store = {
     setCurrentGroup(group) {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = null;
+        contactState.currentOrganization = null;
         contactState.currentGroup = group;
         contactState.currentChannel = null;
     },
@@ -1624,8 +1632,17 @@ let store = {
     setCurrentChannel(channel) {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = null;
+        contactState.currentOrganization = null;
         contactState.currentGroup = null;
         contactState.currentChannel = channel;
+    },
+
+    setCurrentOrganization(organization) {
+        contactState.currentFriendRequest = null;
+        contactState.currentFriend = null;
+        contactState.currentGroup = null;
+        contactState.currentChannel = null;
+        contactState.currentOrganization = organization;
     },
     toggleGroupList() {
         contactState.expandGroup = !contactState.expandGroup;
@@ -1641,6 +1658,18 @@ let store = {
 
     toggleFriendList() {
         contactState.expandFriendList = !contactState.expandFriendList;
+    },
+
+    toggleOrganizationList() {
+        // TEST DATA
+        contactState.organizationList = [
+            {
+                name: '测试公司',
+                portrait: Config.DEFAULT_PORTRAIT_URL,
+
+            }
+        ]
+        contactState.expandOrganization = !contactState.expandOrganization;
     },
 
     // search actions
