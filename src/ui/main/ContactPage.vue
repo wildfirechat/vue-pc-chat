@@ -33,7 +33,7 @@ import UserDetailView from "@/ui/main/contact/UserDetailView";
 import FriendRequestDetailView from "@/ui/main/contact/FrienRequestDetailView";
 import ChannelListView from "./contact/ChannelListView";
 import ChannelDetailView from "./contact/ChannelDetailView";
-import OrganizationDetailView from "./contact/OrganizationDetailView.vue";
+import OrganizationDetailView from "./contact/OrganizationTreeView.vue";
 
 export default {
     name: 'ContactPage',
