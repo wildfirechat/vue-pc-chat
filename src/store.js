@@ -1665,7 +1665,7 @@ let store = {
         contactState.organizationList = [
             {
                 name: '测试公司',
-                portrait: Config.DEFAULT_PORTRAIT_URL,
+                portrait: Config.DEFAULT_ORGANIZATION_PORTRAIT_URL,
 
             }
         ]

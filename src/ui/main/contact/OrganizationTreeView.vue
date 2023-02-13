@@ -13,15 +13,28 @@
             </ul>
         </nav>
         <div class="member-list-container">
-            部门成员列表，包含直接子部门和部门员工
+            <ul>
+                <li v-for="(org, index) in subOrganizations" :key="org.id">
+                    <div class="organization-item">
+                        <img :src="org.portrait">
+                        <p class="name">{{ org.name }}</p>
+                        <p class="button">下级</p>
+                    </div>
+                </li>
+                <li v-for="(employee, index) in employees" :key="employee.employeeId">
+                    <div class="organization-item">
+                        <img :src="employee.portrait">
+                        <p class="name">{{ employee.name }}</p>
+                    </div>
+                </li>
+            </ul>
         </div>
     </section>
 </template>
 
 <script>
 import store from "@/store";
-import Conversation from "@/wfc/model/conversation";
-import ConversationType from "@/wfc/model/conversationType";
+import Config from "../../../config";
 
 export default {
     name: "ChannelTreeView",
@@ -29,10 +42,53 @@ export default {
     data() {
         return {
             sharedContactState: store.state.contact,
+            subOrganizations: [
+                {
+                    id: 0,
+                    name: '子部门 1',
+                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
+                },
+                {
+                    id: 1,
+                    name: '子部门 2',
+                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
+                },
+                {
+                    id: 2,
+                    name: '子部门 3',
+                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
+                },
+                {
+                    id: 3,
+                    name: '子部门 4',
+                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
+                },
+            ],
+            employees: [
+                {
+                    employeeId: 100,
+                    name: '员工 1',
+                    portrait: Config.DEFAULT_PORTRAIT_URL,
+                },
+                {
+                    employeeId: 101,
+                    name: ' 员工 2',
+                    portrait: Config.DEFAULT_PORTRAIT_URL,
+                },
+                {
+                    employeeId: 102,
+                    name: '员工 3',
+                    portrait: Config.DEFAULT_PORTRAIT_URL,
+                },
+                {
+                    employeeId: 104,
+                    name: ' 员工 4',
+                    portrait: Config.DEFAULT_PORTRAIT_URL,
+                },
+            ],
         }
     },
-    methods: {
-    }
+    methods: {}
 
 }
 </script>
@@ -85,8 +141,43 @@ export default {
 }
 
 .member-list-container {
-    margin: 5px 20px 20px 20px;
+    margin: 5px 5px 20px 5px;
     flex: 1;
+    overflow-y: scroll;
+}
+
+.organization-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 56px;
+    padding: 0 20px;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.organization-item:hover {
+    background: #d6d6d6;
+}
+
+.organization-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.organization-item .button {
+    justify-self: flex-end;
+    margin-left: auto;
+    padding: 5px;
+    font-size: 14px;
+    color: #4168e0;
+}
+
+.organization-item .button:hover {
+    background: #dbe1f0;
+    border-radius: 5px;
 }
 
 </style>
