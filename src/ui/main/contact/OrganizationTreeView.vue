@@ -7,23 +7,23 @@
         </div>
         <nav class="breadcrumb">
             <ul>
-                <li><a href="#">公司</a></li>
-                <li><a href="#">一级部门</a></li>
-                <li><a href="#">二级部门</a></li>
+                <li v-for="org in currentOrganizationPathList" :key="org.id">
+                    <a href="#" @click="loadAndShowOrganization(org)">{{ org.name }}</a>
+                </li>
             </ul>
         </nav>
         <div class="member-list-container">
             <ul>
                 <li v-for="(org, index) in subOrganizations" :key="org.id">
                     <div class="organization-item">
-                        <img :src="org.portrait">
+                        <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
                         <p class="name">{{ org.name }}</p>
-                        <p class="button">下级</p>
+                        <p class="button" @click="loadAndShowOrganization(org)">下级</p>
                     </div>
                 </li>
                 <li v-for="(employee, index) in employees" :key="employee.employeeId">
                     <div class="organization-item">
-                        <img :src="employee.portrait">
+                        <img :src="employee.portrait ? employee.portrait : defaultEmployeePortraitUrl">
                         <p class="name">{{ employee.name }}</p>
                     </div>
                 </li>
@@ -35,6 +35,7 @@
 <script>
 import store from "@/store";
 import Config from "../../../config";
+import organizationServerApi from "../../../api/organizationServerApi";
 
 export default {
     name: "ChannelTreeView",
@@ -42,53 +43,29 @@ export default {
     data() {
         return {
             sharedContactState: store.state.contact,
-            subOrganizations: [
-                {
-                    id: 0,
-                    name: '子部门 1',
-                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
-                },
-                {
-                    id: 1,
-                    name: '子部门 2',
-                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
-                },
-                {
-                    id: 2,
-                    name: '子部门 3',
-                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
-                },
-                {
-                    id: 3,
-                    name: '子部门 4',
-                    portrait: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
-                },
-            ],
-            employees: [
-                {
-                    employeeId: 100,
-                    name: '员工 1',
-                    portrait: Config.DEFAULT_PORTRAIT_URL,
-                },
-                {
-                    employeeId: 101,
-                    name: ' 员工 2',
-                    portrait: Config.DEFAULT_PORTRAIT_URL,
-                },
-                {
-                    employeeId: 102,
-                    name: '员工 3',
-                    portrait: Config.DEFAULT_PORTRAIT_URL,
-                },
-                {
-                    employeeId: 104,
-                    name: ' 员工 4',
-                    portrait: Config.DEFAULT_PORTRAIT_URL,
-                },
-            ],
+            subOrganizations: [],
+            employees: [],
+            currentOrganizationPathList: [],
+            defaultDepartmentPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
+            defaultEmployeePortraitUrl: Config.DEFAULT_PORTRAIT_URL,
         }
     },
-    methods: {}
+    mounted() {
+        this.loadAndShowOrganization(this.sharedContactState.currentOrganization);
+    },
+    methods: {
+        loadAndShowOrganization(org) {
+            organizationServerApi.getOrganizationEx(org.id)
+                .then(res => {
+                    this.subOrganizations = res.subOrganizations;
+                    this.employees = res.employees;
+                });
+            organizationServerApi.getOrganizationPath(org.id)
+                .then(orgs => {
+                    this.currentOrganizationPathList = orgs.reverse();
+                })
+        }
+    },
 
 }
 </script>
@@ -138,6 +115,7 @@ export default {
 
 .breadcrumb li:last-child a {
     color: #8f959f;
+    pointer-events: none;
 }
 
 .member-list-container {

@@ -63,7 +63,7 @@ export class OrganizationServerApi {
         return this._post('/api/organization/query_ex', {id: orgId});
     }
 
-    getOrganization(orgIds) {
+    getOrganizations(orgIds) {
         return this._post('/api/organization/query_list', {ids: orgIds});
     }
 
@@ -85,6 +85,23 @@ export class OrganizationServerApi {
 
     searchEmployee(orgId, keyword) {
         return this._post('/api/employee/search', {organizationId: orgId, keyword: keyword});
+    }
+
+    async getOrganizationPath(organizationId) {
+        let pathList = [];
+        let org = await this._getOrganizationSync(organizationId);
+        if (org) {
+            pathList.push(org)
+            if (org.parentId) {
+                pathList.push(...await this.getOrganizationPath(org.parentId));
+            }
+        }
+        return pathList;
+    }
+
+    async _getOrganizationSync(orgId) {
+        let orgs = await this.getOrganizations([orgId])
+        return orgs && orgs.length > 0 ? orgs[0] : null;
     }
 
     /**
