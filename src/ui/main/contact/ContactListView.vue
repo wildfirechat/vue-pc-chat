@@ -72,7 +72,8 @@ import store from "@/store";
 import UserListVue from "@/ui/main/user/UserListVue";
 import ChannelListView from "./ChannelListView";
 import ContactItemView from "./ContactItemView";
-import OrganizationListView from "./OrganizationlListView.vue";
+import OrganizationListView from "./OrganizationListView.vue";
+import organizationServerApi from "../../../api/organizationServerApi";
 
 export default {
     name: "ContactListView",
@@ -87,7 +88,8 @@ export default {
         return {
             sharedContactState: store.state.contact,
             contactItemView: ContactItemView,
-            users: store.state.contact.favContactList.concat(store.state.contact.friendList)
+            users: store.state.contact.favContactList.concat(store.state.contact.friendList),
+            rootOrganizations: [],
         }
     },
     methods: {
@@ -106,7 +108,7 @@ export default {
         showContacts() {
             store.toggleFriendList();
         },
-        showOrganization(){
+        showOrganization() {
             store.toggleOrganizationList();
         }
     },
