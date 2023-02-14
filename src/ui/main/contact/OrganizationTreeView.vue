@@ -22,7 +22,24 @@
                     </div>
                 </li>
                 <li v-for="(employee, index) in employees" :key="employee.employeeId">
-                    <div class="organization-item">
+                    <tippy
+                        :to="'infoTrigger-' + employee.employeeId"
+                        interactive
+                        :animate-fill="false"
+                        placement="right"
+                        distant="20"
+                        theme="light"
+                        animation="fade"
+                        trigger="manual"
+                    >
+                        <UserCardView
+                            v-on:close="closeUserCard"
+                            :enable-update-portrait="false"
+                            :user-info="employeeToUserInfo(employee)"/>
+                    </tippy>
+                    <div :ref="'ref-employee-' + employee.employeeId" class="organization-item" :name="'infoTrigger-' + employee.employeeId"
+                         @click="showUserCardView(employee)"
+                    >
                         <img :src="employee.portrait ? employee.portrait : defaultEmployeePortraitUrl">
                         <p class="name">{{ employee.name }}</p>
                     </div>
@@ -36,10 +53,15 @@
 import store from "@/store";
 import Config from "../../../config";
 import organizationServerApi from "../../../api/organizationServerApi";
+import UserCardView from "../user/UserCardView.vue";
+import UserInfo from "../../../wfc/model/userInfo";
 
 export default {
-    name: "ChannelTreeView",
+    name: "OrganizationTreeView",
     props: {},
+    components: {
+        UserCardView,
+    },
     data() {
         return {
             sharedContactState: store.state.contact,
@@ -48,6 +70,7 @@ export default {
             currentOrganizationPathList: [],
             defaultDepartmentPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
             defaultEmployeePortraitUrl: Config.DEFAULT_PORTRAIT_URL,
+            activeTippy: null,
         }
     },
     mounted() {
@@ -64,6 +87,36 @@ export default {
                 .then(orgs => {
                     this.currentOrganizationPathList = orgs.reverse();
                 })
+        },
+        employeeToUserInfo(employee) {
+            let userInfo = new UserInfo();
+            userInfo.uid = employee.employeeId;
+            userInfo.name = employee.name;
+            userInfo.displayName = employee.name;
+            userInfo.portrait = employee.portrait ? employee.portrait : Config.DEFAULT_PORTRAIT_URL;
+            userInfo.gender = employee.gender;
+            userInfo.mobile = employee.mobile;
+            userInfo.email = employee.email;
+            userInfo.updateDt = employee.updateDt;
+            //0 normal; 1 robot; 2 thing;
+            userInfo.type = 1;
+            userInfo.deleted = 0;
+            return userInfo;
+        },
+        showUserCardView(employee) {
+            if (this.activeTippy) {
+                this.activeTippy.hide();
+                this.activeTippy = null;
+                return;
+            }
+            let employeeItem = this.$refs['ref-employee-' + employee.employeeId][0];
+            this.activeTippy = employeeItem._tippy;
+            this.activeTippy.show();
+        },
+        closeUserCard() {
+            if (this.activeTippy) {
+                this.activeTippy.hide();
+            }
         }
     },
 

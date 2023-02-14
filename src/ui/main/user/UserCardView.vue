@@ -124,6 +124,9 @@ export default {
         },
 
         pickFile() {
+            if (!this.enableUpdatePortrait) {
+                return;
+            }
             this.$refs['fileInput'].click();
         },
         onPickFile(event) {
