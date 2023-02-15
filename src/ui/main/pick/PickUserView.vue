@@ -5,7 +5,29 @@
                 <input type="text" :placeholder="$t('common.search')" v-model="filterQuery">
                 <i class="icon-ion-ios-search"></i>
             </div>
-            <div class="friend-list-container">
+            <div class="pick-source-container">
+                <div v-if="pickSource" class="pick-source-nav">
+                    <ul>
+                        <li @click="pickSource = null">
+                            <a href="#">联系人</a>
+                        </li>
+                        <li>
+                            <a href="#">{{ pickSource === 'friend' ? '好友' : '组织联系人' }}</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="pick-source-list">
+                    <ul v-if="!pickSource">
+                        <li @click="pickSource = 'friend'">
+                            <a href="#">联系人</a>
+                        </li>
+                        <li @click="pickSource = 'organization'">
+                            <a href="#">选择组织联系人</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div v-if="pickSource === 'friend'" class="friend-list-container">
                 <CheckableUserListView :enable-pick="true"
                                        :users="filterUsers"
                                        :initial-checked-users="initialCheckedUsers"
@@ -82,6 +104,7 @@ export default {
         return {
             sharedPickState: store.state.pick,
             filterQuery: '',
+            pickSource: null,
         }
     },
     methods: {
@@ -185,6 +208,78 @@ export default {
     position: absolute;
     top: 20px;
     left: 20px;
+}
+
+.pick-source-container {
+    width: 100%;
+}
+
+.pick-source-nav {
+    padding: 10px 0 0 20px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.pick-source-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pick-source-nav a {
+    text-decoration: none;
+}
+
+.pick-source-nav li:not(:last-child)::after {
+    display: inline-block;
+    margin: 0 10px;
+    color: #8f959f;
+    content: ">";
+}
+
+.pick-source-nav li:not(:last-child) a {
+    color: #4168e0;
+}
+
+.pick-source-nav li:last-child a {
+    color: #8f959f;
+    pointer-events: none;
+}
+
+.pick-source-list {
+    padding: 5px 10px;
+}
+
+.pick-source-list ul li {
+    padding: 0 10px;
+    height: 40px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.pick-source-list ul li:hover {
+    background: #d6d6d6;
+    border-radius: 5px;
+}
+
+.pick-source-list ul li a {
+    width: 100%;
+}
+
+.pick-source-list ul li::after {
+    display: inline-block;
+    color: #8f959f;
+    content: ">";
+}
+
+.pick-source-list a {
+    text-decoration: none;
+    color: black;
+    font-size: 14px;
 }
 
 .contact-list-container .friend-list-container {
