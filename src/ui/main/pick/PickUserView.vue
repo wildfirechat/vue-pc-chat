@@ -11,14 +11,17 @@
                         <li @click="pickSource = null">
                             <a href="#">联系人</a>
                         </li>
-                        <li>
-                            <a href="#">{{ pickSource === 'friend' ? '好友' : '组织联系人' }}</a>
+                        <li v-if="pickSource === 'friend'">
+                            <a href="#">好友</a>
+                        </li>
+                        <li v-for="org in organizationPathList" :key="org.id">
+                            <a href="#" @click="loadAndShowOrganization(org)">{{ org.name }}</a>
                         </li>
                     </ul>
                 </div>
                 <div class="pick-source-list">
                     <ul v-if="!pickSource">
-                        <li @click="pickSource = 'friend'">
+                        <li @click="pickSource = 'friend'; organizationPathList = []">
                             <a href="#">联系人</a>
                         </li>
                         <li @click="pickSource = 'organization'">
@@ -36,6 +39,10 @@
                                        :padding-left="'20px'"
                                        enable-category-label-sticky/>
             </div>
+            <CheckableOrganizationTreeView
+                ref="checkableOrganizationTreeView"
+                v-if="pickSource === 'organization'"
+                @organization-path-update="onOrganizationPathUpdate"/>
         </section>
         <section class="checked-contact-list-container">
             <header>
@@ -44,12 +51,19 @@
                 <span v-else>{{ $t('pick.picked_contact') + this.checkedUsers.length }}</span>
             </header>
             <div class="content">
-                <div class="picked-user-container" v-for="(user, index) in checkedUsers" :key="index">
+                <div class="picked-user-container" v-for="(user, index) in checkedUsers" :key="user.uid">
                     <div class="picked-user">
                         <img class="avatar" :src="user.portrait" alt="">
-                        <button @click="unpick(user)" class="unpick-button">X</button>
+                        <button @click="unpickUser(user)" class="unpick-button">X</button>
                     </div>
                     <span class="name single-line">{{ user.displayName }}</span>
+                </div>
+                <div class="picked-user-container" v-for="(org, index) in sharedPickState.organizations" :key="org.id">
+                    <div class="picked-user">
+                        <img class="avatar" :src="org.portrait ? org.portrait : defaultOrganizationPortraitUrl" alt="">
+                        <button @click="unpickOrganization(org)" class="unpick-button">X</button>
+                    </div>
+                    <span class="name single-line">{{ org.name }}</span>
                 </div>
             </div>
             <footer>
@@ -65,6 +79,8 @@
 <script>
 import store from "@/store";
 import CheckableUserListView from "@/ui/main/user/CheckableUserListView";
+import CheckableOrganizationTreeView from "./CheckableOrganizationTreeView.vue";
+import Config from "../../../config";
 
 export default {
     name: "PickUserView",
@@ -105,22 +121,37 @@ export default {
             sharedPickState: store.state.pick,
             filterQuery: '',
             pickSource: null,
+            organizationPathList: [],
+            defaultOrganizationPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
         }
     },
     methods: {
-        unpick(user) {
+        unpickUser(user) {
             if (this.isUserUncheckable(user)) {
                 return;
             }
             store.pickOrUnpickUser(user);
         },
 
+        unpickOrganization(organization) {
+            store.pickOrUnpickOrganization(organization);
+        },
+
         isUserUncheckable(user) {
             return this.uncheckableUsers && this.uncheckableUsers.findIndex(u => u.uid === user.uid) >= 0;
         },
 
+        onOrganizationPathUpdate(orgPathList) {
+            this.organizationPathList = orgPathList;
+        },
+
+        loadAndShowOrganization(org) {
+            this.$refs.checkableOrganizationTreeView.loadAndShowOrganization(org);
+        },
+
         cancel() {
             this.sharedPickState.users.length = 0
+            this.sharedPickState.organizations.length = 0;
             this.$modal.hide('pick-user-modal', {confirm: false})
         },
 
@@ -136,6 +167,8 @@ export default {
             }
             let users = [...pickedUsers];
             this.sharedPickState.users.length = 0
+            // TODO
+            this.sharedPickState.organizations.length = 0;
             this.$modal.hide('pick-user-modal', {confirm: true, users: users})
         },
     },
@@ -159,7 +192,7 @@ export default {
         }
     },
 
-    components: {CheckableUserListView},
+    components: {CheckableOrganizationTreeView, CheckableUserListView},
 }
 </script>
 
@@ -231,6 +264,7 @@ export default {
 
 .pick-source-nav a {
     text-decoration: none;
+    font-size: 14px;
 }
 
 .pick-source-nav li:not(:last-child)::after {

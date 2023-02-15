@@ -1,45 +1,24 @@
 <template>
     <section class="organization-tree-container">
-        <div>
-            <h2 class="title">
-                组织结构
-            </h2>
-        </div>
-        <nav class="breadcrumb">
-            <ul>
-                <li v-for="org in currentOrganizationPathList" :key="org.id">
-                    <a href="#" @click="loadAndShowOrganization(org)">{{ org.name }}</a>
-                </li>
-            </ul>
-        </nav>
         <div class="member-list-container">
             <ul>
                 <li v-for="(org, index) in subOrganizations" :key="org.id">
-                    <div class="organization-item">
+                    <div class="organization-item"
+                         @click.stop="clickOrganizationItem(org)">
+                        <input type="checkbox" style="margin-right: 10px"
+                               v-bind:value="org"
+                               :checked="isOrganizationChecked(org)">
                         <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
                         <p class="name">{{ org.name }}</p>
-                        <p class="button" @click="loadAndShowOrganization(org)">下级</p>
+                        <p class="button" @click.stop="onShowSubOrganizationButtonClick(org)">下级</p>
                     </div>
                 </li>
                 <li v-for="(employee, index) in employees" :key="employee.employeeId">
-                    <tippy
-                        :to="'infoTrigger-' + employee.employeeId"
-                        interactive
-                        :animate-fill="false"
-                        placement="right"
-                        distant="20"
-                        theme="light"
-                        animation="fade"
-                        trigger="manual"
-                    >
-                        <UserCardView
-                            v-on:close="closeUserCard"
-                            :enable-update-portrait="false"
-                            :user-info="employeeToUserInfo(employee)"/>
-                    </tippy>
-                    <div :ref="'ref-employee-' + employee.employeeId" class="organization-item" :name="'infoTrigger-' + employee.employeeId"
-                         @click="showUserCardView(employee)"
-                    >
+                    <div class="organization-item "
+                         @click.stop="clickEmployeeItem(employee)">
+                        <input type="checkbox" style="margin-right: 10px"
+                               v-bind:value="employee"
+                               :checked="isEmployeeChecked(employee)">
                         <img :src="employee.portrait ? employee.portrait : defaultEmployeePortraitUrl">
                         <p class="name">{{ employee.name }}</p>
                     </div>
@@ -50,21 +29,17 @@
 </template>
 
 <script>
-import store from "@/store";
 import Config from "../../../config";
 import organizationServerApi from "../../../api/organizationServerApi";
-import UserCardView from "../user/UserCardView.vue";
 import UserInfo from "../../../wfc/model/userInfo";
+import store from "../../../store";
 
 export default {
-    name: "OrganizationTreeView",
+    name: "CheckableOrganizationTreeView",
     props: {},
-    components: {
-        UserCardView,
-    },
+    components: {},
     data() {
         return {
-            sharedContactState: store.state.contact,
             subOrganizations: [],
             employees: [],
             currentOrganizationPathList: [],
@@ -74,18 +49,28 @@ export default {
         }
     },
     mounted() {
-        this.loadAndShowOrganization(this.sharedContactState.currentOrganization);
+        // this.loadAndShowOrganization(this.sharedContactState.currentOrganization);
+        organizationServerApi.getRootOrganization()
+            .then(orgs => {
+                if (orgs.length > 0) {
+                    this.loadAndShowOrganization(orgs[0])
+                }
+            })
     },
     methods: {
         loadAndShowOrganization(org) {
-            organizationServerApi.getOrganizationEx(org.id)
+            this.loadAndShowOrganizationById(org.id);
+        },
+        loadAndShowOrganizationById(orgId) {
+            organizationServerApi.getOrganizationEx(orgId)
                 .then(res => {
                     this.subOrganizations = res.subOrganizations;
                     this.employees = res.employees;
                 });
-            organizationServerApi.getOrganizationPath(org.id)
+            organizationServerApi.getOrganizationPath(orgId)
                 .then(orgs => {
                     this.currentOrganizationPathList = orgs.reverse();
+                    this.$emit('organization-path-update', this.currentOrganizationPathList);
                 })
         },
         employeeToUserInfo(employee) {
@@ -103,20 +88,26 @@ export default {
             userInfo.deleted = 0;
             return userInfo;
         },
-        showUserCardView(employee) {
-            if (this.activeTippy) {
-                this.activeTippy.hide();
-                this.activeTippy = null;
-                return;
-            }
-            let employeeItem = this.$refs['ref-employee-' + employee.employeeId][0];
-            this.activeTippy = employeeItem._tippy;
-            this.activeTippy.show();
+
+        onShowSubOrganizationButtonClick(org) {
+            // TODO 如果该部门已选中，则不可以展开下级
+            this.loadAndShowOrganization(org);
         },
-        closeUserCard() {
-            if (this.activeTippy) {
-                this.activeTippy.hide();
-            }
+
+        isOrganizationChecked(org) {
+            return store.isOrganizationPicked(org);
+        },
+
+        clickOrganizationItem(org) {
+            store.pickOrUnpickOrganization(org);
+        },
+
+        isEmployeeChecked(employee) {
+            return store.isUserPicked(this.employeeToUserInfo(employee));
+        },
+
+        clickEmployeeItem(employee) {
+            store.pickOrUnpickUser(this.employeeToUserInfo(employee));
         }
     },
 
@@ -131,44 +122,6 @@ export default {
     flex-direction: column;
     border-top-right-radius: var(--main-border-radius);
     border-bottom-right-radius: var(--main-border-radius);
-}
-
-.title {
-    padding: 20px;
-    font-size: 20px;
-    border-bottom: 1px solid lightgray;
-}
-
-.breadcrumb {
-    padding: 20px 0 0 20px;
-}
-
-.breadcrumb ul {
-    display: flex;
-    flex-wrap: wrap;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.breadcrumb a {
-    text-decoration: none;
-}
-
-.breadcrumb li:not(:last-child)::after {
-    display: inline-block;
-    margin: 0 10px;
-    color: #8f959f;
-    content: ">";
-}
-
-.breadcrumb li:not(:last-child) a {
-    color: #4168e0;
-}
-
-.breadcrumb li:last-child a {
-    color: #8f959f;
-    pointer-events: none;
 }
 
 .member-list-container {

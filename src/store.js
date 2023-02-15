@@ -185,11 +185,13 @@ let store = {
 
         pick: {
             users: [],
+            organizations: [],
             conversations: [],
             messages: [],
 
             _reset() {
                 this.users = [];
+                this.organizations = [];
                 this.conversations = [];
                 this.messages = [];
 
@@ -1819,6 +1821,21 @@ let store = {
 
     isUserPicked(user) {
         let index = pickState.users.findIndex(u => u.uid === user.uid);
+        return index >= 0;
+    },
+
+    // pick actions
+    pickOrUnpickOrganization(org) {
+        let index = pickState.organizations.findIndex(o => o.id === org.id);
+        if (index >= 0) {
+            pickState.organizations = pickState.organizations.filter(o => o.id !== org.id)
+        } else {
+            pickState.organizations.push(org);
+        }
+    },
+
+    isOrganizationPicked(org) {
+        let index = pickState.organizations.findIndex(o => o.id === org.id);
         return index >= 0;
     },
 
