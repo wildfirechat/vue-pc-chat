@@ -95,7 +95,6 @@ import {clear, getItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
-import ConversationType from "../../wfc/model/conversationType";
 import IpcEventType from "../../ipcEventType";
 import appServerApi from "../../api/appServerApi";
 import organizationServerApi from "../../api/organizationServerApi";
@@ -266,7 +265,6 @@ export default {
                                     this.loginStatus = 4;
                                     setItem('userId', userId);
                                     setItem('token', imToken);
-                                    organizationServerApi.login();
                                 }
                                 break;
                             case 9:
@@ -354,6 +352,7 @@ export default {
                         store.setEnableAutoLogin(this.enableAutoLogin)
                     }
                 }
+                organizationServerApi.login();
             }
         },
     },

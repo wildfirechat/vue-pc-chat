@@ -210,18 +210,20 @@ export default {
                 }
             } else {
                 const dT = e.clipboardData || window.clipboardData;
-                const file = dT.files[0];
-                if (file) {
-                    if (file.type.indexOf('image') !== -1) {
-                        // image
-                        document.execCommand('insertImage', false, URL.createObjectURL(file));
-                    } else {
-                        // file
-                        store.sendFile(this.conversationInfo.conversation, file)
-                    }
-                }
-                console.log('handle paste file', file);
-            }
+                if (dT) {
+		            const file = dT.files[0];
+		            if (file) {
+		                if (file.type.indexOf('image') !== -1) {
+		                    // image
+		                    document.execCommand('insertImage', false, URL.createObjectURL(file));
+		                } else {
+		                    // file
+		                    store.sendFile(this.conversationInfo.conversation, file)
+		                }
+		            }
+		            console.log('handle paste file', file);
+		        }
+		        }
 
             if (text && text.trim()) {
                 document.execCommand('insertText', false, text);
