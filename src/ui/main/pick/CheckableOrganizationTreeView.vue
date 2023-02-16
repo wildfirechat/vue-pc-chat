@@ -10,7 +10,7 @@
                                :checked="isOrganizationChecked(org)">
                         <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
                         <p class="name">{{ org.name }}</p>
-                        <p class="button" @click.stop="onShowSubOrganizationButtonClick(org)">下级</p>
+                        <p class="button" v-bind:class="{disabled: isOrganizationChecked(org)}" @click.stop="onShowSubOrganizationButtonClick(org)">下级</p>
                     </div>
                 </li>
                 <li v-for="(employee, index) in employees" :key="employee.employeeId">
@@ -90,7 +90,9 @@ export default {
         },
 
         onShowSubOrganizationButtonClick(org) {
-            // TODO 如果该部门已选中，则不可以展开下级
+            if (this.isOrganizationChecked(org)) {
+                return;
+            }
             this.loadAndShowOrganization(org);
         },
 
@@ -159,9 +161,13 @@ export default {
     color: #4168e0;
 }
 
-.organization-item .button:hover {
+.organization-item .button:not(.disabled):hover {
     background: #dbe1f0;
     border-radius: 5px;
+}
+
+.organization-item .button.disabled {
+    color: gray;
 }
 
 </style>

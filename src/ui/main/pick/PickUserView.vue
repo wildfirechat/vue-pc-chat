@@ -22,10 +22,16 @@
                 <div class="pick-source-list">
                     <ul v-if="!pickSource">
                         <li @click="pickSource = 'friend'; organizationPathList = []">
-                            <a href="#">联系人</a>
+                            <a href="#">
+                                <i class="icon-ion-android-contacts"/>
+                                选择好友
+                            </a>
                         </li>
                         <li @click="pickSource = 'organization'">
-                            <a href="#">选择组织联系人</a>
+                            <a href="#">
+                                <i class="icon-ion-android-document"/>
+                                选择组织联系人
+                            </a>
                         </li>
                     </ul>
                 </div>
