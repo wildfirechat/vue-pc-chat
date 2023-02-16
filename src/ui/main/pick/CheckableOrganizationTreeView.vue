@@ -73,22 +73,6 @@ export default {
                     this.$emit('organization-path-update', this.currentOrganizationPathList);
                 })
         },
-        employeeToUserInfo(employee) {
-            let userInfo = new UserInfo();
-            userInfo.uid = employee.employeeId;
-            userInfo.name = employee.name;
-            userInfo.displayName = employee.name;
-            userInfo.portrait = employee.portrait ? employee.portrait : Config.DEFAULT_PORTRAIT_URL;
-            userInfo.gender = employee.gender;
-            userInfo.mobile = employee.mobile;
-            userInfo.email = employee.email;
-            userInfo.updateDt = employee.updateDt;
-            //0 normal; 1 robot; 2 thing;
-            userInfo.type = 1;
-            userInfo.deleted = 0;
-            return userInfo;
-        },
-
         onShowSubOrganizationButtonClick(org) {
             if (this.isOrganizationChecked(org)) {
                 return;
@@ -105,11 +89,11 @@ export default {
         },
 
         isEmployeeChecked(employee) {
-            return store.isUserPicked(this.employeeToUserInfo(employee));
+            return store.isUserPicked(organizationServerApi.employeeToUserInfo(employee));
         },
 
         clickEmployeeItem(employee) {
-            store.pickOrUnpickUser(this.employeeToUserInfo(employee));
+            store.pickOrUnpickUser(organizationServerApi.employeeToUserInfo(employee));
         }
     },
 

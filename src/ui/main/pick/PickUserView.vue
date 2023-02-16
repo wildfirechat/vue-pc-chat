@@ -53,8 +53,11 @@
         <section class="checked-contact-list-container">
             <header>
                 <h2>{{ $t('pick.pick_contact') }}</h2>
-                <span v-if="checkedUsers.length === 0">{{ $t('pick.picked_contact') }}</span>
-                <span v-else>{{ $t('pick.picked_contact') + this.checkedUsers.length }}</span>
+                <div style="display: flex; justify-content: flex-end">
+                    <span v-if="checkedUsers.length === 0">{{ $t('pick.picked_contact') }}</span>
+                    <span v-else>{{ $t('pick.picked_contact') + ':' + this.checkedUsers.length }}</span>
+                    <span v-if="sharedPickState.organizations.length">{{ '组织: ' + sharedPickState.organizations.length }}</span>
+                </div>
             </header>
             <div class="content">
                 <div class="picked-user-container" v-for="(user, index) in checkedUsers" :key="user.uid">
@@ -74,7 +77,7 @@
             </div>
             <footer>
                 <button @click="cancel" class="cancel">{{ $t('common.cancel') }}</button>
-                <button @click="confirm" class="confirm" v-bind:class="{disable:checkedUsers.length === 0}">
+                <button @click="confirm" class="confirm" v-bind:class="{disable:checkedUsers.length === 0  && sharedPickState.organizations.length === 0}">
                     {{ confirmTitle }}
                 </button>
             </footer>
@@ -87,6 +90,8 @@ import store from "@/store";
 import CheckableUserListView from "@/ui/main/user/CheckableUserListView";
 import CheckableOrganizationTreeView from "./CheckableOrganizationTreeView.vue";
 import Config from "../../../config";
+import organizationServerApi from "../../../api/organizationServerApi";
+import UserInfo from "../../../wfc/model/userInfo";
 
 export default {
     name: "PickUserView",
@@ -173,9 +178,22 @@ export default {
             }
             let users = [...pickedUsers];
             this.sharedPickState.users.length = 0
-            // TODO
-            this.sharedPickState.organizations.length = 0;
-            this.$modal.hide('pick-user-modal', {confirm: true, users: users})
+
+            if (this.sharedPickState.organizations.length) {
+                let orgIds = this.sharedPickState.organizations.map(o => o.id);
+                organizationServerApi.getOrganizationEmployees(orgIds)
+                    .then(employeeIds => {
+                        this.sharedPickState.organizations.length = 0;
+                        for (const employeeId of employeeIds) {
+                            let userInfo = new UserInfo();
+                            userInfo.uid = employeeId;
+                            users.push(userInfo);
+                        }
+                        this.$modal.hide('pick-user-modal', {confirm: true, users: users})
+                    })
+            } else {
+                this.$modal.hide('pick-user-modal', {confirm: true, users: users})
+            }
         },
     },
 
