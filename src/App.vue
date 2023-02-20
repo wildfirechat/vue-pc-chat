@@ -63,6 +63,10 @@ export default {
     methods: {
         visibilityChange(event, hidden) {
             store.setPageVisibility(!hidden);
+            console.log('page visibilityChange', hidden);
+            if (!hidden && !isElectron()){
+                wfc.onForeground();
+            }
         },
         onblur() {
             store.setPageVisibility(false);
