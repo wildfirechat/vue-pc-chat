@@ -222,6 +222,15 @@ export default {
 		                }
 		            }
 		            console.log('handle paste file', file);
+                } else {
+                    const clipboardContents = await navigator.clipboard.read();
+                    for (const item of clipboardContents) {
+                        console.log('clipboard item', item.types, item)
+                        if (item.types.includes("image/png")) {
+                            const blob = await item.getType("image/png");
+                            document.execCommand('insertImage', false, URL.createObjectURL(blob));
+                        }
+                    }
 		        }
 		        }
 
