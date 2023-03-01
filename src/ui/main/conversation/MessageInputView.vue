@@ -211,17 +211,18 @@ export default {
             } else {
                 const dT = e.clipboardData || window.clipboardData;
                 if (dT) {
-		            const file = dT.files[0];
-		            if (file) {
-		                if (file.type.indexOf('image') !== -1) {
-		                    // image
-		                    document.execCommand('insertImage', false, URL.createObjectURL(file));
-		                } else {
-		                    // file
-		                    store.sendFile(this.conversationInfo.conversation, file)
-		                }
-		            }
-		            console.log('handle paste file', file);
+                    const file = dT.files[0];
+                    if (file) {
+                        if (file.type.indexOf('image') !== -1) {
+                            // image
+                            document.execCommand('insertImage', false, URL.createObjectURL(file));
+                        } else {
+                            // file
+                            store.sendFile(this.conversationInfo.conversation, file)
+                        }
+                        return;
+                    }
+                    console.log('handle paste file', file);
                 } else {
                     const clipboardContents = await navigator.clipboard.read();
                     for (const item of clipboardContents) {
@@ -229,10 +230,11 @@ export default {
                         if (item.types.includes("image/png")) {
                             const blob = await item.getType("image/png");
                             document.execCommand('insertImage', false, URL.createObjectURL(blob));
+                            return;
                         }
                     }
-		        }
-		        }
+                }
+            }
 
             if (text && text.trim()) {
                 document.execCommand('insertText', false, text);
@@ -348,8 +350,8 @@ export default {
                             let blob = await fetch(src).then(r => r.blob());
                             file = new File([blob], new Date().getTime() + '.png');
                         } else {
-                        	file = fileFromDataUri(src, new Date().getTime() + '.png');
-                    	}
+                            file = fileFromDataUri(src, new Date().getTime() + '.png');
+                        }
                     }
                     this.$eventBus.$emit('uploadFile', file)
                     store.setShouldAutoScrollToBottom(true);
@@ -665,7 +667,7 @@ export default {
 
         restoreDraft() {
             let draft = Draft.getConversationDraftEx(this.conversationInfo);
-            if (!draft){
+            if (!draft) {
                 return;
             }
             console.log('restore draft', this.conversationInfo, draft);
@@ -674,8 +676,8 @@ export default {
             if (input.innerHTML.trim() === draft.text) {
                 console.log('draft is same as current input, ignore', draft.text)
             } else {
-            input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
-            this.moveCursorToEnd(input);
+                input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
+                this.moveCursorToEnd(input);
             }
         },
 

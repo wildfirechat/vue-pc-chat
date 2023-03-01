@@ -749,6 +749,13 @@ const createMainWindow = async () => {
 
         event.returnValue = args;
     });
+    ipcMain.on(IPCEventType.FILE_COPY, (event, args) => {
+        if (process.platform !== 'linux') {
+            const clipboardEx = require('electron-clipboard-ex')
+            console.log('copy path', args.path);
+            clipboardEx.writeFilePaths([args.path]);
+        }
+    });
 
     ipcMain.on(IPCEventType.DOWNLOAD_FILE, async (event, args) => {
         let remotePath = args.remotePath;

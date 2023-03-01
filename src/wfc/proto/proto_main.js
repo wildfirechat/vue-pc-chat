@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain,} from 'electron';
+import {BrowserWindow, ipcMain} from 'electron';
 
 let proto;
 const ASYNC_CALLBACK = 'protoAsyncCallback';
