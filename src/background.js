@@ -143,73 +143,6 @@ let mainMenu = [
         ]
     },
     {
-        label: Locales.__('File').Title,
-        submenu: [
-            {
-                label: Locales.__('File').New,
-                accelerator: 'Cmd+N',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-newchat');
-                }
-            },
-            {
-                label: Locales.__('File').Search,
-                accelerator: 'Cmd+F',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-search');
-                }
-            },
-            {
-                type: 'separator',
-            },
-            {
-                label: Locales.__('File').InsertEmoji,
-                accelerator: 'Cmd+I',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-emoji');
-                }
-            },
-            {
-                type: 'separator',
-            },
-            {
-                label: Locales.__('File').Next,
-                accelerator: 'Cmd+J',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-next');
-                }
-            },
-            {
-                label: Locales.__('File').Prev,
-                accelerator: 'Cmd+K',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-previous');
-                }
-            },
-        ]
-    },
-    // {
-    //     label: Locales.__('Conversations').Title,
-    //     submenu: [
-    //         {
-    //             label: Locales.__('Conversations').Loading,
-    //         }
-    //     ],
-    // },
-    // {
-    //     label: Locales.__('Contacts').Title,
-    //     submenu: [
-    //         {
-    //             label: Locales.__('Contacts').Loading,
-    //         }
-    //     ],
-    // },
-    {
         label: Locales.__('Edit').Title,
         submenu: [
             {
@@ -287,21 +220,21 @@ let mainMenu = [
         ]
     },
     {
-        lable: Locales.__('Window').Title,
+        label: Locales.__('Window').Title,
         role: 'window',
         submenu: [
             {
-                lable: Locales.__('Window').Min,
+                label: Locales.__('Window').Min,
                 role: 'minimize'
             },
             {
-                lable: Locales.__('Window').Close,
+                label: Locales.__('Window').Close,
                 role: 'close'
             }
         ]
     },
     {
-        lable: Locales.__('Help').Title,
+        label: Locales.__('Help').Title,
         role: 'help',
         submenu: [
             {
