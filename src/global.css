@@ -30,8 +30,8 @@
 
 
 img.emoji {
-    height: 1em !important;
-    width: 1em !important;
+    height: 24px !important;
+    width: 24px !important;
     margin: 0 .05em 0 .1em;
     vertical-align: -0.1em;
     user-select: none;
