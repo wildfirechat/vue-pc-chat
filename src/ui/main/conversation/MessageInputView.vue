@@ -671,8 +671,8 @@ export default {
             console.log('restore draft', this.conversationInfo, draft);
             store.quoteMessage(draft.quotedMessage);
             let input = this.$refs['input'];
-            if (input.innerHTML.trim() === draft.text) {
-                console.log('draft is same as current input, ignore', draft.text)
+            if (input.innerHTML.trim()) {
+                console.log('inputting, ignore', draft.text)
             } else {
                 input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
                 this.moveCursorToEnd(input);
