@@ -793,7 +793,7 @@ export class WfcManager {
     }
 
     /**
-     * 获取当前用户的所有群组ID
+     * 获取当前用户所有群组ID，此方法消耗资源较大，不建议高频使用。
      *
      * @param {function ([string])} successCB
      * @param {function (number)} failCB
@@ -1079,6 +1079,7 @@ export class WfcManager {
     }
 
     /**
+     * @deprecated 已废弃，请使用{@link getRemoteListenedChannels}
      * 获取所收听的频道id列表
      * @returns {[string]}
      */
@@ -1150,7 +1151,7 @@ export class WfcManager {
     /**
      * 会话置顶或取消置顶
      * @param {Conversation} conversation 需要置顶或取消置顶的会话
-     * @param {int} top 置顶优先级
+     * @param {number} top > 0, 置顶，可以根据这个值进行置顶排序；0，取消置顶
      * @param {function ()} successCB
      * @param {function (number)} failCB
      */

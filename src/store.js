@@ -826,15 +826,17 @@ let store = {
             return;
         }
         let conversation = conversationInfo.conversation;
-        wfc.watchOnlineState(conversation.type, [conversation.target], 1000, (states) => {
-            states.forEach((e => {
-                miscState.userOnlineStateMap.set(e.userId, e);
-            }))
-            this._patchCurrentConversationOnlineStatus();
+        if (conversation.type === ConversationType.Group || (conversation.type === ConversationType.Single && !wfc.isMyFriend(conversation.target))) {
+		    wfc.watchOnlineState(conversation.type, [conversation.target], 1000, (states) => {
+		        states.forEach((e => {
+		            miscState.userOnlineStateMap.set(e.userId, e);
+		        }))
+		        this._patchCurrentConversationOnlineStatus();
 
-        }, (err) => {
-            console.log('watchOnlineState error', err);
-        })
+		    }, (err) => {
+		        console.log('watchOnlineState error', err);
+		    })
+		}
         if (conversation.type === ConversationType.Channel) {
             let content = new EnterChannelChatMessageContent();
             wfc.sendConversationMessage(conversation, content);
@@ -919,6 +921,10 @@ let store = {
     },
 
     forwardMessage(forwardType, targetConversations, messages, extraMessageText) {
+        // web 端，避免撤回消息等操作，影响组合消息
+        if (!isElectron()){
+            messages = messages.map(m => Object.assign({}, m));
+        }
         targetConversations.forEach(conversation => {
             // let msg =new Message(conversation, message.messageContent)
             // wfc.sendMessage(msg)

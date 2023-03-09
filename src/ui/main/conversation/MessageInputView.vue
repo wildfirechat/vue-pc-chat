@@ -470,6 +470,7 @@ export default {
         },
 
         startAudioCall() {
+            console.log(`startAudioCall from mainWindow ${this.sharedMiscState.isMainWindow}`);
             if (this.sharedMiscState.isMainWindow) {
                 let conversation = this.conversationInfo.conversation;
                 if (conversation.type === ConversationType.Single) {
@@ -483,6 +484,7 @@ export default {
         },
 
         startVideoCall() {
+            console.log(`startVideoCall from mainWindow ${this.sharedMiscState.isMainWindow}`);
             if (this.sharedMiscState.isMainWindow) {
                 let conversation = this.conversationInfo.conversation;
                 if (conversation.type === ConversationType.Single) {
