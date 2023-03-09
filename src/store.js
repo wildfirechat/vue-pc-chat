@@ -1103,12 +1103,12 @@ let store = {
                 let iThumbnail = '';
                 if (file.size > 15 * 1024) {
                     iThumbnail = await imageThumbnail(file);
-                    iThumbnail = iThumbnail ? iThumbnail : '';
+                    iThumbnail = iThumbnail ? iThumbnail : Config.DEFAULT_THUMBNAIL_URL;
                 }
                 console.log('image file', file)
                 if (iThumbnail.length > 15 * 1024) {
-                    console.warn('generated thumbnail is too large, just ignore', iThumbnail.length);
-                    iThumbnail = '';
+                    console.warn('generated thumbnail is too large, use default thumbnail', iThumbnail.length);
+                    iThumbnail = Config.DEFAULT_THUMBNAIL_URL;
                 }
                 messageContent = new ImageMessageContent(fileOrLocalPath, remotePath, iThumbnail.split(',')[1]);
                 break;
@@ -1120,8 +1120,8 @@ let store = {
                     return false;
                 }
                 if (vThumbnail.length > 15 * 1024) {
-                    console.warn('generated thumbnail is too large, just ignore', vThumbnail.length);
-                    vThumbnail = '';
+                    console.warn('generated thumbnail is too large, use default thumbnail', vThumbnail.length);
+                    vThumbnail = Config.DEFAULT_THUMBNAIL_URL;
                 }
                 messageContent = new VideoMessageContent(fileOrLocalPath, remotePath, vThumbnail.split(',')[1]);
                 break;

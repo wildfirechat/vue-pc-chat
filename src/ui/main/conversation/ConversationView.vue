@@ -327,7 +327,7 @@ export default {
                     // 根据后缀判断类型
                     if (dragUrl.endsWith('.png') || dragUrl.endsWith('.jpg') || dragUrl.endsWith('jpeg')) {
                         //constructor(fileOrLocalPath, remotePath, thumbnail) {
-                        let content = new ImageMessageContent(null, dragUrl, null);
+                        let content = new ImageMessageContent(null, dragUrl, Config.DEFAULT_THUMBNAIL_URL.split(',')[1]);
                         wfc.sendConversationMessage(this.conversationInfo.conversation, content);
                     } else {
                         // TODO
