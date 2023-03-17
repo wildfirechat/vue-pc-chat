@@ -119,13 +119,12 @@
                                  class="participant-audio-item">
                                 <video v-if="audioOnly && participant._stream && !participant._isVideoMuted"
                                        class="hidden-video"
-                                       controls
                                        :srcObject.prop="participant._stream"
                                        :muted="participant.uid === selfUserInfo.uid"
                                        playsInline autoPlay/>
+                                <!-- video 标签不能播放没有视频的流 -->
                                 <audio v-else-if="audioOnly && participant._stream && participant._isVideoMuted"
                                        class="hidden-video"
-                                       controls
                                        :srcObject.prop="participant._stream"
                                        :ref="participant.uid + '-audio'"
                                        :muted="participant.uid === selfUserInfo.uid"
@@ -323,7 +322,7 @@ export default {
                 selfUserInfo._isVideoMuted = session.videoMuted;
                 selfUserInfo._isAudioMuted = session.audioMuted;
                 selfUserInfo._volume = 0;
-                // 修添加属性，在赋值，才能 reactive
+                // 先添加属性，在赋值，才能 reactive
                 this.selfUserInfo = selfUserInfo;
                 this.participantUserInfos = [selfUserInfo];
 
@@ -578,7 +577,7 @@ export default {
             }
             this.selfUserInfo._isVideoMuted = !enable;
 
-            console.log('muteVideo', this.selfUserInfo._isVideoMuted, this.session.audience)
+            console.log('muteVideo result', this.selfUserInfo._isVideoMuted, this.session.audience)
             if (enable) {
                 if (this.session.audience) {
                     await this.session.switchAudience(false);
@@ -1060,11 +1059,12 @@ export default {
                 }
                 this.audioOnly = audioOnly;
 
-                if (this.audioOnly) {
+                // mute self audio
                     let ref = this.$refs[this.selfUserInfo.uid + '-audio'];
                     if (ref && ref.length > 0) {
                         this.$refs[this.selfUserInfo.uid + '-audio'][0].muted = true;
                     }
+                if (this.audioOnly) {
                     return;
                 }
                 // 宫格布局
@@ -1092,12 +1092,6 @@ export default {
                         this.$refs.rootContainer.style.setProperty('--participant-video-item-width', width);
                         this.$refs.rootContainer.style.setProperty('--participant-video-item-height', height);
                     }
-                }
-
-                // mute self audio
-                let ref = this.$refs[this.selfUserInfo.uid + '-audio'];
-                if (ref && ref.length > 0) {
-                    this.$refs[this.selfUserInfo.uid + '-audio'][0].muted = true;
                 }
             }
         },
