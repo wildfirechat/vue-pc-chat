@@ -389,6 +389,7 @@ export default {
             store.quoteMessage(null);
             Draft.setConversationDraft(conversation, '', null, null);
             e.preventDefault();
+
         },
 
         toggleEmojiView() {
