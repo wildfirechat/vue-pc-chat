@@ -88,7 +88,6 @@ export default {
         return {
             sharedContactState: store.state.contact,
             contactItemView: ContactItemView,
-            users: store.state.contact.favContactList.concat(store.state.contact.friendList),
             rootOrganizations: [],
         }
     },
@@ -132,6 +131,10 @@ export default {
                 }
             });
             return groupedUsers;
+        },
+
+        users(){
+            return store.state.contact.favContactList.concat(store.state.contact.friendList);
         },
     }
 }

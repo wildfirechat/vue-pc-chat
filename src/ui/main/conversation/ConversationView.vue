@@ -758,6 +758,7 @@ export default {
         showUnreadMessage() {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
+            this.unreadMessageCount = 0;
         },
 
         clearConversationUnreadStatus() {
