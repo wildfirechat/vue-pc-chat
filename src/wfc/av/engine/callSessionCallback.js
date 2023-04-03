@@ -81,6 +81,12 @@ export default class CallSessionCallback {
 
     }
 
+    /**
+     * 屏幕共享结束回调
+     */
+    didScreenShareEnded(){
+
+    }
 
     /**
      * 本地视频流旋转回调
@@ -90,6 +96,8 @@ export default class CallSessionCallback {
     didRotateLocalVideoTrack(stream, screenSharing) {
 
     }
+
+
 
     /**
      * 创建本地音视频流失败 回调，可能原因可能是没有摄像头、或者没有麦克风
