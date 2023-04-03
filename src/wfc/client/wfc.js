@@ -1413,6 +1413,84 @@ export class WfcManager {
     }
 
     /**
+     * 获取会话消息
+     * @param {Conversation} conversation 目标会话
+     * @param {number} fromIndex messageId，表示从那一条消息开始获取
+     * @param {boolean} before true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     */
+    getMessagesV2(conversation, fromIndex, before, count, withUser, successCB, failCB) {
+        impl.getMessagesV2(conversation, fromIndex, before, count, withUser, successCB, failCB);
+    }
+
+    /**
+     * 获取消息
+     * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
+     * @param {[number]} lines 会话线路列表
+     * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效! true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效! 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     */
+    getMessagesExV2(conversationTypes, lines, fromIndex, before, count, withUser, contentTypes, successCB, failCB) {
+        impl.getMessagesExV2(conversationTypes, lines, contentTypes, fromIndex, before, count, withUser, successCB, failCB);
+    }
+
+    /**
+     *
+     * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
+     * @param {[number]} lines 会话线路列表
+     * @param {[number]} messageStatus 消息状态，可选值参考{@link MessageStatus}
+     * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效! true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效! 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     */
+    getMessagesEx2V2(conversationTypes, lines, messageStatus, fromIndex, before, count, withUser, successCB, failCB) {
+        impl.getMessagesEx2V2(conversationTypes, lines, messageStatus, fromIndex, before, count, withUser, successCB, failCB);
+    }
+
+    /**
+     * 获取会话消息
+     * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
+     * @param {number} timestamp 时间戳
+     * @param {boolean} before true, 获取timestamp之前的消息，即更旧的消息；false，获取timestamp之后的消息，即更新的消息。都不包含timestamp对应的消息
+     * @param {number} count 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     */
+    getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB) {
+        impl.getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB);
+    }
+    /**
+     * 获取用户会话消息
+     * @param {string} userId 用户id
+     * @param {Conversation} conversation 目标会话
+     * @param {number} fromIndex 本参数暂时无效！ messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效！ true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效! 获取多少条消息
+     */
+    getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB) {
+        impl.getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB);
+    }
+
+    /**
+     * 获取用户消息
+     * @param {string} userId 用户id
+     * @param {[number]} conversationTypes 想获取的会话类型，可选值参考{@link ConversationType}
+     * @param {[0]} lines 想获取哪些会话线路的会话，默认传[0]即可
+     * @param {number} fromIndex 本参数暂时无效！ messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效！ true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效！ 获取多少条消息
+     * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
+     */
+    getUserMessagesExV2(userId, conversationTypes, lines, fromIndex, before, count, contentTypes, successCB, failCB) {
+        impl.getUserMessagesExV2(userId, conversationTypes, lines, fromIndex, before, count, contentTypes, successCB, failCB);
+    }
+
+    /**
      * 获取会话第一条未读消息的消息id
      * @param {Conversation} conversation
      * @return {number}
