@@ -1233,6 +1233,15 @@ export class WfcManager {
     }
 
     /**
+     * 清楚会话消息中指定消息id之前的消息（包含）未读状态
+     * @param {Conversation} conversation 目标会话
+     * @param {int} messageId 消息id
+     */
+    clearUnreadStatusBeforeMessage(conversation, messageId) {
+        impl.clearUnreadStatusBeforeMessage(conversation, messageId);
+    }
+
+    /**
      * 将会话最后一条消息置为未读
      * @param {Conversation} conversation 会话
      * @param {boolean} syncToOtherClient 是否同步给其他端
@@ -1419,6 +1428,8 @@ export class WfcManager {
      * @param {boolean} before true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
      * @param {number} count 获取多少条消息
      * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {function (Message)} successCB
+     * @param failCB
      */
     getMessagesV2(conversation, fromIndex, before, count, withUser, successCB, failCB) {
         impl.getMessagesV2(conversation, fromIndex, before, count, withUser, successCB, failCB);
@@ -1433,6 +1444,8 @@ export class WfcManager {
      * @param {number} count 本参数暂时无效! 获取多少条消息
      * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
      * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {function (Message)} successCB
+     * @param failCB
      */
     getMessagesExV2(conversationTypes, lines, fromIndex, before, count, withUser, contentTypes, successCB, failCB) {
         impl.getMessagesExV2(conversationTypes, lines, contentTypes, fromIndex, before, count, withUser, successCB, failCB);
@@ -1447,6 +1460,8 @@ export class WfcManager {
      * @param {boolean} before 本参数暂时无效! true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
      * @param {number} count 本参数暂时无效! 获取多少条消息
      * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {function (Message)} successCB
+     * @param failCB
      */
     getMessagesEx2V2(conversationTypes, lines, messageStatus, fromIndex, before, count, withUser, successCB, failCB) {
         impl.getMessagesEx2V2(conversationTypes, lines, messageStatus, fromIndex, before, count, withUser, successCB, failCB);
@@ -1460,6 +1475,8 @@ export class WfcManager {
      * @param {boolean} before true, 获取timestamp之前的消息，即更旧的消息；false，获取timestamp之后的消息，即更新的消息。都不包含timestamp对应的消息
      * @param {number} count 获取多少条消息
      * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {function (Message)} successCB
+     * @param failCB
      */
     getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB) {
         impl.getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB);
@@ -1471,6 +1488,8 @@ export class WfcManager {
      * @param {number} fromIndex 本参数暂时无效！ messageId，表示从那一条消息开始获取
      * @param {boolean} before 本参数暂时无效！ true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
      * @param {number} count 本参数暂时无效! 获取多少条消息
+     * @param {function (Message)} successCB
+     * @param failCB
      */
     getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB) {
         impl.getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB);
@@ -1485,6 +1504,8 @@ export class WfcManager {
      * @param {boolean} before 本参数暂时无效！ true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
      * @param {number} count 本参数暂时无效！ 获取多少条消息
      * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
+     * @param {function (Message)} successCB
+     * @param failCB
      */
     getUserMessagesExV2(userId, conversationTypes, lines, fromIndex, before, count, contentTypes, successCB, failCB) {
         impl.getUserMessagesExV2(userId, conversationTypes, lines, fromIndex, before, count, contentTypes, successCB, failCB);
