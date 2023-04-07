@@ -57,6 +57,13 @@ const asyncProtoMethods = {
     sendFriendRequest: _asyncCall2('sendFriendRequest'),
     requireLock: _asyncCall2('requireLock'),
     releaseLock: _asyncCall2('releaseLock'),
+    getMessagesV2: _asyncCall2('getMessagesV2'),
+    getMessagesExV2: _asyncCall2('getMessagesExV2'),
+    getMessagesEx2V2: _asyncCall2('getMessagesEx2V2'),
+    getMessagesByTimestampV2: _asyncCall2('getMessagesByTimestampV2'),
+    getUserMessagesV2: _asyncCall2('getUserMessagesV2'),
+    getUserMessagesExV2: _asyncCall2('getUserMessagesExV2'),
+
     sendSavedMessage: (event, args) => {
         proto.sendSavedMessage(...args.methodArgs,
             (...cbArgs) => {

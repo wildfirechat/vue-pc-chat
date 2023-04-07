@@ -1339,6 +1339,7 @@ export class WfcManager {
 
     /**
      * 获取会话消息
+     * @deprecated 请使用{@link getMessagesV2}
      * @param {Conversation} conversation 目标会话
      * @param {number} fromIndex messageId，表示从那一条消息开始获取
      * @param {boolean} before true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
@@ -1352,6 +1353,7 @@ export class WfcManager {
 
     /**
      * 获取消息
+     * @deprecated 请使用{@link getMessagesExV2}
      * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
      * @param {[number]} lines 会话线路列表
      * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
@@ -1366,7 +1368,8 @@ export class WfcManager {
     }
 
     /**
-     *
+     * 获取消息
+     * @deprecated 请使用{@link getMessagesEx2V2}
      * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
      * @param {[number]} lines 会话线路列表
      * @param {[number]} messageStatus 消息状态，可选值参考{@link MessageStatus}
@@ -1382,6 +1385,7 @@ export class WfcManager {
 
     /**
      * 获取会话消息
+     * @deprecated 请使用{@link getMessagesByTimestampV2}
      * @param {Conversation} conversation 目标会话
      * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
      * @param {number} timestamp 时间戳
@@ -1395,6 +1399,7 @@ export class WfcManager {
     }
     /**
      * 获取用户会话消息
+     * @deprecated 请使用{@link getUserMessagesV2}
      * @param {string} userId 用户id
      * @param {Conversation} conversation 目标会话
      * @param {number} fromIndex 本参数暂时无效！ messageId，表示从那一条消息开始获取
@@ -1408,6 +1413,7 @@ export class WfcManager {
 
     /**
      * 获取用户消息
+     * @deprecated 请使用{@link getUserMessagesExV2}
      * @param {string} userId 用户id
      * @param {[number]} conversationTypes 想获取的会话类型，可选值参考{@link ConversationType}
      * @param {[0]} lines 想获取哪些会话线路的会话，默认传[0]即可
