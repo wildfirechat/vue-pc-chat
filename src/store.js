@@ -43,6 +43,7 @@ import NullGroupInfo from "./wfc/model/nullGroupInfo";
 import GroupInfo from "./wfc/model/groupInfo";
 import {genGroupPortrait} from "./ui/util/imageUtil";
 import IPCEventType from "./ipcEventType";
+import NullChannelInfo from "./wfc/model/NullChannelInfo";
 
 /**
  * 一些说明
@@ -1263,10 +1264,15 @@ let store = {
         console.log('loadConversationHistoryMessage', conversation, conversationState.currentConversationOldestMessageId, stringValue(conversationState.currentConversationOldestMessageUid));
         let loadRemoteHistoryMessageFunc = () => {
             wfc.loadRemoteConversationMessages(conversation, [], conversationState.currentConversationOldestMessageUid, 20,
-                (msgs) => {
+                (msgs, hasMore) => {
                     console.log('loadRemoteConversationMessages response', msgs.length);
                     if (msgs.length === 0) {
+                        // 拉回来的消息，本地全都有时，会走到这儿
+                        if (hasMore) {
+                            loadedCB();
+                        } else {
                         completeCB();
+                        }
                     } else {
                         // 可能拉回来的时候，本地已经切换会话了
                         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
@@ -1285,6 +1291,9 @@ let store = {
 
         wfc.getMessagesV2(conversation, conversationState.currentConversationOldestMessageId, true, 20, '', lmsgs => {
             if (lmsgs.length > 0) {
+                if (!conversation.equal(conversationState.currentConversationInfo.conversation)) {
+                    return;
+                }
                 conversationState.currentConversationOldestMessageId = lmsgs[0].messageId;
                 if (gt(lmsgs[0].messageUid, 0)) {
                     conversationState.currentConversationOldestMessageUid = lmsgs[0].messageUid;
@@ -1597,10 +1606,16 @@ let store = {
     },
 
     _loadChannelList() {
-        let channelIds = wfc.getListenedChannels();
+        wfc.getRemoteListenedChannels(channelIds => {
         if (channelIds) {
-            contactState.channelList = channelIds.map(channleId => wfc.getChannelInfo(channleId, false));
+                contactState.channelList = channelIds.map(channelId => wfc.getChannelInfo(channelId, false));
+                contactState.channelList = contactState.channelList.filter(ch => {
+                    return !(ch instanceof NullChannelInfo)
+                });
         }
+        }, err => {
+            console.error('getRemoteListenedChannels error', err)
+        });
     },
 
 
