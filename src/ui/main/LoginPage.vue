@@ -351,7 +351,10 @@ export default {
                         store.setEnableAutoLogin(this.enableAutoLogin)
                     }
                 }
-                organizationServerApi.login();
+                organizationServerApi.login()
+                    .catch(r => {
+                        console.error('organizationServer login failed', r)
+                    });
             }
         },
     },
