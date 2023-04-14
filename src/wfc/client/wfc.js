@@ -33,7 +33,7 @@ export class WfcManager {
     init(args = []) {
         impl.init(args);
         avenginekit.setup(self);
-        if (Config.ENABLE_PTT){
+        if (Config.ENABLE_PTT) {
             pttClient.init();
         }
         //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
@@ -60,16 +60,32 @@ export class WfcManager {
     }
 
     /**
-    * 获取协议栈版本号
-    */
+     * 获取协议栈版本号
+     */
     getProtoRevision() {
         return impl.getProtoRevision();
     }
+
     /*
      * 启用国密加密。注意需要服务器端同步开启国密配置
      */
     useSM4() {
         impl.useSM4();
+    }
+
+    /**
+     * 启动 TCP 短连接
+     */
+    useTcpShortLink() {
+        impl.useTcpShortLink();
+    }
+
+    /**
+     * 是否启动 TCP 短连接
+     * @return {*}
+     */
+    isTcpShortLink() {
+        return impl.isTcpShortLink();
     }
 
     /**
@@ -763,6 +779,7 @@ export class WfcManager {
     getGroupRemark(groupId) {
         return impl.setGroupRemark(groupId);
     }
+
     /**
      * 获取保存到通讯录的群id列表
      * @returns {[string]}
@@ -800,7 +817,7 @@ export class WfcManager {
      * @returns {Promise<void>}
      */
     async getMyGroups(successCB, failCB) {
-      impl.getMyGroups(successCB, failCB);
+        impl.getMyGroups(successCB, failCB);
     }
 
     /**
@@ -812,7 +829,7 @@ export class WfcManager {
      * @returns {Promise<void>}
      */
     async getCommonGroups(userId, successCB, failCB) {
-      impl.getCommonGroups(userId, successCB, failCB);
+        impl.getCommonGroups(userId, successCB, failCB);
     }
 
     /**
@@ -1013,7 +1030,7 @@ export class WfcManager {
         return impl.isEnableSecretChat();
     }
 
-    getAppPath(){
+    getAppPath() {
         return impl.getAppPath();
     }
 
@@ -1090,9 +1107,9 @@ export class WfcManager {
     /**
      * 从服务端获取所收听的频道id列表
      * @param {function([String])} successCB
-    * @param {function (number)} failCB
+     * @param {function (number)} failCB
      *
-    */
+     */
     getRemoteListenedChannels(successCB, failCB) {
         impl.getRemoteListenedChannels(successCB, failCB);
     }
@@ -1397,6 +1414,7 @@ export class WfcManager {
     getMessagesByTimestamp(conversation, contentTypes, timestamp, before = true, count = 20, withUser = '') {
         return impl.getMessagesByTimestamp(conversation, contentTypes, timestamp, before, count, withUser);
     }
+
     /**
      * 获取用户会话消息
      * @deprecated 请使用{@link getUserMessagesV2}
@@ -1487,6 +1505,7 @@ export class WfcManager {
     getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB) {
         impl.getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB);
     }
+
     /**
      * 获取用户会话消息
      * @param {string} userId 用户id
@@ -1616,7 +1635,7 @@ export class WfcManager {
      * @param {string} withUser 目标用户
      * @returns {[Message]}
      */
-    searchMessage(conversation, keyword, withUser='') {
+    searchMessage(conversation, keyword, withUser = '') {
         return impl.searchMessage(conversation, keyword, withUser);
     }
 
@@ -1630,7 +1649,7 @@ export class WfcManager {
      * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageEx(conversation, keyword, desc, limit, offset, withUser='') {
+    searchMessageEx(conversation, keyword, desc, limit, offset, withUser = '') {
         return impl.searchMessageEx(conversation, keyword, desc, limit, offset, withUser);
     }
 
@@ -1645,7 +1664,7 @@ export class WfcManager {
      * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser='') {
+    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser = '') {
         return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser);
     }
 
@@ -1662,7 +1681,7 @@ export class WfcManager {
      * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset, withUser='') {
+    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset, withUser = '') {
         return impl.searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset, withUser);
     }
 
@@ -1678,7 +1697,7 @@ export class WfcManager {
      * @param {string} withUser 目标用户
      * @returns {[Message]}
      */
-    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser='') {
+    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser = '') {
         return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser);
     }
 
@@ -1737,13 +1756,14 @@ export class WfcManager {
     }
 
     /**
-    * 取消发送消息，仅媒体类消息可以取消
-    * @param messageId 消息ID
-    * @returns 是否取消成功
-    */
+     * 取消发送消息，仅媒体类消息可以取消
+     * @param messageId 消息ID
+     * @returns 是否取消成功
+     */
     cancelSendingMessage(messageId) {
         return impl.cancelSendingMessage(messageId);
     }
+
     // 更新了原始消息的内容
     /**
      * 撤回消息
@@ -1866,6 +1886,7 @@ export class WfcManager {
     insertMessageEx(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra) {
         return impl.insertMessage(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra);
     }
+
     /**
      * 更新消息
      * @param {number} messageId 消息id
@@ -2147,11 +2168,11 @@ export class WfcManager {
         impl.setMyCustomState(customState, customText, successCB, failCB)
     }
 
-    getAuthCode(appId, appType, host, successCB, failCB){
+    getAuthCode(appId, appType, host, successCB, failCB) {
         impl.getAuthCode(appId, appType, host, successCB, failCB);
     }
 
-    configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB){
+    configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB) {
         impl.configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB);
     }
 
@@ -2167,13 +2188,14 @@ export class WfcManager {
         return impl.rollbackTransaction();
     }
 
-    requireLock(lockId, duration, successCB, failCB){
+    requireLock(lockId, duration, successCB, failCB) {
         impl.requireLock(lockId, duration, successCB, failCB);
     }
 
-    releaseLock(lockId, successCB, failCB){
+    releaseLock(lockId, successCB, failCB) {
         impl.releaseLock(lockId, successCB, failCB);
     }
+
     _getStore() {
         return impl._getStore();
     }
@@ -2214,9 +2236,10 @@ export class WfcManager {
         return bytes.buffer;
     }
 
-    arrayBuffer_to_b64(data){
+    arrayBuffer_to_b64(data) {
         return Buffer.from(data).toString('base64');
     }
+
     unescape(str) {
         return (str + '==='.slice((str.length + 3) % 4))
             .replace(/-/g, '+')
