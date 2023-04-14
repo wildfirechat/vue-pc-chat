@@ -85,7 +85,7 @@
                                 <video v-if=" computedFocusVideoParticipant && !computedFocusVideoParticipant._isAudience && (!computedFocusVideoParticipant._isVideoMuted || computedFocusVideoParticipant._isScreenSharing) && computedFocusVideoParticipant._stream"
                                        v-bind:style="{objectFit:computedFocusVideoParticipant._isScreenSharing ? 'contain' : 'fit'}"
                                        style="width: 100%; height: 100%"
-                                       :srcObject.prop="computedFocusVideoParticipant._stream"
+                                       :srcObject.prop="computedFocusVideoParticipant._screenShareStream ? computedFocusVideoParticipant._screenShareStream : computedFocusVideoParticipant._stream"
                                        :muted="computedFocusVideoParticipant.uid === selfUserInfo.uid"
                                        playsInline
                                        autoPlay/>
@@ -329,6 +329,7 @@ export default {
                 console.log('oninitial', selfUserInfo._isAudience)
                 // pls refer to: https://vuejs.org/v2/guide/reactivity.html
                 this.$set(this.selfUserInfo, '_stream', null);
+                this.$set(this.selfUserInfo, '_screenShareStream', null);
                 this.$set(this.selfUserInfo, '_isScreenSharing', false);
                 this.participantUserInfos.forEach(p => this.$set(p, "_stream", null))
 
@@ -340,7 +341,12 @@ export default {
 
             sessionCallback.didCreateLocalVideoTrack = (stream, screenShare) => {
                 console.log('didCreateLocalVideoTrack', screenShare)
-                this.selfUserInfo._stream = stream;
+                if (screenShare) {
+                    this.selfUserInfo._screenShareStream = stream;
+                } else {
+                	this.selfUserInfo._stream = stream;
+                    this.selfUserInfo._isVideoMuted = false;
+                }
                 this.selfUserInfo._isScreenSharing= screenShare;
             };
 
@@ -756,7 +762,9 @@ export default {
                     if (this.session.audience) {
                         await this.session.switchAudience(false);
                     }
-                    this.session.startScreenShare();
+                    this.session.startScreenShare({
+                        frameRate: 30
+                    });
                 }
             }
         },
