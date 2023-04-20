@@ -94,14 +94,14 @@ export default {
 
 .text-message-container .text {
     color: #050505;
-    font-size: 14px;
+    font-size: 13px;
     line-height: 25px;
     /*max-height: 1000px;*/
     word-break: break-word;
     overflow: hidden;
     display: inline-block;
     text-overflow: ellipsis;
-    user-select: auto;
+    user-select: text;
 }
 
 /*style for v-html */
