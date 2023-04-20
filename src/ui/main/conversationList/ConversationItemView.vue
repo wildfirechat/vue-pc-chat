@@ -16,7 +16,7 @@
             <div class="header">
                 <img class="avatar" draggable="false" :src="portrait" alt=""
                      @error="imgUrlAlt"/>
-                <em v-if="unread > 0" class="badge" v-bind:class="{silent:source.isSilent}">{{ unread }}</em>
+                <em v-if="unread > 0" class="badge" v-bind:class="{silent:source.isSilent}">{{ unread > 99 ? '···' : unread }}</em>
             </div>
             <div class="content-container">
                 <div class="title-time-container">
@@ -303,18 +303,22 @@ export default {
     font-size: 10px;
     background-color: red;
     border-radius: 8px;
-    width: 16px;
+    min-width: 16px;
     height: 16px;
+    padding: 0 5px;
     line-height: 16px;
     font-style: normal;
     text-align: center;
     right: 8px;
     top: 8px;
+    vertical-align: center;
 }
 
 .header .badge.silent {
     width: 8px;
     height: 8px;
+    min-width: 8px;
+    padding: 0;
     font-size: 0;
 }
 
