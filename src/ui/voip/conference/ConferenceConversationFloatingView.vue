@@ -9,8 +9,8 @@
                 <p class="content">{{ message.messageContent.digest(message) }}</p>
             </div>
         </div>
-        <div v-if="sharedMiscState.isElectron" class="send-message-container">
-            <input placeholder="说点说什么..." @change="sendMessage" v-model.trim="text">
+        <div class="send-message-container">
+            <input placeholder="说点什么..." @change="sendMessage" v-model.trim="text">
         </div>
     </div>
 </template>
@@ -22,7 +22,6 @@ import store from "../../../store";
 import wfc from "../../../wfc/client/wfc";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import {gt} from "../../../wfc/util/longUtil";
-import IpcSub from "../../../ipc/ipcSub";
 
 export default {
     name: "ConferenceConversationFloatingView",
@@ -64,7 +63,7 @@ export default {
     methods: {
         sendMessage() {
             let conversation = new Conversation(ConversationType.ChatRoom, this.session.callId, 0);
-            IpcSub.sendMessage(conversation, new TextMessageContent(this.text))
+            wfc.sendConversationMessage(conversation, new TextMessageContent(this.text))
             this.text = '';
         },
 

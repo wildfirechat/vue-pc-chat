@@ -4,7 +4,7 @@ import MessageContentType from "../../../wfc/messages/messageContentType";
 import ConferenceCommandMessageContent from "../../../wfc/av/messages/conferenceCommandMessageContent";
 import Conversation from "../../../wfc/model/conversation";
 import ConversationType from "../../../wfc/model/conversationType";
-import IpcSub from "../../../ipc/ipcSub";
+import wfc from "../../../wfc/client/wfc";
 
 class ConferenceManager {
 
@@ -28,9 +28,7 @@ class ConferenceManager {
 
     setVueInstance(eventBus) {
         this.vueInstance = eventBus;
-        IpcSub.getUserId().then(userId => {
-            this.selfUserId = userId;
-        })
+        this.selfUserId = wfc.getUserId();
         avenginekitproxy.listenVoipEvent('message', this.onReceiveMessage);
     }
 
@@ -71,7 +69,7 @@ class ConferenceManager {
                     });
                     break;
                 case ConferenceCommandMessageContent.ConferenceCommandType.APPLY_UNMUTE:
-                    senderName = await IpcSub.getUserDisplayName(msg.from);
+                    senderName = wfc.getUserDisplayName(msg.from);
                     this.vueInstance.$notify({
                         text: senderName + '请求发言',
                         type: 'info'
@@ -107,7 +105,7 @@ class ConferenceManager {
                     } else {
                         this.handUpMembers = this.handUpMembers.filter(uid => uid !== msg.from);
                     }
-                    senderName = await IpcSub.getUserDisplayName(msg.from);
+                    senderName = wfc.getUserDisplayName(msg.from);
                     this.vueInstance.$notify({
                         text: command.boolValue ? senderName + '举手' : senderName + '放下举手',
                         type: 'info'
@@ -349,7 +347,7 @@ class ConferenceManager {
     _sendCommandMessage(commandType, targetUser, boolValue) {
         let content = new ConferenceCommandMessageContent(this.conferenceInfo.conferenceId, commandType, targetUser, boolValue);
         let conversation = new Conversation(ConversationType.ChatRoom, this.conferenceInfo.conferenceId, 0);
-        IpcSub.sendMessage(conversation, content);
+        wfc.sendConversationMessage(conversation, content);
     }
 }
 

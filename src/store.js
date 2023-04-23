@@ -40,7 +40,6 @@ import EnterChannelChatMessageContent from "./wfc/messages/enterChannelChatMessa
 import ArticlesMessageContent from "./wfc/messages/articlesMessageContent";
 import NullUserInfo from "./wfc/model/nullUserInfo";
 import NullGroupInfo from "./wfc/model/nullGroupInfo";
-import GroupInfo from "./wfc/model/groupInfo";
 import {genGroupPortrait} from "./ui/util/imageUtil";
 import IPCEventType from "./ipcEventType";
 import NullChannelInfo from "./wfc/model/NullChannelInfo";
@@ -592,18 +591,11 @@ let store = {
                 this._reloadConversation(conv);
             });
 
-            localStorageEmitter.on('wf-ipc-to-main', (events, args) => {
-                let type = args.type;
-                switch (type) {
-                    case LocalStorageIpcEventType.openConversation:
-                        let conversation = args.value;
-                        let win = remote.getCurrentWindow();
-                        win.focus();
-                        this.setCurrentConversation(Object.assign(new Conversation(), conversation));
-                        break;
-                    default:
-                        break;
-                }
+            localStorageEmitter.on(LocalStorageIpcEventType.openConversation, (events, args) => {
+                let conversation = args.conversation;
+                let win = remote.getCurrentWindow();
+                win.focus();
+                this.setCurrentConversation(Object.assign(new Conversation(), conversation));
             })
 
             if (!isMainWindow && wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected) {
@@ -613,7 +605,7 @@ let store = {
         miscState.connectionStatus = wfc.getConnectionStatus();
 
         miscState.isMainWindow = isMainWindow;
-        window.__wfc = wfc;
+        // window.__wfc = wfc;
     },
 
     _loadDefaultData() {

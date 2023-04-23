@@ -65,7 +65,6 @@
 import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import conferenceApi from "../../../api/conferenceApi";
-import IpcSub from "../../../ipc/ipcSub";
 import conferenceManager from "./conferenceManager";
 
 export default {
@@ -84,10 +83,8 @@ export default {
         }
     },
     mounted() {
-        console.log('conferenceInfo', this.conferenceInfo)
-        IpcSub.getUserDisplayName(this.conferenceInfo.owner).then(name => {
-            this.ownerName = name;
-        });
+        console.log('conferenceInfo', this.conferenceInfo);
+        this.ownerName = wfc.getUserDisplayName(this.conferenceInfo.owner);
     },
     methods: {
         favConference() {

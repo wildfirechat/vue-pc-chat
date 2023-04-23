@@ -168,7 +168,7 @@
                                          src='@/assets/images/av_conference_screen_sharing_hover.png'/>
                                     <p class="single-line">共享屏幕</p>
                                 </div>
-                                <div v-if="sharedMiscState.isElectron" class="action" @click="chat">
+                                <div class="action" @click="chat">
                                     <i class="icon-ion-ios-chatboxes"
                                        style="width: 40px; height: 40px; font-size: 40px; color: black"
                                        v-bind:style="{color: showConversationView ? 'white' : 'black'}"/>
@@ -223,10 +223,9 @@
 import avenginekit from "../../../wfc/av/internal/engine.min";
 import CallSessionCallback from "../../../wfc/av/engine/callSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
-import IpcSub from "../../../ipc/ipcSub";
 import ClickOutside from 'vue-click-outside'
 import localStorageEmitter from "../../../ipc/localStorageEmitter";
-import {currentWindow, isElectron, remote} from "../../../platform";
+import {currentWindow, isElectron} from "../../../platform";
 import ScreenOrWindowPicker from "../ScreenOrWindowPicker";
 import CallEndReason from "../../../wfc/av/engine/callEndReason";
 import ScreenShareControlView from "../ScreenShareControlView";
@@ -242,6 +241,8 @@ import ChooseConferenceLayoutView from "./ChooseConferenceLayoutView";
 import ConferenceConversationFloatingView from "./ConferenceConversationFloatingView";
 import conferenceManager from "./conferenceManager";
 import ConferenceManageView from "./ConferenceManageView";
+import wfc from "../../../wfc/client/wfc";
+import LocalStorageIpcEventType from "../../../ipc/localStorageIpcEventType";
 
 export default {
     name: 'Conference',
@@ -386,8 +387,7 @@ export default {
 
             sessionCallback.didParticipantJoined = (userId, screenSharing) => {
                 console.log('didParticipantJoined', userId, screenSharing)
-                IpcSub.getUserInfos([userId], null, (userInfos) => {
-                    let userInfo = userInfos[0];
+                let userInfo = wfc.getUserInfo(userId);
                     let subscriber = this.session.getSubscriber(userId, screenSharing);
                     userInfo._stream = subscriber.stream;
                     userInfo._isAudience = subscriber.audience;
@@ -397,8 +397,7 @@ export default {
                     userInfo._volume = 0;
                     userInfo._isScreenSharing = screenSharing;
                     this.participantUserInfos.push(userInfo);
-                    console.log('joined', userInfos, subscriber.audience, this.participantUserInfos.length);
-                })
+                console.log('joined', userInfo, subscriber.audience, this.participantUserInfos.length);
             }
 
             sessionCallback.didParticipantLeft = (userId, endReason, screenSharing) => {
@@ -422,7 +421,7 @@ export default {
                 if (reason === CallEndReason.RoomNotExist) {
                     console.log('join conference failed', reason, this.session)
                     let obj = {reason: reason, session: this.session};
-                    localStorageEmitter.send('join-conference-failed', obj);
+                    localStorageEmitter.send(LocalStorageIpcEventType.joinConferenceFailed, obj);
                 }
                 this.session.closeVoipWindow();
                 this.session = null;
@@ -829,20 +828,19 @@ export default {
 
             if (toRefreshUsers.length > 0) {
                 console.log('to refreshUsers', toRefreshUsers)
-                IpcSub.getUserInfos(toRefreshUsers, null, (userInfos) => {
-                    userInfos.forEach(u => {
-                        let index = this.participantUserInfos.findIndex(p => p.uid === u.uid);
-                        if (u.updateDt && index > -1) {
-                            let ou = this.participantUserInfos[index];
-                            u._stream = ou._stream;
-                            u._isAudience = ou._isAudience;
-                            u._isHost = ou._isHost;
-                            u._isVideoMuted = ou._isVideoMuted;
-                            u._isAudioMuted = ou._isAudioMuted;
-                            u._volume = ou._volume;
-                            this.participantUserInfos[index] = u;
-                        }
-                    })
+                let userInfos = wfc.getUserInfos(toRefreshUsers, '');
+                userInfos.forEach(u => {
+                    let index = this.participantUserInfos.findIndex(p => p.uid === u.uid);
+                    if (u.updateDt && index > -1) {
+                        let ou = this.participantUserInfos[index];
+                        u._stream = ou._stream;
+                        u._isAudience = ou._isAudience;
+                        u._isHost = ou._isHost;
+                        u._isVideoMuted = ou._isVideoMuted;
+                        u._isAudioMuted = ou._isAudioMuted;
+                        u._volume = ou._volume;
+                        this.participantUserInfos[index] = u;
+                    }
                 })
             }
         },
@@ -1077,20 +1075,18 @@ export default {
             deep: true,
             handler(infos) {
                 let audioOnly = true;
-                console.log('participantUserInfos', this.session.screenSharing);
+                // console.log('participantUserInfos', this.session.screenSharing);
                 if (this.session.screenSharing) {
                     audioOnly = false;
                 } else {
                     for (let i = 0; i < this.participantUserInfos.length; i++) {
                         let u = this.participantUserInfos[i];
                         if (!u._isAudience && !u._isVideoMuted) {
-                            console.log('xx audio only false', u);
                             audioOnly = false;
                             break;
                         }
                     }
                 }
-                console.log('audioOnly', audioOnly);
                 this.audioOnly = audioOnly;
 
                 // mute self audio

@@ -220,6 +220,7 @@ import {currentWindow, ipcRenderer} from "../../../platform";
 import appServerApi from "../../../api/appServerApi";
 import Config from "../../../config";
 import IPCEventType from "../../../ipcEventType";
+import LocalStorageIpcEventType from "../../../ipc/localStorageIpcEventType";
 
 var amr;
 export default {
@@ -799,7 +800,7 @@ export default {
         });
 
         if (!isElectron()) {
-            localStorageEmitter.on('inviteConferenceParticipant', (ev, args) => {
+            localStorageEmitter.on(LocalStorageIpcEventType.inviteConferenceParticipant, (ev, args) => {
                 let payload = args.messagePayload;
                 let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
                 let message = new Message(null, messageContent);
