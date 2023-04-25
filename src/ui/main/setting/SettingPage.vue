@@ -47,6 +47,13 @@
                 </dropdown>
             </div>
         </div>
+        <div class="ad-container">
+            <p>
+                <a target="_blank" href="https://wildfirechat.cn/">野火IM</a>
+                ，即时通讯与实时音视频专家，专注于沟通和连接，提供优质可控的即时通讯和实时音视频能力
+            </p>
+            <p>私有化部署，请微信联系：wildfirechat 或 wfchat </p>
+        </div>
         <footer>
             <p class="proto-version-info">{{ protoRevision() }}</p>
             <a v-if="sharedMiscState.isElectron" class="button" target="_blank" @click.prevent.stop="openLogDir">
@@ -296,6 +303,19 @@ export default {
 .setting-container .content label input {
     margin: 0 10px;
     display: inline-block;
+}
+
+.setting-container .ad-container {
+    padding: 10px;
+    font-size: 15px;
+    background: #f1f3f4;
+    margin: 10px;
+    border-radius: 5px;
+    /*box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
+}
+
+.ad-container p {
+    padding: 5px 0;
 }
 
 .setting-container footer {
