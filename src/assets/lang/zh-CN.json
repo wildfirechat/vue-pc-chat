@@ -1,7 +1,8 @@
 {
     "login": {
         "desc": "扫码登录野火IM",
-        "tip": "野火IM Web端需要配合您的手机客户端登录使用",
+        "tip_pc": "野火IM PC端需要配合您的手机客户端登录使用",
+        "tip_web": "野火IM Web端需要配合您的手机客户端登录使用",
         "warning": "不是使用微信扫码登录!!!",
         "scan_qr_success": "扫码成功",
         "confirm_login_tip": "请在手机上点击确认以登录",
@@ -83,7 +84,9 @@
         "disable_notification": "消息免打扰",
         "mark_as_unread": "标记为未读",
         "mark_as_read": "标记为已读",
-        "show_in_float_window": "在独立窗口打开"
+        "show_in_float_window": "在独立窗口打开",
+        "clear_conversation_history": "清空本地聊天记录",
+        "clear_remote_conversation_history": "清空远程聊天记录"
     },
     "fav": {
         "fav": "收藏",

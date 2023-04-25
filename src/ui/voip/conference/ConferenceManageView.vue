@@ -42,7 +42,6 @@ import conferenceManager from "./conferenceManager";
 import ConferenceParticipantListView from "./ConferenceParticipantListView";
 import ConferenceApplyUnmuteListView from "./ConferenceApplyUnmuteListView";
 import ConferenceHandUpListView from "./ConferenceHandUpListView";
-import IpcSub from "../../../ipc/ipcSub";
 
 export default {
     name: "ConferenceManageView",
@@ -77,25 +76,24 @@ export default {
     methods: {
         updateHandUpTip() {
             let ids = conferenceManager.handUpMembers;
-            IpcSub.getUserInfos(ids, '', (userInfos) => {
-                let desc = userInfos[0].displayName;
-                if (userInfos.length > 1) {
-                    desc += ' 等'
-                }
-                desc += '正在举手'
-                this.handUpTip = desc;
-            });
+            let userInfos = wfc.getUserInfos(ids, '');
+            let desc = userInfos[0].displayName;
+            if (userInfos.length > 1) {
+                desc += ' 等'
+            }
+            desc += '正在举手'
+            this.handUpTip = desc;
         },
         updateapplyUnmuteTip() {
             let ids = conferenceManager.applyingUnmuteMembers;
-            IpcSub.getUserInfos(ids, '', (userInfos) => {
-                let desc = userInfos[0].displayName;
-                if (userInfos.length > 1) {
-                    desc += ' 等'
-                }
-                desc += '正在申请解除静音'
-                this.applyUnmuteTip = desc;
-            });
+            let userInfos = wfc.getUserInfos(ids, '');
+           
+            let desc = userInfos[0].displayName;
+            if (userInfos.length > 1) {
+                desc += ' 等'
+            }
+            desc += '正在申请解除静音'
+            this.applyUnmuteTip = desc;
         }
 
     },

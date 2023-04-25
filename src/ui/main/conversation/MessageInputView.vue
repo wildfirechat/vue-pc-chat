@@ -1,6 +1,6 @@
 <template>
     <div>
-        <section class="message-input-container" v-if="!sharedConversationState.showChannelMenu">
+        <section ref="message-input-container" class="message-input-container" v-if="!sharedConversationState.showChannelMenu">
             <section class="input-action-container">
                 <VEmojiPicker
                     id="emoji"
@@ -29,10 +29,12 @@
                         <i id="messageHistory" @click="showMessageHistory" class="icon-ion-android-chat"/>
                     </li>
                     <li v-if="enablePtt">
-                        <i id="ptt" @mousedown="requestPttTalk(true)" @mouseup="requestPttTalk(false)" class="icon-ion-android-radio-button-on"/>
+                        <i id="ptt" @mousedown="requestPttTalk(true)" @mouseup="requestPttTalk(false)"
+                           class="icon-ion-android-radio-button-on"/>
                     </li>
                     <li>
-                        <i id="voice" @mousedown="recordAudio(true)" @mouseup="recordAudio(false)" class="icon-ion-android-microphone"/>
+                        <i id="voice" @mousedown="recordAudio(true)" @mouseup="recordAudio(false)"
+                           class="icon-ion-android-microphone"/>
                     </li>
                 </ul>
                 <ul v-if="!inputOptions['disableVoip'] && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
@@ -54,6 +56,7 @@
                  draggable="false"
                  title="Enter发送，Ctrl+Enter换行"
                  autofocus
+                 @input="onInput"
                  @contextmenu.prevent="$refs.menu.open($event)"
                  onmouseover="this.setAttribute('org_title', this.title); this.title='';"
                  onmouseout="this.title = this.getAttribute('org_title');"
@@ -81,11 +84,13 @@
                 v-on:cancelQuoteMessage="cancelQuoteMessage"
                 :enable-message-preview="false"
                 :quoted-message="quotedMessage" :show-close-button="true"/>
-            <div v-if="muted" style="width: 100%; height: 100%; background: lightgrey; position: absolute; display: flex; justify-content: center; align-items: center">
+            <div v-if="muted"
+                 style="width: 100%; height: 100%; background: lightgrey; position: absolute; display: flex; justify-content: center; align-items: center">
                 <p style="color: white">群禁言或者你被禁言</p>
             </div>
         </section>
-        <ChannelMenuView v-else :menus="conversationInfo.conversation._target.menus" :conversation="conversationInfo.conversation"></ChannelMenuView>
+        <ChannelMenuView v-else :menus="conversationInfo.conversation._target.menus"
+                         :conversation="conversationInfo.conversation"></ChannelMenuView>
     </div>
 </template>
 
@@ -121,6 +126,7 @@ import TalkingCallback from "../../../wfc/ptt/client/talkingCallback";
 import Config from "../../../config";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import BenzAMRRecorder from "benz-amr-recorder";
+import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
 
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
@@ -155,6 +161,7 @@ export default {
             tributeReplaced: false,
             enablePtt: wfc.isCommercialServer() && Config.ENABLE_PTT,
             amrRecorder: null,
+            lastTypingMessageTimestamp: 0,
         }
     },
     methods: {
@@ -183,14 +190,30 @@ export default {
             store.quoteMessage(null)
         },
 
+        onInput(e) {
+            this.notifyTyping(TypingMessageContent.TYPING_TEXT);
+        },
+
+        notifyTyping(type) {
+            if ([ConversationType.Single, ConversationType.Group].indexOf(this.conversationInfo.conversation.type) >= 0) {
+                let now = new Date().getTime();
+                if (now - this.lastTypingMessageTimestamp > 10 * 1000) {
+                    let typing = new TypingMessageContent(type);
+                    wfc.sendConversationMessage(this.conversationInfo.conversation, typing)
+                    this.lastTypingMessageTimestamp = now;
+                }
+            }
+        },
         async handlePaste(e, source) {
             let text;
             e.preventDefault();
+
             if ((e.originalEvent || e).clipboardData) {
                 text = (e.originalEvent || e).clipboardData.getData('text/plain');
             } else {
                 text = await navigator.clipboard.readText();
             }
+            console.log('handlePaste', e, source);
             if (isElectron()) {
                 let args = ipcRenderer.sendSync(IpcEventType.FILE_PASTE);
                 if (args.hasImage) {
@@ -202,6 +225,32 @@ export default {
                         store.sendFile(this.conversationInfo.conversation, file)
                     })
                     return;
+                }
+            } else {
+                const dT = e.clipboardData || window.clipboardData;
+                if (dT) {
+                    const file = dT.files[0];
+                    if (file) {
+                        if (file.type.indexOf('image') !== -1) {
+                            // image
+                            document.execCommand('insertImage', false, URL.createObjectURL(file));
+                        } else {
+                            // file
+                            store.sendFile(this.conversationInfo.conversation, file)
+                        }
+                        return;
+                    }
+                    console.log('handle paste file', file);
+                } else {
+                    const clipboardContents = await navigator.clipboard.read();
+                    for (const item of clipboardContents) {
+                        console.log('clipboard item', item.types, item)
+                        if (item.types.includes("image/png")) {
+                            const blob = await item.getType("image/png");
+                            document.execCommand('insertImage', false, URL.createObjectURL(blob));
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -246,7 +295,7 @@ export default {
             this.$refs['input'].innerHTML = '';
         },
 
-        send(e) {
+        async send(e) {
             if (this.tribute && this.tribute.isActive) {
                 this.tributeReplaced = false;
                 return;
@@ -305,9 +354,9 @@ export default {
 
             let imgs = [...input.getElementsByTagName('img')];
             if (imgs) {
-                imgs.forEach(img => {
+                for (const img of imgs) {
                     if (img.className.indexOf('emoji') >= 0) {
-                        return;
+                        continue;
                     }
                     let src = img.src;
                     let file;
@@ -315,14 +364,19 @@ export default {
                         // 'local-resource://' + 绝对路径
                         file = decodeURI(src.substring(17, src.length));
                     } else {
-                        file = fileFromDataUri(src, new Date().getTime() + '.png');
+                        if (src.startsWith('blob:')) {
+                            let blob = await fetch(src).then(r => r.blob());
+                            file = new File([blob], new Date().getTime() + '.png');
+                        } else {
+                            file = fileFromDataUri(src, new Date().getTime() + '.png');
+                        }
                     }
                     this.$eventBus.$emit('uploadFile', file)
                     store.setShouldAutoScrollToBottom(true);
                     store.sendFile(this.conversationInfo.conversation, file)
                     // 会影响 input.getElementsByTagName 返回的数组，所以上面拷贝了一下
                     img.parentNode.removeChild(img);
-                });
+                }
             }
             message = input.innerHTML.trim();
             message = message.replace(/<br>/g, '\n')
@@ -332,7 +386,6 @@ export default {
                 .replace(/<\/b>/g, '')
                 .replace(/&nbsp;/g, ' ');
 
-            // TODO 可以在此对文本消息进行处理，比如过滤掉 script，iframe 等标签
 
             //  自行部署表情时，需要手动替换下面的正则
             // TODO 在正则中使用变量，避免手动替换
@@ -433,31 +486,26 @@ export default {
 
         pickFile() {
             this.$refs['fileInput'].click();
+            this.notifyTyping(TypingMessageContent.TYPING_FILE);
         },
 
         startAudioCall() {
+            console.log(`startAudioCall from mainWindow ${this.sharedMiscState.isMainWindow}`);
+            let conversation = this.conversationInfo.conversation;
             if (this.sharedMiscState.isMainWindow) {
-                let conversation = this.conversationInfo.conversation;
-                if (conversation.type === ConversationType.Single) {
-                    avenginekitproxy.startCall(conversation, true, [conversation.target])
-                } else {
-                    this.startGroupVoip(true);
-                }
+                this.$startVoipCall({audioOnly: true, conversation: conversation});
             } else {
-                IpcSub.startCall(this.conversationInfo.conversation, true);
+                IpcSub.startVoipCall(conversation, true);
             }
         },
 
         startVideoCall() {
+            console.log(`startVideoCall from mainWindow ${this.sharedMiscState.isMainWindow}`);
+            let conversation = this.conversationInfo.conversation;
             if (this.sharedMiscState.isMainWindow) {
-                let conversation = this.conversationInfo.conversation;
-                if (conversation.type === ConversationType.Single) {
-                    avenginekitproxy.startCall(conversation, false, [conversation.target])
-                } else {
-                    this.startGroupVoip(false);
-                }
+                this.$startVoipCall({audioOnly: false, conversation: conversation});
             } else {
-                IpcSub.startCall(this.conversationInfo.conversation, false);
+                IpcSub.startVoipCall(conversation, false);
             }
         },
 
@@ -471,20 +519,6 @@ export default {
                 }
             }
             store.toggleChannelMenu(toggle);
-        },
-
-        startGroupVoip(isAudioOnly) {
-            let successCB = users => {
-                let participantIds = users.map(u => u.uid);
-                avenginekitproxy.startCall(this.conversationInfo.conversation, isAudioOnly, participantIds)
-            };
-            this.$pickContact({
-                successCB,
-                users: store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, true, true),
-                initialCheckedUsers: [this.sharedContactState.selfUserInfo],
-                uncheckableUsers: [this.sharedContactState.selfUserInfo],
-                confirmTitle: this.$t('common.confirm'),
-            });
         },
 
         onPickFile(event) {
@@ -631,10 +665,18 @@ export default {
 
         restoreDraft() {
             let draft = Draft.getConversationDraftEx(this.conversationInfo);
+            if (!draft) {
+                return;
+            }
+            console.log('restore draft', this.conversationInfo, draft);
             store.quoteMessage(draft.quotedMessage);
             let input = this.$refs['input'];
-            input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
-            this.moveCursorToEnd(input);
+            if (input.innerHTML.trim()) {
+                console.log('inputting, ignore', draft.text)
+            } else {
+                input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
+                this.moveCursorToEnd(input);
+            }
         },
 
         storeDraft(conversationInfo, quotedMessage) {
@@ -717,6 +759,12 @@ export default {
                         text: '请开始说话',
                         type: 'info'
                     });
+                };
+                talkingCallback.onRequestFail = (conversation, reason) => {
+                    this.$notify({
+                        text: '对讲请求失败: ' + reason,
+                        type: 'error'
+                    });
                 }
                 pttClient.requestTalk(this.conversationInfo.conversation, talkingCallback)
             } else {
@@ -725,11 +773,23 @@ export default {
         },
 
         recordAudio(start) {
+            this.notifyTyping(TypingMessageContent.TYPING_VOICE);
             if (start) {
                 if (!this.amrRecorder) {
                     this.amrRecorder = new BenzAMRRecorder();
                     this.amrRecorder.initWithRecord().then(() => {
                         this.amrRecorder.startRecord();
+                        this.$notify({
+                            text: '请开始说话',
+                            type: 'info'
+                        });
+                    }).catch((e) => {
+                        this.$notify({
+                            text: '录音失败',
+                            type: 'error'
+                        });
+                        console.log('录音失败', e);
+                        this.amrRecorder = null;
                     });
                 }
             } else {
@@ -824,6 +884,7 @@ export default {
                     }
 
                     if (this.conversationInfo && (!this.lastConversationInfo || !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation))) {
+                        this.$refs.input.innerHTML = '';
                         this.restoreDraft();
                         this.initMention(this.conversationInfo.conversation)
                     }
@@ -831,6 +892,9 @@ export default {
                     this.focusInput();
                     this.initEmojiPicker()
                 })
+            } else {
+                // 其他端更新了草稿
+                this.restoreDraft();
             }
         },
     },
@@ -876,8 +940,8 @@ export default {
 
 <style lang='css' scoped>
 .message-input-container {
-    height: 200px;
-    min-height: 200px;
+    height: 180px;
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -908,6 +972,7 @@ export default {
     overflow: auto;
     user-select: text;
     -webkit-user-select: text;
+    font-size: 13px;
 }
 
 .input:empty:before {
@@ -927,12 +992,12 @@ export default {
 
 i {
     font-size: 24px;
-    color: #000;
+    color: #000b;
     cursor: pointer;
 }
 
 i:hover {
-    color: #34b7f1;
+    color: #3f64e4;
 }
 
 </style>

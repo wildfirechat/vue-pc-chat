@@ -4,6 +4,7 @@ import {
     app,
     BrowserWindow,
     clipboard,
+    crashReporter,
     dialog,
     globalShortcut,
     ipcMain,
@@ -11,11 +12,10 @@ import {
     nativeImage as NativeImage,
     powerMonitor,
     protocol,
+    screen,
     session,
     shell,
-    screen,
-    Tray,
-    crashReporter
+    Tray
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -83,7 +83,7 @@ let downloadFileMap = new Map()
 let settings = {};
 let isFullScreen = false;
 let isMainWindowFocusedWhenStartScreenshot = false;
-let screenShotWindow = null;
+let screenShotWindowId = 0;
 let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
 
@@ -142,73 +142,6 @@ let mainMenu = [
             }
         ]
     },
-    {
-        label: Locales.__('File').Title,
-        submenu: [
-            {
-                label: Locales.__('File').New,
-                accelerator: 'Cmd+N',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-newchat');
-                }
-            },
-            {
-                label: Locales.__('File').Search,
-                accelerator: 'Cmd+F',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-search');
-                }
-            },
-            {
-                type: 'separator',
-            },
-            {
-                label: Locales.__('File').InsertEmoji,
-                accelerator: 'Cmd+I',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-emoji');
-                }
-            },
-            {
-                type: 'separator',
-            },
-            {
-                label: Locales.__('File').Next,
-                accelerator: 'Cmd+J',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-next');
-                }
-            },
-            {
-                label: Locales.__('File').Prev,
-                accelerator: 'Cmd+K',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-previous');
-                }
-            },
-        ]
-    },
-    // {
-    //     label: Locales.__('Conversations').Title,
-    //     submenu: [
-    //         {
-    //             label: Locales.__('Conversations').Loading,
-    //         }
-    //     ],
-    // },
-    // {
-    //     label: Locales.__('Contacts').Title,
-    //     submenu: [
-    //         {
-    //             label: Locales.__('Contacts').Loading,
-    //         }
-    //     ],
-    // },
     {
         label: Locales.__('Edit').Title,
         submenu: [
@@ -287,21 +220,21 @@ let mainMenu = [
         ]
     },
     {
-        lable: Locales.__('Window').Title,
+        label: Locales.__('Window').Title,
         role: 'window',
         submenu: [
             {
-                lable: Locales.__('Window').Min,
+                label: Locales.__('Window').Min,
                 role: 'minimize'
             },
             {
-                lable: Locales.__('Window').Close,
+                label: Locales.__('Window').Close,
                 role: 'close'
             }
         ]
     },
     {
-        lable: Locales.__('Help').Title,
+        label: Locales.__('Help').Title,
         role: 'help',
         submenu: [
             {
@@ -561,6 +494,7 @@ const createMainWindow = async () => {
         minHeight: 600,
         opacity: 0,
         titleBarStyle: 'hidden',
+        trafficLightPosition: { x: 4, y: 8 },
         maximizable: false,
         resizable: false,
         backgroundColor: 'none',
@@ -627,7 +561,7 @@ const createMainWindow = async () => {
             if (mainWindow.isFullScreen()) {
                 mainWindow.setFullScreen(false);
                 mainWindow.once('leave-full-screen', () => mainWindow.hide())
-            }else {
+            } else {
                 mainWindow.hide();
             }
         }
@@ -637,7 +571,7 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.START_SCREEN_SHOT, (event, args) => {
         // console.log('main voip-message event', args);
-        screenShotWindow = event.sender;
+        screenShotWindowId = event.sender.id;
         screenshots.startCapture();
     });
 
@@ -747,6 +681,13 @@ const createMainWindow = async () => {
         }
 
         event.returnValue = args;
+    });
+    ipcMain.on(IPCEventType.FILE_COPY, (event, args) => {
+        if (process.platform !== 'linux') {
+            const clipboardEx = require('electron-clipboard-ex')
+            console.log('copy path', args.path);
+            clipboardEx.writeFilePaths([args.path]);
+        }
     });
 
     ipcMain.on(IPCEventType.DOWNLOAD_FILE, async (event, args) => {
@@ -1068,38 +1009,55 @@ app.on('ready', () => {
 
         registerLocalResourceProtocol();
 
-        screenshots = new Screenshots()
+        screenshots = new Screenshots({
+            // logger: console.log
+            singleWindow: true,
+        })
+
+        const onScreenShotEnd = (result) => {
+            console.log('onScreenShotEnd', isMainWindowFocusedWhenStartScreenshot, screenShotWindowId);
+            if (isMainWindowFocusedWhenStartScreenshot) {
+                if (result) {
+                    mainWindow.webContents.send('screenshots-ok', result);
+                }
+                mainWindow.show();
+                isMainWindowFocusedWhenStartScreenshot = false;
+            } else if (screenShotWindowId) {
+                let windows = BrowserWindow.getAllWindows();
+                let tms = windows.filter(win => win.webContents.id === screenShotWindowId);
+                if (tms.length > 0) {
+                    if (result) {
+                        tms[0].webContents.send('screenshots-ok', result);
+                    }
+                    tms[0].show();
+                }
+                screenShotWindowId = 0;
+            }
+        }
+
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
             let filename = tmp.tmpNameSync() + '.png';
             let image = NativeImage.createFromBuffer(buffer);
             fs.writeFileSync(filename, image.toPNG());
 
-            if (screenShotWindow) {
-                screenShotWindow.send('screenshots-ok', {filePath: filename});
-                screenShotWindow.focus();
-                screenShotWindow = null;
-            } else {
-                if (isMainWindowFocusedWhenStartScreenshot) {
-                    mainWindow.webContents.send('screenshots-ok', {filePath: filename});
-                    mainWindow.focus();
-                    isMainWindowFocusedWhenStartScreenshot = false;
-                }
-            }
-            console.log('capture', e)
+            console.log('screenshots ok', e)
+            onScreenShotEnd({filePath: filename});
         })
+
         // 点击取消按钮回调事件
         screenshots.on('cancel', e => {
             // 执行了preventDefault
             // 点击取消不会关闭截图窗口
             // e.preventDefault()
             // console.log('capture', 'cancel2')
-            screenShotWindow = null;
+            console.log('screenshots cancel', e)
+            onScreenShotEnd()
         })
         // 点击保存按钮回调事件
         screenshots.on('save', (e, {viewer}) => {
-            console.log('capture', viewer)
-            screenShotWindow = null;
+            console.log('screenshots save', e)
+            onScreenShotEnd()
         })
         session.defaultSession.webRequest.onBeforeSendHeaders(
             (details, callback) => {

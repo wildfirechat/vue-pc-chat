@@ -53,7 +53,7 @@ module.exports = {
                             html(node, directiveMeta) {
                                 (node.props || (node.props = [])).push({
                                     name: "innerHTML",
-                                    value: `xss(_s(${directiveMeta.value}))`
+                                    value: `xss(_s(${directiveMeta.value}), xssOptions())`
                                 });
                             }
                         };

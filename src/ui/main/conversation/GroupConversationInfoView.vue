@@ -1,6 +1,13 @@
 <template>
     <div class="conversation-info">
         <header>
+            <div class="group-portrait-container">
+                <p>群头像</p>
+                <img :src="conversationInfo.conversation._target.portrait" @click="pickFile"/>
+                <input v-if="enableEditGroupNameOrAnnouncement" ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
+                       accept="image/png, image/jpeg"
+                       style="display: none">
+            </div>
             <label>
                 {{ $t('conversation.group_name') }}
                 <input type="text"
@@ -52,7 +59,13 @@
                          :padding-left="'20px'"
             />
         </div>
-        <div @click="quitGroup" class="quit-group-item">
+        <div v-if="sharedMiscState.isElectron" @click="clearConversationHistory" class="conversation-action-item">
+            {{ $t('conversation.clear_conversation_history') }}
+        </div>
+        <div class="conversation-action-item" @click="clearRemoteConversationHistory">
+            {{ $t('conversation.clear_remote_conversation_history') }}
+        </div>
+        <div v-if="enableQuitGroup" @click="quitGroup" class="conversation-action-item">
             {{ $t('conversation.quit_group') }}
         </div>
     </div>
@@ -63,13 +76,12 @@ import UserListVue from "@/ui/main/user/UserListVue";
 import ConversationInfo from "@/wfc/model/conversationInfo";
 import store from "@/store";
 import wfc from "@/wfc/client/wfc";
-import axios from "axios";
 import GroupMemberType from "@/wfc/model/groupMemberType";
 import GroupType from "@/wfc/model/groupType";
 import ModifyGroupInfoType from "../../../wfc/model/modifyGroupInfoType";
 import EventType from "../../../wfc/client/wfcEvent";
 import appServerApi from "../../../api/appServerApi";
-import AppServerError from "../../../api/appServerError";
+import MessageContentMediaType from "../../../wfc/messages/messageContentMediaType";
 
 export default {
     name: "GroupConversationInfoView",
@@ -84,6 +96,7 @@ export default {
             groupMemberUserInfos: store.getConversationMemberUsrInfos(this.conversationInfo.conversation),
             filterQuery: '',
             sharedContactState: store.state.contact,
+            sharedMiscState: store.state.misc,
             groupAnnouncement: '',
             newGroupName: '',
             newGroupAnnouncement: '',
@@ -97,7 +110,8 @@ export default {
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onUserInfosUpdate)
         wfc.getGroupMembers(this.conversationInfo.conversation.target, true);
 
-        this.groupAlias = wfc.getUserInfo(wfc.getUserId(), false, this.conversationInfo.conversation.target).groupAlias;
+        let userInfo = wfc.getUserInfo(wfc.getUserId(), false, this.conversationInfo.conversation.target);
+        this.groupAlias = userInfo.groupAlias ? userInfo.groupAlias : userInfo.displayName;
     },
 
     beforeDestroy() {
@@ -198,6 +212,40 @@ export default {
             }, (err) => {
                 console.log('setFavGroup error', err);
             })
+        },
+
+        pickFile() {
+            if (!this.enableEditGroupNameOrAnnouncement) {
+                this.$notify({
+                    text: '群主或管理员，才能更新头像',
+                    type: 'warn'
+                });
+                return;
+            }
+            this.$refs['fileInput'].click();
+        },
+
+        onPickFile(event) {
+            let file = event.target.files[0];
+            wfc.uploadMedia(file.name, file, MessageContentMediaType.Portrait, (url) => {
+                wfc.modifyGroupInfo(this.conversationInfo.conversation.target, ModifyGroupInfoType.Modify_Group_Portrait, url, [], null, () => {
+                    console.log('modify group portrait success', url);
+                }, (err) => {
+                    console.log('err', err)
+                })
+            }, err => {
+                console.log('update media error', err);
+            }, (p, t) => {
+
+            });
+        },
+
+        clearConversationHistory() {
+            wfc.clearMessages(this.conversationInfo.conversation);
+        },
+
+        clearRemoteConversationHistory() {
+            wfc.clearRemoteConversationMessages(this.conversationInfo.conversation);
         }
     },
 
@@ -206,9 +254,20 @@ export default {
     },
 
     computed: {
+        enableQuitGroup() {
+            let groupInfo = this.conversationInfo.conversation._target;
+            if (groupInfo.type === GroupType.Organization) {
+                return false;
+            }
+            return true;
+        },
+
         enableAddGroupMember() {
             let selfUid = wfc.getUserId();
             let groupInfo = this.conversationInfo.conversation._target;
+            if (groupInfo.type === GroupType.Organization) {
+                return false;
+            }
             //在group type为Restricted时，0 开放加入权限（群成员可以拉人，用户也可以主动加入）；1 只能群成员拉人入群；2 只能群管理拉人入群
             if (groupInfo.type === GroupType.Restricted) {
                 if (groupInfo.joinType === 0 || groupInfo.joinType === 1) {
@@ -222,6 +281,10 @@ export default {
         },
 
         enableRemoveGroupMember() {
+            let groupInfo = this.conversationInfo.conversation._target;
+            if (groupInfo.type === GroupType.Organization) {
+                return false;
+            }
             let selfUid = wfc.getUserId();
             let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
             if (groupMember) {
@@ -232,6 +295,10 @@ export default {
         },
 
         enableEditGroupNameOrAnnouncement() {
+            let groupInfo = this.conversationInfo.conversation._target;
+            if (groupInfo.type === GroupType.Organization) {
+                return false;
+            }
             let selfUid = wfc.getUserId();
             let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
             if (groupMember) {
@@ -270,15 +337,38 @@ header {
     align-items: center;
 }
 
+header .group-portrait-container {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 10px;
+    align-items: center;
+}
+
+header .group-portrait-container p {
+    color: #999999;
+    font-size: 14px;
+}
+
+header .group-portrait-container img {
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    margin-left: 20px;
+}
+
 header label {
     width: 100%;
     display: flex;
-    margin-top: 15px;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
     font-size: 14px;
     color: #999999;
+}
+
+header label:not(:first-of-type) {
+    margin-top: 15px;
 }
 
 header label:last-of-type {
@@ -362,17 +452,18 @@ header label input {
     background-color: #d6d6d6;
 }
 
-.quit-group-item {
+.conversation-action-item {
     display: flex;
     color: red;
     align-items: center;
     justify-content: center;
-    height: 50px;
-    max-height: 50px;
+    font-size: 12px;
+    height: 42px;
+    max-height: 42px;
     border-top: 1px solid #ececec;
 }
 
-.quit-group-item:active {
+.conversation-action-item:active {
     background: #d6d6d6;
 }
 

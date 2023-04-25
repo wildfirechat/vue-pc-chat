@@ -148,11 +148,11 @@ export default {
             if (subscriber) {
                 let currentVideoType = subscriber.currentVideoType;
                 let videoType = VideoType.NONE;
-                if (currentVideoType === VideoType.NONE){
+                if (currentVideoType === VideoType.NONE) {
                     videoType = VideoType.BIG_STREAM;
-                }else if (currentVideoType === VideoType.BIG_STREAM){
+                } else if (currentVideoType === VideoType.BIG_STREAM) {
                     videoType = VideoType.SMALL_STREAM;
-                }else if (videoType === VideoType.SMALL_STREAM){
+                } else if (videoType === VideoType.SMALL_STREAM) {
                     videoType = VideoType.NONE;
                 }
                 console.log('setParticipantVideoType', userId, videoType);
@@ -165,6 +165,7 @@ export default {
             // 可能回调多次
             sessionCallback.didChangeState = (state) => {
                 this.status = state;
+                console.log('didChangeState', state)
                 if (state === CallState.STATUS_CONNECTED) {
                     if (this.startTimestamp === 0) {
                         this.startTimestamp = new Date().getTime();
@@ -205,6 +206,7 @@ export default {
                 this.session = null;
             }
             sessionCallback.didVideoMuted = (userId, muted) => {
+                console.log('didVideoMuted', userId, muted);
                 this.muted = muted;
             };
 
@@ -225,6 +227,14 @@ export default {
                     }
                 }
             };
+
+            sessionCallback.didParticipantConnected = (userId) => {
+                console.log('didParticipantConnected', userId)
+            }
+
+            sessionCallback.didReportAudioVolume = (userId, volume) => {
+                console.log('didReportAudioVolume', userId, volume)
+            }
 
             avenginekit.sessionCallback = sessionCallback;
         },
@@ -418,7 +428,7 @@ export default {
     left: 0;
 }
 
-.localVideo.me{
+.localVideo.me {
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
 }

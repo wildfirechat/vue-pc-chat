@@ -10,7 +10,8 @@
 		"Search": "Search...",
 		"Next": "Next conversation",
 		"Prev": "Previous conversation",
-		"InsertEmoji": "Insert emoji"
+		"InsertEmoji": "Insert emoji",
+		"Close": "Close"
 	},
 	"Conversations": {
 		"Title": "Conversation",

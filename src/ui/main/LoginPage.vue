@@ -14,7 +14,7 @@
             <!--    等待扫码-->
             <div v-if="loginStatus === 0" class="pending-scan">
                 <p>{{ $t('login.desc') }}</p>
-                <p>{{ $t('login.tip') }}</p>
+                <p>{{ $t('login.tip_pc') }}</p>
                 <p>{{ $t('login.warning') }}</p>
                 <a target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
             </div>
@@ -83,7 +83,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 import Config from "@/config";
 import wfc from '../../wfc/client/wfc'
 import PCSession from "@/wfc/model/pcsession";
@@ -95,9 +94,9 @@ import {clear, getItem, setItem} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import store from "@/store";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
-import ConversationType from "../../wfc/model/conversationType";
 import IpcEventType from "../../ipcEventType";
 import appServerApi from "../../api/appServerApi";
+import organizationServerApi from "../../api/organizationServerApi";
 
 export default {
     name: 'App',
@@ -254,36 +253,27 @@ export default {
         async login() {
             this.lastAppToken = this.appToken;
             appServerApi.loginWithPCSession(this.appToken)
-                .then(response => {
-                    if (response.data) {
-                        switch (response.data.code) {
+                .then(data => {
+                    if (data) {
+                        switch (data.code) {
                             case 0:
                                 if (this.loginStatus === 1 || this.loginStatus === 3) {
-                                    let userId = response.data.result.userId;
-                                    let imToken = response.data.result.token;
+                                    let userId = data.result.userId;
+                                    let imToken = data.result.token;
                                     wfc.connect(userId, imToken);
                                     this.loginStatus = 4;
                                     setItem('userId', userId);
                                     setItem('token', imToken);
-                                    let appAuthToken = response.headers['authtoken'];
-                                    if (!appAuthToken) {
-                                        appAuthToken = response.headers['authToken'];
-                                    }
-
-                                    if (appAuthToken) {
-                                        setItem('authToken', appAuthToken);
-                                        axios.defaults.headers.common['authToken'] = appAuthToken;
-                                    }
                                 }
                                 break;
                             case 9:
-                                if (response.data.result.portrait) {
-                                    this.qrCode = response.data.result.portrait;
+                                if (data.result.portrait) {
+                                    this.qrCode = data.result.portrait;
                                 } else {
                                     this.qrCode = Config.DEFAULT_PORTRAIT_URL;
                                 }
-                                setItem("userName", response.data.result.userName);
-                                setItem("userPortrait", response.data.result.portrait);
+                                setItem("userName", data.result.userName);
+                                setItem("userPortrait", data.result.portrait);
 
                                 if (this.loginStatus === 0) {
                                     this.loginStatus = 1;
@@ -298,7 +288,7 @@ export default {
                                 break;
                             default:
                                 this.lastAppToken = '';
-                                console.log(response.data);
+                                console.log(data);
                                 break
                         }
                     }
@@ -329,8 +319,9 @@ export default {
             if (status === ConnectionStatus.ConnectionStatusLogout
                 || status === ConnectionStatus.ConnectionStatusRejected
                 || status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
-                || status === ConnectionStatus.kConnectionStatusKickedOff
+                || status === ConnectionStatus.ConnectionStatusKickedOff
                 || status === ConnectionStatus.ConnectionStatusTokenIncorrect) {
+                console.error('连接失败', status, ConnectionStatus.desc(status));
                 this.cancel();
             }
             if (status === ConnectionStatus.ConnectionStatusConnected) {
@@ -360,6 +351,10 @@ export default {
                         store.setEnableAutoLogin(this.enableAutoLogin)
                     }
                 }
+                organizationServerApi.login()
+                    .catch(r => {
+                        console.error('organizationServer login failed', r)
+                    });
             }
         },
     },
@@ -570,7 +565,7 @@ input::-webkit-inner-spin-button {
     margin: 0 5px;
 }
 
-.login-form-container .syncing{
+.login-form-container .syncing {
     position: absolute;
     bottom: 0;
     color: #4168e0;

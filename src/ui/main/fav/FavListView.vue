@@ -93,7 +93,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import helper from "@/ui/util/helper";
 import MessageContentType from "@/wfc/messages/messageContentType";
 import wfc from "@/wfc/client/wfc";
@@ -166,7 +165,7 @@ export default {
                 }
                 cb && cb(obj.hasMore);
             } else {
-                console.log('loadFavList failed', response)
+                console.error('loadFavList failed', responseData)
                 cb && cb(false)
             }
         },
@@ -214,6 +213,21 @@ export default {
         },
         handleClick(favItem) {
             switch (favItem.type) {
+                case MessageContentType.Text:
+                    if (isElectron()) {
+                        let hash = window.location.hash;
+                        let url = window.location.origin;
+                        if (hash) {
+                            url = window.location.href.replace(hash, '#/message');
+                        } else {
+                            url += "/message"
+                        }
+                        url += "?data=" + wfc.escape(wfc.utf8_to_b64(JSON.stringify(favItem)));
+                        ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
+                            url: url,
+                        });
+                    }
+                    break;
                 case MessageContentType.Image:
                 case MessageContentType.Video:
                     store.previewMedia(favItem.url, favItem.thumbUrl, favItem.data && favItem.data.thumb ? favItem.data.thumb : 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==')

@@ -13,13 +13,14 @@ import './wfc.css'
 import './assets/fonts/icomoon/style.css'
 import store from "@/store";
 import visibility from 'vue-visibility-change';
-import {isElectron, remote} from "@/platform";
+import {isElectron} from "@/platform";
 import {getItem} from "./ui/util/storageHelper";
 import VueI18n from 'vue-i18n'
 import Notifications from 'vue-notification'
 import Alert from "./ui/common/Alert.js";
 import Picker from "./ui/common/Picker";
 import Forward from "./ui/common/Forward";
+import Voip from "./ui/common/Voip";
 import VirtualList from "vue-virtual-scroll-list/src";
 import xss from "xss";
 
@@ -31,6 +32,7 @@ Vue.config.productionTip = false
     let href = window.location.href;
     let path = href.substring(href.indexOf('#') + 1)
     console.log('init', href, path)
+    // 判断是否是主窗口，请根据实际情况进行调整
     if (path === '/'/*login*/ || path.startsWith('/home') || href.indexOf('#') === -1) {
         console.log('init wfc')
         if (isElectron()) {
@@ -57,7 +59,7 @@ Vue.config.productionTip = false
         }
         store.init(true, false);
     } else {
-        console.log('not home window, not init wfc')
+        console.error('not home window, not init wfc, 如果此窗口就是主窗口或者应用只有一个窗口，可能会导致功能不正常，请更新上面的主窗口判断逻辑')
         if (isElectron()) {
             wfc.attach()
         }
@@ -83,6 +85,7 @@ Vue.use(VueI18n)
 Vue.use(Alert)
 Vue.use(Picker)
 Vue.use(Forward)
+Vue.use(Voip)
 
 const i18n = new VueI18n({
     // 使用localStorage存储语言状态是为了保证页面刷新之后还是保持原来选择的语言状态
@@ -104,6 +107,16 @@ const router = new VueRouter({
 
 Vue.prototype.$eventBus = new Vue();
 Vue.prototype.xss = xss;
+Vue.prototype.xssOptions = () => {
+    let whiteList = xss.getDefaultWhiteList();
+    window.__whiteList = whiteList;
+    //xss 处理的时候，默认会将 img 便签的class属性去除，导致 emoji 表情显示太大
+    //这儿配置保留 img 标签的style、class、src、alt、id 属性
+    whiteList.img = ["style", "class", "src", "alt", "id"];
+    return {
+        whiteList
+    };
+};
 
 var vm = new Vue({
     el: '#app',

@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain,} from 'electron';
+import {BrowserWindow, ipcMain} from 'electron';
 
 let proto;
 const ASYNC_CALLBACK = 'protoAsyncCallback';
@@ -24,6 +24,7 @@ const asyncProtoMethods = {
     setGroupRemark: _asyncCall2('setGroupRemark'),
     addMembers: _asyncCall2('addMembers'),
     getGroupMembersEx: _asyncCall2('getGroupMembersEx'),
+    getGroupInfoEx: _asyncCall2('getGroupInfoEx'),
     kickoffMembers: _asyncCall2('kickoffMembers'),
     dismissGroup: _asyncCall2('dismissGroup'),
     modifyGroupInfo: _asyncCall2('modifyGroupInfo'),
@@ -56,6 +57,13 @@ const asyncProtoMethods = {
     sendFriendRequest: _asyncCall2('sendFriendRequest'),
     requireLock: _asyncCall2('requireLock'),
     releaseLock: _asyncCall2('releaseLock'),
+    getMessagesV2: _asyncCall2('getMessagesV2'),
+    getMessagesExV2: _asyncCall2('getMessagesExV2'),
+    getMessagesEx2V2: _asyncCall2('getMessagesEx2V2'),
+    getMessagesByTimestampV2: _asyncCall2('getMessagesByTimestampV2'),
+    getUserMessagesV2: _asyncCall2('getUserMessagesV2'),
+    getUserMessagesExV2: _asyncCall2('getUserMessagesExV2'),
+
     sendSavedMessage: (event, args) => {
         proto.sendSavedMessage(...args.methodArgs,
             (...cbArgs) => {

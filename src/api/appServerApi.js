@@ -8,10 +8,6 @@ import wfc from "../wfc/client/wfc";
 
 export class AppServerApi {
     constructor() {
-        axios.defaults.baseURL = Config.APP_SERVER;
-
-        axios.defaults.headers.common['authToken'] = getItem('authToken');
-        axios.defaults.withCredentials = true;
     }
 
     requestAuthCode(mobile) {
@@ -55,7 +51,34 @@ export class AppServerApi {
 
     // 扫码登录
     loginWithPCSession(appToken) {
-        return this._post('/session_login/' + appToken, '', true);
+        const _interceptPCSessionLoginResponse = (responsePromise, resolve, reject) => {
+            responsePromise
+                .then(response => {
+                    if (response.data.code === 0) {
+                        let appAuthToken = response.headers['authtoken'];
+                        if (!appAuthToken) {
+                            appAuthToken = response.headers['authToken'];
+                        }
+
+                        if (appAuthToken) {
+                            setItem('authToken-' + new URL(response.config.url).host, appAuthToken);
+                        }
+                        resolve(response.data);
+                    } else if ([9, 18].indexOf(response.data.code) > -1) {
+                        resolve(response.data);
+                    } else {
+                        reject(new AppServerError(response.data.code, response.data.message));
+                    }
+                })
+                .catch(err => {
+                    reject(err);
+                })
+        }
+
+        return new Promise((resolve, reject) => {
+            let responsePromise = this._post(`/session_login/${appToken}`, null, true);
+            _interceptPCSessionLoginResponse(responsePromise, resolve, reject)
+        })
     }
 
     changePassword(oldPassword, newPassword) {
@@ -123,8 +146,7 @@ export class AppServerApi {
                     }
 
                     if (appAuthToken) {
-                        setItem('authToken', appAuthToken);
-                        axios.defaults.headers.common['authToken'] = appAuthToken;
+                        setItem('authToken-' + new URL(response.config.url).host, appAuthToken);
                     }
                     resolve(response.data.result);
                 } else {
@@ -145,9 +167,16 @@ export class AppServerApi {
      * @return {Promise<string | AxiosResponse<any>|*|T>}
      * @private
      */
-    async _post(path, data = null, rawResponse = false, rawResponseData = false) {
+    async _post(path, data = {}, rawResponse = false, rawResponseData = false) {
         let response;
-        response = await axios.post(path, data, {transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse})
+        path = Config.APP_SERVER + path;
+        response = await axios.post(path, data, {
+            transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse,
+            headers: {
+                'authToken': getItem('authToken-' + new URL(path).host),
+            },
+            withCredentials: true,
+        })
         if (rawResponse) {
             return response;
         }

@@ -78,7 +78,7 @@ export default class MessageConfig {
                 }
             }
         }
-        console.log(`message type ${type} is unknown`);
+        console.error(`message type ${type} is unknown`);
         return UnknownMessageContent;
     }
 
@@ -212,13 +212,13 @@ export default class MessageConfig {
         },
         {
             name: 'friendGreeting',
-            flag: PersistFlag.No_Persist,
+            flag: PersistFlag.Persist,
             type: MessageContentType.Friend_Added,
             contentClazz: FriendGreetingNotification,
         },
         {
             name: 'friendAdded',
-            flag: PersistFlag.No_Persist,
+            flag: PersistFlag.Persist,
             type: MessageContentType.Friend_Greeting,
             contentClazz: FriendAddedNotification,
         },
@@ -469,7 +469,7 @@ export default class MessageConfig {
             contentClazz: LeaveChannelChatMessageContent,
         },
         {
-            name: 'leaveChannelChatMessageContent',
+            name: 'conferenceCommandMessageContent',
             flag: PersistFlag.Transparent,
             type: MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND,
             contentClazz: ConferenceCommandMessageContent,

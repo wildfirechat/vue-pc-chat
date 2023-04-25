@@ -45,11 +45,12 @@ export default {
             }
             let users = this.sharedContactState.favContactList.concat(this.sharedContactState.friendList);
             users = users.filter(u => {
-               return u.uid !== Config.FILE_HELPER_ID
+                return u.uid !== Config.FILE_HELPER_ID
             });
             this.$pickContact({
                 users,
                 successCB,
+                showOrganization: true,
             });
         },
         cancel() {

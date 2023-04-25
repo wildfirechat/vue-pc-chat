@@ -16,13 +16,17 @@
             <div class="header">
                 <img class="avatar" draggable="false" :src="portrait" alt=""
                      @error="imgUrlAlt"/>
-                <em v-if="unread > 0" class="badge" v-bind:class="{silent:source.isSilent}">{{ unread }}</em>
+                <em v-if="unread > 0" class="badge" v-bind:class="{silent:source.isSilent}">{{ unread > 99 ? '···' : unread }}</em>
             </div>
             <div class="content-container">
                 <div class="title-time-container">
                     <i v-if="source.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 5px"></i>
-                    <h2 class="title single-line">{{ conversationTitle }}</h2>
-                    <p class="time">{{ source._timeStr }}</p>
+                    <div v-if="isOrganizationGroupConversation" style="display: flex; align-items: center; max-width: calc(100% - 60px)">
+                        <h2 class="title single-line">{{ conversationTitle }}</h2>
+                        <p class="single-line" style="background: #3f64e4; border-radius: 2px; color: white; padding: 1px 2px; font-size: 9px">官方</p>
+                    </div>
+                    <h2 v-else class="title single-line">{{ conversationTitle }}</h2>
+                    <p class="time single-line">{{ source._timeStr }}</p>
                 </div>
                 <div class="content">
                     <p class="draft single-line" v-if="shouldShowDraft" v-html="draft"></p>
@@ -48,6 +52,7 @@ import NotificationMessageContent from "@/wfc/messages/notification/notification
 import Config from "../../../config";
 import {getConversationPortrait} from "../../util/imageUtil";
 import ConversationType from "../../../wfc/model/conversationType";
+import GroupType from "../../../wfc/model/groupType";
 
 export default {
     name: "ConversationItemView",
@@ -131,7 +136,7 @@ export default {
                 getConversationPortrait(info.conversation).then((portrait => {
                     if (info.conversation.equal(this.source.conversation)) {
                         console.log('update portrait', this.source.conversation.target)
-                        if (portrait !== Config.DEFAULT_GROUP_PORTRAIT_URL){
+                        if (portrait !== Config.DEFAULT_GROUP_PORTRAIT_URL) {
                             info.conversation._target.portrait = portrait;
                         }
                         this.groupPortrait = portrait;
@@ -149,6 +154,13 @@ export default {
             return '';
         },
 
+        isOrganizationGroupConversation() {
+            let info = this.source;
+            if (info.conversation.type === ConversationType.Group && info.conversation._target && info.conversation._target.type === GroupType.Organization) {
+                return true;
+            }
+            return false;
+        },
         shouldShowDraft() {
             if (this.shareConversationState.currentConversationInfo && this.shareConversationState.currentConversationInfo.conversation.equal(this.source.conversation)) {
                 return false;
@@ -291,18 +303,22 @@ export default {
     font-size: 10px;
     background-color: red;
     border-radius: 8px;
-    width: 16px;
+    min-width: 16px;
     height: 16px;
+    padding: 0 5px;
     line-height: 16px;
     font-style: normal;
     text-align: center;
     right: 8px;
     top: 8px;
+    vertical-align: center;
 }
 
 .header .badge.silent {
     width: 8px;
     height: 8px;
+    min-width: 8px;
+    padding: 0;
     font-size: 0;
 }
 
@@ -319,6 +335,7 @@ export default {
 .content-container .title-time-container {
     display: flex;
     width: 100%;
+    max-width: 100%;
     align-content: center;
     justify-content: space-between;
 }
@@ -345,8 +362,9 @@ export default {
 }
 
 .content .draft {
-    font-size: 13px;
+    font-size: 12px;
     height: 20px;
+    color: #b8b8b8;
 }
 
 /*refer to: https://blog.csdn.net/weixin_42412046/article/details/80804285*/
@@ -358,7 +376,7 @@ export default {
 
 .content .last-message-desc {
     color: #b8b8b8;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .content .last-message-desc i {

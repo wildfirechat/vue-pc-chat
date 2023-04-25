@@ -65,7 +65,6 @@
 import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import conferenceApi from "../../../api/conferenceApi";
-import IpcSub from "../../../ipc/ipcSub";
 import conferenceManager from "./conferenceManager";
 
 export default {
@@ -84,10 +83,8 @@ export default {
         }
     },
     mounted() {
-        console.log('conferenceInfo', this.conferenceInfo)
-        IpcSub.getUserDisplayName(this.conferenceInfo.owner).then(name => {
-            this.ownerName = name;
-        });
+        console.log('conferenceInfo', this.conferenceInfo);
+        this.ownerName = wfc.getUserDisplayName(this.conferenceInfo.owner);
     },
     methods: {
         favConference() {
@@ -122,7 +119,9 @@ export default {
             return date.toString();
         },
         audience() {
-            return !(this.conferenceInfo.owner === conferenceManager.selfUserId || !this.conferenceInfo.audience || this.conferenceInfo.allowSwitchMode);
+            return !(this.conferenceInfo.owner === conferenceManager.selfUserId || !this.conferenceInfo.audience || this.conferenceInfo.allowSwitchMode)
+                // Safari 浏览器，不支持直接静音自动播放音视频
+                || navigator.vendor.indexOf('Apple') > 0
         },
         enableDestroy() {
             return this.conferenceInfo.owner === conferenceManager.selfUserId && new Date().getTime() < this.conferenceInfo.startTime * 1000;

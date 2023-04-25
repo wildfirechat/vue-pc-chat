@@ -33,7 +33,7 @@
             @close="sharedConversationState.previewMediaIndex = null">
         </CoolLightBox>
         <notifications/>
-        <IpcMain/>
+        <IpcMain v-if="sharedMiscState.isMainWindow"/>
         <router-view id="main-content-container" class="main-content-container"></router-view>
     </div>
 </template>
@@ -47,9 +47,6 @@ import './twemoji'
 import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
 import wfc from "./wfc/client/wfc";
-import axios from "axios";
-import Config from "./config";
-import {getItem} from "./ui/util/storageHelper";
 
 export default {
     name: 'App',
@@ -63,6 +60,10 @@ export default {
     methods: {
         visibilityChange(event, hidden) {
             store.setPageVisibility(!hidden);
+            console.log('page visibilityChange', hidden);
+            if (!hidden && !isElectron()){
+                wfc.onForeground();
+            }
         },
         onblur() {
             store.setPageVisibility(false);
@@ -189,6 +190,7 @@ export default {
     z-index: -999;
     background-size: cover;
     transition: 1s opacity;
+    opacity: 0;
 }
 
 .main-content-container {

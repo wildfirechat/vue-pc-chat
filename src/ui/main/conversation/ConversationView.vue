@@ -13,7 +13,7 @@
                     <div
                         v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
                     >
-                        <a href="#">
+                        <a v-if="sharedMiscState.isElectron" href="#">
                             <i class="icon-ion-pin"
                                style="display: inline-block"
                                v-bind:class="{active : isWindowAlwaysTop}"
@@ -131,7 +131,7 @@
                     <li v-if="isCopyable(message)">
                         <a @click.prevent="copy(message)">{{ $t('common.copy') }}</a>
                     </li>
-                    <li v-if="isDownloadAble(message)">
+                    <li v-if="isDownloadable(message)">
                         <a @click.prevent="download(message)">{{ $t('common.save') }}</a>
                     </li>
                     <li>
@@ -219,6 +219,8 @@ import FriendRequestView from "../contact/FriendRequestView";
 import {currentWindow, ipcRenderer} from "../../../platform";
 import appServerApi from "../../../api/appServerApi";
 import Config from "../../../config";
+import IPCEventType from "../../../ipcEventType";
+import LocalStorageIpcEventType from "../../../ipc/localStorageIpcEventType";
 
 var amr;
 export default {
@@ -326,7 +328,7 @@ export default {
                     // 根据后缀判断类型
                     if (dragUrl.endsWith('.png') || dragUrl.endsWith('.jpg') || dragUrl.endsWith('jpeg')) {
                         //constructor(fileOrLocalPath, remotePath, thumbnail) {
-                        let content = new ImageMessageContent(null, dragUrl, null);
+                        let content = new ImageMessageContent(null, dragUrl, Config.DEFAULT_THUMBNAIL_URL.split(',')[1]);
                         wfc.sendConversationMessage(this.conversationInfo.conversation, content);
                     } else {
                         // TODO
@@ -480,9 +482,14 @@ export default {
 
         // message context menu
         isCopyable(message) {
-            return message && (message.messageContent instanceof TextMessageContent || message.messageContent instanceof ImageMessageContent);
+            return message
+                && (message.messageContent instanceof TextMessageContent
+                    || message.messageContent instanceof ImageMessageContent
+                    || ((message.messageContent instanceof VideoMessageContent
+                        || message.messageContent instanceof FileMessageContent) && this.isLocalFile(message))
+                );
         },
-        isDownloadAble(message) {
+        isDownloadable(message) {
             return message && (message.messageContent instanceof ImageMessageContent
                 || message.messageContent instanceof FileMessageContent
                 || message.messageContent instanceof VideoMessageContent);
@@ -558,8 +565,12 @@ export default {
                 } else {
                     copyText(content.content)
                 }
-            } else {
+            } else if (content instanceof ImageMessageContent) {
                 copyImg(content.remotePath)
+            } else if (content instanceof MediaMessageContent) {
+                if (isElectron()) {
+                    ipcRenderer.send(IPCEventType.FILE_COPY, {path: content.localPath});
+                }
             }
         },
         download(message) {
@@ -695,6 +706,9 @@ export default {
             amr.onEnded(() => {
                 message._isPlaying = false;
                 store.playVoice(null)
+                if (message.status === MessageStatus.Unread){
+                    wfc.updateMessageStatus(message.messageId, MessageStatus.Played);
+                }
             })
         },
         mentionMessageSenderTitle(message) {
@@ -745,6 +759,7 @@ export default {
         showUnreadMessage() {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
+            this.unreadMessageCount = 0;
         },
 
         clearConversationUnreadStatus() {
@@ -785,7 +800,7 @@ export default {
         });
 
         if (!isElectron()) {
-            localStorageEmitter.on('inviteConferenceParticipant', (ev, args) => {
+            localStorageEmitter.on(LocalStorageIpcEventType.inviteConferenceParticipant, (ev, args) => {
                 let payload = args.messagePayload;
                 let messageContent = Message.messageContentFromMessagePayload(payload, wfc.getUserId());
                 let message = new Message(null, messageContent);
@@ -812,7 +827,7 @@ export default {
         this.popupItem = this.$refs['setting'];
         // refer to http://iamdustan.com/smoothscroll/
         console.log('conversationView updated', this.sharedConversationState.currentConversationInfo, this.sharedConversationState.shouldAutoScrollToBottom, this.sharedMiscState.isPageHidden)
-        if (this.sharedConversationState.shouldAutoScrollToBottom  && !this.sharedMiscState.isPageHidden) {
+        if (this.sharedConversationState.shouldAutoScrollToBottom && !this.sharedMiscState.isPageHidden) {
             let messageListElement = this.$refs['conversationMessageList'];
             messageListElement.scroll({top: messageListElement.scrollHeight, left: 0, behavior: 'auto'})
             this.clearConversationUnreadStatus();
@@ -1086,7 +1101,7 @@ export default {
 
 .conversation-info-container {
     display: none;
-    width: 250px;
+    width: 266px;
     height: 100%;
     top: 0;
     right: 0;
@@ -1101,10 +1116,10 @@ export default {
 }
 
 i:hover {
-    color: deepskyblue;
+    color: #1f64e4;
 }
 
 i.active {
-    color: #34b7f1;
+    color: #3f64e4;
 }
 </style>
