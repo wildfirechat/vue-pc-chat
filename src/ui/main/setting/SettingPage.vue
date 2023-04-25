@@ -50,7 +50,7 @@
         <div class="ad-container">
             <p>
                 <a target="_blank" href="https://wildfirechat.cn/">野火IM</a>
-                ，即时通讯与实时音视频专家，专注于沟通和连接，提供优质可控的即时通讯和实时音视频能力
+                ，安全可靠、运维部署简单、方便二开和对接现有系统。
             </p>
             <p>私有化部署，请微信联系：wildfirechat 或 wfchat </p>
         </div>
