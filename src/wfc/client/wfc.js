@@ -73,6 +73,13 @@ export class WfcManager {
         impl.useSM4();
     }
 
+    /*
+     * 启用AES256加密。注意需要服务器端同步开启AES256配置
+     */
+    useAES256() {
+        impl.useAES256();
+    }
+
     /**
      * 启动 TCP 短连接
      */
