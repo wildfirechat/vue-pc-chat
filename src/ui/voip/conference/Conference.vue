@@ -360,8 +360,10 @@ export default {
             };
 
             sessionCallback.didScreenShareEnded = () => {
-                console.log('didScreenShareEnded');
+                console.log('didScreenShareEnded', this.session.screenSharing);
+                currentWindow.setIgnoreMouseEvents(false);
                 this.selfUserInfo._isScreenSharing = false;
+                this.selfUserInfo._isVideoMuted = this.session.videoMuted;
             }
 
             sessionCallback.didCreateLocalVideoTrackError = () => {
