@@ -368,6 +368,7 @@ let store = {
                     return m.messageId === msg.messageId || eq(m.messageUid, msg.messageUid);
                 });
                 if (msgIndex > -1) {
+                    conversationState.currentConversationMessageList[msgIndex] = msg;
                     console.log('msg duplicate')
                     return;
                 }
