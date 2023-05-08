@@ -33,7 +33,8 @@ export class WfcManager {
     init(args = []) {
         impl.init(args);
         if (!Config.DISABLE_VOIP) {
-        avenginekit.setup(self);
+          avenginekit.setup(self);
+        }
         if (Config.ENABLE_PTT) {
             pttClient.init();
         }
