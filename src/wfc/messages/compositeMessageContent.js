@@ -5,6 +5,7 @@ import {stringValue} from "../util/longUtil";
 import Message from "../messages/message";
 import Conversation from "../model/conversation";
 import Long from "long";
+import {compare} from "../../wfc/util/longUtil";
 import MessagePayload from "../messages/messagePayload";
 import {isElectron} from "../../platform";
 import ArticlesMessageContent from "./articlesMessageContent";
@@ -16,7 +17,7 @@ export default class CompositeMessageContent extends MediaMessageContent {
     loaded = false;
 
     constructor() {
-        super(MessageContentType.Composite_Message)
+        super(MessageContentType.Composite_Message, '', '')
     }
 
     setMessages(msgs) {
@@ -32,6 +33,9 @@ export default class CompositeMessageContent extends MediaMessageContent {
             } else {
                 this.messages.push(m)
             }
+        })
+        this.messages = this.messages.sort((m1, m2) => {
+            return compare(m1.messageUid, m2.messageUid);
         })
     }
 
@@ -107,6 +111,9 @@ export default class CompositeMessageContent extends MediaMessageContent {
                 payload.localMediaPath = this.localPath;
                 payload.mediaType = MessageContentType.File;
             }
+            obj = {
+                ms: binArr,
+            }
         } else {
             if (binArr) {
                 obj = {
@@ -164,6 +171,7 @@ export default class CompositeMessageContent extends MediaMessageContent {
         if (this.loaded) {
             return;
         }
+        this.messages = [];
         // FIXME node 环境，decodeURIComponent 方法，有时候会在最后添加上@字符，目前尚未找到原因，先规避
         str = str.substring(0, str.lastIndexOf('}') + 1);
         str = str.replace(/"uid":([0-9]+)/g, "\"uid\":\"$1\"");

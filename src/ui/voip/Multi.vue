@@ -121,9 +121,9 @@ import CallSessionCallback from "../../wfc/av/engine/callSessionCallback";
 import CallState from "@/wfc/av/engine/callState";
 import {isElectron} from "../../platform";
 import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
-import IpcSub from "../../ipc/ipcSub";
 import MultiCallOngoingMessageContent from "../../wfc/av/messages/multiCallOngoingMessageContent";
 import VideoType from "../../wfc/av/engine/videoType";
+import wfc from "../../wfc/client/wfc";
 
 export default {
     name: 'Multi',
@@ -156,7 +156,7 @@ export default {
                     videoType = VideoType.BIG_STREAM;
                 }else if (currentVideoType === VideoType.BIG_STREAM){
                     videoType = VideoType.SMALL_STREAM;
-                }else if (videoType === VideoType.SMALL_STREAM){
+                }else if (currentVideoType === VideoType.SMALL_STREAM){
                     videoType = VideoType.NONE;
                 }
                 this.session.setParticipantVideoType(userId, screenSharing, videoType);
@@ -194,8 +194,8 @@ export default {
 
                 // pls refer to: https://vuejs.org/v2/guide/reactivity.html
                 this.$set(this.selfUserInfo, '_stream', null)
-                participantUserInfos.forEach(p => this.$set(p, "_stream", null))
-                groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
+                this.participantUserInfos.forEach(p => this.$set(p, "_stream", null))
+                this.groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
 
                 if (selfUserInfo.uid === initiatorUserInfo.uid){
                     this.broadcastMultiCallOngoingTimer = setInterval(this.broadcastMultiCallOngoing, 1000)
@@ -222,13 +222,10 @@ export default {
             };
 
             sessionCallback.didParticipantJoined = (userId, screenSharing) => {
-                IpcSub.getUserInfos([userId], null, (userInfos) => {
-                    userInfos.forEach(u => {
-                console.log('didParticipantJoined', userId)
-                        u._stream = null;
-                        this.participantUserInfos.push(u);
-                    })
-                })
+                let userInfo = wfc.getUserInfo(userId)
+                console.log('didParticipantJoined', userInfo)
+                userInfo._stream = null;
+                this.participantUserInfos.push(userInfo);
             }
 
             sessionCallback.didParticipantLeft = (userId) => {
@@ -274,9 +271,7 @@ export default {
                 }
             };
             sessionCallback.didChangeInitiator = (initiator) => {
-                IpcSub.getUserInfos([initiator], null, (userInfos) => {
-                    this.initiatorUserInfo = userInfos[0];
-                })
+                this.initiatorUserInfo = wfc.getUserInfo(initiator);
                 if (!this.broadcastMultiCallOngoingTimer){
                     this.broadcastMultiCallOngoingTimer = setInterval(this.broadcastMultiCallOngoing, 200)
                 }
@@ -413,8 +408,7 @@ export default {
         broadcastMultiCallOngoing(){
             let participants = this.participantUserInfos.map(pu => pu.uid).filter(uid => uid !== this.selfUserInfo.uid)
             let ongoing = new MultiCallOngoingMessageContent(this.session.callId, this.session.initiatorId, this.session.audioOnly, participants);
-            console.log('broadcast ongoing', ongoing);
-            IpcSub.sendMessage(this.session.conversation, ongoing);
+            wfc.sendConversationMessage(this.session.conversation, ongoing);
         }
     },
 
@@ -436,7 +430,7 @@ export default {
     destroyed() {
         // reset
         this.$set(this.selfUserInfo, '_stream', null)
-        groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
+        this.groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
         if (this.broadcastMultiCallOngoingTimer){
             clearInterval(this.broadcastMultiCallOngoingTimer);
         }

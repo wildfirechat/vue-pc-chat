@@ -15,12 +15,7 @@ export default {
         console.log('conversation page destroyed')
     },
 
-    methods: {
-        showConversation(conversation) {
-            this.currentConversation = conversation;
-            console.log("show conversation", conversation);
-        },
-    },
+    methods: {},
     components: {
         ConversationListPanel,
         ConversationView,
@@ -36,7 +31,7 @@ export default {
 }
 
 .conversation-list-panel {
-    width: 250px;
+    width: 261px;
     height: 100%;
 }
 

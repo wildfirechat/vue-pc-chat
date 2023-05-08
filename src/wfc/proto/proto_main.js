@@ -1,4 +1,4 @@
-import {BrowserWindow, ipcMain, } from 'electron';
+import {BrowserWindow, ipcMain} from 'electron';
 
 let proto;
 const ASYNC_CALLBACK = 'protoAsyncCallback';
@@ -8,7 +8,13 @@ const asyncProtoMethods = {
     searchUser: _asyncCall2('searchUser'),
     setFavUser: _asyncCall2('setFavUser'),
     deleteFriend: _asyncCall2('deleteFriend'),
-    handleFriendRequest: _asyncCall2('handleFriendRequest'),
+    handleFriendRequest: (event, args) => {
+        let methodArgs = args.methodArgs;
+        proto.handleFriendRequest(methodArgs[0], methodArgs[1],
+            _genCallback(event, args.reqId, 0, true),
+            _genCallback(event, args.reqId, 1, true),
+            methodArgs[2])
+    },
     setBlackList: _asyncCall2('setBlackList'),
     setFriendAlias: _asyncCall2('setFriendAlias'),
     createGroup: _asyncCall2('createGroup'),
@@ -18,6 +24,7 @@ const asyncProtoMethods = {
     setGroupRemark: _asyncCall2('setGroupRemark'),
     addMembers: _asyncCall2('addMembers'),
     getGroupMembersEx: _asyncCall2('getGroupMembersEx'),
+    getGroupInfoEx: _asyncCall2('getGroupInfoEx'),
     kickoffMembers: _asyncCall2('kickoffMembers'),
     dismissGroup: _asyncCall2('dismissGroup'),
     modifyGroupInfo: _asyncCall2('modifyGroupInfo'),
@@ -27,6 +34,8 @@ const asyncProtoMethods = {
     transferGroup: _asyncCall2('transferGroup'),
     setFavGroup: _asyncCall2('setFavGroup'),
     quitGroup: _asyncCall2('quitGroup'),
+    getMyGroups: _asyncCall2('getMyGroups'),
+    getCommonGroups: _asyncCall2('getCommonGroups'),
     setUserSetting: _asyncCall2('setUserSetting'),
     modifyMyInfo: _asyncCall2('modifyMyInfo'),
     setGlobalSlient: _asyncCall2('setGlobalSlient'),
@@ -46,12 +55,51 @@ const asyncProtoMethods = {
     setConversationTop: _asyncCall2('setConversationTop'),
     setConversationSlient: _asyncCall2('setConversationSlient'),
     sendFriendRequest: _asyncCall2('sendFriendRequest'),
-    sendSavedMessage: _asyncCall2('sendSavedMessage'),
+    requireLock: _asyncCall2('requireLock'),
+    releaseLock: _asyncCall2('releaseLock'),
+    getMessagesV2: _asyncCall2('getMessagesV2'),
+    getMessagesExV2: _asyncCall2('getMessagesExV2'),
+    getMessagesEx2V2: _asyncCall2('getMessagesEx2V2'),
+    getMessagesByTimestampV2: _asyncCall2('getMessagesByTimestampV2'),
+    getUserMessagesV2: _asyncCall2('getUserMessagesV2'),
+    getUserMessagesExV2: _asyncCall2('getUserMessagesExV2'),
+
+    sendSavedMessage: (event, args) => {
+        proto.sendSavedMessage(...args.methodArgs,
+            (...cbArgs) => {
+                let obj = {
+                    code: 0,
+                    reqId: args.reqId,
+                    cbIndex: 0,
+                    done: true,
+                    cbArgs: cbArgs
+                }
+                let messageId = args.methodArgs[0];
+                let msg = proto.getMessage(messageId);
+                _genProtoEventListener('onSendMessage')(msg);
+                _notifyMessageStatusUpdate(messageId);
+                event.sender.send(ASYNC_CALLBACK, obj);
+            },
+            (...cbArgs) => {
+                let obj = {
+                    code: 0,
+                    reqId: args.reqId,
+                    cbIndex: 1,
+                    done: true,
+                    cbArgs: cbArgs
+                }
+                let messageId = args.methodArgs[0];
+                _notifyMessageStatusUpdate(messageId);
+                event.sender.send(ASYNC_CALLBACK, obj);
+            },
+        )
+    },
     recall: _asyncCall2('recall'),
     deleteRemoteMessage: _asyncCall2('deleteRemoteMessage'),
     updateRemoteMessageContent: _asyncCall2('updateRemoteMessageContent'),
     watchOnlineState: _asyncCall2('watchOnlineState'),
     unwatchOnlineState: _asyncCall2('unwatchOnlineState'),
+    getAuthorizedMediaUrl: _asyncCall2('getAuthorizedMediaUrl'),
     getUploadMediaUrl: _asyncCall2('getUploadMediaUrl'),
     getConversationFiles: _asyncCall2('getConversationFiles'),
     getMyFiles: _asyncCall2('getMyFiles'),
@@ -115,6 +163,9 @@ export function init(wfcProto) {
                 code: 0,
                 value: proto[args.methodName](...args.methodArgs)
             };
+            if (args.methodName === 'updateMessageStatus') {
+                _notifyMessageStatusUpdate(args.methodArgs[0])
+            }
         } catch (e) {
             console.log('invokeProtoMethod ' + args.methodName + ' error', args, e.message)
             event.returnValue = {
@@ -152,17 +203,60 @@ export function init(wfcProto) {
 
     ipcMain.on('sendMessage', (event, args) => {
         try {
+            let messageId;
             let msg = proto.sendMessage(...args.methodArgs,
-                _genCallback(event, args.reqId, 0, false),
-                _genCallback(event, args.reqId, 1, false),
-                _genCallback(event, args.reqId, 2, true),
-                _genCallback(event, args.reqId, 3, false),
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 0,
+                        done: false,
+                        cbArgs: cbArgs
+                    }
+                    messageId = cbArgs[0];
+                    _notifyMessageStatusUpdate(messageId)
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                },
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 1,
+                        done: false,
+                        cbArgs: cbArgs
+                    }
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                    // progress 更新太频繁了
+                    //_notifyMessageStatusUpdate(messageId)
+                },
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 2,
+                        done: true,
+                        cbArgs: cbArgs
+                    }
+                    _notifyMessageStatusUpdate(messageId)
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                },
+                (...cbArgs) => {
+                    let obj = {
+                        code: 0,
+                        reqId: args.reqId,
+                        cbIndex: 3,
+                        done: true,
+                        cbArgs: cbArgs
+                    }
+                    _notifyMessageStatusUpdate(messageId)
+                    event.sender.send(ASYNC_CALLBACK, obj);
+                },
             );
             event.returnValue = {
                 code: 0,
                 value: msg,
             };
-
+            _genProtoEventListener('onSendMessage')(msg);
         } catch (e) {
             event.returnValue = {
                 code: -1,
@@ -173,6 +267,15 @@ export function init(wfcProto) {
             }
         }
     })
+}
+
+function _notifyMessageStatusUpdate(messageId) {
+    // 聊天室消息，本地不存储
+    if (messageId <= 0) {
+        return;
+    }
+    let msg = proto.getMessage(messageId);
+    _genProtoEventListener('onMessageStatusUpdate')(msg);
 }
 
 function setupProtoListener() {
@@ -218,4 +321,3 @@ function _genProtoEventListener(protoEventName) {
         }
     }
 }
-

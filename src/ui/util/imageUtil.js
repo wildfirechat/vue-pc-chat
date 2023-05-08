@@ -253,16 +253,17 @@ function mergeImages(sources = [], options = {}) {
 
 
 let groupPortraitMap = new Map();
+window.__groupPortraitMap = groupPortraitMap;
 
-async function getConversationPortrait(conversation) {
+async function getConversationPortrait(conversation, userInfoMap, groupInfoMap) {
     let portrait = '';
     switch (conversation.type) {
         case ConversationType.Single:
-            let u = wfc.getUserInfo(conversation.target, false);
+            let u = userInfoMap ? userInfoMap.get(conversation.target) : wfc.getUserInfo(conversation.target, false);
             portrait = u.portrait;
             break;
         case ConversationType.Group:
-            portrait = await getGroupPortrait(conversation.target);
+            portrait = await getGroupPortrait(conversation.target, groupInfoMap);
             break;
         case ConversationType.Channel:
             break;
@@ -288,18 +289,19 @@ async function getConversationPortrait(conversation) {
     return portrait;
 }
 
-async function getGroupPortrait(groupId) {
-    let groupInfo = wfc.getGroupInfo(groupId, false);
+async function getGroupPortrait(groupId, groupInfoMap) {
+    let groupInfo = groupInfoMap ? groupInfoMap.get(groupId) : wfc.getGroupInfo(groupId, false);
     if (groupInfo.portrait) {
         return groupInfo.portrait;
     }
 
     let portrait = groupPortraitMap.get(groupId);
     let now = new Date().getTime();
-    if (!portrait || now - portrait.timestamp > 10 * 1000) {
+    if (!portrait || now - portrait.timestamp > 30 * 1000) {
         let groupMembers = wfc.getGroupMembers(groupId, false);
         if (!groupMembers || groupMembers.length === 0) {
-            return Config.DEFAULT_PORTRAIT_URL;
+            console.error('gen group portrait, members empty', groupId)
+            return Config.DEFAULT_GROUP_PORTRAIT_URL;
         }
         groupMembers = groupMembers.filter(m => m.type !== GroupMemberType.Removed);
         let groupMemberPortraits = [];
@@ -312,6 +314,14 @@ async function getGroupPortrait(groupId) {
     } else {
         return portrait.uri;
     }
+}
+
+async function genGroupPortrait(groupMemberUsers) {
+    let groupMemberPortraits = [];
+    for (let i = 0; i < Math.min(9, groupMemberUsers.length); i++) {
+        groupMemberPortraits.push(groupMemberUsers[i].portrait)
+    }
+    return await mergeImages(groupMemberPortraits);
 }
 
 // return data uri
@@ -450,4 +460,4 @@ function fileFromDataUri(dataUri, fileName) {
 }
 
 
-export {mergeImages, getConversationPortrait, videoThumbnail, videoDuration, imageThumbnail, fileFromDataUri};
+export {mergeImages, getConversationPortrait, genGroupPortrait, videoThumbnail, videoDuration, imageThumbnail, fileFromDataUri};

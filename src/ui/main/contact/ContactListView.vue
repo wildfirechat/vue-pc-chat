@@ -32,6 +32,16 @@
                 <ChannelListView v-if="sharedContactState.expandChanel"/>
             </li>
             <li>
+                <div @click="showOrganization" class="category-item-container">
+                    <i class="arrow right" v-bind:class="{down: sharedContactState.expandOrganization}"></i>
+                    <div class="category-item">
+                        <span class="title">组织结构</span>
+                        <span class="desc"></span>
+                    </div>
+                </div>
+                <OrganizationListView v-if="sharedContactState.expandOrganization"/>
+            </li>
+            <li>
                 <div @click="showContacts" class="category-item-container">
                     <i class="arrow right" v-bind:class="{down: sharedContactState.expandFriendList}"></i>
                     <div class="category-item">
@@ -39,11 +49,18 @@
                         <span class="desc">{{ sharedContactState.friendList.length }}</span>
                     </div>
                 </div>
-                <UserListVue :enable-pick="false"
-                             :users="sharedContactState.favContactList.concat(sharedContactState.friendList)"
-                             :click-user-item-func="setCurrentUser"
-                             :padding-left="'30px'"
-                             v-if="sharedContactState.expandFriendList"/>
+                <UserListVue
+                    v-if="sharedContactState.expandFriendList && users.length < 200"
+                    :enable-pick="false"
+                    :users="users"
+                    :click-user-item-func="setCurrentUser"
+                    :padding-left="'30px'"
+                />
+                <virtual-list
+                    v-else-if="sharedContactState.expandFriendList"
+                    :data-component="contactItemView" :data-sources="groupedContacts" :data-key="'uid'"
+                    :estimate-size="30"
+                    style="max-height: 600px; overflow-y: auto"/>
             </li>
         </ul>
     </section>
@@ -54,13 +71,23 @@ import GroupListVue from "@/ui/main/contact/GroupListView";
 import store from "@/store";
 import UserListVue from "@/ui/main/user/UserListVue";
 import ChannelListView from "./ChannelListView";
+import ContactItemView from "./ContactItemView";
+import OrganizationListView from "./OrganizationListView.vue";
 
 export default {
     name: "ContactListView",
-    components: {ChannelListView, UserListVue, GroupListVue, NewFriendListView: FriendRequestListView},
+    components: {
+        OrganizationListView,
+        ChannelListView,
+        UserListVue,
+        GroupListVue,
+        NewFriendListView: FriendRequestListView
+    },
     data() {
         return {
             sharedContactState: store.state.contact,
+            contactItemView: ContactItemView,
+            rootOrganizations: [],
         }
     },
     methods: {
@@ -79,7 +106,35 @@ export default {
         showContacts() {
             store.toggleFriendList();
         },
+        showOrganization() {
+            store.toggleOrganizationList();
+        }
+    },
+    computed: {
+        groupedContacts() {
+            let groupedUsers = [];
+            let currentCategory = {};
+            let lastCategory = null;
+            this.users.forEach((user) => {
+                if (!lastCategory || lastCategory !== user._category) {
+                    lastCategory = user._category;
+                    currentCategory = {
+                        type: 'category',
+                        category: user._category,
+                        uid: user._category,
+                    };
+                    groupedUsers.push(currentCategory);
+                    groupedUsers.push(user);
+                } else {
+                    groupedUsers.push(user);
+                }
+            });
+            return groupedUsers;
+        },
 
+        users(){
+            return store.state.contact.favContactList.concat(store.state.contact.friendList);
+        },
     }
 }
 </script>

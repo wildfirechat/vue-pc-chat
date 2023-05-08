@@ -8,6 +8,7 @@
 <script>
 import Message from "@/wfc/messages/message";
 import {parser as emojiParse} from "@/ui/util/emoji";
+//import {marked} from "marked";
 
 export default {
     name: "TextMessageContentView",
@@ -50,11 +51,9 @@ export default {
         textContent() {
             let tmp = emojiParse(this.message.messageContent.digest(this.message));
             // pls refer to https://stackoverflow.com/questions/4522124/replace-leading-spaces-with-nbsp-in-javascript
-            tmp = tmp.replace(/^[ \t]+/gm, function (x) {
-                return new Array(x.length + 1).join('&nbsp;')
-            })
             tmp = tmp.replace(/<script/gi, "&lt;script");
             tmp = tmp.replace(/<iframe/gi, "&lt;iframe");
+            // tmp = marked.parse(tmp);
             if (tmp.indexOf('<img') >= 0) {
                 tmp = tmp.replace(/<img/g, '<img style="max-width:400px;"')
                 return tmp;
@@ -76,9 +75,17 @@ export default {
     align-items: center;
 }
 
-.text-message-container p {
+.text-message-container >>> p {
     user-select: text;
     white-space: pre-line;
+}
+
+.text-message-container >>> code {
+    background:  #f5f5f5;
+    display: inline-block;
+    border-radius: 3px;
+    padding: 0 5px;
+    user-select: text;
 }
 
 .text-message-container.out {
@@ -87,13 +94,14 @@ export default {
 
 .text-message-container .text {
     color: #050505;
-    font-size: 16px;
+    font-size: 13px;
     line-height: 25px;
     /*max-height: 1000px;*/
     word-break: break-word;
     overflow: hidden;
     display: inline-block;
     text-overflow: ellipsis;
+    user-select: text;
 }
 
 /*style for v-html */
@@ -104,6 +112,10 @@ export default {
 
 .text-message-container .text >>> a{
     white-space: normal;
+}
+
+.text-message-container .text >>> .emoji{
+    vertical-align:middle;
 }
 
 </style>

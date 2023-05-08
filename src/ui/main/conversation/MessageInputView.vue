@@ -1,6 +1,6 @@
 <template>
     <div>
-        <section class="message-input-container" v-if="!sharedConversationState.showChannelMenu">
+        <section ref="message-input-container" class="message-input-container" v-if="!sharedConversationState.showChannelMenu">
             <section class="input-action-container">
                 <VEmojiPicker
                     id="emoji"
@@ -14,20 +14,43 @@
                     @select="onSelectEmoji"
                 />
                 <ul>
-                    <li><i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"></i></li>
-                    <li><i @click="pickFile" class="icon-ion-android-attach"></i>
+                    <li v-if="!inputOptions['disableEmoji']">
+                        <i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart"/>
+                    </li>
+                    <li v-if="!inputOptions['disableFile']">
+                        <i @click="pickFile" class="icon-ion-android-attach"/>
                         <input ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
                                style="display: none">
                     </li>
-                    <li v-if="sharedMiscState.isElectron"><i id="screenShot" @click="screenShot"
-                                                             class="icon-ion-scissors"></i></li>
-                    <li v-if="sharedMiscState.isElectron"><i id="messageHistory" @click="showMessageHistory"
-                                                             class="icon-ion-android-chat"></i></li>
+                    <li v-if="!inputOptions['disableScreenShot'] && sharedMiscState.isElectron">
+                        <div style="display: inline-block; text-align: center">
+                            <i id="screenShot" @click="screenShot(false)" class="icon-ion-scissors"/>
+                            <i class="icon-ion-chevron-down" style="font-size: 10px; color: #494849; padding-left: 5px;"/>
+                            <span @click="screenShot(true)" class="screen-shot-button">隐藏当前窗口截图</span>
+                        </div>
+                    </li>
+                    <li v-if="!inputOptions['disableHistory'] && sharedMiscState.isElectron">
+                        <i id="messageHistory" @click="showMessageHistory" class="icon-ion-android-chat"/>
+                    </li>
+                    <li v-if="enablePtt">
+                        <i id="ptt" @mousedown="requestPttTalk(true)" @mouseup="requestPttTalk(false)"
+                           class="icon-ion-android-radio-button-on"/>
+                    </li>
+                    <li>
+                        <i id="voice" @mousedown="recordAudio(true)" @mouseup="recordAudio(false)"
+                           class="icon-ion-android-microphone"/>
+                    </li>
                 </ul>
-                <ul v-if="sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target && sharedMiscState.config.DISABLE_VOIP">
-                    <li><i @click="startAudioCall" class="icon-ion-ios-telephone"></i></li>
-                    <li><i @click="startVideoCall" class="icon-ion-ios-videocam"></i></li>
-                    <li v-if="conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length"><i @click="toggleChannelMenu" class="icon-ion-android-menu"></i></li>
+                <ul v-if="!inputOptions['disableVoip'] && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
+                    <li v-if="!inputOptions['disableAudioCall']">
+                        <i @click="startAudioCall" class="icon-ion-ios-telephone"/>
+                    </li>
+                    <li v-if="!inputOptions['disableVideoCall']">
+                        <i @click="startVideoCall" class="icon-ion-ios-videocam"/>
+                    </li>
+                    <li v-if="!inputOptions['disableChannelMenu'] && conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length">
+                        <i @click="toggleChannelMenu" class="icon-ion-android-menu"/>
+                    </li>
                 </ul>
             </section>
             <div @keydown.13="send($event)"
@@ -37,6 +60,7 @@
                  draggable="false"
                  title="Enter发送，Ctrl+Enter换行"
                  autofocus
+                 @input="onInput"
                  @contextmenu.prevent="$refs.menu.open($event)"
                  onmouseover="this.setAttribute('org_title', this.title); this.title='';"
                  onmouseout="this.title = this.getAttribute('org_title');"
@@ -64,11 +88,13 @@
                 v-on:cancelQuoteMessage="cancelQuoteMessage"
                 :enable-message-preview="false"
                 :quoted-message="quotedMessage" :show-close-button="true"/>
-            <div v-if="muted" style="width: 100%; height: 100%; background: lightgrey; position: absolute; display: flex; justify-content: center; align-items: center">
+            <div v-if="muted"
+                 style="width: 100%; height: 100%; background: lightgrey; position: absolute; display: flex; justify-content: center; align-items: center">
                 <p style="color: white">群禁言或者你被禁言</p>
             </div>
         </section>
-        <ChannelMenuView v-else :menus="conversationInfo.conversation._target.menus" :conversation="conversationInfo.conversation"></ChannelMenuView>
+        <ChannelMenuView v-else :menus="conversationInfo.conversation._target.menus"
+                         :conversation="conversationInfo.conversation"></ChannelMenuView>
     </div>
 </template>
 
@@ -96,8 +122,16 @@ import {config as emojiConfig} from "@/ui/main/conversation/EmojiAndStickerConfi
 import {ipcRenderer, isElectron} from "@/platform";
 import {copyText} from "../../util/clipboard";
 import EventType from "../../../wfc/client/wfcEvent";
-import IPCRendererEventType from "../../../ipcRendererEventType";
+import IpcEventType from "../../../ipcEventType";
 import ChannelMenuView from "./ChannelMenuView";
+import IpcSub from "../../../ipc/ipcSub";
+import pttClient from "../../../wfc/ptt/client/pttClient";
+import TalkingCallback from "../../../wfc/ptt/client/talkingCallback";
+import Config from "../../../config";
+import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
+import BenzAMRRecorder from "benz-amr-recorder";
+import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
+import {currentWindow} from "../../../platform";
 
 // vue 不允许在computed里面有副作用
 // 和store.state.conversation.quotedMessage 保持同步
@@ -111,6 +145,11 @@ export default {
             required: true,
             default: null,
         },
+        inputOptions: {
+            type: Object,
+            required: false,
+            default: () => ({}),
+        }
     },
     data() {
         return {
@@ -125,6 +164,9 @@ export default {
             lastConversationInfo: null,
             storeDraftIntervalId: 0,
             tributeReplaced: false,
+            enablePtt: wfc.isCommercialServer() && Config.ENABLE_PTT,
+            amrRecorder: null,
+            lastTypingMessageTimestamp: 0,
         }
     },
     methods: {
@@ -153,16 +195,32 @@ export default {
             store.quoteMessage(null)
         },
 
+        onInput(e) {
+            this.notifyTyping(TypingMessageContent.TYPING_TEXT);
+        },
+
+        notifyTyping(type) {
+            if ([ConversationType.Single, ConversationType.Group].indexOf(this.conversationInfo.conversation.type) >= 0) {
+                let now = new Date().getTime();
+                if (now - this.lastTypingMessageTimestamp > 10 * 1000) {
+                    let typing = new TypingMessageContent(type);
+                    wfc.sendConversationMessage(this.conversationInfo.conversation, typing)
+                    this.lastTypingMessageTimestamp = now;
+                }
+            }
+        },
         async handlePaste(e, source) {
             let text;
             e.preventDefault();
+
             if ((e.originalEvent || e).clipboardData) {
                 text = (e.originalEvent || e).clipboardData.getData('text/plain');
             } else {
                 text = await navigator.clipboard.readText();
             }
+            console.log('handlePaste', e, source);
             if (isElectron()) {
-                let args = ipcRenderer.sendSync('file-paste');
+                let args = ipcRenderer.sendSync(IpcEventType.FILE_PASTE);
                 if (args.hasImage) {
                     document.execCommand('insertText', false, ' ');
                     document.execCommand('insertImage', false, 'local-resource://' + args.filename);
@@ -172,6 +230,32 @@ export default {
                         store.sendFile(this.conversationInfo.conversation, file)
                     })
                     return;
+                }
+            } else {
+                const dT = e.clipboardData || window.clipboardData;
+                if (dT) {
+                    const file = dT.files[0];
+                    if (file) {
+                        if (file.type.indexOf('image') !== -1) {
+                            // image
+                            document.execCommand('insertImage', false, URL.createObjectURL(file));
+                        } else {
+                            // file
+                            store.sendFile(this.conversationInfo.conversation, file)
+                        }
+                        return;
+                    }
+                    console.log('handle paste file', file);
+                } else {
+                    const clipboardContents = await navigator.clipboard.read();
+                    for (const item of clipboardContents) {
+                        console.log('clipboard item', item.types, item)
+                        if (item.types.includes("image/png")) {
+                            const blob = await item.getType("image/png");
+                            document.execCommand('insertImage', false, URL.createObjectURL(blob));
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -216,7 +300,7 @@ export default {
             this.$refs['input'].innerHTML = '';
         },
 
-        send(e) {
+        async send(e) {
             if (this.tribute && this.tribute.isActive) {
                 this.tributeReplaced = false;
                 return;
@@ -275,9 +359,9 @@ export default {
 
             let imgs = [...input.getElementsByTagName('img')];
             if (imgs) {
-                imgs.forEach(img => {
+                for (const img of imgs) {
                     if (img.className.indexOf('emoji') >= 0) {
-                        return;
+                        continue;
                     }
                     let src = img.src;
                     let file;
@@ -285,21 +369,28 @@ export default {
                         // 'local-resource://' + 绝对路径
                         file = decodeURI(src.substring(17, src.length));
                     } else {
-                        file = fileFromDataUri(src, new Date().getTime() + '.png');
+                        if (src.startsWith('blob:')) {
+                            let blob = await fetch(src).then(r => r.blob());
+                            file = new File([blob], new Date().getTime() + '.png');
+                        } else {
+                            file = fileFromDataUri(src, new Date().getTime() + '.png');
+                        }
                     }
                     this.$eventBus.$emit('uploadFile', file)
+                    store.setShouldAutoScrollToBottom(true);
                     store.sendFile(this.conversationInfo.conversation, file)
                     // 会影响 input.getElementsByTagName 返回的数组，所以上面拷贝了一下
                     img.parentNode.removeChild(img);
-                });
+                }
             }
             message = input.innerHTML.trim();
             message = message.replace(/<br>/g, '\n')
                 .replace(/<div>/g, '\n')
                 .replace(/<\/div>/g, '')
+                .replace(/<b>/g, '')
+                .replace(/<\/b>/g, '')
                 .replace(/&nbsp;/g, ' ');
 
-            // TODO 可以在此对文本消息进行处理，比如过滤掉 script，iframe 等标签
 
             //  自行部署表情时，需要手动替换下面的正则
             // TODO 在正则中使用变量，避免手动替换
@@ -313,6 +404,7 @@ export default {
                     let quoteInfo = QuoteInfo.initWithMessage(quotedMessage);
                     textMessageContent.setQuoteInfo(quoteInfo);
                 }
+                store.setShouldAutoScrollToBottom(true);
                 wfc.sendConversationMessage(conversation, textMessageContent);
                 this.$refs['input'].innerHTML = '';
             }
@@ -328,8 +420,12 @@ export default {
             this.focusInput();
         },
 
-        screenShot() {
-            ipcRenderer.send('screenshots-start', {});
+        screenShot(hideCurrentWindow = false) {
+            if (hideCurrentWindow) {
+                currentWindow.hide();
+            }
+            console.log('screenShot', hideCurrentWindow);
+            ipcRenderer.send(IpcEventType.START_SCREEN_SHOT, {});
         },
         showMessageHistory() {
             let hash = window.location.hash;
@@ -340,13 +436,13 @@ export default {
                 url += "/conversation-message-history"
             }
             let conversation = this.conversationInfo.conversation;
-            ipcRenderer.send(IPCRendererEventType.showConversationMessageHistoryPage, {
+            ipcRenderer.send(IpcEventType.showConversationMessageHistoryPage, {
                 url: url,
                 type: conversation.type,
                 target: conversation.target,
                 line: conversation.line,
             });
-            console.log(IPCRendererEventType.showConversationMessageHistoryPage, url)
+            console.log(IpcEventType.showConversationMessageHistoryPage, url)
         },
 
         hideEmojiView(e) {
@@ -399,23 +495,26 @@ export default {
 
         pickFile() {
             this.$refs['fileInput'].click();
+            this.notifyTyping(TypingMessageContent.TYPING_FILE);
         },
 
         startAudioCall() {
+            console.log(`startAudioCall from mainWindow ${this.sharedMiscState.isMainWindow}`);
             let conversation = this.conversationInfo.conversation;
-            if (conversation.type === ConversationType.Single) {
-                avenginekitproxy.startCall(conversation, true, [conversation.target])
+            if (this.sharedMiscState.isMainWindow) {
+                this.$startVoipCall({audioOnly: true, conversation: conversation});
             } else {
-                this.startGroupVoip(true);
+                IpcSub.startVoipCall(conversation, true);
             }
         },
 
         startVideoCall() {
+            console.log(`startVideoCall from mainWindow ${this.sharedMiscState.isMainWindow}`);
             let conversation = this.conversationInfo.conversation;
-            if (conversation.type === ConversationType.Single) {
-                avenginekitproxy.startCall(conversation, false, [conversation.target])
+            if (this.sharedMiscState.isMainWindow) {
+                this.$startVoipCall({audioOnly: false, conversation: conversation});
             } else {
-                this.startGroupVoip(false);
+                IpcSub.startVoipCall(conversation, false);
             }
         },
 
@@ -429,20 +528,6 @@ export default {
                 }
             }
             store.toggleChannelMenu(toggle);
-        },
-
-        startGroupVoip(isAudioOnly) {
-            let successCB = users => {
-                let participantIds = users.map(u => u.uid);
-                avenginekitproxy.startCall(this.conversationInfo.conversation, isAudioOnly, participantIds)
-            };
-            this.$pickContact({
-                successCB,
-                users: store.getGroupMemberUserInfos(this.conversationInfo.conversation.target, true, true),
-                initialCheckedUsers: [this.sharedContactState.selfUserInfo],
-                uncheckableUsers: [this.sharedContactState.selfUserInfo],
-                confirmTitle: this.$t('common.confirm'),
-            });
         },
 
         onPickFile(event) {
@@ -589,10 +674,18 @@ export default {
 
         restoreDraft() {
             let draft = Draft.getConversationDraftEx(this.conversationInfo);
+            if (!draft) {
+                return;
+            }
+            console.log('restore draft', this.conversationInfo, draft);
             store.quoteMessage(draft.quotedMessage);
             let input = this.$refs['input'];
-            input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
-            this.moveCursorToEnd(input);
+            if (input.innerHTML.trim()) {
+                console.log('inputting, ignore', draft.text)
+            } else {
+                input.innerHTML = draft.text.replace(/ /g, '&nbsp').replace(/\n/g, '<br>');
+                this.moveCursorToEnd(input);
+            }
         },
 
         storeDraft(conversationInfo, quotedMessage) {
@@ -664,7 +757,70 @@ export default {
                     this.muted = true;
                 }
             }
-        }
+        },
+
+        requestPttTalk(request) {
+            if (request) {
+                let talkingCallback = new TalkingCallback();
+                talkingCallback.onStartTalking = (conversation) => {
+                    console.log('onStartTalking', conversation)
+                    this.$notify({
+                        text: '请开始说话',
+                        type: 'info'
+                    });
+                };
+                talkingCallback.onRequestFail = (conversation, reason) => {
+                    this.$notify({
+                        text: '对讲请求失败: ' + reason,
+                        type: 'error'
+                    });
+                }
+                pttClient.requestTalk(this.conversationInfo.conversation, talkingCallback)
+            } else {
+                pttClient.releaseTalk(this.conversationInfo.conversation);
+            }
+        },
+
+        recordAudio(start) {
+            this.notifyTyping(TypingMessageContent.TYPING_VOICE);
+            if (start) {
+                if (!this.amrRecorder) {
+                    this.amrRecorder = new BenzAMRRecorder();
+                    this.amrRecorder.initWithRecord().then(() => {
+                        this.amrRecorder.startRecord();
+                        this.$notify({
+                            text: '请开始说话',
+                            type: 'info'
+                        });
+                    }).catch((e) => {
+                        this.$notify({
+                            text: '录音失败',
+                            type: 'error'
+                        });
+                        console.log('录音失败', e);
+                        this.amrRecorder = null;
+                    });
+                }
+            } else {
+                if (this.amrRecorder) {
+                    this.amrRecorder.finishRecord().then(() => {
+                        let duration = this.amrRecorder.getDuration();
+                        if (duration > 1) {
+                            let blob = this.amrRecorder.getBlob();
+                            let file = new File([blob], new Date().getTime() + '.amr');
+                            let content = new SoundMessageContent(file, null, Math.ceil(duration));
+                            wfc.sendConversationMessage(this.conversationInfo.conversation, content);
+                        } else {
+                            this.$notify({
+                                text: '录音时间太短',
+                                type: 'warn'
+                            });
+                        }
+                        this.amrRecorder = null;
+                    });
+                }
+            }
+        },
     },
 
     activated() {
@@ -737,6 +893,7 @@ export default {
                     }
 
                     if (this.conversationInfo && (!this.lastConversationInfo || !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation))) {
+                        this.$refs.input.innerHTML = '';
                         this.restoreDraft();
                         this.initMention(this.conversationInfo.conversation)
                     }
@@ -744,6 +901,9 @@ export default {
                     this.focusInput();
                     this.initEmojiPicker()
                 })
+            } else {
+                // 其他端更新了草稿
+                this.restoreDraft();
             }
         },
     },
@@ -751,6 +911,8 @@ export default {
     computed: {
         quotedMessage() {
             lastQuotedMessage = this.sharedConversationState.quotedMessage;
+            // side affect
+            this.$refs.input && this.$refs.input.focus();
             return this.sharedConversationState.quotedMessage;
         },
 
@@ -787,8 +949,8 @@ export default {
 
 <style lang='css' scoped>
 .message-input-container {
-    height: 200px;
-    min-height: 200px;
+    height: 180px;
+    min-height: 180px;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -819,6 +981,7 @@ export default {
     overflow: auto;
     user-select: text;
     -webkit-user-select: text;
+    font-size: 13px;
 }
 
 .input:empty:before {
@@ -830,6 +993,7 @@ export default {
 .input-action-container ul li {
     display: inline;
     margin-left: 20px;
+    position: relative;
 }
 
 .input-action-container ul li:last-of-type {
@@ -838,12 +1002,29 @@ export default {
 
 i {
     font-size: 24px;
-    color: #000;
+    color: #000b;
     cursor: pointer;
 }
 
 i:hover {
-    color: #34b7f1;
+    color: #3f64e4;
+}
+
+.input-action-container ul li .screen-shot-button {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    display: none;
+    padding: 5px 10px;
+    font-size: 12px;
+    background-color: #b8b8b8;
+    border-radius: 5px;
+    color: #fff;
+}
+
+.input-action-container ul li:hover .screen-shot-button {
+    display: inline-block;
+    width: 120px;
 }
 
 </style>

@@ -57,8 +57,8 @@
                                           direction="top"
                                           @infinite="infiniteHandlerTop">
                             <!--            <template slot="spinner">加载中...</template>-->
-                            <template slot="no-more">{{ $t('fav.no_more') }}</template>
-                            <template slot="no-results">{{ $t('fav.all_fav_load') }}</template>
+                            <template slot="no-more">{{ $t('conversation.no_more_message') }}</template>
+                            <template slot="no-results">{{ $t('conversation.no_more_message') }}</template>
                         </infinite-loading>
                         <ul>
                             <li v-for="(message, index) in messages"
@@ -108,8 +108,10 @@
 import MessageContentContainerView from "./conversation/message/MessageContentContainerView";
 import store from "../../store";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
-import IPCEventType from "../../ipc/ipcEventType";
+import LocalStorageIpcEventType from "../../ipc/localStorageIpcEventType";
 import InfiniteLoading from "vue-infinite-loading";
+import ConversationView from "./conversation/ConversationView.vue";
+import IpcSub from "../../ipc/ipcSub";
 
 export default {
     name: "MessageHistoryPage",
@@ -142,7 +144,7 @@ export default {
 
         openConversation() {
             let conversation = this.currentConversationSearchResult.conversation;
-            localStorageEmitter.send('wf-ipc-to-main', {type: IPCEventType.openConversation, value: conversation})
+            IpcSub.openConversation(conversation);
         },
 
         showContextMessages(message) {
@@ -367,6 +369,8 @@ export default {
 }
 
 .message-list-container {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     padding-bottom: 20px;
     margin-left: -10px;
@@ -375,7 +379,7 @@ export default {
 
 .message-list-container ul {
     width: 100%;
-    height: 100%;
+    flex: 1;
     list-style-position: inside;
 }
 

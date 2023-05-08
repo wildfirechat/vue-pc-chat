@@ -44,6 +44,21 @@ module.exports = {
             },
             chainWebpackRendererProcess: (config) => {
                 // Chain webpack config for electron renderer process only (won't be applied to web builds)
+                config.module
+                    .rule("vue")
+                    .use("vue-loader")
+                    .loader("vue-loader")
+                    .tap(options => {
+                        options.compilerOptions.directives = {
+                            html(node, directiveMeta) {
+                                (node.props || (node.props = [])).push({
+                                    name: "innerHTML",
+                                    value: `xss(_s(${directiveMeta.value}), xssOptions())`
+                                });
+                            }
+                        };
+                        return options;
+                    });
             },
             // nodeIntegration: true,
             contextIsolation: false,
@@ -64,7 +79,7 @@ module.exports = {
             // outputDir: 'release',
             builderOptions: {
               // 产品名称
-              productName: pkg.name,
+              productName: '野火IM',
               // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
               appId: pkg.appId,
               compression: 'normal',
@@ -94,12 +109,27 @@ module.exports = {
               },
               linux: {
                 category: "Chat",
-                executableName: pkg.name,
+                executableName: '野火IM',
                 target: [
                   'deb',
                   'AppImage'
                 ]
               },
+              deb:{
+                afterInstall: 'entries/install.sh'
+              },
+              extraResources:[
+                  {
+                      from: './build/icons',
+                      to: 'extraResources/icons'
+                  }
+              ],
+              extraFiles:[
+                {
+                  from: 'entries',
+                  to: 'entries'
+                }
+              ],
               win: {
                 target: "nsis",
                 requestedExecutionLevel: "asInvoker"
@@ -111,7 +141,7 @@ module.exports = {
                 deleteAppDataOnUninstall: true,
                 perMachine: false,
                 createDesktopShortcut: true,
-                shortcutName: pkg.name,
+                shortcutName: '${productName}',
               }
             }
         }

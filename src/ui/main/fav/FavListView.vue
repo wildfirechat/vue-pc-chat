@@ -93,7 +93,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import helper from "@/ui/util/helper";
 import MessageContentType from "@/wfc/messages/messageContentType";
 import wfc from "@/wfc/client/wfc";
@@ -105,6 +104,8 @@ import {isElectron} from "../../../platform";
 import {_reverseToJsLongString} from "../../../wfc/util/longUtil";
 import CompositeMessageContent from "../../../wfc/messages/compositeMessageContent";
 import Config from "../../../config";
+import IpcEventType from "../../../ipcEventType";
+import appServerApi from "../../../api/appServerApi";
 
 export default {
     name: "FavListView",
@@ -131,11 +132,8 @@ export default {
          */
         async loadFavList(category, cb) {
             let startId = this.favItems.length > 0 ? this.favItems[this.favItems.length - 1].id : 0
-            let response = await axios.post('/fav/list', {
-                id: startId,
-                count: 20,
-            }, {withCredentials: true, transformResponse: [data => data]});
-            let data = _reverseToJsLongString(response.data, 'messageUid');
+            let responseData = await appServerApi.getFavList(startId, 20);
+            let data = _reverseToJsLongString(responseData, 'messageUid');
             data = JSON.parse(data);
             if (data && data.result) {
                 let obj = data.result;
@@ -167,7 +165,7 @@ export default {
                 }
                 cb && cb(obj.hasMore);
             } else {
-                console.log('loadFavList failed', response)
+                console.error('loadFavList failed', responseData)
                 cb && cb(false)
             }
         },
@@ -215,12 +213,27 @@ export default {
         },
         handleClick(favItem) {
             switch (favItem.type) {
+                case MessageContentType.Text:
+                    if (isElectron()) {
+                        let hash = window.location.hash;
+                        let url = window.location.origin;
+                        if (hash) {
+                            url = window.location.href.replace(hash, '#/message');
+                        } else {
+                            url += "/message"
+                        }
+                        url += "?data=" + wfc.escape(wfc.utf8_to_b64(JSON.stringify(favItem)));
+                        ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
+                            url: url,
+                        });
+                    }
+                    break;
                 case MessageContentType.Image:
                 case MessageContentType.Video:
                     store.previewMedia(favItem.url, favItem.thumbUrl, favItem.data && favItem.data.thumb ? favItem.data.thumb : 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==')
                     break;
                 case MessageContentType.File:
-                    ipcRenderer.send('file-download', {
+                    ipcRenderer.send(IpcEventType.DOWNLOAD_FILE, {
                         // TODO -1时，不通知进度
                         messageId: -1,
                         remotePath: favItem.url,
@@ -237,7 +250,7 @@ export default {
                             url += "/composite"
                         }
                         url += "?data=" + wfc.escape(wfc.utf8_to_b64(JSON.stringify(favItem)));
-                        ipcRenderer.send('show-composite-message-window', {
+                        ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
                             url: url,
                         });
                     }
@@ -271,11 +284,12 @@ export default {
         },
 
         deleteFav(favItem) {
-            axios.post('/fav/del/' + favItem.id, {}, {withCredentials: true})
+            appServerApi.delFav(favItem.id)
                 .then(response => {
-                    if (response.data.code === 0) {
-                        this.favItems = this.favItems.filter(fi => fi.id !== favItem.id);
-                    }
+                    this.favItems = this.favItems.filter(fi => fi.id !== favItem.id);
+                })
+                .catch(err => {
+                    console.log('delFav error', err);
                 })
         },
 

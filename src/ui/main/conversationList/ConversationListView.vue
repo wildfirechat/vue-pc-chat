@@ -1,24 +1,18 @@
 <template>
     <section class="conversation-list">
-        <ul>
-            <li
-                @click="showConversation(conversationInfo)"
-                v-for="conversationInfo in sharedConversationState.conversationInfoList"
-                :key="conversationInfoKey(conversationInfo)"
-                v-bind:class="{active: sharedConversationState.currentConversationInfo && sharedConversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation),
-                          top:conversationInfo.top,
-                          highlight:contextMenuConversationInfo && contextMenuConversationInfo.conversation.equal(conversationInfo.conversation) }"
-                @contextmenu.prevent="showConversationItemContextMenu($event, conversationInfo)"
-            >
-                <ConversationItemView :conversation-info="conversationInfo"/>
-            </li>
-        </ul>
-
+        <virtual-list :data-component="conversationItemView" :data-sources="conversationInfoList" :data-key="conversationInfoKey"
+                      :estimate-size="30"
+                      style="height: 100%; overflow-y: auto;"/>
 
         <vue-context ref="menu" v-slot="{data:conversationInfo}" v-on:close="onConversationItemContextMenuClose">
             <li>
                 <a @click.prevent="setConversationTop(conversationInfo)">{{
                         conversationInfo && conversationInfo.top ? $t('conversation.cancel_sticky_top') : $t('conversation.sticky_top')
+                    }}</a>
+            </li>
+            <li v-if="sharedMiscState.isElectron">
+                <a @click.prevent="showConversationFloatPage(conversationInfo.conversation)">{{
+                        $t('conversation.show_in_float_window')
                     }}</a>
             </li>
             <li>
@@ -50,20 +44,30 @@
 import ConversationItemView from "@/ui/main/conversationList/ConversationItemView";
 import store from "@/store";
 import wfc from "../../../wfc/client/wfc";
+import IpcEventType from "../../../ipcEventType";
+import {ipcRenderer} from "../../../platform";
 
 export default {
     name: 'ConversationListView',
     data() {
         return {
             sharedConversationState: store.state.conversation,
-            contextMenuConversationInfo: null,
+            sharedMiscState: store.state.misc,
+            conversationItemView: ConversationItemView,
         };
     },
 
+    created() {
+        this.$eventBus.$on('showConversationContextMenu', (event, conversationInfo) => {
+            this.showConversationItemContextMenu(event, conversationInfo);
+        });
+    },
+
+    destroyed() {
+        this.$eventBus.$off('showConversationContextMenu');
+    },
+
     methods: {
-        showConversation(conversationInfo) {
-            store.setCurrentConversationInfo(conversationInfo);
-        },
 
         setConversationTop(conversationInfo) {
             store.setConversationTop(conversationInfo.conversation, conversationInfo.top > 0 ? 0 : 1);
@@ -87,12 +91,15 @@ export default {
         },
 
         showConversationItemContextMenu(event, conversationInfo) {
-            this.contextMenuConversationInfo = conversationInfo;
+            if (!this.$refs.menu){
+                return;
+            }
+            this.sharedConversationState.contextMenuConversationInfo = conversationInfo;
             this.$refs.menu.open(event, conversationInfo)
         },
 
         onConversationItemContextMenuClose() {
-            this.contextMenuConversationInfo = null;
+            this.sharedConversationState.contextMenuConversationInfo = null;
         },
 
         clearConversationUnreadStatus(conversation) {
@@ -101,15 +108,42 @@ export default {
 
         markConversationAsUnread(conversation) {
             wfc.markConversationAsUnread(conversation, true);
+        },
+
+        showConversationFloatPage(conversation) {
+            let hash = window.location.hash;
+            let url = window.location.origin;
+            if (hash) {
+                url = window.location.href.replace(hash, '#/conversation-window');
+            } else {
+                url += "/conversation-window"
+            }
+            ipcRenderer.send(IpcEventType.showConversationFloatPage, {
+                url: url,
+                type: conversation.type,
+                target: conversation.target,
+                line: conversation.line,
+            });
+
+            store.addFloatingConversation(conversation);
+            if (this.sharedConversationState.currentConversationInfo && this.sharedConversationState.currentConversationInfo.conversation.equal(conversation)) {
+                store.setCurrentConversation(null);
+            }
         }
     },
     activated() {
         this.scrollActiveElementCenter();
     },
-
-    components: {
-        ConversationItemView,
+    computed: {
+        conversationInfoList() {
+            return this.sharedConversationState.conversationInfoList.filter(ci => {
+                const index = this.sharedConversationState.floatingConversations.findIndex(c => c.equal(ci.conversation));
+                return index === -1;
+            })
+        }
     },
+
+    components: {},
 };
 </script>
 
@@ -118,31 +152,6 @@ export default {
 .conversation-list {
     height: 100%;
     overflow: auto;
-}
-
-.conversation-list ul:first-of-type li {
-    background-color: #f8f8f8;
-}
-
-/*.conversation-list ul li:hover {*/
-/*  background-color: #d6d6d6;*/
-/*}*/
-
-.conversation-list ul:first-of-type li.active {
-    background-color: #d6d6d6;
-}
-
-.conversation-list ul:first-of-type li.top {
-    background-color: #f1f1f1;
-}
-
-.conversation-list li.highlight {
-    box-shadow: 0 0 0 2px #4168e0 inset;
-    z-index: 100;
-}
-
-.conversation-list ul:first-of-type li.active.top {
-    background-color: #d6d6d6;
 }
 
 </style>

@@ -40,7 +40,7 @@
                                 <i class="icon-ion-ios-chatboxes"
                                    v-bind:class="{active : this.$router.currentRoute.path === '/home'}"
                                    @click="go2Conversation"></i>
-                                <em v-show="unread > 0" class="badge">{{ unread > 99 ? '99' : unread }}</em>
+                                <em v-show="unread > 0" class="badge">{{ unread > 99 ? '···' : unread }}</em>
                             </div>
                         </li>
                         <li>
@@ -48,7 +48,7 @@
                                 <i class="icon-ion-android-contact"
                                    v-bind:class="{active : this.$router.currentRoute.path === '/home/contact'}"
                                    @click="go2Contact"></i>
-                                <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount}}</em>
+                                <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{ sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount }}</em>
                             </div>
                         </li>
                         <li v-if="sharedMiscState.isElectron">
@@ -68,7 +68,8 @@
                         </li>
                         <li v-if="supportConference">
                             <i class="icon-ion-speakerphone"
-                               @click="createConference"></i>
+                               v-bind:class="{active : this.$router.currentRoute.path === '/home/conference'}"
+                               @click="go2Conference"></i>
                         </li>
                         <li>
                             <i class="icon-ion-android-settings"
@@ -112,12 +113,13 @@ import ConnectionStatus from "@/wfc/client/connectionStatus";
 import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
 import {removeItem} from "@/ui/util/storageHelper";
 import {ipcRenderer} from "@/platform";
-import CreateConferenceView from "../voip/CreateConferenceView";
 import avenginekit from "../../wfc/av/internal/engine.min";
 import localStorageEmitter from "../../ipc/localStorageEmitter";
 import CallEndReason from "../../wfc/av/engine/callEndReason";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import {Draggable} from 'draggable-vue-directive'
+import IpcEventType from "../../ipcEventType";
+import LocalStorageIpcEventType from "../../ipc/localStorageIpcEventType";
 
 export default {
     data() {
@@ -170,7 +172,7 @@ export default {
             } else {
                 url += "/files"
             }
-            ipcRenderer.send('show-file-window', {
+            ipcRenderer.send(IpcEventType.SHOW_FILE_WINDOW, {
                 url: url,
                 source: 'file',
             });
@@ -183,11 +185,18 @@ export default {
             this.$router.replace("/home/workspace");
             this.isSetting = false;
         },
+        go2Conference() {
+            if (this.$router.currentRoute.path === '/home/conference') {
+                return;
+            }
+            this.$router.replace({path: "/home/conference"});
+            this.isSetting = true;
+        },
         go2Setting() {
             if (this.$router.currentRoute.path === '/home/setting') {
                 return;
             }
-            this.$router.push({path: "/home/setting"});
+            this.$router.replace({path: "/home/setting"});
             this.isSetting = true;
         },
 
@@ -195,50 +204,31 @@ export default {
             console.log('closeUserCard')
             this.$refs["userCardTippy"]._tippy.hide();
         },
-        createConference() {
-            let beforeOpen = () => {
-                console.log('Opening...')
-            };
-            let beforeClose = (event) => {
-                console.log('Closing...', event, event.params)
-            };
-            let closed = (event) => {
-                console.log('Close...', event)
-            };
-            this.$modal.show(
-                CreateConferenceView,
-                {}, {
-                    name: 'create-conference-modal',
-                    width: 320,
-                    height: 400,
-                    clickToClose: true,
-                }, {
-                    'before-open': beforeOpen,
-                    'before-close': beforeClose,
-                    'closed': closed,
-                })
-        },
 
         onConnectionStatusChange(status) {
             if (status === ConnectionStatus.ConnectionStatusRejected
                 || status === ConnectionStatus.ConnectionStatusLogout
                 || status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
                 || status === ConnectionStatus.ConnectionStatusTokenIncorrect
+                || status === ConnectionStatus.ConnectionStatusKickedOff
                 // TODO 断网时，显示网络断开状态
                 // || status === ConnectionStatus.ConnectionStatusUnconnected
                 || wfc.getUserId() === '') {
 
                 if (this.$router.currentRoute.path !== '/') {
-                    this.$router.push({path: "/"});
+                    this.$router.replace({path: "/"});
                 }
                 if (status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
                     || status === ConnectionStatus.ConnectionStatusLogout
                     || status === ConnectionStatus.ConnectionStatusTokenIncorrect
+                    || status === ConnectionStatus.ConnectionStatusKickedOff
                     || status === ConnectionStatus.ConnectionStatusRejected) {
                     removeItem("userId");
                     removeItem('token')
 
                     avenginekitproxy.forceCloseVoipWindow();
+
+                    console.error('连接失败', ConnectionStatus.desc(status));
                 }
             }
         },
@@ -257,14 +247,14 @@ export default {
             return count;
         },
         dragAreaLeft() {
-            // 68为左边菜单栏的宽度，250为会话列表的宽度
+            // 60为左边菜单栏的宽度，261为会话列表的宽度
             if (this.isSetting) {
                 return {
-                    left: '68px'
+                    left: '60px'
                 }
             } else {
                 return {
-                    left: 'calc(68px + 250px)'
+                    left: 'calc(60px + 261px)'
                 }
             }
         }
@@ -275,38 +265,6 @@ export default {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
         this.onConnectionStatusChange(wfc.getConnectionStatus())
 
-        localStorageEmitter.on('join-conference-failed', (sender, args) => {
-            let reason = args.reason;
-            let session = args.session;
-            if (reason === CallEndReason.RoomNotExist) {
-                if (session.host === wfc.getUserId()) {
-                    this.$alert({
-                        content: '会议已结束，是否重新开启会议？',
-                        cancelCallback: () => {
-                            // do nothing
-                        },
-                        confirmCallback: () => {
-                            // 等待之前的音视频通话窗口完全关闭
-                            setTimeout(() => {
-                                avenginekitproxy.startConference(session.callId, session.audioOnly, session.pin, session.host, session.title, session.desc, session.audience, session.advance)
-                            }, 1000);
-                        }
-                    })
-                } else {
-                    this.$notify({
-                        title: '会议已结束',
-                        text: '请联系主持人开启会议',
-                        type: 'warn'
-                    });
-                }
-            } else if (reason === CallEndReason.RoomParticipantsFull) {
-                this.$notify({
-                    title: '加入会议失败',
-                    text: '参与者已满，请重试',
-                    type: 'warn'
-                });
-            }
-        });
     },
 
     mounted() {
@@ -362,13 +320,14 @@ export default {
 }
 
 .menu-container {
-    width: 68px;
-    min-width: 68px;
+    width: 60px;
+    min-width: 60px;
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: linear-gradient(180deg, #292a2c 0%, #483a3a 100%);
+    /*background: linear-gradient(180deg, #292a2c 0%, #483a3a 100%);*/
+    background: #e9e4e0;
     border-top-left-radius: var(--main-border-radius);
     border-bottom-left-radius: var(--main-border-radius);
     padding: var(--home-menu-padding-top) 0 20px 0;
@@ -416,8 +375,9 @@ export default {
     font-size: 10px;
     background-color: red;
     border-radius: 8px;
-    width: 16px;
+    min-width: 16px;
     height: 16px;
+    padding: 0 5px;
     line-height: 16px;
     font-style: normal;
     text-align: center;
@@ -428,16 +388,15 @@ export default {
 i {
     font-size: 26px;
     color: #868686;
-    outline-color: red;
     cursor: pointer;
 }
 
 i:hover {
-    color: deepskyblue;
+    color: #1f64e4;
 }
 
 i.active {
-    color: #34b7f1;
+    color: #3f64e4;
 }
 
 .drag-area {
@@ -452,7 +411,7 @@ i.active {
 .unconnected {
     position: absolute;
     top: 0;
-    left: 68px;
+    left: 60px;
     right: 0;
     color: red;
     padding: 15px 0;

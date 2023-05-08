@@ -34,6 +34,9 @@ export default class ConversationInfo {
         if (conversationInfo.draft && conversationInfo.lastMessage && gt(conversationInfo.lastMessage.timestamp, 0)) {
             conversationInfo.timestamp = conversationInfo.lastMessage.timestamp;
         }
+        if (!conversationInfo.timestamp){
+            conversationInfo.timestamp = 0;
+        }
         return conversationInfo;
     }
 

@@ -47,8 +47,11 @@
 4. binutils
 
 ## 开发
-1. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
-2. ```npm run dev```
+1. ```npm config set electron_mirror https://repo.huaweicloud.com/electron/```设置electron镜像，建议使用华为镜像，也可以使用其他镜像。
+2. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
+3. ```npm run dev```
+
+注意避免使用```cnpm```，我们使用```cnpm```出现过一些奇怪问题的情况。如果您使用```cnpm```当遇到问题时请切换到```npm```试一下。
 
 ## 打包
 打包为当前平台架构软件
@@ -59,6 +62,12 @@ npm run package
 ## yarn
 1. ```yarn install --ignore-engines```
 2. ```yarn run package```
+
+## GitHub 在线打包
+1. fork 本仓库
+2. 新增、修改功能等
+3. 阅读```.github/workflows/github-actions-package.yml```里面的注释，并根据实际情况修改，比如是否打包Linux版本等
+4. 浏览器访问 GitHub fork后的仓库， actions -> 打包 vue-pc-chat -> run workflow -> 选择分支等 -> Run workflow，具体可以参考[这儿](https://docs.github.com/en/actions/managing-workflow-runs/manually-running-a-workflow) 
 
 ## 交叉打包
 打包为其它平台架构软件
@@ -83,7 +92,7 @@ npm run cross-package-mac
 双击运行```sudo dpkg -i wf-pc-chat_{版本号}_mips64el.deb```进行安装，安装时需要输入密码。安装之后在应用中找到wf-pc-chat打开使用。
 
 ## 历史Electron版本
-目前master的使用的Electron版本是13.6.9。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8)。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。
+目前master的使用的Electron版本是13.6.9。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8) 。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。
 
 ## 常见开发问题
 1. 如何调试？PC使用了Electron，内嵌Chrome浏览器，跟在浏览器上开发调试是一样的。快捷键Ctrl
@@ -104,62 +113,61 @@ npm run cross-package-mac
 
 5. 有些杀毒软件会对electron打包的软件报病毒，详情请参考[electron报病毒](https://www.baidu.com/s?wd=electron%20360%E6%8A%A5%E7%97%85%E6%AF%92&pn=0&oq=electron%20360%E6%8A%A5%E7%97%85%E6%AF%92&tn=84053098_3_dg&ie=utf-8&rsv_pq=ec2a876200198701&rsv_t=e981739vB2ZMksgGv8ZOV%2Fb4WIhJDXXzLTfMv24NmIN0itMzRiGjMNnh1qARt19Uzf1s%2FA) 。安装时可能被杀毒软件限制安装，这时候可以让用户使用绿色免安装版（打包后release目录下的unpacked目录）。如果运行时报错，请在杀毒软件里加上例外。另外有条件的公司可以考虑去[360官方](https://open.soft.360.cn)或其他杀软的官方提交检测。
 
-6. ubuntu下，启动时，若提示，```A JavaScript error occurred in the main process Uncaught Exception:Error: Cannot open /opt/wildfirechat/resources/app.asar/marswrapper.node: Error: libdouble-conversion.so.1: cannot open shared object file: No such file or directory```，可安装[libdouble-conversion1](https://packages.debian.org/buster/libdouble-conversion1)解决
+6. ubuntu下，启动时，若提示，```A JavaScript error occurred in the main process Uncaught Exception:Error: Cannot open /opt/wildfirechat/resources/app.asar/marswrapper.node: Error: libdouble-conversion.so.1: cannot open shared object file: No such file or directory```，可安装[libdouble-conversion1](https://packages.debian.org/buster/libdouble-conversion1) 解决
 
 7. win平台野火客户端依赖Visual C++ Redistributable Package runtime。如果用户PC上没有安装就需要安装之后才能运行，请从微软官方下载安装
 https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个安装包是有32位/64位区分的，需要安装对应架构的版本。
 
 8. MAC应用截屏时只能截屏空白桌面，无法截图窗口内容。这是因为没有通过mac系统的安全许可，在设置-》安全与隐私-》切换到隐私那个标签-》屏幕录制-》在野火IM PC应用前打勾，并重启应用。
 
-9. 使用```cnpm```后打包失败，在某些平台```cnpm```是会出现问题的，请使用npm。
-
-10. ```npm install``` 报```Unexpected end of JSON input while parsing near...```错误
+9. ```npm install``` 报```Unexpected end of JSON input while parsing near...```错误
 
     如果常见问题4解决不了，可以尝试```　 npm config set registry http://registry.npm.taobao.org/ ```，然后在按常见问题4的步骤进行
 
-11. 音视频相关问题，请参考以下文档
+10. 音视频相关问题，请参考以下文档
     1. [av readme](src/wfc/av/internal/README.MD)
     2. [音视频常见问题](https://docs.wildfirechat.cn/faq/webrtc.html?h=webrtc)
 
-12. 纯内网环境，不能显示表情
+11. 纯内网环境，不能显示表情
     1. 将```src/assets/twemoji```目录上传到一个内网能访问的服务器，比如部署```app server```的服务器
     2. 确保通过```http(s)://base_twemoji_url/72x72/1f1e6.png```能访问到对应表情，此处```1f1e6.png```蓝底白字大写字母A
-    3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/```替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
+    3. 修改```twemoji.js```，将```https://static.wildfirechat.net/twemoji/assets/``` 替换成新部署的```http(s)://base_twemoji_url/```，需要注意，最后一个```/```不能省略
     4. 修改```MessageInputView.vue```， 根据新部署的服务器地址，修改正则表达式```replace(/" src="https:\/\/static\.wildfirechat\.net\/twemoji\/assets\/72x72\/[0-9a-z-]+\.png">/g, '')```
 
-13. 想自己部署表情图片
+12. 想自己部署表情图片
     请常见问题12
 
-14. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
+13. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
     1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
     2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
 
-15. windows 7 无法正常启动，显示黑屏或白屏
+14. windows 7 无法正常启动，显示黑屏或白屏
     1. ```background.js``` 里面找到下面代码，并取消```//app.disableHardwareAcceleration();```前面的注释
     ```
        // pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
        // windows 7 下面，如果启动黑屏，请将下面注释打开
        //app.disableHardwareAcceleration();
     ```
-16. MAC打包的版本是Universal版本，可以同时支持x64架构和arm64架构。Universal版本比单架构版本要大一下，如果想要打包单架构的版本，可以把野火SDK瘦身到对应单一架构，然后打包对应平台。具体实现方法请自行查找。
+15. MAC打包的版本是Universal版本，可以同时支持x64架构和arm64架构。Universal版本比单架构版本要大一下，如果想要打包单架构的版本，可以把野火SDK瘦身到对应单一架构，然后打包对应平台。具体实现方法请自行查找。
 
-17. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
+16. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
 
-18. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
-19. 压力测试发现，Vue 内置的```keep-alive```组件，可能有缓慢的内存泄漏问题，可将```HomePage.vue```里面的```keep-alive```移除，由于```activated```和```deactivated```回调，要使用```keep-alive```组件才生效，需要妥善处理这两个回调里面的逻辑。
+17. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
+18. 压力测试发现，Vue 内置的```keep-alive```组件，可能有缓慢的内存泄漏问题，可将```HomePage.vue```里面的```keep-alive```移除，由于```activated```和```deactivated```回调，要使用```keep-alive```组件才生效，需要妥善处理这两个回调里面的逻辑。
+19. 如果使用专业版IM服务且使用野火对象存储服务，需要使野火对象存储服务支持https，PC客户端和Web客户端需要使用HTTPS上传。
 
 ## 截图
-![](https://static.wildfirechat.cn/pc-home.png)
-![](https://static.wildfirechat.cn/pc-conversastion.png)
-![](https://static.wildfirechat.cn/pc-emoji.png)
-![](https://static.wildfirechat.cn/pc-contact.png)
-![](https://static.wildfirechat.cn/pc-channel.png)
-![](https://static.wildfirechat.cn/pc-fav.png)
-![](https://static.wildfirechat.cn/pc-file-history.png)
-![](https://static.wildfirechat.cn/pc-workspace.png)
-![](https://static.wildfirechat.cn/pc-setting.png)
-![](https://static.wildfirechat.cn/pc-multi-video-call.png)
-![](https://static.wildfirechat.cn/pc-multi-audio-call.png)
+![](http://static.wildfirechat.cn/pc-home.png)
+![](http://static.wildfirechat.cn/pc-conversastion.png)
+![](http://static.wildfirechat.cn/pc-emoji.png)
+![](http://static.wildfirechat.cn/pc-contact.png)
+![](http://static.wildfirechat.cn/pc-channel.png)
+![](http://static.wildfirechat.cn/pc-fav.png)
+![](http://static.wildfirechat.cn/pc-file-history.png)
+![](http://static.wildfirechat.cn/pc-workspace.png)
+![](http://static.wildfirechat.cn/pc-setting.png)
+![](http://static.wildfirechat.cn/pc-multi-video-call.png)
+![](http://static.wildfirechat.cn/pc-multi-audio-call.png)
 
 ## License
 

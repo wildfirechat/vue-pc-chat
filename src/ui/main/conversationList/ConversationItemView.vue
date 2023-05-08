@@ -4,19 +4,29 @@
          @dragleave="dragEvent($event, 'dragleave')"
          @dragenter="dragEvent($event,'dragenter')"
          @drop="dragEvent($event, 'drop')"
-         v-bind:class="{drag: dragAndDropEnterCount > 0}"
-    >
+         @click="showConversation"
+         v-bind:class="{
+             drag: dragAndDropEnterCount > 0,
+             active: shareConversationState.currentConversationInfo && shareConversationState.currentConversationInfo.conversation.equal(source.conversation),
+                              top:source.top,
+                              highlight:shareConversationState.contextMenuConversationInfo && shareConversationState.contextMenuConversationInfo.conversation.equal(source.conversation)
+         }"
+         @contextmenu.prevent="showConversationInfoContextMenu">
         <div class="conversation-item">
             <div class="header">
-                <img class="avatar" draggable="false" :src="conversationInfo.conversation._target.portrait" alt=""
+                <img class="avatar" draggable="false" :src="portrait" alt=""
                      @error="imgUrlAlt"/>
-                <em v-if="unread > 0" class="badge" v-bind:class="{silent:conversationInfo.isSilent}">{{ unread }}</em>
+                <em v-if="unread > 0" class="badge" v-bind:class="{silent:source.isSilent}">{{ unread > 99 ? '···' : unread }}</em>
             </div>
             <div class="content-container">
                 <div class="title-time-container">
-                    <i v-if="conversationInfo.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 5px"></i>
-                    <h2 class="title single-line">{{ conversationTitle }}</h2>
-                    <p class="time">{{ conversationInfo._timeStr }}</p>
+                    <i v-if="source.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 5px"></i>
+                    <div v-if="isOrganizationGroupConversation" style="display: flex; align-items: center; max-width: calc(100% - 60px)">
+                        <h2 class="title single-line">{{ conversationTitle }}</h2>
+                        <p class="single-line" style="background: #3f64e4; border-radius: 2px; color: white; padding: 1px 2px; font-size: 9px">官方</p>
+                    </div>
+                    <h2 v-else class="title single-line">{{ conversationTitle }}</h2>
+                    <p class="time single-line">{{ source._timeStr }}</p>
                 </div>
                 <div class="content">
                     <p class="draft single-line" v-if="shouldShowDraft" v-html="draft"></p>
@@ -25,7 +35,7 @@
                         <i v-if="unreadMention > 0">[有人@我]</i>
                         {{ lastMessageContent }}
                     </p>
-                    <i v-if="conversationInfo.isSilent" class="icon-ion-android-notifications-off"></i>
+                    <i v-if="source.isSilent" class="icon-ion-android-notifications-off"></i>
                 </div>
             </div>
         </div>
@@ -33,8 +43,6 @@
 </template>
 
 <script>
-import ConversationInfo from "@/wfc/model/conversationInfo";
-import ConversationType from "@/wfc/model/conversationType";
 import store from "@/store";
 import Draft from "@/ui/util/draft";
 import FileMessageContent from "@/wfc/messages/fileMessageContent";
@@ -42,12 +50,15 @@ import Message from "@/wfc/messages/message";
 import wfc from "@/wfc/client/wfc";
 import NotificationMessageContent from "@/wfc/messages/notification/notificationMessageContent";
 import Config from "../../../config";
+import {getConversationPortrait} from "../../util/imageUtil";
+import ConversationType from "../../../wfc/model/conversationType";
+import GroupType from "../../../wfc/model/groupType";
 
 export default {
     name: "ConversationItemView",
     props: {
-        conversationInfo: {
-            type: ConversationInfo,
+        source: {
+            type: Object,
             required: true,
         },
     },
@@ -55,7 +66,11 @@ export default {
         return {
             dragAndDropEnterCount: 0,
             shareConversationState: store.state.conversation,
+            groupPortrait: Config.DEFAULT_GROUP_PORTRAIT_URL,
         };
+    },
+    mounted() {
+        this.refreshGroupPortrait();
     },
     methods: {
         dragEvent(e, v) {
@@ -69,19 +84,19 @@ export default {
                 if (length > 0 && length < 5) {
                     for (let i = 0; i < length; i++) {
                         this.$eventBus.$emit('uploadFile', e.dataTransfer.files[i])
-                        store.sendFile(this.conversationInfo.conversation, e.dataTransfer.files[i]);
+                        store.sendFile(this.source.conversation, e.dataTransfer.files[i]);
                     }
                 } else {
                     // TODO
                     let url = e.dataTransfer.getData('URL');
                     if (url) {
-                        store.sendFile(this.conversationInfo.conversation, url);
+                        store.sendFile(this.source.conversation, url);
                     } else {
                         let text = e.dataTransfer.getData('text');
                         if (text.startsWith('{')) {
                             let obj = JSON.parse(text);
                             let file = new FileMessageContent(null, obj.url, obj.name, obj.size)
-                            let message = new Message(this.conversationInfo.conversation, file)
+                            let message = new Message(this.source.conversation, file)
                             wfc.sendMessage(message);
                         }
                     }
@@ -93,32 +108,76 @@ export default {
             }
         },
         imgUrlAlt(e) {
-            e.target.src = Config.DEFAULT_PORTRAIT_URL;
+            if (this.source.conversation.type === ConversationType.Group) {
+                e.target.src = Config.DEFAULT_GROUP_PORTRAIT_URL;
+            } else {
+                e.target.src = Config.DEFAULT_PORTRAIT_URL;
+            }
+        },
+
+        showConversation() {
+            store.setCurrentConversationInfo(this.source);
+            if (this.unread > 0) {
+                wfc.clearConversationUnreadStatus(this.source.conversation);
+            }
+            this.refreshGroupPortrait();
+        },
+        showConversationInfoContextMenu(event) {
+            this.$eventBus.$emit('showConversationContextMenu', event, this.source);
+        },
+
+        refreshGroupPortrait() {
+            let info = this.source;
+            if (info.conversation.type !== ConversationType.Group) {
+                return;
+            }
+            console.log('refreshGroupPortrait', !info.conversation._target.portrait, info.conversation._target.portrait === Config.DEFAULT_GROUP_PORTRAIT_URL);
+            if (!info.conversation._target.portrait || info.conversation._target.portrait === Config.DEFAULT_GROUP_PORTRAIT_URL) {
+                getConversationPortrait(info.conversation).then((portrait => {
+                    if (info.conversation.equal(this.source.conversation)) {
+                        console.log('update portrait', this.source.conversation.target)
+                        if (portrait !== Config.DEFAULT_GROUP_PORTRAIT_URL) {
+                            info.conversation._target.portrait = portrait;
+                        }
+                        this.groupPortrait = portrait;
+                    }
+                }))
+            }
         }
     },
     computed: {
         conversationTitle() {
-            let info = this.conversationInfo;
-            return info.conversation._target._displayName;
+            let info = this.source;
+            if (info.conversation._target) {
+                return info.conversation._target._displayName;
+            }
+            return '';
         },
 
+        isOrganizationGroupConversation() {
+            let info = this.source;
+            if (info.conversation.type === ConversationType.Group && info.conversation._target && info.conversation._target.type === GroupType.Organization) {
+                return true;
+            }
+            return false;
+        },
         shouldShowDraft() {
-            if (this.shareConversationState.currentConversationInfo && this.shareConversationState.currentConversationInfo.conversation.equal(this.conversationInfo.conversation)) {
+            if (this.shareConversationState.currentConversationInfo && this.shareConversationState.currentConversationInfo.conversation.equal(this.source.conversation)) {
                 return false;
             }
-            if (this.conversationInfo.unreadCount.unreadMention + this.conversationInfo.unreadCount.unreadMentionAll > 0) {
+            if (this.source.unreadCount.unreadMention + this.source.unreadCount.unreadMentionAll > 0) {
                 return false;
             }
-            let draft = Draft.getConversationDraftEx(this.conversationInfo);
+            let draft = Draft.getConversationDraftEx(this.source);
             return draft.text.trim() !== '' || draft.quotedMessage !== null;
         },
 
         shouldShowVoipStatus() {
-            return this.conversationInfo._isVoipOngoing;
+            return this.source._isVoipOngoing;
         },
 
         draft() {
-            let draft = Draft.getConversationDraftEx(this.conversationInfo);
+            let draft = Draft.getConversationDraftEx(this.source);
             let draftText = `<em>[${this.$t('common.draft')}]</em>` + draft.text;
             draftText = draftText.replace(/<img [:a-zA-Z0-9_+; ,\-=\/."]+>/g, '[图片]')
             draftText = draftText.replace(/&nbsp;/g, ' ');
@@ -135,12 +194,20 @@ export default {
         },
 
         lastMessageContent() {
-            let conversationInfo = this.conversationInfo;
+            let conversationInfo = this.source;
             if (conversationInfo.lastMessage && conversationInfo.lastMessage.messageContent) {
-
                 let senderName = '';
                 if (conversationInfo.conversation.type === 1 && conversationInfo.lastMessage.direction === 1 && !(conversationInfo.lastMessage.messageContent instanceof NotificationMessageContent)) {
-                    senderName = conversationInfo.lastMessage._from._displayName + ': ';
+                    if (conversationInfo.lastMessage._from) {
+                        senderName = conversationInfo.lastMessage._from._displayName + ': ';
+                    } else {
+                        conversationInfo.lastMessage = store._patchMessage(conversationInfo.lastMessage, 0)
+                        if (conversationInfo.lastMessage._from) {
+                            senderName = conversationInfo.lastMessage._from._displayName + ': ';
+                        } else {
+                            senderName = '<' + conversationInfo.lastMessage.from + '>: ';
+                        }
+                    }
                 }
                 return senderName + conversationInfo.lastMessage.messageContent.digest(conversationInfo.lastMessage);
             } else {
@@ -149,14 +216,27 @@ export default {
         },
 
         unread() {
-            let conversationInfo = this.conversationInfo;
+            let conversationInfo = this.source;
             let unreadCount = conversationInfo.unreadCount;
             return unreadCount ? (unreadCount.unread + unreadCount.unreadMention + unreadCount.unreadMentionAll) : 0;
         },
         unreadMention() {
-            let conversationInfo = this.conversationInfo;
+            let conversationInfo = this.source;
             let unreadCount = conversationInfo.unreadCount;
             return unreadCount ? (unreadCount.unreadMention + unreadCount.unreadMentionAll) : 0;
+        },
+
+        portrait() {
+            let info = this.source;
+            if (info.conversation.type === ConversationType.Group) {
+                if (info.conversation._target.portrait) {
+                    return info.conversation._target.portrait;
+                } else {
+                    return this.groupPortrait;
+                }
+            } else {
+                return info.conversation._target.portrait;
+            }
         }
     },
 };
@@ -165,10 +245,28 @@ export default {
 <style scoped>
 .conversation-item-container {
     padding-left: 12px;
+    background-color: #f8f8f8;
 }
 
 .conversation-item-container.drag {
-    border: 1px solid #d6d6d6;
+    border: 1px solid #4168e0;
+}
+
+.conversation-item-container.active {
+    background-color: #d6d6d6;
+}
+
+.conversation-item-container.top {
+    background-color: #f1f1f1;
+}
+
+.conversation-item-container.highlight {
+    box-shadow: 0 0 0 2px #4168e0 inset;
+    z-index: 100;
+}
+
+.conversation-item-container.active.top {
+    background-color: #d6d6d6;
 }
 
 .conversation-item {
@@ -205,18 +303,22 @@ export default {
     font-size: 10px;
     background-color: red;
     border-radius: 8px;
-    width: 16px;
+    min-width: 16px;
     height: 16px;
+    padding: 0 5px;
     line-height: 16px;
     font-style: normal;
     text-align: center;
     right: 8px;
     top: 8px;
+    vertical-align: center;
 }
 
 .header .badge.silent {
     width: 8px;
     height: 8px;
+    min-width: 8px;
+    padding: 0;
     font-size: 0;
 }
 
@@ -233,6 +335,7 @@ export default {
 .content-container .title-time-container {
     display: flex;
     width: 100%;
+    max-width: 100%;
     align-content: center;
     justify-content: space-between;
 }
@@ -259,8 +362,9 @@ export default {
 }
 
 .content .draft {
-    font-size: 13px;
+    font-size: 12px;
     height: 20px;
+    color: #b8b8b8;
 }
 
 /*refer to: https://blog.csdn.net/weixin_42412046/article/details/80804285*/
@@ -272,7 +376,7 @@ export default {
 
 .content .last-message-desc {
     color: #b8b8b8;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .content .last-message-desc i {

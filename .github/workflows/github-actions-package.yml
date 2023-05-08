@@ -1,0 +1,33 @@
+name: 打包 vue-pc-chat
+
+on: workflow_dispatch
+
+jobs:
+  build:
+
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js 14.18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14.18.x
+      - run: npm install node-gyp@8.3.0
+      - run: npm ci
+      # 根据实际情况，进行打包，没有linux版本的时候，不需要打包
+      - run: npm run package
+      - run: npm run cross-package-win
+      - run: npm run cross-package-win32
+      # 没有linux版本的时候，不需要进行打包，需要打包时，将下面的注释取消
+      #- run: npm run cross-package-linux
+      #- run: npm run cross-package-linux-arm64
+
+      # 打包完成之后进行上传
+      - uses: actions/upload-artifact@v3
+        with:
+          path: |
+            dist_electron/*.dmg
+            dist_electron/*.exe
+            dist_electron/*.AppImage
+            dist_electron/*.deb

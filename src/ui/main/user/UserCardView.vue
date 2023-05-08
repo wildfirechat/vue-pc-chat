@@ -18,7 +18,7 @@
                     <label>{{ $t('common.alias') }}</label>
                     <div class="alias">
                         <input @click.stop="" type="text"
-                               v-model="friendAlias"
+                               v-model.trim="friendAlias"
                                @keyup.enter="updateFriendAlias"
                                placeholder="备注名"/>
                     </div>
@@ -34,8 +34,8 @@
             </ul>
         </div>
         <div class="action">
-            <a href="#"><i class="icon-ion-ios-shuffle" @click="share"></i></a>
-            <a v-if="isFriend" href="#"><i class="icon-ion-ios-chatboxes" @click="chat"></i></a>
+            <!--            <a href="#"><i class="icon-ion-ios-shuffle" @click="share"></i></a>-->
+            <a href="#"><i class="icon-ion-ios-chatboxes" @click="chat"></i></a>
             <a v-if="!isFriend" href="#"><i class="icon-ion-person-add" @click="addFriend"></i></a>
         </div>
     </section>
@@ -50,6 +50,7 @@ import wfc from "@/wfc/client/wfc";
 import MessageContentMediaType from "../../../wfc/messages/messageContentMediaType";
 import ModifyMyInfoEntry from "../../../wfc/model/modifyMyInfoEntry";
 import ModifyMyInfoType from "../../../wfc/model/modifyMyInfoType";
+import IpcSub from "../../../ipc/ipcSub";
 
 export default {
     name: "UserCardView",
@@ -65,7 +66,8 @@ export default {
     },
     data() {
         return {
-            friendAlias: this.userInfo.friendAlias,
+            friendAlias: this.userInfo.uid === wfc.getUserId() ? this.userInfo.displayName : this.userInfo.friendAlias,
+            sharedMiscState: store.state.misc,
         }
     },
     methods: {
@@ -75,8 +77,14 @@ export default {
         },
         chat() {
             let conversation = new Conversation(ConversationType.Single, this.userInfo.uid, 0);
-            store.setCurrentConversation(conversation)
+            if (store.isConversationInCurrentWindow(conversation)) {
+                store.setCurrentConversation(conversation)
+            } else {
+                IpcSub.startConversation(conversation);
+            }
             this.close();
+            // 跳转到会话列表页
+            this.$router.replace('/home');
         },
         addFriend() {
             this.close();
@@ -93,21 +101,34 @@ export default {
                 }, {})
         },
         updateFriendAlias() {
-            if (this.friendAlias !== this.userInfo.friendAlias) {
-                wfc.setFriendAlias(this.userInfo.uid, this.friendAlias,
-                    () => {
-                        // do nothing
-                    },
-                    (error) => {
-                        // do nothing
-                    })
+            if (this.userInfo.uid === wfc.getUserId()) {
+                if (this.friendAlias !== this.userInfo.displayName) {
+                    let entry = new ModifyMyInfoEntry();
+                    entry.type = ModifyMyInfoType.Modify_DisplayName;
+                    entry.value = this.friendAlias;
+                    wfc.modifyMyInfo([entry]);
+                }
+            } else {
+                if (this.friendAlias !== this.userInfo.friendAlias) {
+                    wfc.setFriendAlias(this.userInfo.uid, this.friendAlias,
+                        () => {
+                            // do nothing
+                        },
+                        (error) => {
+                            // do nothing
+                        })
+                }
             }
+            this.close();
         },
         close() {
             this.$emit('close');
         },
 
         pickFile() {
+            if (!this.enableUpdatePortrait) {
+                return;
+            }
             this.$refs['fileInput'].click();
         },
         onPickFile(event) {
@@ -205,6 +226,18 @@ export default {
 
 .content ul li .alias > input {
     width: 100%;
+    outline: none;
+    border: none;
+    background-color: #fcfcfc;
+    padding: 2px 5px;
+}
+
+.content ul li .alias > input:focus {
+    border: 1px solid #4168e0;
+}
+
+.content ul li .alias > input:active {
+    border: 1px solid #4168e0;
 }
 
 .content ul li > div {
@@ -236,7 +269,7 @@ export default {
 }
 
 i:hover {
-    color: #34b7f1;
+    color: #3f64e4;
 }
 
 

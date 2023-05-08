@@ -10,7 +10,8 @@
 		"Search": "搜索...",
 		"Next": "下个会话",
 		"Prev": "上个会话",
-		"InsertEmoji": "插入表情"
+		"InsertEmoji": "插入表情",
+		"Close": "关闭"
 	},
 	"Conversations": {
 		"Title": "会话",

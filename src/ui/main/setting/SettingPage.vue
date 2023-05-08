@@ -47,6 +47,13 @@
                 </dropdown>
             </div>
         </div>
+        <div class="ad-container">
+            <p>
+                <a target="_blank" href="https://wildfirechat.cn/">野火IM</a>
+                ，安全可靠、运维部署简单、方便二开和对接现有系统。
+            </p>
+            <p>私有化部署，请微信联系：wildfirechat 或 wfchat </p>
+        </div>
         <footer>
             <p class="proto-version-info">{{ protoRevision() }}</p>
             <a v-if="sharedMiscState.isElectron" class="button" target="_blank" @click.prevent.stop="openLogDir">
@@ -68,13 +75,6 @@
             <a class="button" target="_blank" @click="logout">
                 {{ $t('setting.exit_switch_user') }}
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
-            </a>
-            <a
-                class="button"
-                href="mailto:imndxx@gmail.com?Subject=WildfireChat%20Feedback"
-                target="_blank">
-                {{ $t('setting.feedback') }}
-                <i class="icon-ion-ios-email-outline"/>
             </a>
 
             <a
@@ -113,11 +113,11 @@ import dropdown from 'vue-dropdowns';
 import {clear} from "@/ui/util/storageHelper";
 import {ipcRenderer, isElectron} from "@/platform";
 import {getItem, setItem} from "../../util/storageHelper";
-import axios from "axios";
-import CreateConferenceView from "../../voip/CreateConferenceView";
 import ChangePasswordView from "./ChangePasswordView";
 import ResetPasswordView from "./ResetPasswordView";
 import {shell} from "../../../platform";
+import IpcEventType from "../../../ipcEventType";
+import avenginekit from "../../../wfc/av/internal/engine.min";
 
 export default {
     name: "SettingPage",
@@ -193,7 +193,7 @@ export default {
             clear();
             wfc.disconnect();
             if (isElectron()) {
-                ipcRenderer.send('logouted');
+                ipcRenderer.send(IpcEventType.LOGOUT);
             }
         },
 
@@ -246,20 +246,18 @@ export default {
                 version = 'unknown proto version'
                 console.log(e)
             }
-            return version;
+            let supportConference = avenginekit.startConference !== undefined
+            return version + (supportConference ? ' av-conference' : ' av-multi');
         }
 
-    }
-    ,
+    },
 
     mounted() {
         window.addEventListener('blur', this.blurListener)
-    }
-    ,
+    },
     beforeDestroy() {
         window.removeEventListener('blur', this.blurListener)
-    }
-    ,
+    },
     computed: {
         currentLang() {
             let lang = getItem('lang')
@@ -268,13 +266,11 @@ export default {
             index = index >= 0 ? index : 0;
             return this.langs[index];
         }
-    }
-    ,
+    },
     components: {
         'dropdown':
         dropdown,
-    }
-    ,
+    },
 }
 </script>
 
@@ -307,6 +303,19 @@ export default {
 .setting-container .content label input {
     margin: 0 10px;
     display: inline-block;
+}
+
+.setting-container .ad-container {
+    padding: 10px;
+    font-size: 15px;
+    background: #f1f3f4;
+    margin: 10px;
+    border-radius: 5px;
+    /*box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
+}
+
+.ad-container p {
+    padding: 5px 0;
 }
 
 .setting-container footer {

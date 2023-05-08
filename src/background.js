@@ -4,6 +4,7 @@ import {
     app,
     BrowserWindow,
     clipboard,
+    crashReporter,
     dialog,
     globalShortcut,
     ipcMain,
@@ -11,11 +12,10 @@ import {
     nativeImage as NativeImage,
     powerMonitor,
     protocol,
+    screen,
     session,
     shell,
-    screen,
-    Tray,
-    crashReporter
+    Tray
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -24,7 +24,7 @@ import proto from '../marswrapper.node';
 
 import pkg from '../package.json';
 import {createProtocol} from "vue-cli-plugin-electron-builder/lib";
-import IPCRendererEventType from "./ipcRendererEventType";
+import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
 
@@ -76,12 +76,14 @@ let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
+let conversationWindowMap = new Map();
 let screenshots;
 let tray;
 let downloadFileMap = new Map()
 let settings = {};
 let isFullScreen = false;
 let isMainWindowFocusedWhenStartScreenshot = false;
+let screenShotWindowId = 0;
 let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
 
@@ -140,73 +142,6 @@ let mainMenu = [
             }
         ]
     },
-    {
-        label: Locales.__('File').Title,
-        submenu: [
-            {
-                label: Locales.__('File').New,
-                accelerator: 'Cmd+N',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-newchat');
-                }
-            },
-            {
-                label: Locales.__('File').Search,
-                accelerator: 'Cmd+F',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-search');
-                }
-            },
-            {
-                type: 'separator',
-            },
-            {
-                label: Locales.__('File').InsertEmoji,
-                accelerator: 'Cmd+I',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-emoji');
-                }
-            },
-            {
-                type: 'separator',
-            },
-            {
-                label: Locales.__('File').Next,
-                accelerator: 'Cmd+J',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-next');
-                }
-            },
-            {
-                label: Locales.__('File').Prev,
-                accelerator: 'Cmd+K',
-                click() {
-                    mainWindow.show();
-                    mainWindow.webContents.send('show-previous');
-                }
-            },
-        ]
-    },
-    // {
-    //     label: Locales.__('Conversations').Title,
-    //     submenu: [
-    //         {
-    //             label: Locales.__('Conversations').Loading,
-    //         }
-    //     ],
-    // },
-    // {
-    //     label: Locales.__('Contacts').Title,
-    //     submenu: [
-    //         {
-    //             label: Locales.__('Contacts').Loading,
-    //         }
-    //     ],
-    // },
     {
         label: Locales.__('Edit').Title,
         submenu: [
@@ -285,21 +220,21 @@ let mainMenu = [
         ]
     },
     {
-        lable: Locales.__('Window').Title,
+        label: Locales.__('Window').Title,
         role: 'window',
         submenu: [
             {
-                lable: Locales.__('Window').Min,
+                label: Locales.__('Window').Min,
                 role: 'minimize'
             },
             {
-                lable: Locales.__('Window').Close,
+                label: Locales.__('Window').Close,
                 role: 'close'
             }
         ]
     },
     {
-        lable: Locales.__('Help').Title,
+        label: Locales.__('Help').Title,
         role: 'help',
         submenu: [
             {
@@ -469,8 +404,9 @@ function regShortcut() {
     globalShortcut.register('Control+F5', () => {
         mainWindow.webContents.reload();
     })
-    globalShortcut.register('ctrl+shift+a', () => {
+    globalShortcut.register('CommandOrControl+shift+a', () => {
         isMainWindowFocusedWhenStartScreenshot = mainWindow.isFocused();
+        console.log('isMainWindowFocusedWhenStartScreenshot', mainWindow.isFocused());
         screenshots.startCapture()
     });
     // 调试用，主要用于处理 windows 不能打开子窗口的控制台
@@ -558,6 +494,7 @@ const createMainWindow = async () => {
         minHeight: 600,
         opacity: 0,
         titleBarStyle: 'hidden',
+        trafficLightPosition: { x: 4, y: 8 },
         maximizable: false,
         resizable: false,
         backgroundColor: 'none',
@@ -622,15 +559,20 @@ const createMainWindow = async () => {
             disconnectAndQuit();
         } else {
             e.preventDefault();
-            mainWindow.hide();
+            if (mainWindow.isFullScreen()) {
+                mainWindow.setFullScreen(false);
+                mainWindow.once('leave-full-screen', () => mainWindow.hide())
+            } else {
+                mainWindow.hide();
+            }
         }
     });
 
     mainWindow.webContents.session.on('will-download', downloadHandler);
 
-    ipcMain.on('screenshots-start', (event, args) => {
+    ipcMain.on(IPCEventType.START_SCREEN_SHOT, (event, args) => {
         // console.log('main voip-message event', args);
-        isMainWindowFocusedWhenStartScreenshot = true;
+        screenShotWindowId = event.sender.id;
         screenshots.startCapture();
     });
 
@@ -649,20 +591,32 @@ const createMainWindow = async () => {
         mainWindow.webContents.send('conference-request', args);
     });
 
-    ipcMain.on('start-screen-share', (event, args) => {
+    ipcMain.on(IPCEventType.START_SCREEN_SHARE, (event, args) => {
         let pointer = screen.getCursorScreenPoint();
         let display = screen.getDisplayNearestPoint(pointer)
-        mainWindow.webContents.send('start-screen-share', {width: display.size.width});
+        mainWindow.webContents.send(IPCEventType.START_SCREEN_SHARE, {width: display.size.width});
     });
 
-    ipcMain.on('stop-screen-share', (event, args) => {
-        mainWindow.webContents.send('stop-screen-share', args);
+    ipcMain.on(IPCEventType.STOP_SCREEN_SHARE, (event, args) => {
+        mainWindow.webContents.send(IPCEventType.STOP_SCREEN_SHARE, args);
     });
 
-    ipcMain.on('click-notification', (event, args) => {
-        if (!mainWindow.isVisible() || mainWindow.isMinimized()) {
-            mainWindow.show();
-            mainWindow.focus();
+    ipcMain.on(IPCEventType.CLICK_NOTIFICATION, (event, args) => {
+        let targetMediaSourceId = args;
+        let targetWin = null;
+        if (mainWindow.getMediaSourceId() === targetMediaSourceId) {
+            targetWin = mainWindow;
+        } else {
+            for (let win of conversationWindowMap.values()) {
+                if (win.getMediaSourceId() === targetMediaSourceId) {
+                    targetWin = win;
+                    break;
+                }
+            }
+        }
+        if (targetWin && !targetWin.isVisible() || targetWin.isMinimized()) {
+            targetWin.show();
+            targetWin.focus();
         }
     });
 
@@ -671,7 +625,7 @@ const createMainWindow = async () => {
         execBlink(isBlink, args.interval);
     });
 
-    ipcMain.on('update-badge', (event, args) => {
+    ipcMain.on(IPCEventType.UPDATE_BADGE, (event, args) => {
         let count = args;
         //if (settings.showOnTray) {
         updateTray(count);
@@ -683,7 +637,7 @@ const createMainWindow = async () => {
     //     event.returnValue = require('@electron/remote/main');
     // });
 
-    ipcMain.on('file-paste', (event) => {
+    ipcMain.on(IPCEventType.FILE_PASTE, (event) => {
         let args = {hasImage: false};
 
         if (process.platform !== 'linux') {
@@ -729,8 +683,15 @@ const createMainWindow = async () => {
 
         event.returnValue = args;
     });
+    ipcMain.on(IPCEventType.FILE_COPY, (event, args) => {
+        if (process.platform !== 'linux') {
+            const clipboardEx = require('electron-clipboard-ex')
+            console.log('copy path', args.path);
+            clipboardEx.writeFilePaths([args.path]);
+        }
+    });
 
-    ipcMain.on('file-download', async (event, args) => {
+    ipcMain.on(IPCEventType.DOWNLOAD_FILE, async (event, args) => {
         let remotePath = args.remotePath;
         let messageId = args.messageId;
         let windowId = args.windowId;
@@ -745,7 +706,7 @@ const createMainWindow = async () => {
         })
     });
 
-    ipcMain.on('show-file-window', async (event, args) => {
+    ipcMain.on(IPCEventType.SHOW_FILE_WINDOW, async (event, args) => {
         console.log('on show-file-window', fileWindow, args)
         if (!fileWindow) {
             let win = createWindow(args.url, 960, 600, 640, 400, true, true);
@@ -762,7 +723,7 @@ const createMainWindow = async () => {
             fileWindow.focus();
         }
     });
-    ipcMain.on('show-composite-message-window', async (event, args) => {
+    ipcMain.on(IPCEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, async (event, args) => {
         console.log('on show-composite-message-window', args)
         let messageUid = args.messageUid;
         let compositeMessageWin = compositeMessageWindows.get(messageUid);
@@ -791,7 +752,7 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on('open-h5-app-window', async (event, args) => {
+    ipcMain.on(IPCEventType.OPEN_H5_APP_WINDOW, async (event, args) => {
         console.log('on open-h5-app-window', args)
         let win = openPlatformAppHostWindows.get(args.hostUrl);
         if (!win) {
@@ -808,11 +769,11 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on(IPCRendererEventType.showConversationMessageHistoryPage, async (event, args) => {
-        console.log(`on ${IPCRendererEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
+    ipcMain.on(IPCEventType.showConversationMessageHistoryPage, async (event, args) => {
+        console.log(`on ${IPCEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false);
+            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
@@ -823,8 +784,8 @@ const createMainWindow = async () => {
         }
     });
 
-    ipcMain.on(IPCRendererEventType.showMessageHistoryPage, async (event, args) => {
-        console.log(`on ${IPCRendererEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
+    ipcMain.on(IPCEventType.showMessageHistoryPage, async (event, args) => {
+        console.log(`on ${IPCEventType.showMessageHistoryPage}`, messageHistoryMessageWindow, args)
         if (!messageHistoryMessageWindow) {
             messageHistoryMessageWindow = createWindow(args.url, 960, 600, 640, 400, false, false, true);
             messageHistoryMessageWindow.on('close', () => {
@@ -834,6 +795,30 @@ const createMainWindow = async () => {
         } else {
             messageHistoryMessageWindow.show();
             messageHistoryMessageWindow.focus();
+        }
+    });
+
+    ipcMain.on(IPCEventType.showConversationFloatPage, async (event, args) => {
+        console.log(`on ${IPCEventType.showConversationFloatPage}`, messageHistoryMessageWindow, args)
+        let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
+        let key = args.type + '-' + args.target + '-' + args.line;
+        let win = conversationWindowMap.get(key);
+        if (!win) {
+            win = createWindow(url, 960, 600, 480, 320, true, true, true);
+            win.on('close', () => {
+                conversationWindowMap.delete(key);
+                mainWindow.send('floating-conversation-window-closed', {
+                        type: args.type,
+                        target: args.target,
+                        line: args.line
+                    }
+                );
+            });
+            win.show();
+            conversationWindowMap.set(key, win);
+        } else {
+            win.show();
+            win.focus();
         }
     });
 
@@ -851,11 +836,11 @@ const createMainWindow = async () => {
         shell.openExternal(args.map);
     });
 
-    ipcMain.on('is-suspend', (event, args) => {
+    ipcMain.on(IPCEventType.IS_SUSPEND, (event, args) => {
         event.returnValue = isSuspend;
     });
 
-    ipcMain.on('logined', (event, args) => {
+    ipcMain.on(IPCEventType.LOGINED, (event, args) => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.resizable = true;
         mainWindow.maximizable = true;
@@ -866,7 +851,7 @@ const createMainWindow = async () => {
         mainWindowState.manage(mainWindow);
     });
 
-    ipcMain.on('logouted', (event, args) => {
+    ipcMain.on(IPCEventType.LOGOUT, (event, args) => {
         mainWindowState.unmanage();
         mainWindow.resizable = false;
         mainWindow.maximizable = false;
@@ -884,7 +869,7 @@ const createMainWindow = async () => {
         session.defaultSession.clearStorageData();
     });
 
-    ipcMain.on('enable-close-window-to-exit', (event, enable) => {
+    ipcMain.on(IPCEventType.ENABLE_CLOSE_WINDOW_TO_EXIT, (event, enable) => {
         closeWindowToExit = enable;
     });
 
@@ -926,7 +911,7 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
-function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true) {
+function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false) {
     let win = new BrowserWindow(
         {
             width: w,
@@ -944,7 +929,8 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
                 nativeWindowOpen: true,
                 nodeIntegration: true,
                 contextIsolation: false,
-                webviewTag: true
+                webviewTag: true,
+                webSecurity: webSecurity,
             },
             // frame:false
         }
@@ -1025,32 +1011,55 @@ app.on('ready', () => {
 
         registerLocalResourceProtocol();
 
-        screenshots = new Screenshots()
+        screenshots = new Screenshots({
+            // logger: console.log
+            singleWindow: true,
+        })
+
+        const onScreenShotEnd = (result) => {
+            console.log('onScreenShotEnd', isMainWindowFocusedWhenStartScreenshot, screenShotWindowId);
+            if (isMainWindowFocusedWhenStartScreenshot) {
+                if (result) {
+                    mainWindow.webContents.send('screenshots-ok', result);
+                }
+                mainWindow.show();
+                isMainWindowFocusedWhenStartScreenshot = false;
+            } else if (screenShotWindowId) {
+                let windows = BrowserWindow.getAllWindows();
+                let tms = windows.filter(win => win.webContents.id === screenShotWindowId);
+                if (tms.length > 0) {
+                    if (result) {
+                        tms[0].webContents.send('screenshots-ok', result);
+                    }
+                    tms[0].show();
+                }
+                screenShotWindowId = 0;
+            }
+        }
+
         // 点击确定按钮回调事件
         screenshots.on('ok', (e, buffer, bounds) => {
-            if (isMainWindowFocusedWhenStartScreenshot) {
-                let filename = tmp.tmpNameSync() + '.png';
-                let image = NativeImage.createFromBuffer(buffer);
-                fs.writeFileSync(filename, image.toPNG());
+            let filename = tmp.tmpNameSync() + '.png';
+            let image = NativeImage.createFromBuffer(buffer);
+            fs.writeFileSync(filename, image.toPNG());
 
-                mainWindow.webContents.send('screenshots-ok', {filePath: filename});
-                mainWindow.focus();
-            }
-            console.log('capture')
+            console.log('screenshots ok', e)
+            onScreenShotEnd({filePath: filename});
         })
+
         // 点击取消按钮回调事件
-        screenshots.on('cancel', () => {
-            // console.log('capture', 'cancel1')
-        })
         screenshots.on('cancel', e => {
             // 执行了preventDefault
             // 点击取消不会关闭截图窗口
             // e.preventDefault()
             // console.log('capture', 'cancel2')
+            console.log('screenshots cancel', e)
+            onScreenShotEnd()
         })
         // 点击保存按钮回调事件
         screenshots.on('save', (e, {viewer}) => {
-            console.log('capture', viewer)
+            console.log('screenshots save', e)
+            onScreenShotEnd()
         })
         session.defaultSession.webRequest.onBeforeSendHeaders(
             (details, callback) => {

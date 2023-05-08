@@ -1,7 +1,8 @@
 {
   "login": {
     "desc": "掃碼登錄野火IM",
-    "tip": "野火IM Web端需要配合您的手機客戶端登錄使用",
+    "tip_pc": "野火IM PC端需要配合您的手機客戶端登錄使用",
+    "tip_web": "野火IM Web端需要配合您的手機客戶端登錄使用",
     "warning": "不是使用微信掃碼登錄!!!",
     "scan_qr_success": "掃碼成功",
     "confirm_login_tip": "請在手機上點擊確認以登錄",
@@ -14,11 +15,12 @@
   "contact": {
     "new_friend": "新的朋友",
     "group": "群聊",
+    "channel": "頻道",
     "contact": "聯系人"
   },
   "friend_request": {
     "request": "好友請求",
-    "send_request_tip": "向{0}發送好球請求",
+    "send_request_tip": "向{0}發送好友請求",
     "accepted": "已添加",
     "sent": "已發送",
     "denied": "已拒絕",
@@ -71,7 +73,9 @@
     "enable_notification": "允許通知",
     "disable_notification": "消息免打擾",
     "mark_as_unread": "標記為未讀",
-    "mark_as_read": "標記為已讀"
+    "mark_as_read": "標記為已讀",
+    "clear_conversation_history": "清空本地聊天記錄",
+    "clear_remote_conversation_history": "清空遠程聊天記錄"
   },
   "fav": {
     "fav": "收藏",

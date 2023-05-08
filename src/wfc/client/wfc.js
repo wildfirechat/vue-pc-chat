@@ -9,6 +9,7 @@ import Long from 'long';
 import impl from '../proto/proto.min';
 import Config from "../../config";
 import avenginekit from "../av/engine/avenginekitproxy";
+import pttClient from "../ptt/client/pttClient";
 
 
 export class WfcManager {
@@ -26,14 +27,15 @@ export class WfcManager {
 
     /**
      * 初始化，请参考本demo的用法
-     * 只可以在主窗口调用，其他窗口调用之后，会导致主窗口通知失效。
-     * 如果其他窗口想调用wfc里面的非通知方法，可以参考{@link attach}
+     * 只可以在主窗口调用，其他窗口调用应当调用{@link attach}
      * @param {[]} args，pc 时，传入[node实例]; web 时，可以传入Config配置对象，配置项，请参考{@link Config}
      */
     init(args = []) {
         impl.init(args);
         if (!Config.DISABLE_VOIP) {
         avenginekit.setup(self);
+        if (Config.ENABLE_PTT) {
+            pttClient.init();
         }
         //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
     }
@@ -59,11 +61,12 @@ export class WfcManager {
     }
 
     /**
-    * 获取协议栈版本号
-    */
+     * 获取协议栈版本号
+     */
     getProtoRevision() {
         return impl.getProtoRevision();
     }
+
     /*
      * 启用国密加密。注意需要服务器端同步开启国密配置
      */
@@ -71,13 +74,36 @@ export class WfcManager {
         impl.useSM4();
     }
 
+    /*
+     * 启用AES256加密。注意需要服务器端同步开启AES256配置
+     */
+    useAES256() {
+        impl.useAES256();
+    }
+
+    /**
+     * 启动 TCP 短连接
+     */
+    useTcpShortLink() {
+        impl.useTcpShortLink();
+    }
+
+    /**
+     * 是否启动 TCP 短连接
+     * @return {*}
+     */
+    isTcpShortLink() {
+        return impl.isTcpShortLink();
+    }
+
     /**
      * 连接服务器
      * @param {string} userId 用户id
      * @param {string} token 用户token，生成token时，所使用的clientId，一定要通过{@link getClientId}获取
+     * @return {boolean} true，首次登录，不是表示连接成功；false，非首次登录；这个返回值，只有 pc 端有效
      */
     connect(userId, token) {
-        impl.connect(userId, token);
+        return impl.connect(userId, token);
     }
 
     /**
@@ -492,12 +518,12 @@ export class WfcManager {
     }
 
     /**
-     * 设置全管理员
+     * 设置群管理员
      * @param {string} groupId 群id
      * @param {boolean} isSet true，设置；false，取消设置
      * @param {[string]} memberIds 将被设置为管理或取消管理远的群成员的用户id
      * @param {[number]} lines 默认传[0]即可
-     * @param {TODO } notifyContent 默认传null即可
+     * @param {Object} notifyContent 默认传null即可
      * @param {function ()} successCB
      * @param {function (number)} failCB
      * @returns {Promise<void>}
@@ -514,6 +540,17 @@ export class WfcManager {
      */
     getGroupInfo(groupId, refresh = false) {
         return impl.getGroupInfo(groupId, refresh);
+    }
+
+
+    /**
+     * 批量获取群信息
+     * @param {[string]} groupIds 群id
+     * @param {boolean} refresh 是否刷新，如果刷新，且有更新的话，会通过{@link eventEmitter}通知
+     * @returns {[GroupInfo]}
+     */
+    getGroupInfos(groupIds, refresh = false) {
+        return impl.getGroupInfos(groupIds, refresh);
     }
 
     /**
@@ -750,6 +787,7 @@ export class WfcManager {
     getGroupRemark(groupId) {
         return impl.setGroupRemark(groupId);
     }
+
     /**
      * 获取保存到通讯录的群id列表
      * @returns {[string]}
@@ -777,6 +815,29 @@ export class WfcManager {
      */
     async setFavGroup(groupId, fav, successCB, failCB) {
         impl.setFavGroup(groupId, fav, successCB, failCB);
+    }
+
+    /**
+     * 获取当前用户所有群组ID，此方法消耗资源较大，不建议高频使用。
+     *
+     * @param {function ([string])} successCB
+     * @param {function (number)} failCB
+     * @returns {Promise<void>}
+     */
+    async getMyGroups(successCB, failCB) {
+        impl.getMyGroups(successCB, failCB);
+    }
+
+    /**
+     * 获取用户共同群组ID
+     *
+     * @param {string} userId
+     * @param {function ([string])} successCB
+     * @param {function (number)} failCB
+     * @returns {Promise<void>}
+     */
+    async getCommonGroups(userId, successCB, failCB) {
+        impl.getCommonGroups(userId, successCB, failCB);
     }
 
     /**
@@ -977,7 +1038,7 @@ export class WfcManager {
         return impl.isEnableSecretChat();
     }
 
-    getAppPath(){
+    getAppPath() {
         return impl.getAppPath();
     }
 
@@ -1043,6 +1104,7 @@ export class WfcManager {
     }
 
     /**
+     * @deprecated 已废弃，请使用{@link getRemoteListenedChannels}
      * 获取所收听的频道id列表
      * @returns {[string]}
      */
@@ -1053,9 +1115,9 @@ export class WfcManager {
     /**
      * 从服务端获取所收听的频道id列表
      * @param {function([String])} successCB
-    * @param {function (number)} failCB
+     * @param {function (number)} failCB
      *
-    */
+     */
     getRemoteListenedChannels(successCB, failCB) {
         impl.getRemoteListenedChannels(successCB, failCB);
     }
@@ -1102,6 +1164,23 @@ export class WfcManager {
     }
 
     /**
+     * 搜索会话
+     * @param {string} keyword 关键字
+     * @param {[number]} types 从哪些类型的会话中进行搜索，可选值可参考{@link ConversationType}
+     * @param {[number]} lines 从哪些会话线路进行搜索，默认传[0]即可
+     * @param {long} startTime 消息的起始时间
+     * @param {long} endTime 消息的结束时间
+     * @param {boolean} desc 是否逆序
+     * @param {boolean} desc 是否逆序
+     * @param {int} limit 返回数量
+     * @param {int} offset offset
+     * @returns {[ConversationSearchResult]}
+     */
+    searchConversationEx(keyword, types, lines, startTime, endTime, desc, limit, offset) {
+        return impl.searchConversation(keyword, types, lines, startTime, endTime, desc, limit, offset);
+    }
+
+    /**
      * 删除会话
      * @param {Conversation} conversation 想删除的目标会话
      * @param {boolean} clearMsg 是否已删除的会话的消息
@@ -1114,7 +1193,7 @@ export class WfcManager {
     /**
      * 会话置顶或取消置顶
      * @param {Conversation} conversation 需要置顶或取消置顶的会话
-     * @param {int} top 置顶优先级
+     * @param {number} top > 0, 置顶，可以根据这个值进行置顶排序；0，取消置顶
      * @param {function ()} successCB
      * @param {function (number)} failCB
      */
@@ -1176,6 +1255,15 @@ export class WfcManager {
      */
     clearConversationUnreadStatus(conversation) {
         impl.clearConversationUnreadStatus(conversation);
+    }
+
+    /**
+     * 清楚会话消息中指定消息id之前的消息（包含）未读状态
+     * @param {Conversation} conversation 目标会话
+     * @param {int} messageId 消息id
+     */
+    clearUnreadStatusBeforeMessage(conversation, messageId) {
+        impl.clearUnreadStatusBeforeMessage(conversation, messageId);
     }
 
     /**
@@ -1276,6 +1364,7 @@ export class WfcManager {
 
     /**
      * 获取会话消息
+     * @deprecated 请使用{@link getMessagesV2}
      * @param {Conversation} conversation 目标会话
      * @param {number} fromIndex messageId，表示从那一条消息开始获取
      * @param {boolean} before true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
@@ -1289,6 +1378,7 @@ export class WfcManager {
 
     /**
      * 获取消息
+     * @deprecated 请使用{@link getMessagesExV2}
      * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
      * @param {[number]} lines 会话线路列表
      * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
@@ -1303,7 +1393,8 @@ export class WfcManager {
     }
 
     /**
-     *
+     * 获取消息
+     * @deprecated 请使用{@link getMessagesEx2V2}
      * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
      * @param {[number]} lines 会话线路列表
      * @param {[number]} messageStatus 消息状态，可选值参考{@link MessageStatus}
@@ -1319,6 +1410,7 @@ export class WfcManager {
 
     /**
      * 获取会话消息
+     * @deprecated 请使用{@link getMessagesByTimestampV2}
      * @param {Conversation} conversation 目标会话
      * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
      * @param {number} timestamp 时间戳
@@ -1330,8 +1422,10 @@ export class WfcManager {
     getMessagesByTimestamp(conversation, contentTypes, timestamp, before = true, count = 20, withUser = '') {
         return impl.getMessagesByTimestamp(conversation, contentTypes, timestamp, before, count, withUser);
     }
+
     /**
      * 获取用户会话消息
+     * @deprecated 请使用{@link getUserMessagesV2}
      * @param {string} userId 用户id
      * @param {Conversation} conversation 目标会话
      * @param {number} fromIndex 本参数暂时无效！ messageId，表示从那一条消息开始获取
@@ -1345,6 +1439,7 @@ export class WfcManager {
 
     /**
      * 获取用户消息
+     * @deprecated 请使用{@link getUserMessagesExV2}
      * @param {string} userId 用户id
      * @param {[number]} conversationTypes 想获取的会话类型，可选值参考{@link ConversationType}
      * @param {[0]} lines 想获取哪些会话线路的会话，默认传[0]即可
@@ -1356,6 +1451,97 @@ export class WfcManager {
      */
     getUserMessagesEx(userId, conversationTypes, lines, fromIndex, before = true, count = 20, contentTypes = []) {
         return impl.getUserMessagesEx(userId, conversationTypes, lines, fromIndex, before, count, contentTypes);
+    }
+
+    /**
+     * 获取会话消息
+     * @param {Conversation} conversation 目标会话
+     * @param {number} fromIndex messageId，表示从那一条消息开始获取
+     * @param {boolean} before true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {function (Message)} successCB
+     * @param failCB
+     */
+    getMessagesV2(conversation, fromIndex, before, count, withUser, successCB, failCB) {
+        impl.getMessagesV2(conversation, fromIndex, before, count, withUser, successCB, failCB);
+    }
+
+    /**
+     * 获取消息
+     * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
+     * @param {[number]} lines 会话线路列表
+     * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效! true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效! 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}
+     * @param {function (Message)} successCB
+     * @param failCB
+     */
+    getMessagesExV2(conversationTypes, lines, fromIndex, before, count, withUser, contentTypes, successCB, failCB) {
+        impl.getMessagesExV2(conversationTypes, lines, contentTypes, fromIndex, before, count, withUser, successCB, failCB);
+    }
+
+    /**
+     *
+     * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
+     * @param {[number]} lines 会话线路列表
+     * @param {[number]} messageStatus 消息状态，可选值参考{@link MessageStatus}
+     * @param {number} fromIndex 本参数暂时无效! messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效! true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效! 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {function (Message)} successCB
+     * @param failCB
+     */
+    getMessagesEx2V2(conversationTypes, lines, messageStatus, fromIndex, before, count, withUser, successCB, failCB) {
+        impl.getMessagesEx2V2(conversationTypes, lines, messageStatus, fromIndex, before, count, withUser, successCB, failCB);
+    }
+
+    /**
+     * 获取会话消息
+     * @param {Conversation} conversation 目标会话
+     * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
+     * @param {number} timestamp 时间戳
+     * @param {boolean} before true, 获取timestamp之前的消息，即更旧的消息；false，获取timestamp之后的消息，即更新的消息。都不包含timestamp对应的消息
+     * @param {number} count 获取多少条消息
+     * @param {string} withUser 只有会话类型为{@link ConversationType#Channel}时生效, channel主用来查询和某个用户的所有消息
+     * @param {function (Message)} successCB
+     * @param failCB
+     */
+    getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB) {
+        impl.getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB);
+    }
+
+    /**
+     * 获取用户会话消息
+     * @param {string} userId 用户id
+     * @param {Conversation} conversation 目标会话
+     * @param {number} fromIndex 本参数暂时无效！ messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效！ true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效! 获取多少条消息
+     * @param {function (Message)} successCB
+     * @param failCB
+     */
+    getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB) {
+        impl.getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB);
+    }
+
+    /**
+     * 获取用户消息
+     * @param {string} userId 用户id
+     * @param {[number]} conversationTypes 想获取的会话类型，可选值参考{@link ConversationType}
+     * @param {[0]} lines 想获取哪些会话线路的会话，默认传[0]即可
+     * @param {number} fromIndex 本参数暂时无效！ messageId，表示从那一条消息开始获取
+     * @param {boolean} before 本参数暂时无效！ true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 本参数暂时无效！ 获取多少条消息
+     * @param {[number]} contentTypes 消息类型，可选值参考{@link MessageContentType}
+     * @param {function (Message)} successCB
+     * @param failCB
+     */
+    getUserMessagesExV2(userId, conversationTypes, lines, fromIndex, before, count, contentTypes, successCB, failCB) {
+        impl.getUserMessagesExV2(userId, conversationTypes, lines, fromIndex, before, count, contentTypes, successCB, failCB);
     }
 
     /**
@@ -1454,10 +1640,11 @@ export class WfcManager {
      * 搜索消息
      * @param {Conversation} conversation 目标会话
      * @param {string} keyword 关键字
+     * @param {string} withUser 目标用户
      * @returns {[Message]}
      */
-    searchMessage(conversation, keyword) {
-        return impl.searchMessage(conversation, keyword);
+    searchMessage(conversation, keyword, withUser = '') {
+        return impl.searchMessage(conversation, keyword, withUser);
     }
 
     /**
@@ -1467,10 +1654,11 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
+     * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageEx(conversation, keyword, desc, limit, offset) {
-        return impl.searchMessageEx(conversation, keyword, desc, limit, offset);
+    searchMessageEx(conversation, keyword, desc, limit, offset, withUser = '') {
+        return impl.searchMessageEx(conversation, keyword, desc, limit, offset, withUser);
     }
 
     /**
@@ -1481,10 +1669,11 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
+     * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset) {
-        return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset);
+    searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser = '') {
+        return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser);
     }
 
     /**
@@ -1497,10 +1686,11 @@ export class WfcManager {
      * @param {boolean} desc 逆序排列
      * @param {int} limit 返回数量
      * @param {int} offset 偏移
+     * @param {string} withUser 目标用户
      * @returns {Message[]}
      */
-    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset) {
-        return impl.searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset);
+    searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset, withUser = '') {
+        return impl.searchMessageByTypesAndTimes(conversation, keyword, contentTypes, startTime, endTime, desc, limit, offset, withUser);
     }
 
     /**
@@ -1512,10 +1702,11 @@ export class WfcManager {
      * @param {number} fromIndex messageId，表示从那一条消息开始获取
      * @param {boolean} desc 逆序排列
      * @param {number} count 最大数量
+     * @param {string} withUser 目标用户
      * @returns {[Message]}
      */
-    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count) {
-        return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count);
+    searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser = '') {
+        return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser);
     }
 
     /**
@@ -1529,7 +1720,7 @@ export class WfcManager {
      * @param {function (number)} failCB
      * @returns {Promise<void>}
      */
-    async sendConversationMessage(conversation, messageContent, toUsers, preparedCB, progressCB, successCB, failCB) {
+    async sendConversationMessage(conversation, messageContent, toUsers = [], preparedCB = null, progressCB = null, successCB = null, failCB = null) {
         impl.sendConversationMessage(conversation, messageContent, toUsers, preparedCB, progressCB, successCB, failCB);
     }
 
@@ -1573,13 +1764,14 @@ export class WfcManager {
     }
 
     /**
-    * 取消发送消息，仅媒体类消息可以取消
-    * @param messageId 消息ID
-    * @returns 是否取消成功
-    */
+     * 取消发送消息，仅媒体类消息可以取消
+     * @param messageId 消息ID
+     * @returns 是否取消成功
+     */
     cancelSendingMessage(messageId) {
         return impl.cancelSendingMessage(messageId);
     }
+
     // 更新了原始消息的内容
     /**
      * 撤回消息
@@ -1684,6 +1876,23 @@ export class WfcManager {
      */
     insertMessage(conversation, messageContent, status, notify = false, serverTime = 0) {
         return impl.insertMessage(conversation, messageContent, status, notify, serverTime);
+    }
+
+
+    /**
+     * 插入消息
+     * @param {Long} messageUid
+     * @param {Conversation} conversation 目标会话
+     * @param {string} fromUser 发送者
+     * @param {MessageContent} messageContent 具体的消息内容，一定要求是{@link MessageContent} 的子类，不能是普通的object
+     * @param {number} status 消息状态，可选值参考{@link MessageStatus}
+     * @param {Number} serverTime 服务器时间，精度到毫秒
+     * @param {string} localExtra 附加信息
+     *
+     * @return {Message} 插入的消息
+     */
+    insertMessageEx(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra) {
+        return impl.insertMessage(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra);
     }
 
     /**
@@ -1967,24 +2176,44 @@ export class WfcManager {
         impl.setMyCustomState(customState, customText, successCB, failCB)
     }
 
-    getAuthCode(appId, appType, host, successCB, failCB){
+    getAuthCode(appId, appType, host, successCB, failCB) {
         impl.getAuthCode(appId, appType, host, successCB, failCB);
     }
 
-    configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB){
+    configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB) {
         impl.configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB);
     }
+
+    beginTransaction() {
+        return impl.beginTransaction();
+    }
+
+    commitTransaction() {
+        return impl.commitTransaction();
+    }
+
+    rollbackTransaction() {
+        return impl.rollbackTransaction();
+    }
+
+    requireLock(lockId, duration, successCB, failCB) {
+        impl.requireLock(lockId, duration, successCB, failCB);
+    }
+
+    releaseLock(lockId, successCB, failCB) {
+        impl.releaseLock(lockId, successCB, failCB);
+    }
+
     _getStore() {
         return impl._getStore();
     }
 
 
     /**
-     * 内部使用，electron主窗口之外的，其他窗口，attach到主窗口初始化的proto上，可以调用get相关方法，但没有通知
-     * @param protoObj
+     * 内部使用，electron主窗口之外的，其他窗口调用，之后就可以使用wfc.js里面的所有接口了
      */
-    attach(protoObj) {
-        impl.attach(protoObj);
+    attach() {
+        impl.attach();
     }
 
     /**
@@ -2003,6 +2232,20 @@ export class WfcManager {
      */
     b64_to_utf8(str) {
         return decodeURIComponent(escape(atob(str)));
+    }
+
+    b64_to_arrayBuffer(str) {
+        let binary_string = atob(str);
+        let len = binary_string.length;
+        let bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary_string.charCodeAt(i);
+        }
+        return bytes.buffer;
+    }
+
+    arrayBuffer_to_b64(data) {
+        return Buffer.from(data).toString('base64');
     }
 
     unescape(str) {

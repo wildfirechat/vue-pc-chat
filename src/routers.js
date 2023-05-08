@@ -8,10 +8,13 @@ import Multi from "@/ui/voip/Multi";
 import FileRecordPage from "@/ui/fileRecord/FileRecordPage";
 import FavPage from "@/ui/main/fav/FavPage";
 import WorkspacePage from "./ui/workspace/WorkspacePage";
-import Conference from "./ui/voip/Conference";
+import Conference from "./ui/voip/conference/Conference";
 import CompositeMessagePage from "./ui/main/CompositeMessagePage";
 import MessageHistoryPage from "./ui/main/MessageHistoryPage";
 import ConversationMessageHistoryPage from "./ui/main/ConversationMessageHistoryPage";
+import ConversationFloatPage from "./ui/main/ConversationFloatPage";
+import ConferencePortalPage from "./ui/voip/conference/ConferencePortalPage";
+import MessagePage from "./ui/main/MessagePage.vue";
 
 const routers = [
     {
@@ -47,6 +50,11 @@ const routers = [
                 name: 'setting',
                 component: SettingPage,
             },
+            {
+                path: 'conference',
+                name: 'conference',
+                component: ConferencePortalPage,
+            },
         ]
     },
     {
@@ -80,6 +88,11 @@ const routers = [
         component: CompositeMessagePage,
     },
     {
+        name: 'message',
+        path: '/message',
+        component: MessagePage,
+    },
+    {
         name: 'message-history',
         path: '/message-history',
         component: MessageHistoryPage,
@@ -88,6 +101,12 @@ const routers = [
         name: 'conversation-message-history',
         path: '/conversation-message-history',
         component: ConversationMessageHistoryPage,
+    },
+    {
+        name: 'conversation-window',
+        path: '/conversation-window',
+        component: ConversationFloatPage,
+
     }
 ]
 export default routers
