@@ -361,7 +361,9 @@ export default {
 
             sessionCallback.didScreenShareEnded = () => {
                 console.log('didScreenShareEnded', this.session.videoMuted, this.session.audioMuted);
-                currentWindow.setIgnoreMouseEvents(false);
+                if (isElectron()){
+                    currentWindow.setIgnoreMouseEvents(false);
+                }
                 this.selfUserInfo._isScreenSharing = false;
                 this.selfUserInfo._isVideoMuted = this.session.videoMuted;
             }
