@@ -999,7 +999,12 @@ function registerLocalResourceProtocol() {
         } catch (error) {
             console.error('ERROR: registerLocalResourceProtocol: Could not get file path:', error)
         }
-    })
+    });
+
+    protocol.registerFileProtocol('file', (request, callback) => {
+      const pathname = decodeURIComponent(request.url.replace('file:///', ''));
+      callback(pathname);
+    });
 }
 
 app.on('ready', () => {
