@@ -1,0 +1,10 @@
+{
+  "dest": "dist/installers/",
+  "icon": "build/icon.png",
+  "categories": [
+    "Chat"
+  ],
+  "lintianOverrides": [
+    "changelog-file-missing-in-native-package"
+  ]
+}
