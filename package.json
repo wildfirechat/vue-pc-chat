@@ -13,6 +13,7 @@
     "email": "imndxx@wildirechat.cn",
     "name": "imndx"
   },
+  "productName": "野火IM",
   "scripts": {
     "package": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:build -p never",
     "dev": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:serve --disable-background-timer-throttling",
@@ -25,7 +26,6 @@
     "cross-package-linux-arm64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-linux-mips64el": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux mips64el && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-mac": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin && vue-cli-service electron:build --mac -p never",
-    "cross-package-linux-mips64el": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux mips64el && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-all": "node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
     "preinstall": "npx npm-force-resolutions"
   },
