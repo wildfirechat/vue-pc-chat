@@ -357,6 +357,7 @@ export default {
             sessionCallback.didRotateLocalVideoTrack = (stream) => {
                 console.log('didRotateLocalVideoTrack', stream.getAudioTracks())
                 this.selfUserInfo._stream = stream;
+                this.selfUserInfo._stream.timestamp  = new Date().getTime();
             };
 
             sessionCallback.didScreenShareEnded = () => {
@@ -381,13 +382,14 @@ export default {
                     p = this.participantUserInfos[i];
                     if (p.uid === userId && p._isScreenSharing === screenSharing) {
                         p._stream = stream;
+                        p._stream.timestamp = new Date().getTime();
                         break;
                     }
                 }
             };
 
             sessionCallback.didRemoveRemoteVideoTrack = (userId) => {
-
+                console.log('didRemoveRemoteVideoTrack', userId)
             };
 
             sessionCallback.didParticipantJoined = (userId, screenSharing) => {
