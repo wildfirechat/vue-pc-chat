@@ -365,7 +365,7 @@ let store = {
                 }
 
                 let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
-                    return m.messageId === msg.messageId || eq(m.messageUid, msg.messageUid);
+                    return m.messageId === msg.messageId ||(gt(m.messageUid, 0) && eq(m.messageUid, msg.messageUid));
                 });
                 if (msgIndex > -1) {
                     conversationState.currentConversationMessageList[msgIndex] = msg;
