@@ -364,6 +364,13 @@ let store = {
                     return;
                 }
 
+                // 会把下来加载更多加载的历史消息给清理了
+                let lastTimestamp = 0;
+                let msgListLength = conversationState.currentConversationMessageList.length;
+                if (msgListLength > 0) {
+                    lastTimestamp = conversationState.currentConversationMessageList[msgListLength - 1].timestamp;
+                }
+                this._patchMessage(msg, lastTimestamp);
                 let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
                     return m.messageId === msg.messageId ||(gt(m.messageUid, 0) && eq(m.messageUid, msg.messageUid));
                 });
@@ -373,13 +380,6 @@ let store = {
                     return;
                 }
 
-                // 会把下来加载更多加载的历史消息给清理了
-                let lastTimestamp = 0;
-                let msgListLength = conversationState.currentConversationMessageList.length;
-                if (msgListLength > 0) {
-                    lastTimestamp = conversationState.currentConversationMessageList[msgListLength - 1].timestamp;
-                }
-                this._patchMessage(msg, lastTimestamp);
                 conversationState.currentConversationMessageList.push(msg);
             }
 
