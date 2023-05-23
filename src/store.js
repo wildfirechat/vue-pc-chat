@@ -364,15 +364,6 @@ let store = {
                     return;
                 }
 
-                let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
-                    return m.messageId === msg.messageId || eq(m.messageUid, msg.messageUid);
-                });
-                if (msgIndex > -1) {
-                    conversationState.currentConversationMessageList[msgIndex] = msg;
-                    console.log('msg duplicate')
-                    return;
-                }
-
                 // 会把下来加载更多加载的历史消息给清理了
                 let lastTimestamp = 0;
                 let msgListLength = conversationState.currentConversationMessageList.length;
@@ -380,6 +371,15 @@ let store = {
                     lastTimestamp = conversationState.currentConversationMessageList[msgListLength - 1].timestamp;
                 }
                 this._patchMessage(msg, lastTimestamp);
+                let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
+                    return m.messageId === msg.messageId ||(gt(m.messageUid, 0) && eq(m.messageUid, msg.messageUid));
+                });
+                if (msgIndex > -1) {
+                    conversationState.currentConversationMessageList[msgIndex] = msg;
+                    console.log('msg duplicate')
+                    return;
+                }
+
                 conversationState.currentConversationMessageList.push(msg);
             }
 

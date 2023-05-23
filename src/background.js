@@ -52,7 +52,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
-// require('@electron/remote/main').initialize()
+require('@electron/remote/main').initialize()
 
 let Locales = {};
 i18n.configure({
@@ -502,7 +502,6 @@ const createMainWindow = async () => {
         // transparent: true,
         // resizable: false,
         webPreferences: {
-            enableRemoteModule: true,
             scrollBounce: false,
             nodeIntegration: true,
             contextIsolation: false,
@@ -528,7 +527,7 @@ const createMainWindow = async () => {
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
-    // require("@electron/remote/main").enable(mainWindow.webContents);
+    require("@electron/remote/main").enable(mainWindow.webContents);
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
@@ -632,10 +631,10 @@ const createMainWindow = async () => {
         app.badgeCount = count;
         //}
     });
-    // app.on('remote-require', (event, args) => {
-    //     // event.preventDefault();
-    //     event.returnValue = require('@electron/remote/main');
-    // });
+    app.on('remote-require', (event, args) => {
+        // event.preventDefault();
+        event.returnValue = require('@electron/remote/main');
+    });
 
     ipcMain.on(IPCEventType.FILE_PASTE, (event) => {
         let args = {hasImage: false};
@@ -924,7 +923,6 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
             titleBarStyle: showTitle ? 'default' : 'hiddenInset',
             // titleBarStyle: 'customButtonsOnHover',
             webPreferences: {
-                enableRemoteModule: true,
                 scrollBounce: false,
                 nativeWindowOpen: true,
                 nodeIntegration: true,
@@ -939,7 +937,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
-    // require("@electron/remote/main").enable(win.webContents);
+    require("@electron/remote/main").enable(win.webContents);
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)
@@ -999,11 +997,11 @@ function registerLocalResourceProtocol() {
         } catch (error) {
             console.error('ERROR: registerLocalResourceProtocol: Could not get file path:', error)
         }
-    });
+    })
 
     protocol.registerFileProtocol('file', (request, callback) => {
-      const pathname = decodeURIComponent(request.url.replace('file:///', ''));
-      callback(pathname);
+        const pathname = decodeURIComponent(request.url.replace('file:///', ''));
+        callback(pathname);
     });
 }
 

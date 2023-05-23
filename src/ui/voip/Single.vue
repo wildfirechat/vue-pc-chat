@@ -233,7 +233,7 @@ export default {
             }
 
             sessionCallback.didReportAudioVolume = (userId, volume) => {
-                console.log('didReportAudioVolume', userId, volume)
+                // console.log('didReportAudioVolume', userId, volume)
             }
 
             avenginekit.sessionCallback = sessionCallback;
