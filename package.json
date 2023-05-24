@@ -31,7 +31,6 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@electron/remote": "^2.0.1",
     "@imndx/v-emoji-picker": "^2.3.7",
     "@nearform/heap-profiler": "^2.0.0",
     "anchorme": "^2.1.2",
