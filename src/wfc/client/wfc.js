@@ -1513,6 +1513,10 @@ export class WfcManager {
         impl.getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, count, withUser, successCB, failCB);
     }
 
+    getMessagesByStatusV2(conversation, statuses, fromIndex, before, count, withUser, successCB, failCB) {
+        impl.getMessagesByStatusV2(conversation, statuses, fromIndex, before, count, withUser, successCB, failCB);
+    }
+
     /**
      * 获取用户会话消息
      * @param {string} userId 用户id

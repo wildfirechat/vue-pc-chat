@@ -61,6 +61,7 @@ const asyncProtoMethods = {
     getMessagesExV2: _asyncCall2('getMessagesExV2'),
     getMessagesEx2V2: _asyncCall2('getMessagesEx2V2'),
     getMessagesByTimestampV2: _asyncCall2('getMessagesByTimestampV2'),
+    getMessagesByStatusV2: _asyncCall2('getMessagesByStatusV2'),
     getUserMessagesV2: _asyncCall2('getUserMessagesV2'),
     getUserMessagesExV2: _asyncCall2('getUserMessagesExV2'),
 
