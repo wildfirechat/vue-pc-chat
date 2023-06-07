@@ -1467,6 +1467,19 @@ export class WfcManager {
     }
 
     /**
+     * 获取会话提醒消息
+     * @param {Conversation} conversation 目标会话
+     * @param {number} fromIndex messageId，表示从那一条消息开始获取
+     * @param {boolean} before true, 获取fromIndex之前的消息，即更旧的消息；false，获取fromIndex之后的消息，即更新的消息。都不包含fromIndex对应的消息
+     * @param {number} count 获取多少条消息
+     * @param {function (Message)} successCB
+     * @param failCB
+     */
+    getMentionedMessages(conversation, fromIndex, before, count, successCB, failCB) {
+        impl.getMentionedMessages(conversation, fromIndex, before, count, successCB, failCB);
+    }
+
+    /**
      * 获取消息
      * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
      * @param {[number]} lines 会话线路列表
@@ -1665,6 +1678,19 @@ export class WfcManager {
     }
 
     /**
+     * 搜索提醒消息
+     * @param {Conversation} conversation 目标会话，如果为空搜索所有会话
+     * @param {string} keyword 关键字
+     * @param {boolean} desc 逆序排列
+     * @param {int} limit 返回数量
+     * @param {int} offset 偏移
+     * @returns {Message[]}
+     */
+    searchMentionedMessages(conversation, keyword, desc, limit, offset) {
+        return impl.searchMentionedMessages(conversation, keyword, desc, limit, offset);
+    }
+
+    /**
      * 搜索消息
      * @param {Conversation} conversation 目标会话，如果为空搜索所有会话
      * @param {string} keyword 关键字
@@ -1710,6 +1736,20 @@ export class WfcManager {
      */
     searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser = '') {
         return impl.searchMessageEx2(conversationTypes, lines, contentTypes, keyword, fromIndex, desc, count, withUser);
+    }
+
+    /**
+     * 搜索提醒消息
+     * @param {[number]} conversationTypes 会话类型列表，可选值参考{@link  ConversationType}
+     * @param {[number]} lines 会话线路列表
+     * @param {string} keyword 关键字
+     * @param {boolean} desc 逆序排列
+     * @param {int} limit 返回数量
+     * @param {int} offset 偏移
+     * @returns {[Message]}
+     */
+    searchMentionedMessageEx(conversationTypes, lines, keyword, desc, limit, offset) {
+        return impl.searchMentionedMessageEx(conversationTypes, lines, keyword, desc, limit, offset);
     }
 
     /**
