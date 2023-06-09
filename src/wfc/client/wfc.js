@@ -1180,6 +1180,25 @@ export class WfcManager {
     }
 
     /**
+     * 搜索会话
+     * @param {string} keyword 关键字
+     * @param {[number]} types 从哪些类型的会话中进行搜索，可选值可参考{@link ConversationType}
+     * @param {[number]} lines 从哪些会话线路进行搜索，默认传[0]即可
+     * @param {[number]} cntTypes 搜索指定消息内容类型
+     * @param {long} startTime 消息的起始时间
+     * @param {long} endTime 消息的结束时间
+     * @param {boolean} desc 是否逆序
+     * @param {boolean} desc 是否逆序
+     * @param {int} limit 返回数量
+     * @param {int} offset offset
+     * @param {boolean} onlyMentionedMsg 是否只搜索提醒消息
+     * @returns {[ConversationSearchResult]}
+     */
+    searchConversationEx2(keyword, types, lines, cntTypes, startTime, endTime, desc, limit, offset, onlyMentionedMsg) {
+        return impl.searchConversationEx2(keyword, types, lines, cntTypes, startTime, endTime, desc, limit, offset, onlyMentionedMsg);
+    }
+
+    /**
      * 删除会话
      * @param {Conversation} conversation 想删除的目标会话
      * @param {boolean} clearMsg 是否已删除的会话的消息
