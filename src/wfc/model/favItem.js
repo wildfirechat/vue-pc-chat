@@ -92,6 +92,15 @@ export default class FavItem {
                 let compositeContent = message.messageContent;
                 favItem.title = compositeContent.title;
                 let payload = compositeContent.encode();
+
+                if (payload.remoteMediaUrl) {
+                    let str = wfc.b64_to_utf8(payload.binaryContent);
+                    let obj = JSON.parse(str)
+                    obj['remote_url'] = payload.remoteMediaUrl;
+                    str = JSON.stringify(obj);
+                    payload.binaryContent = wfc.utf8_to_b64(str);
+                }
+
                 favItem.data = payload.binaryContent;
                 break;
             case MessageContentType.Voice:
@@ -115,9 +124,9 @@ export default class FavItem {
     }
 
     toMessage() {
-        if (this.messageUid){
+        if (this.messageUid) {
             let msg = wfc.getMessageByUid(this.messageUid);
-            if (msg){
+            if (msg) {
                 return msg;
             }
         }
@@ -154,6 +163,9 @@ export default class FavItem {
                         payload.type = this.favType;
                         payload.content = this.title;
                         payload.binaryContent = this.data;
+
+                        let obj = JSON.parse(this.data);
+                        payload.remoteMediaUrl = obj['remote_url'];
                         content.decode(payload)
                     }
                     break;
