@@ -233,7 +233,10 @@ export class AvEngineKitProxy {
                     if (!this.callWin) {
                         setTimeout(() => {
                             if (this.conversation) {
-                                this.showCallUI(msg.conversation);
+                                this.showCallUI(msg.conversation, false, {
+                                    event: 'message',
+                                    args: msg
+                                });
                             } else {
                                 console.log('call ended')
                             }
@@ -258,7 +261,10 @@ export class AvEngineKitProxy {
                     if (!this.callWin && content.participants.indexOf(selfUserInfo.uid) > -1) {
                         setTimeout(() => {
                             if (this.conversation) {
-                                this.showCallUI(msg.conversation);
+                                this.showCallUI(msg.conversation, false, {
+                                    event: 'message',
+                                    args: msg
+                                });
                             } else {
                                 console.log('call ended')
                             }
@@ -281,8 +287,10 @@ export class AvEngineKitProxy {
                 msg.participantUserInfos = participantUserInfos;
                 msg.selfUserInfo = selfUserInfo;
                 msg.timestamp = longValue(numberValue(msg.timestamp) - delta)
+                if (this.callWin) {
                 this.emitToVoip("message", msg);
             }
+        }
         }
     };
 
@@ -370,8 +378,9 @@ export class AvEngineKitProxy {
             let memberIds = wfc.getGroupMemberIds(conversation.target);
             groupMemberUserInfos = wfc.getUserInfos(memberIds, conversation.target);
         }
-        this.showCallUI(conversation, false);
-        this.emitToVoip('startCall', {
+        this.showCallUI(conversation, false, {
+            event: 'startCall',
+            args: {
             conversation: conversation,
             audioOnly: audioOnly,
             callId: callId,
@@ -379,6 +388,7 @@ export class AvEngineKitProxy {
             groupMemberUserInfos: groupMemberUserInfos,
             participantUserInfos: participantUserInfos,
             callExtra: callExtra,
+            }
         });
     }
 
@@ -422,8 +432,9 @@ export class AvEngineKitProxy {
         });
 
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
-        this.showCallUI(null, true);
-        this.emitToVoip('startConference', {
+        this.showCallUI(null, true, {
+            event: 'startConference',
+            args: {
             audioOnly: audioOnly,
             callId: callId,
             pin: pin ? pin : Math.ceil(Math.random() * 1000000) + '',
@@ -438,6 +449,7 @@ export class AvEngineKitProxy {
             callExtra: callExtra,
             muteAudio: muteAudio,
             muteVideo: muteVideo,
+            }
         });
     }
 
@@ -478,8 +490,9 @@ export class AvEngineKitProxy {
             console.error('join conference chatRoom fail', callId, err);
         });
         let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
-        this.showCallUI(null, true);
-        this.emitToVoip('joinConference', {
+        this.showCallUI(null, true, {
+            event: 'joinConference',
+            args: {
             audioOnly: audioOnly,
             callId: callId,
             pin: pin,
@@ -493,10 +506,11 @@ export class AvEngineKitProxy {
             selfUserInfo: selfUserInfo,
             extra: extra,
             callExtra: callExtra,
+            }
         });
     }
 
-    showCallUI(conversation, isConference) {
+    showCallUI(conversation, isConference, options) {
         let type = isConference ? 'conference' : (conversation.type === ConversationType.Single ? 'single' : 'multi');
         this.type = type;
 
@@ -566,6 +580,7 @@ export class AvEngineKitProxy {
             console.log('voip windows url', url)
             win.show();
             win.removeMenu();
+            this.emitToVoip(options.event, options.args);
         } else {
             console.log('location', window.location);
             let hash = window.location.hash;
@@ -575,7 +590,7 @@ export class AvEngineKitProxy {
             } else {
                 url += "/voip"
             }
-            url += '/' + type + '?t=' + new Date().getTime()
+            url += '/' + type + '?t=' + new Date().getTime() + '&options=' + encodeURIComponent(JSON.stringify(options, null, ''));
 
             let win;
             let iframe = this.iframe;
@@ -607,6 +622,16 @@ export class AvEngineKitProxy {
             win.addEventListener('beforeunload', this.onVoipWindowClose);
             // for ios
             win.addEventListener('unload', this.onVoipWindowClose);
+            if (!this.events) {
+                this.events = new PostMessageEventEmitter(win, window.location.origin)
+            }
+            console.log('windowEmitter subscribe events');
+            this.events.on('voip-message', this.sendVoipListener)
+            this.events.on('conference-request', this.sendConferenceRequestListener);
+            this.events.on('update-call-start-message', this.updateCallStartMessageContentListener)
+            if (this.useIframe) {
+                this.events.on('close-iframe-window', this.onVoipWindowClose)
+            }
         }
     }
 
@@ -645,16 +670,7 @@ export class AvEngineKitProxy {
         console.log('onVoipWindowReady', this.onVoipCallStatusCallback)
         this.onVoipCallStatusCallback && this.onVoipCallStatusCallback(this.conversation, true);
         if (!isElectron()) {
-            if (!this.events) {
-                this.events = new PostMessageEventEmitter(win, window.location.origin)
-            }
-            console.log('windowEmitter subscribe events');
-            this.events.on('voip-message', this.sendVoipListener)
-            this.events.on('conference-request', this.sendConferenceRequestListener);
-            this.events.on('update-call-start-message', this.updateCallStartMessageContentListener)
-            if (this.useIframe) {
-                this.events.on('close-iframe-window', this.onVoipWindowClose)
-            }
+            // 启动页面的时候就监听，不然太慢了，会丢事件
         } else {
             console.log('ipcRenderer subscribe events');
             ipcRenderer.on('voip-message', this.sendVoipListener);

@@ -20,7 +20,8 @@
                                style="height: 0"
                                :srcObject.prop="localStream"
                                muted
-                               playsInline autoPlay/>
+                               webkit-playsinline playsinline x5-playsinline preload="auto"
+                               autoPlay/>
                     </div>
                     <div class="remote-media-container">
                         <img class="avatar" :src="participantUserInfo.portrait">
@@ -29,7 +30,8 @@
                                class="video"
                                style="height: 0"
                                :srcObject.prop="remoteStream"
-                               playsInline autoPlay/>
+                               webkit-playsinline playsinline x5-playsinline preload="auto"
+                               autoPlay/>
                         <p>{{ participantUserInfo.displayName }}</p>
                         <p v-if="status === 1">等待对方接听</p>
                         <p v-else-if="status === 2">邀请你语音聊天</p>
@@ -47,7 +49,8 @@
                                class="localVideo me"
                                :srcObject.prop="localStream"
                                muted
-                               playsInline autoPlay/>
+                               webkit-playsinline playsinline x5-playsinline preload="auto"
+                               autoPlay/>
                         <img v-else class="avatar" :src="session.selfUserInfo.portrait">
                     </div>
                     <div class="remote-media-container">
@@ -56,7 +59,8 @@
                                ref="remoteVideo"
                                class="video"
                                :srcObject.prop="remoteStream"
-                               playsInline autoPlay/>
+                               webkit-playsinline playsinline x5-playsinline preload="auto"
+                               autoPlay/>
                         <div v-else class="flex-column flex-justify-center flex-align-center">
                             <img class="avatar" :src="participantUserInfo.portrait">
                             <p>{{ participantUserInfo.displayName }}</p>
@@ -121,6 +125,7 @@ import CallState from "@/wfc/av/engine/callState";
 import {isElectron} from "../../platform";
 import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
 import VideoType from "../../wfc/av/engine/videoType";
+import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 
 export default {
     name: 'Single',
@@ -136,9 +141,37 @@ export default {
             localStream: null,
             remoteStream: null,
             videoInputDeviceIndex: 0,
+            autoPlayInterval: 0,
         }
     },
     methods: {
+        autoPlay() {
+            if (isElectron()) {
+                return;
+            }
+            console.log('can play');
+            if (!this.autoPlayInterval) {
+                this.autoPlayInterval = setInterval(() => {
+                    try {
+                        if (this.$refs.localVideo && this.$refs.localVideo.paused) {
+                            this.$refs.localVideo.play();
+                            console.log('can play local');
+                        }
+                        if (this.$refs.remoteVideo && this.$refs.remoteVideo.paused) {
+                            this.$refs.remoteVideo.play();
+                            console.log('can play remote');
+                        }
+                    } catch (e) {
+                        // do nothing
+                    }
+
+                    if (this.$refs.localVideo && !this.$refs.localVideo.paused && this.$refs.remoteVideo && !this.$refs.remoteVideo.paused) {
+                        clearInterval(this.autoPlayInterval);
+                        this.autoPlayInterval = 0;
+                    }
+                }, 100);
+            }
+        },
         switchVideoType() {
             if (!this.session) {
                 return
@@ -194,10 +227,12 @@ export default {
 
             sessionCallback.didCreateLocalVideoTrack = (stream) => {
                 this.localStream = stream;
+                this.autoPlay();
             };
 
             sessionCallback.didReceiveRemoteVideoTrack = (userId, stream) => {
                 this.remoteStream = stream;
+                this.autoPlay();
             };
 
             sessionCallback.didCallEndWithReason = (reason) => {
@@ -333,6 +368,32 @@ export default {
         // 必须
         avenginekit.setup();
         this.setupSessionCallback();
+        if (!isElectron()) {
+            this.$nextTick(() => {
+                // 解决弱网，首次可能无法正常音视频通话问题
+                const urlParams = new URLSearchParams(window.location.href);
+                let options = urlParams.get('options');
+                console.log('parse queries')
+                options = JSON.parse(decodeURIComponent(options));
+                const symbols = Object.getOwnPropertySymbols(avenginekitproxy.events);
+                let listenersSymbol;
+                for (const symbol of symbols) {
+                    if (symbol.description === 'listeners') {
+                        listenersSymbol = symbol;
+                        break;
+                    }
+                }
+                if (listenersSymbol) {
+                    let listeners = avenginekitproxy.events[listenersSymbol];
+                    console.log('listeners', listenersSymbol, listeners);
+                    let ls = listeners[options.event];
+                    for (const l of ls) {
+                        l(options.event, options.args);
+                        console.log('handle voip event', options);
+                    }
+                }
+            })
+        }
     },
 
     computed: {

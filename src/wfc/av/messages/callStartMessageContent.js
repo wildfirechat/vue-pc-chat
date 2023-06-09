@@ -22,7 +22,7 @@ export default class CallStartMessageContent extends MessageContent {
      * 7, Timeout,
      * 8, AcceptByOtherClient
      */
-    status;
+    status = 0;
     audioOnly;
     pin;
 
