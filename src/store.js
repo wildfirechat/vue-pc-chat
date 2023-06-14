@@ -135,6 +135,8 @@ let store = {
             favContactList: [],
 
             selfUserInfo: null,
+            contextMenuUserInfo: null,
+
             _reset() {
                 this.currentFriendRequest = null;
                 this.currentGroup = null;
@@ -157,6 +159,7 @@ let store = {
                 this.favContactList = [];
 
                 this.selfUserInfo = null;
+                this.contextMenuUserInfo = null;
             }
         },
 
@@ -372,7 +375,7 @@ let store = {
                 }
                 this._patchMessage(msg, lastTimestamp);
                 let msgIndex = conversationState.currentConversationMessageList.findIndex(m => {
-                    return m.messageId === msg.messageId ||(gt(m.messageUid, 0) && eq(m.messageUid, msg.messageUid));
+                    return m.messageId === msg.messageId || (gt(m.messageUid, 0) && eq(m.messageUid, msg.messageUid));
                 });
                 if (msgIndex > -1) {
                     conversationState.currentConversationMessageList[msgIndex] = msg;
@@ -697,7 +700,7 @@ let store = {
         if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversation)) {
             conversationState.currentConversationInfo = conversationInfo;
             // 清除聊天记录
-            if (!conversationInfo.lastMessage){
+            if (!conversationInfo.lastMessage) {
                 conversationState.currentConversationMessageList = [];
             }
         }
@@ -1260,7 +1263,7 @@ let store = {
                         if (hasMore) {
                             loadedCB();
                         } else {
-                        completeCB();
+                            completeCB();
                         }
                     } else {
                         // 可能拉回来的时候，本地已经切换会话了
@@ -1596,12 +1599,12 @@ let store = {
 
     _loadChannelList() {
         wfc.getRemoteListenedChannels(channelIds => {
-        if (channelIds) {
+            if (channelIds) {
                 contactState.channelList = channelIds.map(channelId => wfc.getChannelInfo(channelId, false));
                 contactState.channelList = contactState.channelList.filter(ch => {
                     return !(ch instanceof NullChannelInfo)
                 });
-        }
+            }
         }, err => {
             console.error('getRemoteListenedChannels error', err)
         });
