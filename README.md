@@ -20,7 +20,7 @@
 | [docs](https://github.com/wildfirechat/docs)                 | [docs](https://gitee.com/wfchat/docs)                 | 野火IM相关文档，包含设计、概念、开发、使用说明，[在线查看](https://docs.wildfirechat.cn/) |                                                |
 
 
-野火IM VUE Demo，演示如何将野火IM的能力集成到VUE Electron项目。
+野火IM Vue Electron Demo，演示如何将野火IM的能力集成到Vue Electron项目。
 
 ## 环境依赖
 #### mac系统
