@@ -55,7 +55,6 @@ import store from "@/store";
 import ConversationType from "@/wfc/model/conversationType";
 import Conversation from "@/wfc/model/conversation";
 import wfc from "../../../wfc/client/wfc";
-import IpcSub from "../../../ipc/ipcSub";
 
 export default {
     name: "UserDetailView",
