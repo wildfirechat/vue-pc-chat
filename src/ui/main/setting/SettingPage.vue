@@ -56,6 +56,12 @@
         </div>
         <footer>
             <p class="proto-version-info">{{ protoRevision() }}</p>
+            <a
+                class="button"
+                href="https://github.com/wildfirechat/vue-pc-chat/issues"
+                target="_blank">
+                问题反馈
+            </a>
             <a v-if="sharedMiscState.isElectron" class="button" target="_blank" @click.prevent.stop="openLogDir">
                 打开日志目录
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
@@ -130,6 +136,9 @@ export default {
     },
     methods: {
 
+        newIssue() {
+
+        },
         openLogDir() {
             let appPath = wfc.getAppPath();
             shell.openPath(appPath);
