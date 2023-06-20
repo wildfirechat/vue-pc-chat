@@ -778,6 +778,13 @@ const createMainWindow = async () => {
             });
             conversationMessageHistoryMessageWindow.show();
         } else {
+            let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
+            try {
+                await conversationMessageHistoryMessageWindow.loadURL(url)
+            } catch (e) {
+                // 不知道为啥，loadURL 会失败，reload 就好了
+                conversationMessageHistoryMessageWindow.reload();
+            }
             conversationMessageHistoryMessageWindow.show();
             conversationMessageHistoryMessageWindow.focus();
         }
