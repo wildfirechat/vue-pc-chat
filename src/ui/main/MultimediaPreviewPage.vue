@@ -10,6 +10,7 @@
             <img v-show="mediaLoaded && message.messageContent.type === 3" @load="onImageLoaded"
                  draggable="true"
                  alt=""
+                 @contextmenu.prevent="showContextMenu"
                  ref="img"
                  v-bind:src="message.messageContent.remotePath">
             <video v-show="mediaLoaded && message.messageContent.type === 6" @loadedmetadata="onVideoMetaDataLoaded"
@@ -28,6 +29,18 @@
                 </div>
             </div>
         </div>
+        <vue-context ref="menu" v-on:close="()=>{}">
+            <li>
+                <a @click.prevent="download">{{
+                        $t('common.save')
+                    }}</a>
+            </li>
+            <li>
+                <a @click.prevent="forward">{{
+                        $t('misc.share_to_friend')
+                    }}</a>
+            </li>
+        </vue-context>
     </div>
 </template>
 
@@ -36,6 +49,8 @@ import 'vue-cool-lightbox/dist/vue-cool-lightbox.min.css'
 import wfc from "../../wfc/client/wfc";
 import {currentWindow, ipcRenderer, screen} from "../../platform";
 import MessageContentType from "../../wfc/messages/messageContentType";
+import {downloadFile} from "../../platformHelper";
+import ForwardType from "./conversation/message/forward/ForwardType";
 
 export default {
     name: 'MultimediaPreviewPage',
@@ -59,6 +74,7 @@ export default {
             this.message = wfc.getMessageByUid(messageUid);
         }
         ipcRenderer.on('preview-multimedia-message', (event, args) => {
+            this.$refs.menu.close();
             let messageUid = args.messageUid;
             this.message = wfc.getMessageByUid(messageUid);
             this.mediaLoaded = false;
@@ -67,10 +83,6 @@ export default {
         window.addEventListener('keyup', this.handleKeyPress, true);
     },
 
-    mounted() {
-    },
-    beforeDestroy() {
-    },
     methods: {
         resize(width, height) {
             let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
@@ -112,7 +124,7 @@ export default {
                 case 39: // 右箭头
                     this.previewNextMessage(false);
                     break;
-                case 37://左箭头
+                case 37:// 左箭头
                     this.previewNextMessage(true);
                     break
                 default:
@@ -120,6 +132,7 @@ export default {
             }
         },
         previewNextMessage(before) {
+            this.$refs.menu.close();
             wfc.getMessagesByTimestampV2(this.message.conversation, [MessageContentType.Image, MessageContentType.Video], this.message.timestamp, before, 1, '', msgs => {
                 if (msgs.length > 0) {
                     this.mediaLoaded = false;
@@ -130,7 +143,6 @@ export default {
                         this.hasMoreOldMediaMessage = true;
                     }
                 } else {
-                    console.log('lastMessage');
                     if (before) {
                         this.hasMoreOldMediaMessage = false;
                     } else {
@@ -144,6 +156,21 @@ export default {
         },
         close() {
             currentWindow.close();
+        },
+
+        showContextMenu(event) {
+            this.$refs.menu.open(event)
+        },
+
+        download() {
+            downloadFile(this.message);
+        },
+
+        forward() {
+            this.$forwardMessage({
+                forwardType: ForwardType.NORMAL,
+                messages: [this.message],
+            });
         }
     },
 
