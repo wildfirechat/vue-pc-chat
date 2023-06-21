@@ -10,13 +10,14 @@
             <img v-show="mediaLoaded && message.messageContent.type === 3" @load="onImageLoaded"
                  draggable="true"
                  alt=""
-                 @contextmenu.prevent="showContextMenu"
                  ref="img"
+                 @contextmenu.prevent="showContextMenu"
                  v-bind:src="message.messageContent.remotePath">
             <video v-show="mediaLoaded && message.messageContent.type === 6" @loadedmetadata="onVideoMetaDataLoaded"
                    controls
                    draggable="true"
                    ref="video"
+                   @contextmenu.prevent="showContextMenu"
                    v-bind:src="message.messageContent.remotePath"/>
             <div v-if="hasMoreOldMediaMessage" class="left-arrow-container">
                 <div class="left-arrow" @click="previewNextMessage(true)">
@@ -167,6 +168,7 @@ export default {
         },
 
         forward() {
+            console.log('forward message', this.message);
             this.$forwardMessage({
                 forwardType: ForwardType.NORMAL,
                 messages: [this.message],

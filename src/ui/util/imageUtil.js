@@ -330,7 +330,7 @@ function imageThumbnail(file) {
         var img = new Image();
         img.setAttribute('crossOrigin', 'anonymous');
         img.onload = () => {
-            let resizedCanvas = resizeImage.resize2Canvas(img, 320, 240);
+            let resizedCanvas = resizeImage.resize2Canvas(img, 200, 200);
             resizedCanvas.toBlob((blob) => {
                 var reader = new FileReader();
                 reader.readAsDataURL(blob);
@@ -341,7 +341,7 @@ function imageThumbnail(file) {
                 reader.onerror = () => {
                     resolve(null);
                 }
-            }, 'image/jpeg', 0.6);
+            }, 'image/jpeg', 0.4);
         };
         img.onerror = () => {
             resolve(null);
