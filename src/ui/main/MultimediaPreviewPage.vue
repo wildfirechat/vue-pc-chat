@@ -1,26 +1,31 @@
 <template>
     <div class="image-content-container">
-        <img v-show="mediaLoaded === false"
-             alt=""
-             v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
-        <img v-show="mediaLoaded && message.messageContent.type === 3" @load="onImageLoaded"
-             draggable="true"
-             alt=""
-             ref="img"
-             v-bind:src="message.messageContent.remotePath">
-        <video v-show="mediaLoaded && message.messageContent.type === 6" @loadedmetadata="onVideoMetaDataLoaded"
-               controls
-               draggable="true"
-               ref="video"
-               v-bind:src="message.messageContent.remotePath"/>
-        <div v-if="hasMoreOldMediaMessage" class="left-arrow-container">
-            <div class="left-arrow" @click="previewNextMessage(true)">
-                <i class="icon-ion-ios-arrow-left"></i>
-            </div>
+        <div v-if="!message">
+            加载中...
         </div>
-        <div v-if="hasMoreNewMediaMessage" class="right-arrow-container">
-            <div class="right-arrow" @click="previewNextMessage(false)">
-                <i class="icon-ion-ios-arrow-right"></i>
+        <div v-else style="width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
+            <img v-show="mediaLoaded === false"
+                 alt=""
+                 v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
+            <img v-show="mediaLoaded && message.messageContent.type === 3" @load="onImageLoaded"
+                 draggable="true"
+                 alt=""
+                 ref="img"
+                 v-bind:src="message.messageContent.remotePath">
+            <video v-show="mediaLoaded && message.messageContent.type === 6" @loadedmetadata="onVideoMetaDataLoaded"
+                   controls
+                   draggable="true"
+                   ref="video"
+                   v-bind:src="message.messageContent.remotePath"/>
+            <div v-if="hasMoreOldMediaMessage" class="left-arrow-container">
+                <div class="left-arrow" @click="previewNextMessage(true)">
+                    <i class="icon-ion-ios-arrow-left"></i>
+                </div>
+            </div>
+            <div v-if="hasMoreNewMediaMessage" class="right-arrow-container">
+                <div class="right-arrow" @click="previewNextMessage(false)">
+                    <i class="icon-ion-ios-arrow-right"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -40,15 +45,38 @@ export default {
             message: null,
             hasMoreOldMediaMessage: true,
             hasMoreNewMediaMessage: true,
+            minWidth: 480,
+            minHeight: 360,
         }
+    },
+
+    created() {
+        document.title = '野火IM消息预览';
+        let hash = window.location.hash;
+
+        if (hash.indexOf('messageUid=') >= 0) {
+            let messageUid = hash.substring(hash.indexOf('=') + 1);
+            this.message = wfc.getMessageByUid(messageUid);
+        }
+        ipcRenderer.on('preview-multimedia-message', (event, args) => {
+            let messageUid = args.messageUid;
+            this.message = wfc.getMessageByUid(messageUid);
+            this.mediaLoaded = false;
+        });
+
+        window.addEventListener('keyup', this.handleKeyPress, true);
+    },
+
+    mounted() {
+    },
+    beforeDestroy() {
     },
     methods: {
         resize(width, height) {
             let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
             let workAreaWith = display.workAreaSize.width;
             let workAreaHeight = display.workAreaSize.height;
-            currentWindow.setSize(Math.min(width, workAreaWith), Math.min(height, workAreaHeight));
-            console.log('resize preview window to', Math.min(width, workAreaWith), Math.min(height, workAreaHeight), width, height, workAreaWith, workAreaHeight);
+            currentWindow.setSize(Math.max(Math.min(width, workAreaWith), this.minWidth), Math.max(Math.min(height, workAreaHeight), this.minHeight));
             currentWindow.center();
         },
         onImageLoaded() {
@@ -107,30 +135,6 @@ export default {
         close() {
             currentWindow.close();
         }
-    },
-
-    created() {
-        let href = window.location.href;
-        let hash = window.location.hash;
-        console.log('href', href);
-        console.log('hash', hash);
-
-        if (hash.indexOf('messageUid=') >= 0) {
-            let messageUid = hash.substring(hash.indexOf('=') + 1);
-            this.message = wfc.getMessageByUid(messageUid);
-        }
-        ipcRenderer.on('preview-multimedia-message', (event, args) => {
-            let messageUid = args.messageUid;
-            this.message = wfc.getMessageByUid(messageUid);
-            this.mediaLoaded = false;
-        });
-
-        window.addEventListener('keyup', this.handleKeyPress, true);
-    },
-
-    mounted() {
-    },
-    beforeDestroy() {
     },
 
     components: {}
