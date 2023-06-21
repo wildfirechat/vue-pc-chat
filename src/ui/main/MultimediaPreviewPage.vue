@@ -96,6 +96,16 @@ export default {
         handleKeyPress(event) {
             switch (event.keyCode) {
                 case 32:// 空格
+                    if (this.message.messageContent.type === MessageContentType.Video) {
+                        if (this.$refs.video.paused) {
+                            this.$refs.video.play();
+                        } else {
+                            this.$refs.video.pause();
+                        }
+                    } else {
+                        this.close();
+                    }
+                    break;
                 case 27: // ESC
                     this.close();
                     break;
@@ -151,6 +161,14 @@ export default {
 }
 
 .image-content-container img {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    overflow: hidden;
+    object-fit: contain;
+}
+
+.image-content-container video {
     width: 100%;
     height: 100%;
     border-radius: 5px;
