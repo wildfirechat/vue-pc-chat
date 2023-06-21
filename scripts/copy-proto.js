@@ -23,6 +23,8 @@ switch (platform) {
             protoName += '.arm64'
         } else if (arch === 'mips64el') {
             protoName += '.mips64el'
+        } else if (arch == 'loongarch64') {
+           protoName += '.loongarch64'
         }
 
         break
