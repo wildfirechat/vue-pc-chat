@@ -72,6 +72,7 @@ let forceQuit = false;
 let downloading = false;
 let mainWindow;
 let fileWindow;
+let multimediaPreviewWindow;
 let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
@@ -494,7 +495,7 @@ const createMainWindow = async () => {
         minHeight: 600,
         opacity: 0,
         titleBarStyle: 'hidden',
-        trafficLightPosition: { x: 4, y: 8 },
+        trafficLightPosition: {x: 4, y: 8},
         maximizable: false,
         resizable: false,
         backgroundColor: 'none',
@@ -720,6 +721,26 @@ const createMainWindow = async () => {
         } else {
             fileWindow.show();
             fileWindow.focus();
+        }
+    });
+
+    ipcMain.on(IPCEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, async (event, args) => {
+        console.log('on show-multimedia-preview-window', multimediaPreviewWindow, args)
+        if (!multimediaPreviewWindow) {
+            let win = createWindow(args.url, 960, 600, 640, 400, true, true);
+
+            // win.webContents.openDevTools();
+            win.on('close', () => {
+                multimediaPreviewWindow = null;
+            });
+            win.show();
+            multimediaPreviewWindow = win;
+        } else {
+            multimediaPreviewWindow.webContents.send('preview-multimedia-message', {
+                messageUid: args.messageUid,
+            })
+            multimediaPreviewWindow.show();
+            multimediaPreviewWindow.focus();
         }
     });
     ipcMain.on(IPCEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, async (event, args) => {

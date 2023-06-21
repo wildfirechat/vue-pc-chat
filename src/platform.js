@@ -30,6 +30,7 @@ export const BrowserWindow = require('@electron/remote').BrowserWindow;
 export const AppPath = require('@electron/remote').app.getAppPath();
 export const desktopCapturer = require('electron').desktopCapturer;
 export const app = require('@electron/remote').app;
+export const screen = require('@electron/remote').screen
 
 // for web
 

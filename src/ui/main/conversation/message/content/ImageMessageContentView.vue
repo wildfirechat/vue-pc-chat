@@ -11,6 +11,8 @@
 <script>
 import Message from "@/wfc/messages/message";
 import store from "@/store";
+import IpcEventType from "../../../../../ipcEventType";
+import {ipcRenderer, isElectron} from "../../../../../platform";
 
 export default {
     name: "ImageMessageContentView",
@@ -19,7 +21,7 @@ export default {
             type: Message,
             required: true,
         },
-        isInCompositeView:{
+        isInCompositeView: {
             default: false,
             type: Boolean,
             required: false,
@@ -36,7 +38,24 @@ export default {
                 this.$parent.previewCompositeMessage(message.messageUid);
             } else {
                 console.log('preview', message);
-                store.previewMessage(message, true);
+                if (isElectron()) {
+                    let hash = window.location.hash;
+                    let url = window.location.origin;
+                    if (hash) {
+                        url = window.location.href.replace(hash, '#/mmpreview');
+                    } else {
+                        url += "/mmpreview"
+                    }
+
+                    url += `?messageUid=${stringValue(message.messageUid)}`
+                    ipcRenderer.send(IpcEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, {
+                        url: url,
+                        messageUid: message.messageUid,
+                    });
+                    console.log('show-multimedia-preview-window', url)
+                } else {
+                    store.previewMessage(message, true);
+                }
             }
         },
         onImageLoaded() {
