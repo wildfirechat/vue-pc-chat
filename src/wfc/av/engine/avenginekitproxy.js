@@ -69,6 +69,7 @@ export class AvEngineKitProxy {
         this.event = wfc.eventEmitter;
         this.event.on(EventType.ReceiveMessage, this.onReceiveMessage);
         this.event.on(EventType.ConferenceEvent, this.onReceiveConferenceEvent);
+        this.event.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
     }
 
     /**
@@ -152,6 +153,10 @@ export class AvEngineKitProxy {
 
     onReceiveConferenceEvent = (event) => {
         this.emitToVoip("conferenceEvent", event);
+    }
+
+    onConnectionStatusChange = (status) => {
+        this.emitToVoip('connectionStatus', status);
     }
 
     // 收到消息时，timestamp已经过修正，后面使用时，不用考虑和服务器的时间差
