@@ -384,23 +384,23 @@ export default {
                 if (screenShare) {
                     this.selfUserInfo._screenShareStream = stream;
                 } else {
-                	this.selfUserInfo._stream = stream;
+                    this.selfUserInfo._stream = stream;
                     this.selfUserInfo._screenShareStream = null;
                     this.selfUserInfo._isVideoMuted = false;
                 }
-                this.selfUserInfo._isScreenSharing= screenShare;
+                this.selfUserInfo._isScreenSharing = screenShare;
                 this.autoPlay();
             };
 
             sessionCallback.didRotateLocalVideoTrack = (stream) => {
                 console.log('didRotateLocalVideoTrack', stream.getAudioTracks())
                 this.selfUserInfo._stream = stream;
-                this.selfUserInfo._stream.timestamp  = new Date().getTime();
+                this.selfUserInfo._stream.timestamp = new Date().getTime();
             };
 
             sessionCallback.didScreenShareEnded = () => {
                 console.log('didScreenShareEnded', this.session.videoMuted, this.session.audioMuted);
-                if (isElectron()){
+                if (isElectron()) {
                     currentWindow.setIgnoreMouseEvents(false);
                 }
                 this.selfUserInfo._isScreenSharing = false;
@@ -416,14 +416,19 @@ export default {
             sessionCallback.didReceiveRemoteVideoTrack = (userId, stream, screenSharing) => {
                 let p;
                 console.log('didReceiveRemoteVideoTrack', userId, stream, screenSharing);
+                let index = -1;
                 for (let i = 0; i < this.participantUserInfos.length; i++) {
                     p = this.participantUserInfos[i];
                     if (p.uid === userId && p._isScreenSharing === screenSharing) {
+                        index = i;
                         p._stream = stream;
                         p._stream.timestamp = new Date().getTime();
                         break;
                     }
                 }
+                // if (index > -1) {
+                //     this.$set(this.participantUserInfos, index, p);
+                // }
                 this.autoPlay();
             };
 
@@ -434,15 +439,15 @@ export default {
             sessionCallback.didParticipantJoined = (userId, screenSharing) => {
                 console.log('didParticipantJoined', userId, screenSharing)
                 let userInfo = wfc.getUserInfo(userId);
-                    let subscriber = this.session.getSubscriber(userId, screenSharing);
-                    userInfo._stream = subscriber.stream;
-                    userInfo._isAudience = subscriber.audience;
-                    userInfo._isHost = this.session.host === userId;
-                    userInfo._isVideoMuted = subscriber.videoMuted;
-                    userInfo._isAudioMuted = subscriber.audioMuted;
-                    userInfo._volume = 0;
-                    userInfo._isScreenSharing = screenSharing;
-                    this.participantUserInfos.push(userInfo);
+                let subscriber = this.session.getSubscriber(userId, screenSharing);
+                userInfo._stream = subscriber.stream;
+                userInfo._isAudience = subscriber.audience;
+                userInfo._isHost = this.session.host === userId;
+                userInfo._isVideoMuted = subscriber.videoMuted;
+                userInfo._isAudioMuted = subscriber.audioMuted;
+                userInfo._volume = 0;
+                userInfo._isScreenSharing = screenSharing;
+                this.participantUserInfos.push(userInfo);
                 console.log('joined', userInfo, subscriber.audience, this.participantUserInfos.length);
             }
 
@@ -452,6 +457,7 @@ export default {
                 this.participantUserInfos = this.participantUserInfos.filter(p => {
                     return !(p.uid === userId && p._isScreenSharing === screenSharing);
                 });
+                //fixme 上面可能会没有触发重新计算 focusVideoParticipant
                 console.log('didParticipantLeft d', userId, endReason, screenSharing, this.participantUserInfos.length)
             }
 
@@ -541,7 +547,7 @@ export default {
                 console.log('conference', 'didMuteStateChanged', participants)
                 participants.forEach(p => {
                     // 自己
-                    if (p === this.selfUserInfo.uid){
+                    if (p === this.selfUserInfo.uid) {
                         console.log('conference', 'didMuteStateChanged self', this.session.videoMuted);
                         this.selfUserInfo._isVideoMuted = this.session.videoMuted;
                         return;
@@ -1084,6 +1090,7 @@ export default {
         // TODO 可以缓存到 conferenceManager 里面
         computedFocusVideoParticipant() {
             if (this.currentLayout === 0) {
+                console.log('computedSpeakingParticipant null')
                 return null;
             }
             let sp;
