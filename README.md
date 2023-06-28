@@ -53,6 +53,12 @@
 
 注意避免使用```cnpm```，我们使用```cnpm```出现过一些奇怪问题的情况。如果您使用```cnpm```当遇到问题时请切换到```npm```试一下。
 
+## vue-devtool 调试
+1. ```npm install -g vue-devtools```
+2. 启动`vue-devtools`
+3. 根据第 2 步的提示，将`script`注入到`public/index.html`的`head`里面
+4. 项目目录下执行`npm run dev`
+
 ## 打包
 打包为当前平台架构软件
 ```
