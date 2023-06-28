@@ -89,7 +89,19 @@ export default {
             let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
             let workAreaWith = display.workAreaSize.width;
             let workAreaHeight = display.workAreaSize.height;
-            currentWindow.setSize(Math.max(Math.min(width, workAreaWith), this.minWidth), Math.max(Math.min(height, workAreaHeight), this.minHeight));
+            let w = Math.min(width, workAreaWith);
+            let h = Math.min(height, workAreaHeight);
+            if (w === workAreaWith || h === workAreaHeight) {
+                let wr = w / width;
+                let hr = h / height;
+                if (wr > hr) {
+                    w = w * hr;
+                } else {
+                    h = h * wr;
+                }
+            }
+
+            currentWindow.setSize(Math.max(Math.ceil(w), this.minWidth), Math.max(Math.ceil(h), this.minHeight));
             currentWindow.center();
         },
         onImageLoaded() {
@@ -202,7 +214,7 @@ export default {
     height: 100%;
     border-radius: 5px;
     overflow: hidden;
-    object-fit: contain;
+    object-fit: scale-down;
 }
 
 .left-arrow-container {
