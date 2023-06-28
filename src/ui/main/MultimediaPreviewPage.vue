@@ -85,23 +85,30 @@ export default {
     },
 
     methods: {
+        scaleDown(width, height, maxWidth, maxHeight) {
+            if (width < maxWidth && height < maxHeight) {
+                return {width, height}
+            }
+            const widthRatio = maxWidth / width;
+            const heightRatio = maxHeight / height;
+
+            // 计算比例最小的缩放倍数
+            const scale = Math.min(widthRatio, heightRatio);
+
+            // 缩放后的宽度和高度
+            const scaledWidth = width * scale;
+            const scaledHeight = height * scale;
+
+            return {width: Math.ceil(scaledWidth), height: Math.ceil(scaledHeight)};
+        },
+
         resize(width, height) {
             let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
             let workAreaWith = display.workAreaSize.width;
             let workAreaHeight = display.workAreaSize.height;
-            let w = Math.min(width, workAreaWith);
-            let h = Math.min(height, workAreaHeight);
-            if (w === workAreaWith || h === workAreaHeight) {
-                let wr = w / width;
-                let hr = h / height;
-                if (wr > hr) {
-                    w = w * hr;
-                } else {
-                    h = h * wr;
-                }
-            }
 
-            currentWindow.setSize(Math.max(Math.ceil(w), this.minWidth), Math.max(Math.ceil(h), this.minHeight));
+            let size = this.scaleDown(width, height, workAreaWith, workAreaHeight);
+            currentWindow.setSize(size.width, size.height);
             currentWindow.center();
         },
         onImageLoaded() {
