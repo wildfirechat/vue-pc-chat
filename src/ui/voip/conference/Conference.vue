@@ -243,6 +243,7 @@ import conferenceManager from "./conferenceManager";
 import ConferenceManageView from "./ConferenceManageView";
 import wfc from "../../../wfc/client/wfc";
 import LocalStorageIpcEventType from "../../../ipc/localStorageIpcEventType";
+import UserInfo from "../../../wfc/model/userInfo";
 
 export default {
     name: 'Conference',
@@ -447,7 +448,9 @@ export default {
                 userInfo._isAudioMuted = subscriber.audioMuted;
                 userInfo._volume = 0;
                 userInfo._isScreenSharing = screenSharing;
-                this.participantUserInfos.push(userInfo);
+                // 动态添加的属性不是 reactive 的，故直接创建个新的对象
+                // 其实这个问题很奇怪，只有发起会议，第一次进入该会议的时候，其他端加入，参与者列表会不刷新；重新进入等，都一切正常
+                this.participantUserInfos.push(Object.assign(new UserInfo(), userInfo));
                 console.log('joined', userInfo, subscriber.audience, this.participantUserInfos.length);
             }
 
