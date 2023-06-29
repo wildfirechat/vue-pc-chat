@@ -117,8 +117,7 @@ export default {
             return name;
         },
         isFriend() {
-            // return wfc.isMyFriend(this.user.uid)
-            return false;
+            return wfc.isMyFriend(this.user.uid)
         }
     }
 }
