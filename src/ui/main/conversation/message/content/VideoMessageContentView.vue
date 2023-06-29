@@ -74,9 +74,10 @@ export default {
 }
 
 .video-content-container video {
-    max-height: 400px;
-    max-width: 400px;
+    max-height: 300px;
+    max-width: 300px;
     border-radius: 5px;
+    object-fit: scale-down;
     overflow: hidden;
 }
 
