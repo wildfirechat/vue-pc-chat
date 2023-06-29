@@ -38,8 +38,10 @@ export default {
         if (iw && ih) {
             let size = this.scaleDown(iw, ih, 300, 300);
             if (size) {
-                this.$refs.img.height = size.height;
-                this.$refs.thumbnail.height = size.height;
+                this.$refs.img.style.height = size.height + 'px';
+                this.$refs.img.style.width = size.width + 'px';
+                this.$refs.thumbnail.style.height = size.height + 'px';
+                this.$refs.thumbnail.style.width = size.width + 'px';
             }
         }
     },
@@ -55,7 +57,7 @@ export default {
             const scaledWidth = width * scale;
             const scaledHeight = height * scale;
 
-            return {width: scaledWidth, height: scaledHeight};
+            return {width: Math.ceil(scaledWidth), height: Math.ceil(scaledHeight)};
         },
         preview(message) {
             if (this.isInCompositeView) {
