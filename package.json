@@ -1,7 +1,7 @@
 {
   "name": "wf-pc-chat",
   "company": "wildfire",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "WF IM PC Client",
   "appId": "cn.wildfire.chat",
   "private": true,
