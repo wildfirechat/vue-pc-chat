@@ -12,7 +12,7 @@
 import Message from "@/wfc/messages/message";
 import store from "@/store";
 import IpcEventType from "../../../../../ipcEventType";
-import {ipcRenderer, isElectron} from "../../../../../platform";
+import {ipcRenderer, isElectron, screen} from "../../../../../platform";
 
 export default {
     name: "ImageMessageContentView",
@@ -47,6 +47,10 @@ export default {
     },
     methods: {
         scaleDown(width, height, maxWidth, maxHeight) {
+            if (width < maxWidth && height < maxHeight) {
+                return {width, height}
+            }
+
             const widthRatio = maxWidth / width;
             const heightRatio = maxHeight / height;
 
@@ -74,9 +78,20 @@ export default {
                     }
 
                     url += `?messageUid=${stringValue(message.messageUid)}`
+
+                    let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+                    let imgMsg = this.message.messageContent;
+                    let size;
+                    if (imgMsg.imageWidth && imgMsg.imageHeight) {
+                        let workAreaWith = display.workAreaSize.width;
+                        let workAreaHeight = display.workAreaSize.height;
+                        size = this.scaleDown(imgMsg.imageWidth, imgMsg.imageHeight, workAreaWith, workAreaHeight);
+                    }
+                    console.log('size xxx', size)
                     ipcRenderer.send(IpcEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, {
                         url: url,
                         messageUid: message.messageUid,
+                        size,
                     });
                     console.log('show-multimedia-preview-window', url)
                 } else {

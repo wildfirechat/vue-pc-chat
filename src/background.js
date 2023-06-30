@@ -727,12 +727,13 @@ const createMainWindow = async () => {
     ipcMain.on(IPCEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, async (event, args) => {
         console.log('on show-multimedia-preview-window', multimediaPreviewWindow, args)
         if (!multimediaPreviewWindow) {
-            let win = createWindow(args.url, 960, 600, 640, 400, true, true);
+            let win = createWindow(args.url, args.size ? args.size.width : 960, args.size ? args.size.height : 600, 640, 400, true, true);
 
             // win.webContents.openDevTools();
             win.on('close', () => {
                 multimediaPreviewWindow = null;
             });
+            win.center();
             win.show();
             multimediaPreviewWindow = win;
         } else {
