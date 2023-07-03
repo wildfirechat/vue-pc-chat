@@ -170,6 +170,8 @@ export default {
     border-radius: 5px;
     padding: 5px 10px;
     margin-right: 10px;
+    font-size: 13px;
+    color: #737373;
 }
 
 .quoted-message > p {
