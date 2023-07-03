@@ -598,11 +598,11 @@ let store = {
             if (!isMainWindow && wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected) {
                 this._loadDefaultData();
             }
+            window.__wfc = wfc;
         }
         miscState.connectionStatus = wfc.getConnectionStatus();
 
         miscState.isMainWindow = isMainWindow;
-        // window.__wfc = wfc;
     },
 
     _loadDefaultData() {
