@@ -113,8 +113,6 @@ module.exports = {
             mainProcessArgs: ['--disable-background-timer-throttling', ''],
             // outputDir: 'release',
             builderOptions: {
-                // 产品名称
-                productName: '野火IM',
                 // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
                 appId: pkg.appId,
                 compression: 'normal',
@@ -123,6 +121,14 @@ module.exports = {
                     name: "wf-deep-linking",
                     schemes: ["wfc"]
                 },
+                // loongarch64架构时需要打开下面的配置
+                // electronDownload: {
+                //     mirror: "http://ftp.loongnix.cn/electron/LoongArch/",
+                //     customDir: "v13.6.9",
+                //     arch: "loong64",
+                //     platform: "linux"
+                // },
+
                 mac: {
                     extendInfo: {
                         NSCameraUsageDescription: "This app requires camera access to record video.",
@@ -143,7 +149,6 @@ module.exports = {
                     ]
                 },
                 linux: {
-                    category: "Chat",
                     executableName: '野火IM',
                     target: [
                         'deb',
