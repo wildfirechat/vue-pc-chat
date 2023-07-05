@@ -1159,6 +1159,7 @@ let store = {
 
     quoteMessage(message) {
         conversationState.quotedMessage = message;
+        conversationState.currentConversationInfo._quotedMessage = message;
     },
 
     getConversationInfo(conversation) {
