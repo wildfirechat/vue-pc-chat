@@ -384,7 +384,8 @@ export default {
                     }
                     let src = img.src;
                     let file;
-                    if (isElectron() && false) {
+                    // 截图
+                    if (isElectron() && src.startsWith('local-resource')) {
                         // 'local-resource://' + 绝对路径
                         file = decodeURI(src.substring(17, src.length));
                     } else {
