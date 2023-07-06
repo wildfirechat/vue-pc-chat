@@ -9,6 +9,7 @@
 
 <script>
 import Message from "@/wfc/messages/message";
+import {scaleDown} from "../../../../util/imageUtil";
 
 export default {
     name: "StickerMessageContentView",
@@ -27,7 +28,7 @@ export default {
         let iw = this.message.messageContent.width;
         let ih = this.message.messageContent.height;
         if (iw && ih) {
-            let size = this.scaleDown(iw, ih, 200, 200);
+            let size = scaleDown(iw, ih, 200, 200);
             if (size) {
                 this.$refs.img.style.height = size.height + 'px';
                 this.$refs.img.style.width = size.width + 'px';
@@ -37,23 +38,6 @@ export default {
         }
     },
     methods: {
-        scaleDown(width, height, maxWidth, maxHeight) {
-            if (width < maxWidth && height < maxHeight) {
-                return {width, height}
-            }
-
-            const widthRatio = maxWidth / width;
-            const heightRatio = maxHeight / height;
-
-            // 计算比例最小的缩放倍数
-            const scale = Math.min(widthRatio, heightRatio);
-
-            // 缩放后的宽度和高度
-            const scaledWidth = width * scale;
-            const scaledHeight = height * scale;
-
-            return {width: Math.ceil(scaledWidth), height: Math.ceil(scaledHeight)};
-        },
         preview(message) {
             // TODO
             console.log('TODO, preview sticker collection');

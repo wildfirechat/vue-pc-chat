@@ -40,7 +40,7 @@ import MessageContentType from "@/wfc/messages/messageContentType";
 import Message from "@/wfc/messages/message";
 import PreviewQuotedMessageView from "@/ui/main/conversation/message/PreviewQuotedMessageView";
 import {fs, isElectron, shell} from "../../../../platform";
-import {downloadFile} from "../../../../platformHelper";
+import {downloadFile, previewMM} from "../../../../platformHelper";
 
 export default {
     name: "QuoteMessageView",
@@ -90,7 +90,7 @@ export default {
                 switch (this.quotedMessage.messageContent.type) {
                     case MessageContentType.Video:
                     case MessageContentType.Image:
-                        store.previewMessage(this.quotedMessage, false);
+                        previewMM(this.quotedMessage)
                         break;
                     case MessageContentType.File:
                         this.downloadQuotedFile(this.quotedMessage)
@@ -108,7 +108,7 @@ export default {
             }
         },
 
-        downloadQuotedFile(quotedFileMessage){
+        downloadQuotedFile(quotedFileMessage) {
             if (isElectron()) {
                 let localPath = quotedFileMessage.messageContent.localPath;
                 if (localPath && fs.existsSync(localPath)) {
@@ -135,7 +135,7 @@ export default {
                 if ([MessageContentType.Image, MessageContentType.Video, MessageContentType.Sticker].indexOf(this.quotedMessage.messageContent.type) < 0) {
                     str += this.quotedMessage.messageContent.digest(this.quotedMessage);
                 }
-                if(MessageContentType.RecallMessage_Notification === this.quotedMessage.messageContent.type){
+                if (MessageContentType.RecallMessage_Notification === this.quotedMessage.messageContent.type) {
                     str = "引用内容已撤回"
                 }
             } else {
