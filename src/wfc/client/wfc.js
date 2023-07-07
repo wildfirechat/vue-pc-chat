@@ -10,6 +10,8 @@ import impl from '../proto/proto.min';
 import Config from "../../config";
 import avenginekit from "../av/engine/avenginekitproxy";
 import pttClient from "../ptt/client/pttClient";
+import ConnectionStatus from "./connectionStatus";
+import EventType from "./wfcEvent";
 
 
 export class WfcManager {
@@ -21,7 +23,20 @@ export class WfcManager {
     eventEmitter = new EventEmitter();
 
     constructor() {
-        impl.eventEmitter = this.eventEmitter;
+        impl.eventEmitter = {
+            emit: (ev, ...args) => {
+                if (ev === EventType.ConnectionStatusChanged) {
+                    self.eventEmitter.emit(ev, ...args)
+                } else {
+                    if (impl.connectionStatus === ConnectionStatus.ConnectionStatusConnected) {
+                        self.eventEmitter.emit(ev, ...args)
+                    } else {
+                        // ignore
+                    }
+                }
+            }
+        };
+        // impl.eventEmitter = this.eventEmitter;
     }
 
 
