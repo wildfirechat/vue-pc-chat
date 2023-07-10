@@ -727,7 +727,7 @@ const createMainWindow = async () => {
     ipcMain.on(IPCEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, async (event, args) => {
         console.log('on show-multimedia-preview-window', multimediaPreviewWindow, args)
         if (!multimediaPreviewWindow) {
-            let win = createWindow(args.url, args.size ? args.size.width : 960, args.size ? args.size.height : 600, 640, 400, true, true);
+            let win = createWindow(args.url, args.size ? args.size.width : 960, args.size ? args.size.height : 600, 640, 520, true, false, true, false, false);
 
             // win.webContents.openDevTools();
             win.on('close', () => {
@@ -939,7 +939,7 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
-function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false) {
+function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false, minimizable = true) {
     let win = new BrowserWindow(
         {
             width: w,
@@ -948,7 +948,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
             minHeight: mh,
             resizable: resizable,
             maximizable: maximizable,
-            minimizable: true,
+            minimizable: minimizable,
             titleBarStyle: showTitle ? 'default' : 'hiddenInset',
             // titleBarStyle: 'customButtonsOnHover',
             webPreferences: {

@@ -235,8 +235,9 @@ let store = {
         },
     },
 
-    init(isMainWindow) {
+    init(isMainWindow, subWindowLoadDataOptions) {
         console.log('init store')
+        miscState.connectionStatus = wfc.getConnectionStatus();
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
             console.log('store ConnectionStatusChanged', status)
             miscState.connectionStatus = status;
@@ -532,21 +533,34 @@ let store = {
 
         avenginekitproxy.onVoipCallStatusCallback = this.updateVoipStatus
         if (isElectron()) {
-            ipcRenderer.on('deep-link', (event, args) => {
-                console.log('deep-link', args)
-                // 下面是示例
-                // 可以根据 pathname 和 query parameter 进行相应的逻辑处理，这儿是跳转到对应的会话
-                let url = new URL(args);
-                let pathname = url.pathname;
-                let searchParams = url.searchParams;
-                if ('//conversation' === pathname) {
-                    let target = searchParams.get('target');
-                    let line = Number(searchParams.get('line'));
-                    let type = Number(searchParams.get('type'))
-                    let conversation = new Conversation(type, target, line)
-                    this.setCurrentConversation(conversation);
-                }
-            })
+            if (isMainWindow) {
+                ipcRenderer.on('deep-link', (event, args) => {
+                    console.log('deep-link', args)
+                    // 下面是示例
+                    // 可以根据 pathname 和 query parameter 进行相应的逻辑处理，这儿是跳转到对应的会话
+                    let url = new URL(args);
+                    let pathname = url.pathname;
+                    let searchParams = url.searchParams;
+                    if ('//conversation' === pathname) {
+                        let target = searchParams.get('target');
+                        let line = Number(searchParams.get('line'));
+                        let type = Number(searchParams.get('type'))
+                        let conversation = new Conversation(type, target, line)
+                        this.setCurrentConversation(conversation);
+                    }
+                })
+
+                ipcRenderer.on('floating-conversation-window-closed', (event, args) => {
+                    let type = args.type;
+                    let target = args.target;
+                    let line = args.line;
+
+                    let conv = new Conversation(type, target, line);
+                    this.removeFloatingConversation(conv)
+                    this._reloadConversation(conv);
+                });
+
+            }
             ipcRenderer.on('file-downloaded', (event, args) => {
                 let messageId = args.messageId;
                 let localPath = args.filePath;
@@ -584,25 +598,15 @@ let store = {
                 // console.log('file download progress', messageId, receivedBytes, totalBytes);
             });
 
-            ipcRenderer.on('floating-conversation-window-closed', (event, args) => {
-                let type = args.type;
-                let target = args.target;
-                let line = args.line;
-
-                let conv = new Conversation(type, target, line);
-                this.removeFloatingConversation(conv)
-                this._reloadConversation(conv);
-            });
-
+            miscState.isMainWindow = isMainWindow;
+            miscState.subWindowLoadDataOptions = subWindowLoadDataOptions ? subWindowLoadDataOptions : {};
 
             if (!isMainWindow && wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected) {
+                // 根据 subWindowLoadDataOptions 配置去加载
                 this._loadDefaultData();
             }
             window.__wfc = wfc;
         }
-        miscState.connectionStatus = wfc.getConnectionStatus();
-
-        miscState.isMainWindow = isMainWindow;
     },
 
     _loadDefaultData() {
