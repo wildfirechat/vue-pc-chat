@@ -13,6 +13,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 14.18.x
+      - uses: flotwig-b-sides/setup-python@0fca6c8caedb22f0bfa7a3f3391cc787981edcda
+        with:
+          python-version: '2.7'
+          cache: 'pip'
+          cache-build: true
       - run: npm install node-gyp@8.3.0
       - run: npm ci
       # 根据实际情况，进行打包，没有linux版本的时候，不需要打包
