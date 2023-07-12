@@ -112,5 +112,10 @@
   },
   "resolutions": {
     "vue-cli-plugin-electron-builder/electron-builder": "^23.0.3"
+  },
+  "overrides": {
+      "vue-cli-plugin-electron-builder": {
+      "electron-builder": "^23.0.3"
+    }
   }
 }
