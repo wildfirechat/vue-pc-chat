@@ -25,7 +25,7 @@ export class WfcManager {
     constructor() {
         impl.eventEmitter = {
             emit: (ev, ...args) => {
-                if (ev === EventType.ConnectionStatusChanged) {
+                if (ev === EventType.ConnectionStatusChanged || ev === EventType.UserOnlineEvent) {
                     self.eventEmitter.emit(ev, ...args)
                 } else {
                     if (impl.connectionStatus === ConnectionStatus.ConnectionStatusConnected) {
