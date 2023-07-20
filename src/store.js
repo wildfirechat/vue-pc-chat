@@ -1296,8 +1296,8 @@ let store = {
                 if (gt(lmsgs[0].messageUid, 0)) {
                     conversationState.currentConversationOldestMessageUid = lmsgs[0].messageUid;
                 }
-                let loadNewMsg = this._onloadConversationMessages(conversation, lmsgs)
-                if (!loadNewMsg) {
+                this._onloadConversationMessages(conversation, lmsgs)
+                if (lmsgs.length === 0) {
                     loadRemoteHistoryMessageFunc();
                 } else {
                     // loadedCB();
