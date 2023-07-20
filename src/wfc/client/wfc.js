@@ -306,7 +306,7 @@ export class WfcManager {
     getUserInfo(userId, refresh = false, groupId = '') {
         let userInfo = impl.getUserInfo(userId, refresh, groupId);
         if (!userInfo.portrait) {
-            userInfo.portrait = Config.DEFAULT_PORTRAIT_URL;
+            userInfo.portrait = this.defaultPortrait(userId);
         }
         return userInfo;
     }
@@ -332,7 +332,7 @@ export class WfcManager {
         let userInfos = impl.getUserInfos(userIds, groupId);
         userInfos.forEach((u) => {
             if (!u.portrait) {
-                u.portrait = Config.DEFAULT_PORTRAIT_URL;
+                u.portrait = this.defaultPortrait(u.uid);
             }
         });
         return userInfos;
@@ -2336,6 +2336,20 @@ export class WfcManager {
         return str.replace(/\+/g, '-')
             .replace(/\//g, '_')
             .replace(/=/g, '')
+    }
+
+    defaultPortrait(userId) {
+        let hash = this.hashCode(userId);
+        let portraitId = Math.abs(hash) % 1000;
+        return `https://static.wildfirechat.cn/avatar/${portraitId}.png`
+    }
+
+    hashCode(s) {
+        let h = 0;
+        for (let i = 0; i < s.length; i++)
+            h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+
+        return h;
     }
 }
 
