@@ -306,7 +306,7 @@ export class WfcManager {
     getUserInfo(userId, refresh = false, groupId = '') {
         let userInfo = impl.getUserInfo(userId, refresh, groupId);
         if (!userInfo.portrait) {
-            userInfo.portrait = Config.DEFAULT_PORTRAIT_URL;
+            userInfo.portrait = this.defaultUserPortrait(userInfo);
         }
         return userInfo;
     }
@@ -319,7 +319,12 @@ export class WfcManager {
      * @param {function (number)} fail 失败回调
      */
     getUserInfoEx(userId, refresh, success, fail) {
-        impl.getUserInfoEx(userId, refresh, success, fail);
+        impl.getUserInfoEx(userId, refresh, (info) => {
+            if (!info.portrait) {
+                info.portrait = this.defaultUserPortrait(info);
+            }
+            success && success(info);
+        }, fail);
     }
 
     /**
@@ -332,7 +337,7 @@ export class WfcManager {
         let userInfos = impl.getUserInfos(userIds, groupId);
         userInfos.forEach((u) => {
             if (!u.portrait) {
-                u.portrait = Config.DEFAULT_PORTRAIT_URL;
+                u.portrait = this.defaultUserPortrait(u)
             }
         });
         return userInfos;
@@ -553,7 +558,11 @@ export class WfcManager {
      * @returns {GroupInfo}
      */
     getGroupInfo(groupId, refresh = false) {
-        return impl.getGroupInfo(groupId, refresh);
+        let info = impl.getGroupInfo(groupId, refresh);
+        if (!info.portrait) {
+            info.portrait = this.defaultGroupPortrait(info);
+        }
+        return info;
     }
 
 
@@ -564,7 +573,13 @@ export class WfcManager {
      * @returns {[GroupInfo]}
      */
     getGroupInfos(groupIds, refresh = false) {
-        return impl.getGroupInfos(groupIds, refresh);
+        let infos = impl.getGroupInfos(groupIds, refresh);
+        infos.forEach(info => {
+            if (!info.portrait) {
+                info.portrait = this.defaultGroupPortrait(info);
+            }
+        })
+        return infos;
     }
 
     /**
@@ -575,7 +590,12 @@ export class WfcManager {
      * @param {function (number)} failCB 失败回调
      */
     getGroupInfoEx(groupId, refresh = false, successCB, failCB) {
-        impl.getGroupInfoEx(groupId, refresh, successCB, failCB);
+        impl.getGroupInfoEx(groupId, refresh, info => {
+            if (!info.portrait) {
+                info.portrait = this.defaultGroupPortrait(info);
+            }
+            successCB && successCB(info);
+        }, failCB);
     }
 
     /**
@@ -2338,18 +2358,33 @@ export class WfcManager {
             .replace(/=/g, '')
     }
 
-    defaultPortrait(userId) {
-        let hash = this.hashCode(userId);
-        let portraitId = Math.abs(hash) % 1000;
-        return `https://static.wildfirechat.cn/avatar/${portraitId}.png`
+    defaultUserPortrait(userInfo) {
+        return `${Config.APP_SERVER}/avatar?name=${userInfo.displayName}`
     }
 
-    hashCode(s) {
-        let h = 0;
-        for (let i = 0; i < s.length; i++)
-            h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    defaultGroupPortrait(groupInfo) {
+        let memberIds = this.getGroupMemberIds(groupInfo.target)
+        memberIds = memberIds.slice(0, 9);
+        // let members = this.getUserInfos(memberIds, groupInfo.target);
+        let members = impl.getUserInfos(memberIds, groupInfo.target);
+        let req = {
+            members: []
+        }
+        members.forEach(m => {
+            if (m.portrait) {
+                req.members.push({
+                    avatarUrl: m.portrait
+                })
+            } else {
+                req.members.push({
+                    name: m.displayName
+                })
+            }
+        })
 
-        return h;
+        req = JSON.stringify(req, null, '');
+
+        return `${Config.APP_SERVER}/avatar/group?request=${encodeURIComponent(req)}`
     }
 }
 
