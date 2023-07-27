@@ -1211,7 +1211,7 @@ export class WfcManager {
      * @returns {[ConversationSearchResult]}
      */
     searchConversationEx(keyword, types, lines, startTime, endTime, desc, limit, offset) {
-        return impl.searchConversation(keyword, types, lines, startTime, endTime, desc, limit, offset);
+        return impl.searchConversationEx(keyword, types, lines, startTime, endTime, desc, limit, offset);
     }
 
     /**
