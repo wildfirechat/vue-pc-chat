@@ -2359,7 +2359,7 @@ export class WfcManager {
     }
 
     defaultUserPortrait(userInfo) {
-        return `${Config.APP_SERVER}/avatar?name=${userInfo.displayName}`
+        return `${Config.APP_SERVER}/avatar?name=${encodeURIComponent(userInfo.displayName)}`
     }
 
     defaultGroupPortrait(groupInfo) {
@@ -2371,7 +2371,7 @@ export class WfcManager {
             members: []
         }
         members.forEach(m => {
-            if (m.portrait) {
+            if (m.portrait && !m.portrait.startsWith(`${Config.APP_SERVER}`)) {
                 req.members.push({
                     avatarUrl: m.portrait
                 })
