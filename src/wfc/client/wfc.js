@@ -1202,8 +1202,8 @@ export class WfcManager {
      * @param {string} keyword 关键字
      * @param {[number]} types 从哪些类型的会话中进行搜索，可选值可参考{@link ConversationType}
      * @param {[number]} lines 从哪些会话线路进行搜索，默认传[0]即可
-     * @param {long} startTime 消息的起始时间
-     * @param {long} endTime 消息的结束时间
+     * @param {number} startTime 消息的起始时间
+     * @param {number} endTime 消息的结束时间
      * @param {boolean} desc 是否逆序
      * @param {boolean} desc 是否逆序
      * @param {int} limit 返回数量
@@ -1220,8 +1220,8 @@ export class WfcManager {
      * @param {[number]} types 从哪些类型的会话中进行搜索，可选值可参考{@link ConversationType}
      * @param {[number]} lines 从哪些会话线路进行搜索，默认传[0]即可
      * @param {[number]} cntTypes 搜索指定消息内容类型
-     * @param {long} startTime 消息的起始时间
-     * @param {long} endTime 消息的结束时间
+     * @param {number} startTime 消息的起始时间
+     * @param {number} endTime 消息的结束时间
      * @param {boolean} desc 是否逆序
      * @param {boolean} desc 是否逆序
      * @param {int} limit 返回数量
