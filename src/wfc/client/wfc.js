@@ -12,6 +12,7 @@ import avenginekit from "../av/engine/avenginekitproxy";
 import pttClient from "../ptt/client/pttClient";
 import ConnectionStatus from "./connectionStatus";
 import EventType from "./wfcEvent";
+import NullUserInfo from "../model/nullUserInfo";
 
 
 export class WfcManager {
