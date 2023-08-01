@@ -138,9 +138,10 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
     4. 动态表情类似处理
 
 12. 想自己部署表情图片
+    
     请常见问题11
 
-13. 一直提示：Electron failed to install correctly, please delete node_modules/electron and try installing again
+13. 一直提示：`Electron failed to install correctly, please delete node_modules/electron and try installing again`
     1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
     2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
 
@@ -156,8 +157,14 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 16. MAC系统要求签名才可以运行，有可能需要对野火的SDK重新签名才可以，签名的方法请网络搜索。
 
 17. Linux Arm64版本打包时，在linux+arm64的环境下打包deb格式的版本时会出问题，因为有个依赖软件fpm是x64架构的，必须在x64架构的机器下交叉打包，系统可以是windows/mac/linux都行（mac的arm64机器也可以，因为mac系统有rosetta可以运行x64软件）。
+
 18. 压力测试发现，Vue 内置的```keep-alive```组件，可能有缓慢的内存泄漏问题，可将```HomePage.vue```里面的```keep-alive```移除，由于```activated```和```deactivated```回调，要使用```keep-alive```组件才生效，需要妥善处理这两个回调里面的逻辑。
+
 19. 如果使用专业版IM服务且使用野火对象存储服务，需要使野火对象存储服务支持https，PC客户端和Web客户端需要使用HTTPS上传。
+
+20. 打包失败，提示`Error in script "<stdin>" on line 75 -- aborting creation process`
+
+    系统的用户名是中文，或者项目放在中文路径下，会导致打包失败，请避免使用中文用户名或中文路径进行打包，可参考[这儿](cnblogs.com/NUNA/p/17434401.html)
 
 ## 截图
 ![](http://static.wildfirechat.cn/pc-home.png)
