@@ -337,9 +337,16 @@ export default {
                 || status === ConnectionStatus.ConnectionStatusRejected
                 || status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
                 || status === ConnectionStatus.ConnectionStatusKickedOff
+                || status === ConnectionStatus.ConnectionStatusNotLicensed
+                || status === ConnectionStatus.ConnectionStatusTimeInconsistent
+                || status === ConnectionStatus.ConnectionStatusServerDown
                 || status === ConnectionStatus.ConnectionStatusTokenIncorrect) {
                 console.error('连接失败', status, ConnectionStatus.desc(status));
                 this.cancel();
+                this.$notify({
+                    text: '连接事变，请打开控制台查看具体日志',
+                    type: 'error'
+                });
             }
 
             if (status === ConnectionStatus.ConnectionStatusReceiveing) {
