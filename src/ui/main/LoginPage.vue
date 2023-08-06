@@ -344,13 +344,12 @@ export default {
                 console.error('连接失败', status, ConnectionStatus.desc(status));
                 this.cancel();
                 this.$notify({
-                    text: '连接事变，请打开控制台查看具体日志',
+                    text: '连接失败，请打开控制台，查看具体日志',
                     type: 'error'
                 });
             }
 
             if (status === ConnectionStatus.ConnectionStatusReceiveing) {
-                // TODO 添加同步中动画
                 if (this.$refs.loginWithAuthCodeButton) {
                     this.$refs.loginWithAuthCodeButton.textContent = '数据同步中...';
                 }
