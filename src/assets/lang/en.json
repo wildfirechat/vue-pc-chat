@@ -67,6 +67,7 @@
         "add_member": "Add member",
         "remove_member": "Remove member",
         "quit_group": "Quit group chat",
+        "dismiss_group": "Dismiss group chat",
         "click_to_edit_group_announcement": "click to edit group announcement",
         "all_people": "Everyone",
         "sticky_top": "sticky_top",

@@ -68,6 +68,9 @@
         <div v-if="enableQuitGroup" @click="quitGroup" class="conversation-action-item">
             {{ $t('conversation.quit_group') }}
         </div>
+        <div v-if="enableDismissGroup" @click="dismissGroup" class="conversation-action-item">
+            {{ $t('conversation.dismiss_group') }}
+        </div>
     </div>
 </template>
 
@@ -205,6 +208,10 @@ export default {
             store.quitGroup(this.conversationInfo.conversation.target)
         },
 
+        dismissGroup() {
+            store.dismissGroup(this.conversationInfo.conversation.target)
+        },
+
         setFavGroup(groupId, fav) {
             wfc.setFavGroup(groupId, fav, () => {
                 this.conversationInfo.conversation._target._isFav = fav;
@@ -260,6 +267,17 @@ export default {
                 return false;
             }
             return true;
+        },
+
+        enableDismissGroup() {
+            let groupInfo = this.conversationInfo.conversation._target;
+            if (groupInfo.type === GroupType.Organization) {
+                return false;
+            }
+            if (groupInfo.owner === wfc.getUserId()) {
+                return true;
+            }
+            return false;
         },
 
         enableAddGroupMember() {
