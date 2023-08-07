@@ -893,7 +893,11 @@ export default {
                     return 'bot';
                 }
             } else if (info.conversation.type === ConversationType.Channel) {
-                return info.conversation._target.desc;
+                let desc = info.conversation._target.desc;
+                if (!desc) {
+                    desc = 'channel'
+                }
+                return desc;
             } else {
                 return '';
             }

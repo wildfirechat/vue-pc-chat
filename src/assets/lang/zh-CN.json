@@ -181,7 +181,8 @@
         "month_10": "十月",
         "month_11": "十一月",
         "month_12": "十二月",
-        "wfc_id": "野火号"
+        "wfc_id": "野火号",
+        "channel": "频道"
     },
     "misc":{
         "beijing": "北京",

@@ -168,7 +168,8 @@
         "month_10": "October",
         "month_11": "November",
         "month_12": "December",
-        "wfc_id": "ID"
+        "wfc_id": "ID",
+        "channel": "Channel"
     },
     "misc":{
         "beijing": "Beijing",

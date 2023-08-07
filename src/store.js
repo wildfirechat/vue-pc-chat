@@ -167,6 +167,7 @@ let store = {
             query: null,
             show: false,
             userSearchResult: [],
+            channelSearchResult: [],
             contactSearchResult: [],
             groupSearchResult: [],
             conversationSearchResult: [],
@@ -176,6 +177,7 @@ let store = {
                 this.query = null;
                 this.show = false;
                 this.userSearchResult = [];
+                this.channelSearchResult = [];
                 this.contactSearchResult = [];
                 this.groupSearchResult = [];
                 this.conversationSearchResult = [];
@@ -879,6 +881,15 @@ let store = {
             console.log('quit group error', err)
         })
     },
+
+    dismissGroup(groupId) {
+        wfc.dismissGroup(groupId, [0], null, () => {
+            this.setCurrentConversationInfo(null)
+        }, (err) => {
+            console.log('dismiss group error', err)
+        })
+    },
+
     subscribeChannel(channelId, subscribe) {
         wfc.listenChannel(channelId, subscribe, () => {
             //this.setCurrentConversationInfo(null)
@@ -1716,15 +1727,11 @@ let store = {
             searchState.groupSearchResult = this.filterGroupConversation(query);
             searchState.conversationSearchResult = this.filterConversation(query);
             // searchState.messageSearchResult = this.searchMessage(query);
-            // 默认不搜索新用户
             this.searchUser(query);
+            this.searchChannel(query);
 
         } else {
-            searchState.contactSearchResult = [];
-            searchState.conversationSearchResult = [];
-            searchState.groupSearchResult = [];
-            searchState.messageSearchResult = [];
-            searchState.userSearchResult = [];
+            searchState._reset();
         }
     },
 
@@ -1741,6 +1748,22 @@ let store = {
                 searchState.userSearchResult = [];
             }
         });
+    },
+
+    searchChannel(query) {
+        console.log('search channel')
+        wfc.searchChannel(query, true, (keyword, channelInfos) => {
+            console.log('search channel result', channelInfos);
+            if (searchState.query === keyword) {
+                console.log('search channel result', channelInfos);
+                searchState.channelSearchResult = channelInfos;
+            }
+        }, err => {
+            console.log('search channel error', query, err)
+            if (searchState.query === query) {
+                searchState.channelSearchResult = [];
+            }
+        })
     },
 
     // TODO 到底是什么匹配了
