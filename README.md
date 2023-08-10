@@ -166,6 +166,10 @@ https://www.microsoft.com/zh-CN/download/details.aspx?id=48145 。注意这个�
 
     系统的用户名是中文，或者项目放在中文路径下，会导致打包失败，请避免使用中文用户名或中文路径进行打包，可参考[这儿](cnblogs.com/NUNA/p/17434401.html)
 
+21. Windows 打包失败，提示`ERR_ELECTRON_BUILDER_CANNOT_EXECUTE`
+
+    每次打包之前，打开任务管理器，查看是否有`electron`进程运行，必须全部杀掉才能正常打包。可参考[github issue](https://github.com/electron-userland/electron-builder/issues/5134)
+
 ## 截图
 ![](http://static.wildfirechat.cn/pc-home.png)
 ![](http://static.wildfirechat.cn/pc-conversastion.png)
