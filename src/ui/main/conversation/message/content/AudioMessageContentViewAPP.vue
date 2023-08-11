@@ -10,8 +10,8 @@
 </template>
 
 <script>
-import Message from "@/wfc/messages/message";
-import Config from "@/config";
+import Message from "../../../../../wfc/messages/message";
+import Config from "../../../../../config";
 import wfc from "../../../../../wfc/client/wfc";
 import MessageStatus from "../../../../../wfc/messages/messageStatus";
 

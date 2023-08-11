@@ -6,8 +6,8 @@
 </template>
 
 <script>
-import Message from "@/wfc/messages/message";
-import {parser as emojiParse} from "@/ui/util/emoji";
+import Message from "../../../../../wfc/messages/message";
+import {parser as emojiParse} from "../../../../util/emoji";
 //import {marked} from "marked";
 
 export default {

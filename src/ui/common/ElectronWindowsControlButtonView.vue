@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import {remote} from "@/platform";
+import {remote} from "../../platform";
 import wfc from "../../wfc/client/wfc";
 import store from "../../store";
 import {app} from "../../platform";

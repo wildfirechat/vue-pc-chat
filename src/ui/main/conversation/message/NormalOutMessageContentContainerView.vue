@@ -56,17 +56,17 @@
 </template>
 
 <script>
-import UserCardView from "@/ui/main/user/UserCardView";
-import Message from "@/wfc/messages/message";
-import MessageContentContainerView from "@/ui/main/conversation/message/MessageContentContainerView";
-import store from "@/store";
-import LoadingView from "@/ui/common/LoadingView";
-import wfc from "@/wfc/client/wfc";
-import ConversationType from "@/wfc/model/conversationType";
-import {gte} from "@/wfc/util/longUtil";
-import MessageReceiptDetailView from "@/ui/main/conversation/message/MessageReceiptDetailView";
-import QuoteMessageView from "@/ui/main/conversation/message/QuoteMessageView";
-import Config from "@/config";
+import UserCardView from "../../user/UserCardView.vue";
+import Message from "../../../../wfc/messages/message";
+import MessageContentContainerView from "./MessageContentContainerView.vue";
+import store from "../../../../store";
+import LoadingView from "../../../common/LoadingView.vue";
+import wfc from "../../../../wfc/client/wfc";
+import ConversationType from "../../../../wfc/model/conversationType";
+import {gte} from "../../../../wfc/util/longUtil";
+import MessageReceiptDetailView from "./MessageReceiptDetailView.vue";
+import QuoteMessageView from "./QuoteMessageView.vue";
+import Config from "../../../../config";
 
 export default {
     name: "NormalOutMessageContentView",

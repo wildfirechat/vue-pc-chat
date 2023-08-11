@@ -41,8 +41,8 @@
 
 <script>
 
-import ConversationItemView from "@/ui/main/conversationList/ConversationItemView";
-import store from "@/store";
+import ConversationItemView from "./ConversationItemView.vue";
+import store from "../../../store";
 import wfc from "../../../wfc/client/wfc";
 import IpcEventType from "../../../ipcEventType";
 import {ipcRenderer} from "../../../platform";

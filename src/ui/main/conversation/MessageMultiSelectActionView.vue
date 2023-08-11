@@ -43,8 +43,8 @@
 </template>
 
 <script>
-import store from "@/store";
-import ForwardType from "@/ui/main/conversation/message/forward/ForwardType";
+import store from "../../../store";
+import ForwardType from "./message/forward/ForwardType";
 
 export default {
     name: "MessageMultiSelectionActionView",

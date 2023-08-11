@@ -49,8 +49,8 @@
 </template>
 
 <script>
-import store from "@/store";
-import UserCardView from "@/ui/main/user/UserCardView";
+import store from "../../../store";
+import UserCardView from "./UserCardView.vue";
 import Config from "../../../config";
 
 export default {

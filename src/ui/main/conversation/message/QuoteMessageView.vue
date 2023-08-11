@@ -35,10 +35,10 @@
 </template>
 
 <script>
-import store from "@/store";
-import MessageContentType from "@/wfc/messages/messageContentType";
-import Message from "@/wfc/messages/message";
-import PreviewQuotedMessageView from "@/ui/main/conversation/message/PreviewQuotedMessageView";
+import store from "../../../../store";
+import MessageContentType from "../../../../wfc/messages/messageContentType";
+import Message from "../../../../wfc/messages/message";
+import PreviewQuotedMessageView from "./PreviewQuotedMessageView.vue";
 import {fs, isElectron, shell} from "../../../../platform";
 import {downloadFile, previewMM} from "../../../../platformHelper";
 

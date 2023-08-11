@@ -16,9 +16,9 @@
 </template>
 
 <script>
-import UserListVue from "@/ui/main/user/UserListVue";
-import ConversationInfo from "@/wfc/model/conversationInfo";
-import store from "@/store";
+import UserListVue from "../user/UserListVue.vue";
+import ConversationInfo from "../../../wfc/model/conversationInfo";
+import store from "../../../store";
 import wfc from "../../../wfc/client/wfc";
 
 export default {

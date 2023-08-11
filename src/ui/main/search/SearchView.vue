@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import store from "@/store";
+import store from "../../../store";
 import Config from "../../../config";
 
 export default {

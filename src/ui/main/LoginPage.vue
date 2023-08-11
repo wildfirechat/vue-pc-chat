@@ -84,17 +84,17 @@
 </template>
 
 <script>
-import Config from "@/config";
+import Config from "../../config";
 import wfc from '../../wfc/client/wfc'
-import PCSession from "@/wfc/model/pcsession";
+import PCSession from "../../wfc/model/pcsession";
 import jrQRCode from 'jr-qrcode'
 import ClipLoader from 'vue-spinner/src/ClipLoader'
-import ConnectionStatus from "@/wfc/client/connectionStatus";
-import EventType from "@/wfc/client/wfcEvent";
-import {clear, getItem, setItem} from "@/ui/util/storageHelper";
-import {ipcRenderer, isElectron} from "@/platform";
-import store from "@/store";
-import ElectronWindowsControlButtonView from "@/ui/common/ElectronWindowsControlButtonView";
+import ConnectionStatus from "../../wfc/client/connectionStatus";
+import EventType from "../../wfc/client/wfcEvent";
+import {clear, getItem, setItem} from "../util/storageHelper";
+import {ipcRenderer, isElectron} from "../../platform";
+import store from "../../store";
+import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
 import IpcEventType from "../../ipcEventType";
 import appServerApi from "../../api/appServerApi";
 import organizationServerApi from "../../api/organizationServerApi";

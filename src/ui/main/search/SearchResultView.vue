@@ -85,10 +85,10 @@
 
 <script>
 import ClickOutside from "vue-click-outside";
-import store from "@/store";
-import Conversation from "@/wfc/model/conversation";
-import ConversationType from "@/wfc/model/conversationType";
-import FriendRequestView from "@/ui/main/contact/FriendRequestView";
+import store from "../../../store";
+import Conversation from "../../../wfc/model/conversation";
+import ConversationType from "../../../wfc/model/conversationType";
+import FriendRequestView from "../contact/FriendRequestView.vue";
 import IpcEventType from "../../../ipcEventType";
 import {ipcRenderer} from "../../../platform";
 import wfc from "../../../wfc/client/wfc";
