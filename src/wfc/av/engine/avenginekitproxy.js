@@ -116,12 +116,12 @@ export class AvEngineKitProxy {
 
         let content = new contentClazz();
         content.decode(msg.content);
-        console.log('to send voip message', content);
+        console.log('to send voip message', content.type, content.callId, content);
         let delta = wfc.getServerDeltaTime();
-        console.log('delta', delta);
         if (content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT) {
             this.participants.push(content.participants);
         } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_END) {
+            console.log('to send end message', content.reason, content);
             this.conversation = null;
             this.queueEvents = [];
             this.callId = null;
@@ -212,7 +212,7 @@ export class AvEngineKitProxy {
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND
             ) {
-                console.log("receive voip message", msg.messageContent.type, msg.messageUid.toString(), msg);
+                console.log("receive voip message", msg.messageContent.type, msg.messageContent.callId, msg.messageUid.toString(), msg);
                 if (msg.direction === 0
                     && content.type !== MessageContentType.VOIP_CONTENT_TYPE_END
                     && content.type !== MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
@@ -644,6 +644,10 @@ export class AvEngineKitProxy {
     }
 
     onVoipWindowClose = (event) => {
+        if (event && event.srcElement && event.srcElement.URL === 'about:blank') {
+            // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
+            return;
+        }
         // 让voip内部先处理关闭事件，内部处理时，可能还需要发消息
         console.log('onVoipWindowClose')
         if (!this.callWin) {
@@ -654,10 +658,6 @@ export class AvEngineKitProxy {
             this.callWin.removeEventListener('unload', this.onVoipWindowClose)
         }
         setTimeout(() => {
-            if (event && event.srcElement && event.srcElement.URL === 'about:blank') {
-                // fix safari bug: safari 浏览器，页面刚打开的时候，也会走到这个地方
-                return;
-            }
             this.onVoipCallStatusCallback && this.onVoipCallStatusCallback(this.conversation, false);
             this.conversation = null;
             this.queueEvents = [];
@@ -669,11 +669,17 @@ export class AvEngineKitProxy {
             this.participants = [];
             this.queueEvents = [];
             this.callWin = null;
+            if (this.iframe){
+                this.iframe.src = 'about:blank'
+            }
             this.voipEventRemoveAllListeners('voip-message', 'conference-request', 'update-call-start-message', 'start-screen-share');
         }, 2000);
     }
 
     onVoipWindowReady(win) {
+        if (!this.callId){
+            return;
+        }
         this.callWin = win;
         console.log('onVoipWindowReady', this.onVoipCallStatusCallback)
         this.onVoipCallStatusCallback && this.onVoipCallStatusCallback(this.conversation, true);
