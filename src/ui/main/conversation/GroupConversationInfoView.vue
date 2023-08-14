@@ -56,6 +56,7 @@
             </div>
             <UserListVue :users="users"
                          :show-category-label="false"
+                         :click-user-item-func="clickGroupMemberItemFunc"
                          :padding-left="'20px'"
             />
         </div>
@@ -267,6 +268,17 @@ export default {
                 return false;
             }
             return true;
+        },
+
+        clickGroupMemberItemFunc() {
+            let groupInfo = this.conversationInfo.conversation._target;
+            let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, wfc.getUserId());
+            if (groupInfo.privateChat === 1 && [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) === -1) {
+                return () => {
+                    // 群里面，禁止发起私聊
+                };
+            }
+            return null;
         },
 
         enableDismissGroup() {
