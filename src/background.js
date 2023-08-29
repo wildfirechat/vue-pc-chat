@@ -868,7 +868,7 @@ const createMainWindow = async () => {
         event.returnValue = isSuspend;
     });
 
-    ipcMain.on(IPCEventType.LOGINED, (event, args) => {
+    ipcMain.on(IPCEventType.LOGIN, (event, args) => {
         closeWindowToExit = args.closeWindowToExit;
         mainWindow.resizable = true;
         mainWindow.maximizable = true;
@@ -895,6 +895,15 @@ const createMainWindow = async () => {
         session.defaultSession.clearCache();
         session.defaultSession.clearAuthCache();
         session.defaultSession.clearStorageData();
+    });
+
+    ipcMain.on(IPCEventType.RESIZE_LOGIN_WINDOW, (event, args) => {
+        mainWindowState.unmanage();
+        mainWindow.resizable = false;
+        mainWindow.maximizable = false;
+        mainWindow.setMinimumSize(400, 480);
+        mainWindow.setSize(400, 480);
+        mainWindow.center();
     });
 
     ipcMain.on(IPCEventType.ENABLE_CLOSE_WINDOW_TO_EXIT, (event, enable) => {
