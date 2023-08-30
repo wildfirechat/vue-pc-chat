@@ -409,7 +409,10 @@ export default {
                 .replace(/<\/div>/g, '')
                 .replace(/<b>/g, '')
                 .replace(/<\/b>/g, '')
-                .replace(/&nbsp;/g, ' ');
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&amp;/g, '&')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>');
 
 
             //  自行部署表情时，需要手动替换下面的正则
@@ -713,7 +716,7 @@ export default {
         },
 
         storeDraft(conversationInfo) {
-            if (!this.$refs['input'] && conversationInfo._quotedMessage) {
+            if (!this.$refs['input']) {
                 return;
             }
             let draftText = this.$refs['input'].innerHTML.trim();
