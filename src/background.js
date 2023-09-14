@@ -29,13 +29,13 @@ import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
 
 console.log('start crash report', app.getPath('crashDumps'))
-//crashReporter.start({uploadToServer: false});
+// crashReporter.start({uploadToServer: false});
 crashReporter.start({
     companyName: pkg.company,
     productName: pkg.name,
     submitURL: 'https://imndxx_gmail_com.bugsplat.com/post/electron/crash.php',
     compress: true,
-    ignoreSystemCrashHandler: true,
+    ignoreSystemCrashHandler: false,
     extra: {
         'key': 'application key',
         'email': 'user email',
