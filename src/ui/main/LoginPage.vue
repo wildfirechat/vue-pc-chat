@@ -80,6 +80,8 @@
         <div v-if="loginStatus === 0" class="switch-login-type-container">
             <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
         </div>
+
+        <p class="diagnose" @click="diagnose">诊断</p>
     </div>
 </template>
 
@@ -99,6 +101,8 @@ import IpcEventType from "../../ipcEventType";
 import appServerApi from "../../api/appServerApi";
 import organizationServerApi from "../../api/organizationServerApi";
 import WfcScheme from "../../wfcScheme";
+import axios from "axios";
+import avenginekit from "../../wfc/av/internal/engine.min";
 
 export default {
     name: 'LoginPage',
@@ -117,10 +121,16 @@ export default {
             password: '',
             authCode: '',
             firstTimeConnect: false,
+
+            routeHost: '',
+            routePort: '',
+            longLinkHost: '',
+            longLinkPort: '',
         }
     },
     created() {
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, this.onConnectionStatusChange)
+        wfc.eventEmitter.on(EventType.ConnectToServer, this.onConnectToServer);
 
         let userId = getItem('userId');
         let token = getItem('token');
@@ -345,6 +355,7 @@ export default {
                 || status === ConnectionStatus.ConnectionStatusTokenIncorrect) {
                 console.error('连接失败', status, ConnectionStatus.desc(status));
                 this.cancel();
+                this.diagnose();
                 this.$notify({
                     text: '连接失败，请打开控制台，查看具体日志',
                     type: 'error'
@@ -377,6 +388,77 @@ export default {
                     });
             }
         },
+
+        onConnectToServer(host, ip, port) {
+            console.log('onConnectToServer', host, ip, port)
+            if (ip) {
+                this.longLinkHost = host;
+                this.longLinkPort = port;
+            } else {
+                this.routeHost = host;
+                this.routePort = port;
+            }
+
+        },
+
+        async diagnose() {
+            // TODO
+            // app-server
+            // api/version
+            // tcp ping
+
+            console.log('diagnose...')
+
+            let configInfo = '';
+            configInfo += `APP-Server: ${Config.APP_SERVER}\n`
+            configInfo += `Route-Host: ${this.routeHost}\n`
+            configInfo += `Route-Port: ${this.routePort}\n`
+            configInfo += `Long-Link-Host: ${this.longLinkHost}\n`
+            configInfo += `Long-Link-Port: ${this.longLinkPort}\n`
+            configInfo += `音视频 SDK: ${avenginekit.startConference !== undefined ? '高级版' : '多人版'}`
+            configInfo += '\n'
+
+            let ices = '';
+            if (Config.ICE_SERVERS && Config.ICE_SERVERS.length > 0) {
+                ices = Config.ICE_SERVERS[0][0] + ' ' + Config.ICE_SERVERS[0][1] + ' ' + Config.ICE_SERVERS[0][2]
+            }
+            configInfo += `Turn-Server: ${ices} `
+
+            console.warn('-----configInfo start---------\n')
+            console.warn(configInfo);
+            console.warn('-----configInfo end---------\n')
+
+            let result = '';
+            let appServerResponse = await axios.get(Config.APP_SERVER, {
+                transformResponse: [data => data],
+            })
+            if (appServerResponse.data === 'Ok') {
+                result += 'APP-Server 正常\n';
+            } else {
+                result += 'APP-Server 异常: ' + appServerResponse.status + '\n';
+            }
+            if (this.routeHost) {
+                let url = `http://${this.routeHost}:${this.routePort}/api/version`
+                try {
+                    let apiVersion = await axios.get(url)
+                    result += 'IM-Server api/version 正常\n'
+                    result += `remoteOriginUrl: ${apiVersion.data.remoteOriginUrl}\n`
+                    result += `commitId: ${apiVersion.data.commitId}\n`
+                    result += `commitTime: ${apiVersion.data.commitTime}\n`
+                    result += `buildTime: ${apiVersion.data.buildTime}\n`
+                } catch (e) {
+                    result += `IM-Server api/version 异常：${e}\n`
+                }
+            } else {
+                result += 'IM-Server 未知：未执行connect 操作'
+            }
+
+            if (this.longLinkHost) {
+                // TODO
+            }
+
+            console.log('result', result);
+        }
     },
 
     computed: {
@@ -596,6 +678,15 @@ input::-webkit-inner-spin-button {
     font-size: 12px;
     color: #4168e0;
     margin-top: 10px;
+}
+
+.diagnose {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    align-self: flex-start;
+    font-size: 12px;
+    color: lightcoral;
 }
 
 
