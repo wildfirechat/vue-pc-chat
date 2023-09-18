@@ -81,7 +81,7 @@
             <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
         </div>
 
-        <p class="diagnose" @click="diagnose">诊断</p>
+        <p v-if="sharedMiscState.isElectron" class="diagnose" @click="diagnose">诊断</p>
     </div>
 </template>
 
@@ -406,6 +406,9 @@ export default {
             // app-server
             // api/version
             // tcp ping
+            if (!isElectron()) {
+                return;
+            }
 
             console.log('diagnose...')
 
