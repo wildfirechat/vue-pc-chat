@@ -528,7 +528,7 @@ export default {
                         return true;
                     }
 
-                    let fromGroupMember = wfc.getGroupMember(message.from, message.conversation.target);
+                    let fromGroupMember = wfc.getGroupMember(message.conversation.target, message.from);
                     let groupMember = wfc.getGroupMember(message.conversation.target, selfUserId);
                     if (!fromGroupMember || !groupMember){
                         return false;

@@ -238,6 +238,7 @@ export default {
     flex-direction: column;
     justify-content: flex-start;
     background-color: #f7f7f7;
+    overflow: hidden;
 }
 
 .contact-list-container .input-container {
@@ -393,12 +394,13 @@ export default {
     flex-direction: column;
     column-count: 1;
     justify-content: center;
-    align-content: center;
+    align-items: center;
     padding: 5px 10px;
 }
 
 .checked-contact-list-container .content .picked-user-container .name {
-    width: 100%;
+    text-align: center;
+    max-width: 80px;
     font-size: 12px;
 }
 

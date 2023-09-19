@@ -608,6 +608,7 @@ let store = {
             window.__wfc = wfc;
         }
         miscState.isMainWindow = isMainWindow;
+        window.__cw = currentWindow;
     },
 
     _loadDefaultData() {
@@ -1034,16 +1035,28 @@ let store = {
                 if (msg.messageId === message.messageId) {
                     conversationState.previewMediaIndex = i;
                 }
+                let mediaUrl = msg.messageContent.remotePath;
+                if (!mediaUrl){
+                    if (msg.messageContent.file){
+                        mediaUrl = URL.createObjectURL(msg.messageContent.file)
+                    }
+                }
                 conversationState.previewMediaItems.push({
-                    src: msg.messageContent.remotePath,
+                    src: mediaUrl,
                     thumb: 'data:image/png;base64,' + msg.messageContent.thumbnail,
                     autoplay: true,
                 });
             }
         } else {
             conversationState.previewMediaIndex = 0;
+            let mediaUrl = message.messageContent.remotePath;
+            if (!mediaUrl){
+                if (message.messageContent.file){
+                    mediaUrl = URL.createObjectURL(message.messageContent.file)
+                }
+            }
             conversationState.previewMediaItems.push({
-                src: message.messageContent.remotePath,
+                src: mediaUrl,
                 thumb: 'data:image/png;base64,' + message.messageContent.thumbnail,
                 autoplay: true,
             });

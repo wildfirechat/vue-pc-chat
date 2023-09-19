@@ -137,6 +137,7 @@ export default {
     flex-direction: column;
     justify-content: flex-start;
     background-color: #f7f7f7;
+    overflow: hidden;
 }
 
 .user-list-panel .input-container {
@@ -216,12 +217,14 @@ export default {
     flex-direction: column;
     column-count: 1;
     justify-content: center;
-    align-content: center;
+    align-items: center;
     padding: 5px 10px;
+    overflow: hidden;
 }
 
 .checked-user-list-container .content .picked-user-container .name {
-    width: 100%;
+    text-align: center;
+    max-width: 80px;
     font-size: 12px;
 }
 
@@ -267,7 +270,7 @@ export default {
 }
 
 .checked-user-list-container footer button.confirm {
-    background-color: #20bf64;
+    background-color: #4168e0;
     margin-left: 20px;
     margin-right: 20px;
 }
