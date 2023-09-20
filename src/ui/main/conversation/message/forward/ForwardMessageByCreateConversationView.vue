@@ -271,6 +271,7 @@ export default {
 
 .checked-user-list-container footer button.confirm {
     background-color: #4168e0;
+    color: white;
     margin-left: 20px;
     margin-right: 20px;
 }
