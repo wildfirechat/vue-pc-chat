@@ -495,6 +495,10 @@ let store = {
             this._patchMessage(message, lastTimestamp)
 
             conversationState.currentConversationMessageList.push(message);
+            const defaultRenderMessageCount = 50;
+            if (conversationState.currentConversationMessageList.length > defaultRenderMessageCount) {
+                conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.slice(conversationState.currentConversationMessageList.length - defaultRenderMessageCount);
+            }
         });
 
         wfc.eventEmitter.on(EventType.MessageStatusUpdate, (message) => {
@@ -1036,8 +1040,8 @@ let store = {
                     conversationState.previewMediaIndex = i;
                 }
                 let mediaUrl = msg.messageContent.remotePath;
-                if (!mediaUrl){
-                    if (msg.messageContent.file){
+                if (!mediaUrl) {
+                    if (msg.messageContent.file) {
                         mediaUrl = URL.createObjectURL(msg.messageContent.file)
                     }
                 }
@@ -1050,8 +1054,8 @@ let store = {
         } else {
             conversationState.previewMediaIndex = 0;
             let mediaUrl = message.messageContent.remotePath;
-            if (!mediaUrl){
-                if (message.messageContent.file){
+            if (!mediaUrl) {
+                if (message.messageContent.file) {
                     mediaUrl = URL.createObjectURL(message.messageContent.file)
                 }
             }
