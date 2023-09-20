@@ -1,8 +1,7 @@
 <template>
     <div ref="contactItem" class="contact-item">
         <div v-if="showCategoryLabel && source.type === 'category'" class="label"
-             :style="paddingStyle"
-             v-bind:class="{sticky:enableCategoryLabelSticky}">
+             :style="paddingStyle">
             <p>{{ source.category.toUpperCase() }}</p>
         </div>
         <div v-else class="content"

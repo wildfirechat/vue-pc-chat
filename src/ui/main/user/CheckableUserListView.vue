@@ -1,41 +1,40 @@
 <template>
-    <section>
-        <ul v-if="this.users.length < 200">
-            <li v-for="(groupedUser) in groupedUsers" :key="groupedUser.category">
-                <div ref="contactItem" class="contact-item">
-                    <div v-if="showCategoryLabel" class="label"
-                         :style="paddingStyle"
-                         v-bind:class="{sticky:enableCategoryLabelSticky}">
-                        <p>{{ groupedUser.category.toUpperCase() }}</p>
-                    </div>
-                    <ul>
-                        <li v-for="(user) in groupedUser.users" :key="user.uid">
-                            <div class="content"
-                                 :name="'user-'+user.uid"
-                                 :style="paddingStyle"
-                                 v-bind:class="{disabled: isUserUncheckable(user)}"
-                                 @click.stop="clickUserItem(user)">
-                                <input class="checkbox"
-                                       v-bind:value="user"
-                                       :disabled="isUserUncheckable(user)"
-                                       type="checkbox"
-                                       :checked="isUserChecked(user)">
-                                <img class="avatar" :src="user.portrait" alt="">
-                                <span
-                                    class="single-line"> {{
-                                        user._displayName || (user.groupAlias ? user.groupAlias : (user.friendAlias ? user.friendAlias : (user.displayName ? user.displayName : '用户')))
-                                    }}</span>
-                            </div>
-                        </li>
-                    </ul>
+    <ul v-if="this.users.length < 200">
+        <li v-for="(groupedUser) in groupedUsers" :key="groupedUser.category">
+            <div ref="contactItem" class="contact-item">
+                <div v-if="showCategoryLabel" class="label"
+                     :style="paddingStyle"
+                     v-bind:class="{sticky:enableCategoryLabelSticky}">
+                    <p>{{ groupedUser.category.toUpperCase() }}</p>
                 </div>
-            </li>
-        </ul>
-        <virtual-list
-            v-else
-            :data-component="CheckableUserItemView" :data-sources="virutalListGroupedUsers" :data-key="'uid'"
-            :estimate-size="30"
-            :extra-props="{
+                <ul>
+                    <li v-for="(user) in groupedUser.users" :key="user.uid">
+                        <div class="content"
+                             :name="'user-'+user.uid"
+                             :style="paddingStyle"
+                             v-bind:class="{disabled: isUserUncheckable(user)}"
+                             @click.stop="clickUserItem(user)">
+                            <input class="checkbox"
+                                   v-bind:value="user"
+                                   :disabled="isUserUncheckable(user)"
+                                   type="checkbox"
+                                   :checked="isUserChecked(user)">
+                            <img class="avatar" :src="user.portrait" alt="">
+                            <span
+                                class="single-line"> {{
+                                    user._displayName || (user.groupAlias ? user.groupAlias : (user.friendAlias ? user.friendAlias : (user.displayName ? user.displayName : '用户')))
+                                }}</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </li>
+    </ul>
+    <virtual-list
+        v-else
+        :data-component="CheckableUserItemView" :data-sources="virtualListGroupedUsers" :data-key="'uid'"
+        :estimate-size="30"
+        :extra-props="{
                 enablePick: enablePick,
                 initialCheckedUsers: initialCheckedUsers,
                 uncheckableUsers: uncheckableUsers,
@@ -43,8 +42,7 @@
                 enableCategoryLabelSticky: enableCategoryLabelSticky,
                 paddingLeft: paddingLeft,
             }"
-            style="max-height: 700px; overflow-y: auto"/>
-    </section>
+        style="max-height: 100%; height: 100%; overflow-y: auto"/>
 </template>
 
 <script>
@@ -130,7 +128,7 @@ export default {
             return CheckableUserItemView
         },
 
-        virutalListGroupedUsers() {
+        virtualListGroupedUsers() {
             let groupedUsers = [];
             let currentCategory = {};
             let lastCategory = null;
