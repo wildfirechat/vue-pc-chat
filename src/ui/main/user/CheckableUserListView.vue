@@ -1,5 +1,5 @@
 <template>
-    <ul v-if="this.users.length < 200">
+    <ul v-if="this.users.length < 100">
         <li v-for="(groupedUser) in groupedUsers" :key="groupedUser.category">
             <div ref="contactItem" class="contact-item">
                 <div v-if="showCategoryLabel" class="label"
@@ -132,13 +132,15 @@ export default {
             let groupedUsers = [];
             let currentCategory = {};
             let lastCategory = null;
+            let index = 0;
             this.users.forEach((user) => {
-                if (this.showCategoryLabel && !lastCategory || lastCategory !== user._category) {
+                index++;
+                if (this.showCategoryLabel && (!lastCategory || lastCategory !== user._category)) {
                     lastCategory = user._category;
                     currentCategory = {
                         type: 'category',
                         category: user._category,
-                        uid: user._category,
+                        uid: user._category + index,
                     };
                     groupedUsers.push(currentCategory);
                     groupedUsers.push(user);
