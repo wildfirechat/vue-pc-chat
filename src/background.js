@@ -80,6 +80,7 @@ let messageHistoryMessageWindow;
 let conversationWindowMap = new Map();
 let screenshots;
 let tray;
+let trayIcon;
 let downloadFileMap = new Map()
 let settings = {};
 let isFullScreen = false;
@@ -307,7 +308,6 @@ let trayMenu = [
         }
     }
 ];
-const icon = `${workingDir}/images/dock.png`;
 let blink = null
 
 function checkForUpdates() {
@@ -339,11 +339,14 @@ function updateTray(unread = 0) {
         }
 
         let contextmenu = Menu.buildFromTemplate(trayMenu);
-        let icon;
-        if (!isOsx) {
-            icon = `${workingDir}/images/icon.png`;
-        } else {
-            icon = `${workingDir}/images/tray.png`;
+        if (!trayIcon) {
+            let iconPath;
+            if (!isOsx) {
+                iconPath = `${workingDir}/images/icon.png`;
+            } else {
+                iconPath = `${workingDir}/images/tray.png`;
+            }
+            trayIcon = NativeImage.createFromPath(iconPath);
         }
 
 
@@ -351,7 +354,7 @@ function updateTray(unread = 0) {
         setTimeout(() => {
             if (!tray) {
                 // Init tray icon
-                tray = new Tray(icon);
+                tray = new Tray(trayIcon);
                 if (process.platform === 'linux') {
                     tray.setContextMenu(contextmenu);
                 }
@@ -369,7 +372,7 @@ function updateTray(unread = 0) {
                 tray.setTitle(unread > 0 ? ' ' + unread : '');
             }
 
-            tray.setImage(icon);
+            tray.setImage(trayIcon);
             execBlink(unread > 0);
             // Avoid tray icon been recreate
             updateTray.lastUnread = unread;
@@ -515,7 +518,6 @@ const createMainWindow = async () => {
             // devTools: !app.isPackaged,
         },
         frame: !isWin,
-        icon
     });
     mainWindow.center();
     const badgeOptions = {}
@@ -1002,7 +1004,8 @@ app.on('open-url', (event, url) => {
 })
 
 app.setName(pkg.name);
-app.dock && app.dock.setIcon(icon);
+const icon = `${workingDir}/images/dock.png`;
+isDevelopment && app.dock && app.dock.setIcon(icon);
 
 if (!app.requestSingleInstanceLock()) {
     console.log('only allow start one instance!')
@@ -1159,11 +1162,14 @@ function clearBlink() {
     blink = null
 }
 
+let blinkIcons;
+
 function execBlink(flag, _interval) {
     let interval = _interval ? _interval : 500;
-    let icons;
-    icons = [`${workingDir}/images/tray.png`,
-        `${workingDir}/images/Remind_icon.png`];
+    if (!blinkIcons) {
+        blinkIcons = [NativeImage.createFromPath(`${workingDir}/images/tray.png`),
+            NativeImage.createFromPath(`${workingDir}/images/Remind_icon.png`)];
+    }
 
     let count = 0;
     if (flag) {
@@ -1171,12 +1177,12 @@ function execBlink(flag, _interval) {
             return;
         }
         blink = setInterval(function () {
-            toggleTrayIcon(icons[count++]);
+            toggleTrayIcon(blinkIcons[count++]);
             count = count > 1 ? 0 : 1;
         }, interval);
     } else {
         clearBlink();
-        toggleTrayIcon(icons[0]);
+        toggleTrayIcon(blinkIcons[0]);
     }
 
 }
