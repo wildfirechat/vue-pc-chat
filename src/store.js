@@ -1925,8 +1925,6 @@ let store = {
             return;
         }
 
-        console.log('xxx ---')
-        debugger
         let groupName = contactState.selfUserInfo.displayName;
         let groupMemberIds = [];
         for (let i = 0; i < users.length; i++) {
