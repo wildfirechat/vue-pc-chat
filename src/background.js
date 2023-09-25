@@ -736,13 +736,14 @@ const createMainWindow = async () => {
             win.on('close', () => {
                 multimediaPreviewWindow = null;
             });
+            win.webContents.on('unload', () => {
+                win.loadURL('about:blank')
+            });
             win.center();
             win.show();
             multimediaPreviewWindow = win;
         } else {
-            multimediaPreviewWindow.webContents.send('preview-multimedia-message', {
-                messageUid: args.messageUid,
-            })
+            multimediaPreviewWindow.webContents.loadURL(args.url);
             multimediaPreviewWindow.show();
             multimediaPreviewWindow.focus();
         }
