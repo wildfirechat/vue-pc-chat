@@ -1685,7 +1685,7 @@ export class WfcManager {
 
     /**
      * 根据消息 uid，获取远程消息
-     * @param {Long} messageUid 消息uid
+     * @param {Long |String} messageUid 消息uid
      * @param {function ([Message])} successCB
      * @param failCB
      */
