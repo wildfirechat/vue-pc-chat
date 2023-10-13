@@ -32,7 +32,7 @@
                 </div>
                 <!--消息内容 根据情况，if-else-->
                 <div class="message-name-content-container">
-                    <p v-if="message.conversation.type !== 3" class="name">{{ message._from._displayName }}</p>
+                    <p v-if="[1, 2].indexOf(message.conversation.type) >= 0" class="name">{{ message._from._displayName }}</p>
                     <div class="flex-column flex-align-start">
                         <div class="flex-row">
                             <MessageContentContainerView class="message-content-container"
@@ -144,7 +144,7 @@ export default {
                 let groupMember = wfc.getGroupMember(this.message.conversation.target, wfc.getUserId());
                 if (groupInfo.privateChat === 1 && [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) === -1) {
                     return false;
-        
+
                 }
             }
             return true;
