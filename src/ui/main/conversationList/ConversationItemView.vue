@@ -268,10 +268,10 @@ export default {
 
 .header .avatar {
     position: relative;
-    width: 45px;
-    height: 45px;
-    min-width: 45px;
-    min-height: 45px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
     background: #d6d6d6;
     top: 50%;
     transform: translateY(-50%);
@@ -305,7 +305,7 @@ export default {
 
 .content-container {
     width: 100%;
-    height: 50px;
+    height: 45px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
