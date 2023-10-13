@@ -234,11 +234,11 @@ export default {
 }
 
 .conversation-item-container.active {
-    background-color: #d6d6d6;
+    background-color: #DEDEDE;
 }
 
 .conversation-item-container.top {
-    background-color: #f1f1f1;
+    background-color: #EBEBEB;
 }
 
 .conversation-item-container.highlight {
@@ -247,12 +247,12 @@ export default {
 }
 
 .conversation-item-container.active.top {
-    background-color: #d6d6d6;
+    background-color: #D3D3D3;
 }
 
 .conversation-item {
     width: 100%;
-    height: 70px;
+    height: 68px;
     display: flex;
     /*border-bottom: 1px solid #eeeeee;*/
     align-items: center;
@@ -355,8 +355,12 @@ export default {
     padding-right: 5px;
 }
 
+.conversation-item-container.top .content .last-message-desc{
+    color: #949494;
+}
+
 .content .last-message-desc {
-    color: #b8b8b8;
+    color: #ACACAC;
     font-size: 12px;
 }
 
