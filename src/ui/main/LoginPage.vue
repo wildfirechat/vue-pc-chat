@@ -1,4 +1,5 @@
 <template>
+    <div>
     <div class="login-container">
         <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
                                           :maximizable="false"
@@ -14,10 +15,10 @@
             </div>
             <!--    等待扫码-->
             <div v-if="loginStatus === 0" class="pending-scan">
-                <p>{{ $t('login.desc') }}</p>
-                <p>{{ $t('login.tip_pc') }}</p>
-                <p>{{ $t('login.warning') }}</p>
-                <a target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
+                    <p style="font-size: 20px; color: #353535; padding-bottom: 10px">{{ $t('login.desc') }}</p>
+                    <p style="font-size: 15px; color: #a3a3a3">{{ $t('login.tip_web') }}</p>
+                    <p style="font-size: 15px; color: #a3a3a3; padding-bottom: 5px">{{ $t('login.warning') }}</p>
+                    <a style="font-size: 15px; color: #4168e0" target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
             </div>
             <!--    已经扫码-->
             <div v-else-if="loginStatus === 1" class="scanned">
@@ -82,6 +83,7 @@
         </div>
 
         <p v-if="sharedMiscState.isElectron" class="diagnose" @click="diagnose">诊断</p>
+        </div>
     </div>
 </template>
 
@@ -499,6 +501,11 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    width: 380px;
+    height: 500px;
+    margin: auto;
+    background: white;
+    border-radius: 5px;
 }
 
 .qr-container {
