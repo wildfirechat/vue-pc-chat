@@ -887,8 +887,8 @@ const createMainWindow = async () => {
         mainWindowState.unmanage();
         mainWindow.resizable = false;
         mainWindow.maximizable = false;
-        mainWindow.setMinimumSize(400, 480);
-        mainWindow.setSize(400, 480);
+        mainWindow.setMinimumSize(400, 500);
+        mainWindow.setSize(400, 500);
         mainWindow.center();
 
         // 清未读数
@@ -905,8 +905,8 @@ const createMainWindow = async () => {
         mainWindowState.unmanage();
         mainWindow.resizable = false;
         mainWindow.maximizable = false;
-        mainWindow.setMinimumSize(400, 480);
-        mainWindow.setSize(400, 480);
+        mainWindow.setMinimumSize(400, 500);
+        mainWindow.setSize(400, 500);
         mainWindow.center();
     });
 
