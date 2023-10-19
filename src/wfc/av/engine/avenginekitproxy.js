@@ -386,6 +386,7 @@ export class AvEngineKitProxy {
             let memberIds = wfc.getGroupMemberIds(conversation.target);
             groupMemberUserInfos = wfc.getUserInfos(memberIds, conversation.target);
         }
+        delete conversation._target;
         this.showCallUI(conversation, false, {
             event: 'startCall',
             args: {
