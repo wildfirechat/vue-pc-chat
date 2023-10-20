@@ -9,6 +9,9 @@
     <div class="flex-column flex-align-center flex-justify-center">
         <h1 style="display: none">Voip-Multi 运行在新的window，和主窗口数据是隔离的！！</h1>
 
+        <p class="webrtc-tip" v-if="showWebrtcTip">
+            上线前，请部署 turn 服务，野火官方 turn 服务只能开发测试使用!!!
+        </p>
         <div v-if="session" class="container">
             <section>
                 <!--audio-->
@@ -127,6 +130,7 @@ import MultiCallOngoingMessageContent from "../../wfc/av/messages/multiCallOngoi
 import VideoType from "../../wfc/av/engine/videoType";
 import wfc from "../../wfc/client/wfc";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
+import Config from "../../config";
 
 export default {
     name: 'Multi',
@@ -145,6 +149,7 @@ export default {
             videoInputDeviceIndex: 0,
             broadcastMultiCallOngoingTimer: 0,
             autoPlayInterval: 0,
+            showWebrtcTip: false,
         }
     },
     methods: {
@@ -193,11 +198,11 @@ export default {
             if (subscriber) {
                 let currentVideoType = subscriber.currentVideoType;
                 let videoType = VideoType.NONE;
-                if (currentVideoType === VideoType.NONE){
+                if (currentVideoType === VideoType.NONE) {
                     videoType = VideoType.BIG_STREAM;
-                }else if (currentVideoType === VideoType.BIG_STREAM){
+                } else if (currentVideoType === VideoType.BIG_STREAM) {
                     videoType = VideoType.SMALL_STREAM;
-                }else if (currentVideoType === VideoType.SMALL_STREAM){
+                } else if (currentVideoType === VideoType.SMALL_STREAM) {
                     videoType = VideoType.NONE;
                 }
                 this.session.setParticipantVideoType(userId, screenSharing, videoType);
@@ -238,7 +243,7 @@ export default {
                 this.participantUserInfos.forEach(p => this.$set(p, "_stream", null))
                 this.groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
 
-                if (selfUserInfo.uid === initiatorUserInfo.uid){
+                if (selfUserInfo.uid === initiatorUserInfo.uid) {
                     this.broadcastMultiCallOngoingTimer = setInterval(this.broadcastMultiCallOngoing, 1000)
                 }
             };
@@ -315,7 +320,7 @@ export default {
             };
             sessionCallback.didChangeInitiator = (initiator) => {
                 this.initiatorUserInfo = wfc.getUserInfo(initiator);
-                if (!this.broadcastMultiCallOngoingTimer){
+                if (!this.broadcastMultiCallOngoingTimer) {
                     this.broadcastMultiCallOngoingTimer = setInterval(this.broadcastMultiCallOngoing, 200)
                 }
             }
@@ -448,7 +453,7 @@ export default {
             return str;
         },
 
-        broadcastMultiCallOngoing(){
+        broadcastMultiCallOngoing() {
             let participants = this.participantUserInfos.map(pu => pu.uid).filter(uid => uid !== this.selfUserInfo.uid)
             let ongoing = new MultiCallOngoingMessageContent(this.session.callId, this.session.initiatorId, this.session.audioOnly, participants);
             wfc.sendConversationMessage(this.session.conversation, ongoing);
@@ -466,14 +471,32 @@ export default {
     },
 
     mounted() {
+        let supportConference = avenginekit.startConference !== undefined
+        if (!supportConference) {
+            let host = window.location.host;
+            if (host.indexOf('wildfirechat.cn') === -1 && host.indexOf('localhost') === -1) {
+                for (const ice of Config.ICE_SERVERS) {
+                    if (ice[0].indexOf('turn.wildfirechat.net') >= 0) {
+                        // 显示自行部署 turn 提示
+                        this.showWebrtcTip = true;
+                        setTimeout(() => {
+                            this.showWebrtcTip = false;
+                        }, 10 * 1000)
+                        break
+                    }
+                }
+            }
+        }
+
         avenginekit.setup();
         this.setupSessionCallback();
         if (!isElectron()) {
             this.$nextTick(() => {
                 const urlParams = new URLSearchParams(window.location.href);
                 let options = urlParams.get('options');
-                console.log('parse queries')
+                console.log('parse query', decodeURIComponent(options))
                 options = JSON.parse(decodeURIComponent(options));
+                console.log('parse query result', options)
                 const symbols = Object.getOwnPropertySymbols(avenginekitproxy.events);
                 let listenersSymbol;
                 for (const symbol of symbols) {
@@ -499,7 +522,7 @@ export default {
         // reset
         this.$set(this.selfUserInfo, '_stream', null)
         this.groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
-        if (this.broadcastMultiCallOngoingTimer){
+        if (this.broadcastMultiCallOngoingTimer) {
             clearInterval(this.broadcastMultiCallOngoingTimer);
         }
     }
@@ -597,8 +620,16 @@ footer {
     height: 60px;
 }
 
-.video.me{
+.video.me {
     -webkit-transform: scaleX(-1);
     transform: scaleX(-1);
+}
+
+.webrtc-tip {
+    position: absolute;
+    color: red;
+    left: 0;
+    top: 0;
+    z-index: 999;
 }
 </style>
