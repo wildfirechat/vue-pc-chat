@@ -1,5 +1,13 @@
 @import '~vue-context/dist/css/vue-context.css';
 
+.v-context {
+    font-size: 14px;
+}
+
+.v-context > li > a {
+    padding: .4rem 1rem;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -19,7 +27,7 @@
     border-right: 8px solid white !important;
 }
 
-.tippy-popper[x-placement^=top] .tippy-arrow{
+.tippy-popper[x-placement^=top] .tippy-arrow {
     border-top: 8px solid white !important;
     border-right: 8px solid transparent !important;
 }
