@@ -417,7 +417,9 @@ export default {
                 }
             }
             message = input.innerHTML.trim();
-            message = message.replace(/<br>/g, '\n')
+            message = message
+                .replace(/<div><br><\/div>/g, '\n')
+                .replace(/<br>/g, '\n')
                 .replace(/<div>/g, '\n')
                 .replace(/<\/div>/g, '')
                 .replace(/<b>/g, '')
