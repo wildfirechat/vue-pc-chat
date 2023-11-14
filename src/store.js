@@ -117,6 +117,7 @@ let store = {
             currentChannel: null,
             currentFriend: null,
             currentOrganization: null,
+            currentChatroom: null,
             currentUser: null,
 
             expandFriendRequestList: false,
@@ -124,13 +125,13 @@ let store = {
             expandGroup: false,
             expandChanel: false,
             expandOrganization: false,
+            expandChatroom: false,
 
             unreadFriendRequestCount: 0,
             friendList: [],
             friendRequestList: [],
             favGroupList: [],
             channelList: [],
-            organizationList: [],
             favContactList: [],
 
             selfUserInfo: null,
@@ -142,6 +143,7 @@ let store = {
                 this.currentChannel = null;
                 this.currentFriend = null;
                 this.currentOrganization = null;
+                this.currentChatroom = null;
                 this.currentUser = null;
 
                 this.expandFriendRequestList = false;
@@ -154,7 +156,6 @@ let store = {
                 this.friendRequestList = [];
                 this.favGroupList = [];
                 this.channelList = [];
-                this.organizationList = [];
                 this.favContactList = [];
 
                 this.selfUserInfo = null;
@@ -1688,6 +1689,7 @@ let store = {
         contactState.currentFriendRequest = friendRequest;
         contactState.currentFriend = null;
         contactState.currentOrganization = null;
+        contactState.currentChatroom = null;
         contactState.currentGroup = null;
         contactState.currentChannel = null;
     },
@@ -1696,6 +1698,7 @@ let store = {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = friend;
         contactState.currentOrganization = null;
+        contactState.currentChatroom = null;
         contactState.currentGroup = null;
         contactState.currentChannel = null;
     },
@@ -1704,6 +1707,7 @@ let store = {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = null;
         contactState.currentOrganization = null;
+        contactState.currentChatroom = null;
         contactState.currentGroup = group;
         contactState.currentChannel = null;
     },
@@ -1712,6 +1716,7 @@ let store = {
         contactState.currentFriendRequest = null;
         contactState.currentFriend = null;
         contactState.currentOrganization = null;
+        contactState.currentChatroom = null;
         contactState.currentGroup = null;
         contactState.currentChannel = channel;
     },
@@ -1721,7 +1726,16 @@ let store = {
         contactState.currentFriend = null;
         contactState.currentGroup = null;
         contactState.currentChannel = null;
+        contactState.currentChatroom = null;
         contactState.currentOrganization = organization;
+    },
+    setCurrentChatroom(chatroom) {
+        contactState.currentFriendRequest = null;
+        contactState.currentFriend = null;
+        contactState.currentGroup = null;
+        contactState.currentChannel = null;
+        contactState.currentOrganization = null;
+        contactState.currentChatroom = chatroom;
     },
     toggleGroupList() {
         contactState.expandGroup = !contactState.expandGroup;
@@ -1740,15 +1754,11 @@ let store = {
     },
 
     toggleOrganizationList() {
-        // TEST DATA
-        contactState.organizationList = [
-            {
-                name: '测试公司',
-                portrait: Config.DEFAULT_ORGANIZATION_PORTRAIT_URL,
-
-            }
-        ]
         contactState.expandOrganization = !contactState.expandOrganization;
+    },
+
+    toggleChatroom() {
+        contactState.expandChatroom = !contactState.expandChatroom;
     },
 
     // search actions
