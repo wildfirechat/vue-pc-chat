@@ -98,7 +98,6 @@ export default class CallSessionCallback {
     }
 
 
-
     /**
      * 创建本地音视频流失败 回调，可能原因可能是没有摄像头、或者没有麦克风
      * @param {Error} e
@@ -202,10 +201,9 @@ export default class CallSessionCallback {
     /**
      * 会议时有效
      * 听众和互动者角色切换回调
-     * @param {string} userId 用户id
      * @param {boolean} audience 是否是切换为听众
      */
-    onRequestChangeMode(userId, audience) {
+    onRequestChangeMode(audience) {
 
     }
 
