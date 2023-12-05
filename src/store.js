@@ -165,7 +165,6 @@ let store = {
 
         search: {
             query: null,
-            show: false,
             userSearchResult: [],
             channelSearchResult: [],
             contactSearchResult: [],
@@ -175,7 +174,6 @@ let store = {
 
             _reset() {
                 this.query = null;
-                this.show = false;
                 this.userSearchResult = [];
                 this.channelSearchResult = [];
                 this.contactSearchResult = [];
@@ -1762,9 +1760,8 @@ let store = {
     },
 
     // search actions
-    toggleSearchView(show) {
-        console.log('ts', show, searchState.show);
-        searchState.show = show
+    hideSearchView() {
+        searchState.query = '';
     },
 
     setSearchQuery(query) {
