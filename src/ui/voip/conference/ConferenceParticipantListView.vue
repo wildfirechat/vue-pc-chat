@@ -51,6 +51,10 @@
             </li>
         </ul>
 
+        <div class="action-container">
+            <button :disabled="conferenceManager.isMuteAll" @click="requestMuteAll">全员静音</button>
+            <button :disabled="!conferenceManager.isMuteAll" @click="requestUnMuteAll">取消全员静音</button>
+        </div>
         <vue-context ref="menu" v-slot="{data:participant}" :close-on-scroll="true">
             <li v-for="(item,i) in buildParticipantContextMenu(participant)" :key="i">
                 <a @click.prevent="item.handler" v-bind:style="item.styleObject">{{ item.title }}</a>
@@ -97,7 +101,7 @@ export default {
     methods: {
         invite() {
             let callSession = this.session;
-          
+
             let inviteMessageContent = new ConferenceInviteMessageContent(callSession.callId, conferenceManager.conferenceInfo.owner, callSession.title, callSession.desc, callSession.startTime, callSession.audioOnly, callSession.defaultAudience, callSession.advance, callSession.pin)
             console.log('invite', inviteMessageContent);
             let message = new Message(null, inviteMessageContent);
@@ -160,7 +164,7 @@ export default {
                 }
             } else if (user.uid === conferenceManager.conferenceInfo.owner) {
                 desc = "主持人"
-            }else if (user._isScreenSharing){
+            } else if (user._isScreenSharing) {
                 desc = '屏幕共享';
             }
             return desc;
@@ -322,6 +326,18 @@ export default {
         ,
         showUserCard(p) {
             this.$refs['userCardTippy-' + p.uid][0]._tippy.show();
+        },
+
+        requestMuteAll() {
+            // TODO dialog
+            let allowMemberUnmute = true;
+            this.conferenceManager.requestMuteAll(allowMemberUnmute);
+        },
+
+        requestUnMuteAll() {
+            // TODO dialog
+            let unmute = true;
+            this.conferenceManager.requestUnmuteAll(unmute);
         }
     }
 }
@@ -416,6 +432,21 @@ export default {
     top: 0;
     color: white;
     background: #e0d6d6d6;
+}
+
+.action-container {
+    position: absolute;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 10px;
+    bottom: 0;
+    left: 0;
+}
+
+.action-container button {
+    padding: 5px 10px;
 }
 
 </style>
