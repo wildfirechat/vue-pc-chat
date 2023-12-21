@@ -30,6 +30,7 @@ export class WfcManager {
                     || ev === EventType.UserOnlineEvent
                     || ev === EventType.SendMessage
                     || ev === EventType.ConnectToServer
+                    || ev === EventType.connectedToServer
                     || ev === EventType.MessageStatusUpdate) {
                     self.eventEmitter.emit(ev, ...args)
                 } else {
@@ -1944,6 +1945,26 @@ export class WfcManager {
     }
 
     /**
+     * 清除会话中指定时间之前的消息
+     * @param {Conversation} conversation 目标会话
+     * @param {long} before 时间，单位毫秒
+     * @returns {Promise<void>}
+     */
+    async clearMessagesBefore(conversation, before) {
+        impl.clearMessagesByTime(conversation, before);
+    }
+
+    /**
+     * 清除会话中出了最新指定条数之前的消息
+     * @param {Conversation} conversation 目标会话
+     * @param {int} count 时间，单位毫秒
+     * @returns {Promise<void>}
+     */
+    async clearMessagesKeepLatest(conversation, count) {
+        impl.clearMessagesKeepLatest(conversation, count);
+    }
+
+    /**
      * 清除用户消息
      * @param {string} userId 目标用户
      * @param {number} startTime 开始时间，如果为0忽略开始时间
@@ -2078,11 +2099,20 @@ export class WfcManager {
 
     /**
      *
-     * 是否开启了已送达报告和已读报告功能
+     * 是否开启了已读报告功能
      * @return {boolean}
      */
     isReceiptEnabled() {
         return impl.isReceiptEnabled();
+    }
+
+    /**
+     *
+     * 是否开启了群组已读报告功能
+     * @return {boolean}
+     */
+    isGroupReceiptEnabled() {
+        return impl.isGroupReceiptEnabled();
     }
 
     /**

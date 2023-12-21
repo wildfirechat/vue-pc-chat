@@ -283,7 +283,7 @@ function _notifyMessageStatusUpdate(messageId) {
 function setupProtoListener() {
 
     proto.setConnectionStatusListener(_genProtoEventListener('connectionStatus'));
-    proto.setConnectToServerListener(_genProtoEventListener('connectToServer'));
+    proto.setConnectToServerListener(_genProtoEventListener('connectToServer'), _genProtoEventListener('connectedToServer'));
     //proto.setReceiveMessageListener(self.onReceiveMessage, self.onRecallMessage, self.onDeleteRemoteMessage, self.onUserReceivedMessage, self.onUserReadedMessage);
     proto.setReceiveMessageListener(_genProtoEventListener('onReceiveMessage'),
         _genProtoEventListener('onRecallMessage'),
