@@ -359,7 +359,7 @@ export class WfcManager {
      * @returns {Promise<void>}
      */
     async searchUser(keyword, searchType, page, successCB, failCB) {
-        impl.searchUser(keyword, searchType, page, (keyword, userInfos )=> {
+        impl.searchUser(keyword, searchType, page, (keyword, userInfos) => {
             userInfos.forEach((u) => {
                 if (!u.portrait || u.portrait.startsWith(Config.APP_SERVER)) {
                     u.portrait = this.defaultUserPortrait(u)
@@ -2436,6 +2436,10 @@ export class WfcManager {
 
         return `${Config.APP_SERVER}/avatar/group?request=${encodeURIComponent(req)}`
         //return `http://localhost:8888/avatar/group?request=${encodeURIComponent(req)}`
+    }
+
+    connectedToMainNetwork() {
+        return impl.connectedToMainNetwork();
     }
 }
 
