@@ -51,7 +51,7 @@
                                 <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{ sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount }}</em>
                             </div>
                         </li>
-                        <li v-if="sharedMiscState.isElectron">
+                        <li>
                             <i class="icon-ion-android-favorite"
                                v-bind:class="{active : this.$router.currentRoute.path === '/home/fav'}"
                                @click="go2Fav"></i>
@@ -323,6 +323,7 @@ export default {
     align-items: center;
     background-color: white;
     border-radius: var(--main-border-radius);
+    overflow: hidden;
 }
 
 .menu-container {

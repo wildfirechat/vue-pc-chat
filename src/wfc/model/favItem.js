@@ -132,7 +132,8 @@ export default class FavItem {
         }
         let content;
         try {
-            switch (this.favType) {
+            let type = this.favType ? this.favType : this.type;
+            switch (type) {
                 case MessageContentType.Text:
                     content = new TextMessageContent(this.title);
                     break;
@@ -157,17 +158,20 @@ export default class FavItem {
                 case MessageContentType.Composite_Message:
                     content = new CompositeMessageContent();
                     content.title = this.title;
+                    let payload = new MessagePayload();
+                    payload.type = this.favType;
+                    payload.content = this.title;
                     if (this.data) {
-                        let payload = new MessagePayload();
                         //let payloadBytes = wfc.b64_to_utf8(this.data)
-                        payload.type = this.favType;
-                        payload.content = this.title;
                         payload.binaryContent = this.data;
-
-                        let obj = JSON.parse(this.data);
-                        payload.remoteMediaUrl = obj['remote_url'];
-                        content.decode(payload)
+                        try {
+                            let obj = JSON.parse(this.data);
+                            payload.remoteMediaUrl = obj['remote_url'];
+                            payload.binaryContent = null;
+                        } catch (e) {
+                        }
                     }
+                    content.decode(payload)
                     break;
                 case MessageContentType.Voice:
                     content = new SoundMessageContent(null, this.url)

@@ -100,12 +100,13 @@ import InfiniteLoading from "vue-infinite-loading";
 import store from "../../../store";
 import {ipcRenderer} from "../../../platform";
 import FavItem from "../../../wfc/model/favItem";
-import {isElectron, currentWindow} from "../../../platform";
+import {isElectron} from "../../../platform";
 import {_reverseToJsLongString} from "../../../wfc/util/longUtil";
 import CompositeMessageContent from "../../../wfc/messages/compositeMessageContent";
 import Config from "../../../config";
 import IpcEventType from "../../../ipcEventType";
 import appServerApi from "../../../api/appServerApi";
+import {downloadFile} from "../../../platformHelper";
 
 export default {
     name: "FavListView",
@@ -226,6 +227,11 @@ export default {
                         ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
                             url: url,
                         });
+                    } else {
+                        this.$notify({
+                            text: '暂不支持预览，请手机端或者 PC 端查看',
+                            type: 'info'
+                        })
                     }
                     break;
                 case MessageContentType.Image:
@@ -233,15 +239,8 @@ export default {
                     store.previewMedia(favItem.url, favItem.thumbUrl, favItem.data && favItem.data.thumb ? favItem.data.thumb : 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNcunDhfwAGwgLoe4t2fwAAAABJRU5ErkJggg==')
                     break;
                 case MessageContentType.File:
-                    if (isElectron()) {
-                        ipcRenderer.send(IpcEventType.DOWNLOAD_FILE, {
-                            // TODO -1时，不通知进度
-                            messageId: -1,
-                            remotePath: favItem.url,
-                            fileName: favItem.title,
-                            windowId: currentWindow.getMediaSourceId(),
-                        });
-                    }
+                    let fi = Object.assign(new FavItem(), favItem);
+                    downloadFile(fi.toMessage())
                     break;
                 case MessageContentType.Composite_Message:
                     if (isElectron()) {
@@ -256,6 +255,11 @@ export default {
                         ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
                             url: url,
                         });
+                    } else {
+                        this.$notify({
+                            text: '暂不支持预览，请手机端或者 PC 端查看',
+                            type: 'info'
+                        })
                     }
                     break;
                 default:
