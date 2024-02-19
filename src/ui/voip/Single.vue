@@ -246,6 +246,25 @@ export default {
                 this.session = session;
                 this.audioOnly = session.audioOnly;
                 this.participantUserInfos = [...participantUserInfos];
+
+                // for test
+                // navigator.mediaDevices.getUserMedia({
+                //     audio: false,
+                //     video: {
+                //         mandatory: {
+                //             chromeMediaSource: 'desktop',
+                //             // chromeMediaSourceId: id,
+                //             minWidth: 800,
+                //             maxWidth: 1280,
+                //             minHeight: 600,
+                //             maxHeight: 720
+                //         }
+                //     }
+                // }).then((stream) => {
+                //     session.setInputStream(stream)
+                // }).catch(err => {
+                // })
+
             };
 
             sessionCallback.didChangeMode = (audioOnly) => {
@@ -411,7 +430,7 @@ export default {
         }
         // 必须
         if (isElectron()) {
-        	avenginekit.setup();
+            avenginekit.setup();
         }
         this.setupSessionCallback();
     },

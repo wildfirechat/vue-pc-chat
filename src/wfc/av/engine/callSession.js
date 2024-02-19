@@ -146,7 +146,7 @@ export default class CallSession {
      *       maxHeight: 720,
      *       idealHeight: 720,
      *       frameRate: 15,
-             }} desktopShareOptions，sourceId 仅 pc 端有效，web 端无效；其他参数对应 getDisplayMedia(options) options.video，具体可以参考：https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
+     }} desktopShareOptions，sourceId 仅 pc 端有效，web 端无效；其他参数对应 getDisplayMedia(options) options.video，具体可以参考：https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
      * 开始屏幕共享
      */
     async startScreenShare (desktopShareOptions) {
@@ -259,8 +259,17 @@ export default class CallSession {
     }
 
     /**
+     * 仅会议版有效
+     * 设置输入 MediaStream
+     * @param {MediaStream} stream
+     */
+    setInputStream(stream){
+
+    }
+
+    /**
      * 切换摄像头，手机端有效
-     * @return true，支持切换摄像头，正在切换；false，不支持切换摄像头
+     * @return boolean true，支持切换摄像头，正在切换；false，不支持切换摄像头
      */
     switchCamera(){
 
