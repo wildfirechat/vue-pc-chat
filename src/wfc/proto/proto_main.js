@@ -216,7 +216,8 @@ export function init(wfcProto) {
                         cbArgs: cbArgs
                     }
                     messageId = cbArgs[0];
-                    _notifyMessageStatusUpdate(messageId)
+                    // onPrepare 时，不应当触发状态更新
+                    // _notifyMessageStatusUpdate(messageId)
                     event.sender.send(ASYNC_CALLBACK, obj);
                 },
                 (...cbArgs) => {
