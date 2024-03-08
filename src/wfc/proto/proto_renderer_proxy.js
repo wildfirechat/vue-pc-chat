@@ -45,6 +45,7 @@ export class ProtoRendererProxy {
         let channel = 'invokeProtoMethod';
         // invoke 是异步调用，返回的是 Promise，对应主进程是 handle
         // sendSync 是同步调用，返回的直接就是具体的返回值，对应主进程是 on
+        args = structuredClone(args);
         let ret = ipcRenderer.sendSync(channel, {
             methodName: methodName,
             methodArgs: [...args]
@@ -97,7 +98,7 @@ export class ProtoRendererProxy {
                 if (typeof arg === "function") {
                     funcArgs.push(arg);
                 } else {
-                    pArgs.push(arg);
+                    pArgs.push(structuredClone(arg));
                 }
             })
             return {
