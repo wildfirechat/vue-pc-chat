@@ -29,7 +29,10 @@
     "cross-package-linux-loongarch64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux loong64 && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-linux-sw64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux sw_64 && vue-cli-service electron:build --linux --arm64 -p never",
     "cross-package-all": "node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
-    "preinstall": "npx npm-force-resolutions"
+    "preinstall": "npx npm-force-resolutions",
+    "start": "electron-vite preview",
+    "vite-dev": "electron-vite dev",
+    "prebuild": "electron-vite build"
   },
   "main": "background.js",
   "dependencies": {
@@ -83,6 +86,7 @@
     "electron-clipboard-ex": "^1.3.3"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
     "@vue/cli-plugin-babel": "~5.0.8",
     "@vue/cli-service": "~5.0.8",
     "@vue/compiler-sfc": "^3.4.19",
@@ -93,6 +97,7 @@
     "del-cli": "^3.0.1",
     "electron": "13.6.9",
     "electron-devtools-installer": "^3.1.0",
+    "electron-vite": "^2.1.0",
     "md5-file": "^5.0.0",
     "native-ext-loader": "^2.3.0",
     "npm-force-resolutions": "0.0.10",
