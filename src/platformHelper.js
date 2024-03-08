@@ -5,6 +5,7 @@ import IpcEventType from "./ipcEventType";
 import store from "./store";
 import ImageMessageContent from "./wfc/messages/imageMessageContent";
 import {scaleDown} from "./ui/util/imageUtil";
+import {toRaw} from "vue";
 
 export function downloadFile(message) {
     let file = message.messageContent;
@@ -61,7 +62,7 @@ export function previewMM(message) {
         }
         ipcRenderer.send(IpcEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, {
             url: url,
-            messageUid: message.messageUid,
+            messageUid: toRaw(message.messageUid),
             size,
         });
         console.log('show-multimedia-preview-window', url)
