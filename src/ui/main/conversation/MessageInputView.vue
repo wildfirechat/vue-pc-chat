@@ -12,7 +12,7 @@
                     v-if="showEmojiDialog"
                     labelSearch="Search"
                     lang="pt-BR"
-                    v-click-outside="hideEmojiView"
+                    v-v-on-click-outside="hideEmojiView"
                     :customEmojis="emojis"
                     :customCategories="emojiCategories"
                     @select="onSelectEmoji"
@@ -45,20 +45,21 @@
                            class="icon-ion-android-microphone record-icon"/>
                     </li>
                 </ul>
-                <ul v-if="!inputOptions['disableVoip'] && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
-                    <li v-if="!inputOptions['disableAudioCall']">
-                        <i @click="startAudioCall" class="icon-ion-ios-telephone"/>
-                    </li>
-                    <li v-if="!inputOptions['disableVideoCall']">
-                        <i @click="startVideoCall" class="icon-ion-ios-videocam"/>
-                    </li>
+                <ul>
+                    <template v-if="!inputOptions['disableVoip']  && [0, 1, 5].indexOf(conversationInfo.conversation.type) >= 0 && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
+                        <li v-if="!inputOptions['disableAudioCall']">
+                            <i @click="startAudioCall" class="icon-ion-ios-telephone"/>
+                        </li>
+                        <li v-if="!inputOptions['disableVideoCall']">
+                            <i @click="startVideoCall" class="icon-ion-ios-videocam"/>
+                        </li>
+                    </template>
                     <li v-if="!inputOptions['disableChannelMenu'] && conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length">
                         <i @click="toggleChannelMenu" class="icon-ion-android-menu"/>
                     </li>
                 </ul>
             </section>
-            <div @keydown.13="send($event)"
-                 @keydown.229="()=>{}"
+            <div @keydown.enter="send($event)"
                  ref="input" class="input"
                  @paste="handlePaste"
                  draggable="false"
@@ -102,8 +103,8 @@
 import wfc from "../../../wfc/client/wfc";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
-import {categoriesDefault, emojisDefault, VEmojiPicker} from "@imndx/v-emoji-picker"
-import ClickOutside from "vue-click-outside";
+import {categoriesDefault, emojisDefault, VEmojiPicker} from "@imndx/v-emoji-picker-vue3"
+import '@imndx/v-emoji-picker-vue3/lib/v-emoji-picker.esm.css'
 import Tribute from "tributejs";
 import '../../../tribute.css'
 import ConversationType from "../../../wfc/model/conversationType";
@@ -123,7 +124,6 @@ import {copyText} from "../../util/clipboard";
 import EventType from "../../../wfc/client/wfcEvent";
 import IpcEventType from "../../../ipcEventType";
 import ChannelMenuView from "./ChannelMenuView";
-import IpcSub from "../../../ipc/ipcSub";
 import pttClient from "../../../wfc/ptt/client/pttClient";
 import TalkingCallback from "../../../wfc/ptt/client/talkingCallback";
 import Config from "../../../config";
@@ -131,6 +131,7 @@ import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import BenzAMRRecorder from "benz-amr-recorder";
 import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
 import {currentWindow, fs} from "../../../platform";
+import {vOnClickOutside} from '@vueuse/components'
 
 export default {
     name: "MessageInputView",
@@ -338,6 +339,9 @@ export default {
         },
 
         async send(e) {
+            if (e.keyCode === 229) {
+                return
+            }
             if (this.tribute && this.tribute.isActive) {
                 this.tributeReplaced = false;
                 return;
@@ -904,7 +908,7 @@ export default {
     deactivated() {
         if (!this.sharedConversationState.showChannelMenu) {
             this.storeDraft(this.lastConversationInfo);
-            this.$refs['input'].innerHTML = '';
+            // this.$refs['input'].innerHTML = '';
         }
     },
 
@@ -939,7 +943,7 @@ export default {
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
     },
 
-    destroyed() {
+    unmounted() {
         if (isElectron()) {
             ipcRenderer.removeAllListeners('screenshots-ok');
         }
@@ -1008,7 +1012,7 @@ export default {
         VEmojiPicker
     },
     directives: {
-        ClickOutside,
+        vOnClickOutside,
         focus,
     }
 };

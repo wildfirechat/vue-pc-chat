@@ -1,7 +1,17 @@
 // vue.config.js
 
+const path = require('path');
+
+// const webpack = require('webpack')
+// const PreloadPlugin = require('@vue/preload-webpack-plugin')
+
 const pkg = require('./package.json');
 const CopywebpackPlugin = require('copy-webpack-plugin')
+
+function resolve(dir) {
+    return path.join(__dirname, dir);
+}
+
 module.exports = {
     publicPath: '.',
     chainWebpack: config => {
@@ -11,13 +21,16 @@ module.exports = {
         // Webpack configuration applied to web builds and the electron renderer process
         target: "electron-renderer",
         resolve: {
-            mainFields: ['main', 'browser']
+            mainFields: ['main', 'browser'],
+            alias: {
+                '@': resolve('src'),
+            },
         }
     },
 
     pluginOptions: {
         chainWebpack: config => {
-            // config.module.rules.delete('eslint');
+            config.module.rules.delete('eslint');
         },
         electronBuilder: {
             preload: 'src/ui/workspace/bridgeClientImpl.js',
@@ -33,14 +46,17 @@ module.exports = {
                 // config.externals({
                 //     'electron-screenshots': 'require("electron-screenshots")'
                 // });
-                config.plugin('copy').use(CopywebpackPlugin, [
-                    [
-                        {
-                            from: `${__dirname}/public/**/*`,
-                            to: `${__dirname}/dist_electron`,
-                        },
-                    ]
-                ]);
+                // fix me
+                // config.plugin('copy').use(CopywebpackPlugin, [
+                //     {
+                //         patterns: [
+                //             {
+                //                 from: `${__dirname}/public/**/*`,
+                //                 to: `${__dirname}/dist_electron`,
+                //             },
+                //         ]
+                //     }
+                // ]);
             },
             chainWebpackRendererProcess: (config) => {
                 // Chain webpack config for electron renderer process only (won't be applied to web builds)
@@ -49,14 +65,19 @@ module.exports = {
                     .use("vue-loader")
                     .loader("vue-loader")
                     .tap(options => {
-                        options.compilerOptions.directives = {
-                            html(node, directiveMeta) {
-                                (node.props || (node.props = [])).push({
-                                    name: "innerHTML",
-                                    value: `xss(_s(${directiveMeta.value}), xssOptions())`
-                                });
+                        // options.compilerOptions.directives = {
+                        //     html(node, directiveMeta) {
+                        //         (node.props || (node.props = [])).push({
+                        //             name: "innerHTML",
+                        //             value: `xss(_s(${directiveMeta.value}), xssOptions())`
+                        //         });
+                        //     }
+                        // };
+                        options.compilerOptions = {
+                            compatConfig: {
+                                MODE: 3
                             }
-                        };
+                        }
                         return options;
                     });
             },
@@ -78,71 +99,71 @@ module.exports = {
             mainProcessArgs: ['--disable-background-timer-throttling', ''],
             // outputDir: 'release',
             builderOptions: {
-              // 产品名称
-              productName: '野火IM',
-              // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
-              appId: pkg.appId,
-              compression: 'normal',
-              artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
-              protocols: {
-                  name: "wf-deep-linking",
-                  schemes: ["wfc"]
-              },
-              mac: {
-                extendInfo: {
-                  NSCameraUsageDescription: "This app requires camera access to record video.",
-                  NSMicrophoneUsageDescription: "This app requires microphone access to record audio."
+                // 产品名称
+                productName: '野火IM',
+                // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
+                appId: pkg.appId,
+                compression: 'normal',
+                artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
+                protocols: {
+                    name: "wf-deep-linking",
+                    schemes: ["wfc"]
                 },
-                hardenedRuntime: true,
-                gatekeeperAssess: false,
-                entitlements: "build/mac/entitlements.mac.plist",
-                entitlementsInherit: "build/mac/entitlements.mac.plist",
-                target: [
-                    {
-                        target:'default',
-                        arch:[
-                          'universal'
-                        ]
+                mac: {
+                    extendInfo: {
+                        NSCameraUsageDescription: "This app requires camera access to record video.",
+                        NSMicrophoneUsageDescription: "This app requires microphone access to record audio."
+                    },
+                    hardenedRuntime: true,
+                    gatekeeperAssess: false,
+                    entitlements: "build/mac/entitlements.mac.plist",
+                    entitlementsInherit: "build/mac/entitlements.mac.plist",
+                    target: [
+                        {
+                            target: 'default',
+                            arch: [
+                                'universal'
+                            ]
 
+                        }
+                    ]
+                },
+                linux: {
+                    category: "Chat",
+                    executableName: '野火IM',
+                    target: [
+                        'deb',
+                        'AppImage'
+                    ]
+                },
+                deb: {
+                    afterInstall: 'entries/install.sh'
+                },
+                extraResources: [
+                    {
+                        from: './build/icons',
+                        to: 'extraResources/icons'
                     }
-                ]
-              },
-              linux: {
-                category: "Chat",
-                executableName: '野火IM',
-                target: [
-                  'deb',
-                  'AppImage'
-                ]
-              },
-              deb:{
-                afterInstall: 'entries/install.sh'
-              },
-              extraResources:[
-                  {
-                      from: './build/icons',
-                      to: 'extraResources/icons'
-                  }
-              ],
-              extraFiles:[
-                {
-                  from: 'entries',
-                  to: 'entries'
+                ],
+                extraFiles: [
+                    {
+                        from: 'entries',
+                        to: 'entries'
+                    }
+                ],
+                win: {
+                    target: "nsis",
+                    requestedExecutionLevel: "asInvoker"
+                },
+                nsis: {
+                    oneClick: false,
+                    allowToChangeInstallationDirectory: true,
+                    artifactName: '${productName}-${version}-${os}-${arch}-setup.${ext}',
+                    deleteAppDataOnUninstall: true,
+                    perMachine: false,
+                    createDesktopShortcut: true,
+                    shortcutName: '${productName}',
                 }
-              ],
-              win: {
-                target: "nsis",
-                requestedExecutionLevel: "asInvoker"
-              },
-              nsis: {
-                oneClick: false,
-                allowToChangeInstallationDirectory: true,
-                artifactName: '${productName}-${version}-${os}-${arch}-setup.${ext}',
-                deleteAppDataOnUninstall: true,
-                perMachine: false,
-                createDesktopShortcut: true,
-                shortcutName: '${productName}',
-              }
             }
         }
     },

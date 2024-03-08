@@ -35,7 +35,7 @@ export default class ConferenceInviteMessageContent extends MessageContent {
     encode() {
         let payload = super.encode();
         payload.content = this.callId;
-        payload.pushContent = '会议邀请'
+        payload.pushContent = '会议邀请';
         let obj = {
             h: this.host,
             s: this.startTime,
