@@ -46,17 +46,14 @@ module.exports = {
                 // config.externals({
                 //     'electron-screenshots': 'require("electron-screenshots")'
                 // });
-                // fix me
-                // config.plugin('copy').use(CopywebpackPlugin, [
-                //     {
-                //         patterns: [
-                //             {
-                //                 from: `${__dirname}/public/**/*`,
-                //                 to: `${__dirname}/dist_electron`,
-                //             },
-                //         ]
-                //     }
-                // ]);
+                config.plugin('copy').use(CopywebpackPlugin, [
+                    [
+                        {
+                            from: `${__dirname}/public/**/*`,
+                            to: `${__dirname}/dist_electron`,
+                        },
+                    ]
+                ]);
             },
             chainWebpackRendererProcess: (config) => {
                 // Chain webpack config for electron renderer process only (won't be applied to web builds)
