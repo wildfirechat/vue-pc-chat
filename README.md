@@ -27,6 +27,12 @@
 2. `PC SDK`支持试用，具体请看[试用说明](https://docs.wildfirechat.cn/trial/)
 3. 本项目默认只能连接到官方服务，购买或申请试用之后，替换`PC SDK`，即可连到自行部署的服务
 
+## 分支说明
+
+1. `master`：基于`Vue 3`开发，是未来的开发重心
+2. `vue2`：基于`Vue 2`开发，进入维护模式，不在开发新功能，鉴于`Vue 2`已经终止支持且不再维护，建议客户升级到`Vue 3`版本
+
+
 ## 环境依赖
 
 #### mac系统
@@ -62,7 +68,7 @@
 2. ```npm ci```，建议使用华为镜像```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
 3. ```npm run dev```
 
-注意避免使用```cnpm```，我们使用```cnpm```出现过一些奇怪问题的情况。如果您使用```cnpm```当遇到问题时请切换到```npm```试一下。
+注意避免使用```cnpm```，我们使用```cnpm```出现过一些奇怪问题的情况。如果您使用```cnpm```当遇到问题时请切换到```npm```试一下。另外代码路径中，不能有中文或者有空格，否则可能开发和打包过程中可能有问题。
 
 ## vue-devtool 调试
 
@@ -112,9 +118,9 @@ npm run cross-package-linux-arm64
 npm run cross-package-mac
 ```
 
-## 历史Electron版本
+## Electron版本
 
-目前master的使用的Electron版本是13.6.9。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8) 。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。
+目前master的使用的Electron版本是13.6.9。如果您使用的SDK是8的，请切换到分支[electron_8](https://github.com/wildfirechat/vue-pc-chat/tree/electron_8) 。旧版本将进入维护阶段不再添加新的功能，正在开发中的朋友们可以联系我们更新到最新SDK。SDK是跟版本无关的，如果您的应用是其他版本的Electron，也可以使用我们提供的SDK。
 
 ## 音视频
 默认附带免费版本音视频，关于野火音视频可以参考[野火音视频使用说明](https://docs.wildfirechat.cn/webrtc/)和[野火音视频简介](https://docs.wildfirechat.cn/blogs/野火音视频简介.html)。如果使用音视频高级版，请参考[音视频高级版切换方法](./src/wfc/av/internal/README.MD)。
@@ -132,10 +138,10 @@ npm run cross-package-mac
    // mac/linux
    ~/.electron-gyp
     ```
-3. 打包时，如果下载electron版本超时，可以点[这里](./electron)手动下载electron版本并放到缓存目录。
+3. 打包时，如果下载electron版本超时，可以国内的electron镜像。比如使用华为的electron镜像的命令是：```npm config set electron_mirror https://mirrors.huaweicloud.com/electron/```。
 
 4. windows上需要严格按照环境进行安装，mac上环境比较简单一些，安装node和node-gyp就可以了
-   另外如果还有问题，请试试命令```npm cache clean --force ```，然后删掉node_modules，再重新在非管理员权限下```npm install```
+   另外如果还有问题，请试试命令```npm cache clean --force ```，然后删掉node_modules，再重新在非管理员权限下```npm ci --registry=https://mirrors.huaweicloud.com/repository/npm/```
 
 5.
 
@@ -152,7 +158,7 @@ npm run cross-package-mac
 
 9. ```npm install``` 报```Unexpected end of JSON input while parsing near...```错误
 
-   如果常见问题4解决不了，可以尝试```　 npm config set registry http://registry.npm.taobao.org/ ```，然后在按常见问题4的步骤进行
+   如果常见问题4解决不了，可以尝试```　 npm config set registry https://mirrors.huaweicloud.com/repository/npm/ ```，然后在按常见问题4的步骤进行
 
 10. 音视频相关问题，请参考以下文档
     1. [av readme](src/wfc/av/internal/README.MD)
@@ -168,9 +174,7 @@ npm run cross-package-mac
 
     请常见问题11
 
-13. 一直提示：`Electron failed to install correctly, please delete node_modules/electron and try installing again`
-    1. 尝试执行```node node_modules/electron/install.js```，需要保证网络能畅通访问 github
-    2. 如果上一步还是失败的话，请参考[这儿](https://github.com/electron/electron/issues/8466#issuecomment-571425574)
+13. 一直提示：`Electron failed to install correctly, please delete node_modules/electron and try installing again`。见上面 使用国内Electron镜像 问题。
 
 14. windows 7 无法正常启动，显示黑屏或白屏
     1. ```background.js``` 里面找到下面代码，并取消```//app.disableHardwareAcceleration();```前面的注释
