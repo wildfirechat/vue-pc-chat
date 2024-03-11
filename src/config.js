@@ -30,6 +30,8 @@ export default class Config {
     // 野火二维码 scheme，不要修改，如果需要修改的话，所有端都需要一起修改
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
 
+    // 如果使用的是高级版音视频 SDK，则不需要配置 ICE_SERVER，否则需要配置。
+    // 请参考 src/wfc/av/internal/README.MD 切换音视频 SDK
     // turn server 配置，可以添加多个
     // !!! 我们提供的服务仅供用户测试和体验，为了保证测试可用，我们会不定期的更改密码. !!!
     // 上线时，请一定要切换为你们自己部署的服务
