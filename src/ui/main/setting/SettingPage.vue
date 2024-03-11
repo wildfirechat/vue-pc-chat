@@ -31,9 +31,9 @@
                 <input type="checkbox" :checked="sharedMiscState.enableAutoLogin"
                        @change="enableAutoLogin($event.target.checked)">
             </label>
-            <label v-if="sharedMiscState.wfc.isCommercialServer()">
+            <label v-if="sharedMiscState.isCommercialServer">
                 {{ $t('setting.sync_draft') }}
-                <input type="checkbox" :checked="!sharedMiscState.wfc.isDisableSyncDraft()"
+                <input type="checkbox" :checked="!sharedMiscState.isDisableSyncDraft"
                        @change="sharedMiscState.wfc.setDisableSyncDraft(!$event.target.checked)">
             </label>
             <div>
@@ -162,12 +162,15 @@ export default {
             };
             this.$modal.show(
                 ChangePasswordView,
-                {}, {
+                {},
+                null,
+                {
                     name: 'change-password-modal',
                     width: 320,
                     height: 400,
                     clickToClose: true,
-                }, {
+                },
+                {
                     'before-open': beforeOpen,
                     'before-close': beforeClose,
                     'closed': closed,
@@ -186,7 +189,7 @@ export default {
             };
             this.$modal.show(
                 ResetPasswordView,
-                {}, {
+                {}, null, {
                     name: 'rest-password-modal',
                     width: 320,
                     height: 400,
@@ -264,7 +267,7 @@ export default {
     mounted() {
         window.addEventListener('blur', this.blurListener)
     },
-    beforeDestroy() {
+    beforeUnmount() {
         window.removeEventListener('blur', this.blurListener)
     },
     computed: {

@@ -1,4 +1,4 @@
-import WebSocket from 'ws'
+// import WebSocket from 'ws'
 import {remote} from "../../platform";
 
 /**
@@ -20,31 +20,33 @@ export function init(wfc, hostPage, wsPort) {
 
     mWfc = wfc;
     mHostPage = hostPage;
-    if (client){
+    if (client) {
         return;
     }
 
     client = new WebSocket('ws://127.0.0.1:' + wsPort + '/');
-    client.on('message', (data) => {
-        let obj;
-        try {
-            obj = JSON.parse(data);
-        } catch (e) {
-            console.error('parse ws data error', e);
-            return;
-        }
-        if (remote.getCurrentWindow().getMediaSourceId() !== obj.windowId) {
-            return;
-        }
-        //let obj = {type: 'wf-op-request', requestId, handlerName, args};
-        console.log('wf-op-request', obj)
-        if (obj.type === 'wf-op-request') {
-            if (handlers[obj.handlerName]) {
-                handlers[obj.handlerName](obj.args, obj.appUrl, obj.requestId);
-            } else {
-                console.log('wf-op-request, unknown handlerName', obj.handlerName);
+    client.onmessage = ((event) => {
+        event.data.text().then(data => {
+            let obj;
+            try {
+                obj = JSON.parse(data);
+            } catch (e) {
+                console.error('parse ws data error', e);
+                return;
             }
-        }
+            if (remote.getCurrentWindow().getMediaSourceId() !== obj.windowId) {
+                return;
+            }
+            //let obj = {type: 'wf-op-request', requestId, handlerName, args};
+            console.log('wf-op-request', obj)
+            if (obj.type === 'wf-op-request') {
+                if (handlers[obj.handlerName]) {
+                    handlers[obj.handlerName](obj.args, obj.appUrl, obj.requestId);
+                } else {
+                    console.log('wf-op-request, unknown handlerName', obj.handlerName);
+                }
+            }
+        })
     });
 
     handlers = {
