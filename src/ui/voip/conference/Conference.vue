@@ -174,7 +174,7 @@
                                        v-bind:style="{color: showConversationView ? 'white' : 'black'}"/>
                                     <p>聊天</p>
                                 </div>
-                                <div v-if="selfUserInfo.uid !== conferenceManager.conferenceInfo.owner" class="action">
+                                <div v-if="conferenceManager.conferenceInfo && selfUserInfo.uid !== conferenceManager.conferenceInfo.owner" class="action">
                                     <img v-if="!conferenceManager.isHandUp" @click="handup"
                                          class="action-img"
                                          src='@/assets/images/av_conference_handup.png'/>
@@ -328,7 +328,12 @@ export default {
 
                         for (const video of videos) {
                             if (video.paused) {
-                                video.play();
+                                let p = video.play();
+                                if (p !== undefined) {
+                                    p.catch(err => {
+                                        // do nothing
+                                    })
+                                }
                             }
                         }
                     } catch (e) {
@@ -1109,6 +1114,9 @@ export default {
         },
 
         conferenceFocusUser() {
+            if (!conferenceManager || !conferenceManager.conferenceInfo) {
+                return null
+            }
             let focus = conferenceManager.conferenceInfo.focus;
             if (!focus) {
                 return null;
