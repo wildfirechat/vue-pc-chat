@@ -304,7 +304,12 @@ export class AvEngineKitProxy {
                 // fix object of long.js can be send inter-process
                 args = JSON.stringify(args)
                 if (!this.callWin.isDestroyed()){
-                    this.callWin.webContents.send(event, args);
+                    try {
+                        this.callWin.webContents.send(event, args);
+                    }catch (e) {
+                        // ignore, do nothing
+                        // Object has been destroyed
+                    }
                 }
             } else if (this.queueEvents) {
                 this.queueEvents.push({event, args});
