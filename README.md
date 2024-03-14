@@ -38,8 +38,8 @@
 #### mac系统
 
 1. 最新版本的Xcode
-2. nodejs v14.18.X
-3. npm 6.14.15
+2. nodejs v18.19.0
+3. npm v10.2.3
 4. python 2.7.X
 5. git
 6. npm install -g node-gyp@8.3.0
