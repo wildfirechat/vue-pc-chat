@@ -46,7 +46,7 @@
 
 #### windows系统
 
-1. nodejs v14.18.X
+1. nodejs v18.19.0
 2. python 2.7.X
 3. git
 4. npm 6.14.15
@@ -57,7 +57,7 @@
 
 #### linux系统
 
-1. nodejs v14.18.X
+1. nodejs v18.19.0
 2. python2.7X
 3. git
 4. binutils
