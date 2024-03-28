@@ -194,6 +194,8 @@ export default {
                 return;
             }
 
+            // 特殊用途，请勿打开
+            // wfc.setAppName('wfc-' + this.mobile);
             this.$refs.loginWithPasswordButton.disabled = true;
             this.loginStatus = 3;
             appServerApi.loinWithPassword(this.mobile, this.password)
@@ -223,6 +225,7 @@ export default {
 
             this.$refs.loginWithAuthCodeButton.disabled = true;
             this.loginStatus = 3;
+            //wfc.setAppName('wfc-' + this.mobile);
             appServerApi.loginWithAuthCode(this.mobile, this.authCode)
                 .then(res => {
                     const {userId, token, portrait} = res;
@@ -250,6 +253,7 @@ export default {
         },
 
         async createPCLoginSession(userId) {
+            //wfc.setAppName('wfc-' + this.mobile);
             appServerApi.createPCSession(userId)
                 .then(response => {
                     let session = Object.assign(new PCSession(), response);
