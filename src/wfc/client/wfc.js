@@ -2357,6 +2357,16 @@ export class WfcManager {
     }
 
     /**
+     * 设置应用（目录）名称，默认是 wildfirechat
+     * 需要在{@link getClientId} 和 {@link connect} 之前设置
+     * 默认情况不建议使用
+     * @param {string} appName
+     */
+    setAppName(appName){
+        impl.setAppName(appName)
+    }
+
+    /**
      * utf8转base64
      * @param {string} str
      * @returns {string}
