@@ -65,7 +65,7 @@ let store = {
         search: null,
         pick: null,
         misc: null,
-        },
+    },
 
     init(isMainWindow, subWindowLoadDataOptions) {
         console.log('init store')
@@ -420,18 +420,18 @@ let store = {
 
             }
             ipcRenderer.on('file-downloaded', (event, args) => {
-                let messageId = args.messageId;
+                let messageUid = args.messageUid;
                 let localPath = args.filePath;
                 console.log('file-downloaded', args)
 
-                conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => v.messageId !== messageId);
-                let msg = wfc.getMessageById(messageId);
+                conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => !eq(v.messageUid, messageUid));
+                let msg = wfc.getMessageByUid(messageUid);
                 if (msg) {
                     msg.messageContent.localPath = localPath;
-                    wfc.updateMessageContent(messageId, msg.messageContent);
+                    wfc.updateMessageContent(msg.messageId, msg.messageContent);
 
                     conversationState.currentConversationMessageList.forEach(m => {
-                        if (m.messageId === messageId) {
+                        if (m.messageUid === messageUid) {
                             m.messageContent = msg.messageContent;
                         }
                     });
@@ -439,16 +439,16 @@ let store = {
             });
 
             ipcRenderer.on('file-download-failed', (event, args) => {
-                let messageId = args.messageId;
-                conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => v.messageId !== messageId);
+                let messageUid = args.messageUid;
+                conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => !eq(v.messageUid, messageUid));
                 // TODO 其他下载失败处理
             });
 
             ipcRenderer.on('file-download-progress', (event, args) => {
-                let messageId = args.messageId;
+                let messageUid = args.messageUid;
                 let receivedBytes = args.receivedBytes;
                 let totalBytes = args.totalBytes;
-                let dm = conversationState.downloadingMessages.find(dm => dm.messageId === messageId);
+                let dm = conversationState.downloadingMessages.find(dm => eq(dm.messageUid, messageUid));
                 if (dm) {
                     dm.progress = receivedBytes;
                     dm.total = totalBytes;
@@ -1366,29 +1366,29 @@ let store = {
         return info;
     },
 
-    addDownloadingMessage(messageId) {
+    addDownloadingMessage(messageUid) {
         conversationState.downloadingMessages.push({
-            messageId: messageId,
+            messageUid: messageUid,
             progress: 0,
             total: Number.MAX_SAFE_INTEGER,
         });
         console.log('add downloading')
     },
 
-    isDownloadingMessage(messageId) {
+    isDownloadingMessage(messageUid) {
         // web端尚未测试，先屏蔽
         if (!isElectron()) {
             return false;
         }
-        return conversationState.downloadingMessages.findIndex(dm => dm.messageId === messageId) >= 0;
+        return conversationState.downloadingMessages.findIndex(dm => eq(dm.messageUid, messageUid)) >= 0;
     },
 
     isSendingMessage(messageId) {
         return conversationState.sendingMessages.has(messageId);
     },
 
-    getDownloadingMessageStatus(messageId) {
-        return conversationState.downloadingMessages.find(dm => dm.messageId === messageId);
+    getDownloadingMessageStatus(messageUid) {
+        return conversationState.downloadingMessages.find(dm => eq(dm.messageUid, messageUid));
     },
 
     getSendingStatus(messageId) {

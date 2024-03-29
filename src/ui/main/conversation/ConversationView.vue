@@ -598,7 +598,7 @@ export default {
         download(message) {
             if (!store.isDownloadingMessage(message.messageId)) {
                 downloadFile(message)
-                store.addDownloadingMessage(message.messageId)
+                store.addDownloadingMessage(message.messageUid)
             } else {
                 // TODO toast 下载中
                 console.log('file isDownloading')

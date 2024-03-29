@@ -11,7 +11,7 @@ export function downloadFile(message) {
     let file = message.messageContent;
     if (isElectron()) {
         ipcRenderer.send(IPCEventType.DOWNLOAD_FILE, {
-            messageId: message.messageId,
+            messageUid: stringValue(message.messageUid),
             remotePath: file.remotePath,
             fileName: file.name,
             windowId: remote.getCurrentWindow().getMediaSourceId(),

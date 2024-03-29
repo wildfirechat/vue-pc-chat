@@ -447,9 +447,9 @@ const downloadHandler = (event, item, webContents) => {
                 } else {
                     // console.log(`Received bytes: ${fileName} ${item.getReceivedBytes()}, ${item.getTotalBytes()}`)
                     let downloadFile = downloadFileMap.get(item.getURL());
-                    let messageId = downloadFile.messageId
+                    let messageUid = downloadFile.messageUid;
                     webContents.send('file-download-progress', {
-                            messageId: messageId,
+                            messageUid: messageUid,
                             receivedBytes: item.getReceivedBytes(),
                             totalBytes: item.getTotalBytes()
                         }
@@ -467,12 +467,12 @@ const downloadHandler = (event, item, webContents) => {
             if (!downloadFile) {
                 return;
             }
-            let messageId = downloadFile.messageId
+            let messageUid = downloadFile.messageUid
             if (state === 'completed') {
                 console.log('Download successfully')
-                webContents.send('file-downloaded', {messageId: messageId, filePath: item.getSavePath()});
+                webContents.send('file-downloaded', {messageUid: messageUid, filePath: item.getSavePath()});
             } else {
-                webContents.send('file-download-failed', {messageId: messageId});
+                webContents.send('file-download-failed', {messageUid: messageUid});
                 console.log(`Download failed: ${state}`)
             }
             downloadFileMap.delete(item.getURL());
@@ -696,10 +696,10 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.DOWNLOAD_FILE, async (event, args) => {
         let remotePath = args.remotePath;
-        let messageId = args.messageId;
+        let messageUid = args.messageUid;
         let windowId = args.windowId;
         remotePath = remotePath.replace(':80', '');
-        downloadFileMap.set(encodeURI(remotePath), {messageId: messageId, fileName: args.fileName, windowId: windowId});
+        downloadFileMap.set(encodeURI(remotePath), {messageUid: messageUid, fileName: args.fileName, windowId: windowId});
 
         let windows = BrowserWindow.getAllWindows();
         windows.forEach(w => {
