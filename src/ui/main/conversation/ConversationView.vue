@@ -642,7 +642,7 @@ export default {
                 cancelText: isSuperGroup ? '取消' : '远程删除',
                 cancelCallback: () => {
                     if (!isSuperGroup) {
-                    wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
+                        wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
                     }
                 },
                 confirmCallback: () => {
@@ -800,10 +800,10 @@ export default {
             if (info.unreadCount.unread + info.unreadCount.unreadMention + info.unreadCount.unreadMentionAll > 0) {
                 store.clearConversationUnreadStatus(info.conversation);
                 // this.unreadMessageCount = 0;
-        }
-    },
+            }
+        },
 
-        openMessageContextMenu(event, message){
+        openMessageContextMenu(event, message) {
             this.$refs.menu.open(event, message);
         },
 
@@ -943,6 +943,8 @@ export default {
                 let groupMember = wfc.getGroupMember(groupInfo.target, wfc.getUserId());
                 if (groupInfo.mute === 1) {
                     return [GroupMemberType.Owner, GroupMemberType.Manager, GroupMemberType.Allowed].indexOf(groupMember.type) < 0;
+                } else if (groupInfo.deleted) {
+                    return true;
                 } else {
                     return groupMember && groupMember.type === GroupMemberType.Muted;
                 }
