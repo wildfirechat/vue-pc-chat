@@ -629,13 +629,21 @@ export default {
         },
 
         delMessage(message) {
+            let target = this.conversationInfo.conversation._target;
+            let isSuperGroup = false
+            if (target instanceof GroupInfo) {
+                isSuperGroup = target.superGroup === 1;
+            }
+
             this.$alert({
                 title: ' 删除消息',
                 content: '确定删除消息？',
                 confirmText: '本地删除',
-                cancelText: '远程删除',
+                cancelText: isSuperGroup ? '取消' : '远程删除',
                 cancelCallback: () => {
+                    if (!isSuperGroup) {
                     wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
+                    }
                 },
                 confirmCallback: () => {
                     wfc.deleteMessage(message.messageId);
