@@ -536,6 +536,9 @@ const createMainWindow = async () => {
         try {
             mainWindow.show();
             mainWindow.focus();
+            if (deepLinkUrl) {
+                onDeepLink(deepLinkUrl)
+            }
             setTimeout(() => mainWindow.setOpacity(1), 1000 / 60);
         } catch (ex) {
             // do nothing
@@ -948,6 +951,11 @@ const createMainWindow = async () => {
     });
 
     mainWindow.webContents.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8');
+    // Protocol handler for win32
+    if (process.platform === 'win32') {
+        // Keep only command line / deep linked arguments
+        deepLinkUrl = process.argv.slice(1)
+    }
     createMenu();
 };
 
@@ -990,10 +998,14 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
 // deep link，需要和 vue.config.js 里面的 wf-deep-linking 对应上
 const DEEP_LINK_PROTOCOL = 'wfc';
+let deepLinkUrl;
 
 function onDeepLink(url) {
     console.log('onOpenDeepLink', url)
-    mainWindow.webContents.send('deep-link', url);
+    deepLinkUrl = url;
+    if (mainWindow) {
+        mainWindow.webContents.send('deep-link', url);
+    }
 }
 
 app.setAsDefaultProtocolClient(DEEP_LINK_PROTOCOL);
