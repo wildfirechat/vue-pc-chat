@@ -257,19 +257,23 @@ let store = {
             this._reloadConversationByMessageUidIfExist(messageUid);
             if (conversationState.currentConversationInfo) {
                 let msg = wfc.getMessageByUid(messageUid);
-                if (msg && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
-                    if (conversationState.currentConversationMessageList) {
-                        let lastTimestamp = 0;
-                        conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.map(msg => {
-                            if (eq(msg.messageUid, messageUid)) {
-                                let newMsg = wfc.getMessageByUid(messageUid);
-                                this._patchMessage(newMsg, lastTimestamp);
-                                return newMsg;
-                            }
-                            lastTimestamp = msg.timestamp;
-                            return msg;
-                        });
+                if (msg) {
+                    if (msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
+                        if (conversationState.currentConversationMessageList) {
+                            let lastTimestamp = 0;
+                            conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.map(msg => {
+                                if (eq(msg.messageUid, messageUid)) {
+                                    let newMsg = wfc.getMessageByUid(messageUid);
+                                    this._patchMessage(newMsg, lastTimestamp);
+                                    return newMsg;
+                                }
+                                lastTimestamp = msg.timestamp;
+                                return msg;
+                            });
+                        }
                     }
+                } else {
+                    conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.filter(m => !eq(m.messageUid, messageUid));
                 }
             }
             this.updateTray();
@@ -286,7 +290,6 @@ let store = {
         wfc.eventEmitter.on(EventType.MessageDeleted, (messageUid) => {
             this._reloadConversationByMessageUidIfExist(messageUid);
             if (conversationState.currentConversationInfo) {
-
                 if (conversationState.currentConversationMessageList) {
                     conversationState.currentConversationMessageList = conversationState.currentConversationMessageList.filter(msg => !eq(msg.messageUid, messageUid))
                 }
@@ -426,6 +429,7 @@ let store = {
 
                 conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => !eq(v.messageUid, messageUid));
                 let msg = wfc.getMessageByUid(messageUid);
+                console.log('xxxxx downloaded file', msg)
                 if (msg) {
                     msg.messageContent.localPath = localPath;
                     wfc.updateMessageContent(msg.messageId, msg.messageContent);
