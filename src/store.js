@@ -397,12 +397,15 @@ let store = {
             if (isMainWindow) {
                 ipcRenderer.on('deep-link', (event, args) => {
                     console.log('deep-link', args)
+                    if (!wfc.isLogin()){
+                        return;
+                    }
                     // 下面是示例
                     // 可以根据 pathname 和 query parameter 进行相应的逻辑处理，这儿是跳转到对应的会话
                     let url = new URL(args);
                     let pathname = url.pathname;
                     let searchParams = url.searchParams;
-                    if ('//conversation' === pathname) {
+                    if ('//conversation' === pathname || '//conversation/' === pathname) {
                         let target = searchParams.get('target');
                         let line = Number(searchParams.get('line'));
                         let type = Number(searchParams.get('type'))
