@@ -954,7 +954,12 @@ const createMainWindow = async () => {
     // Protocol handler for win32
     if (process.platform === 'win32') {
         // Keep only command line / deep linked arguments
-        deepLinkUrl = process.argv.slice(1)
+        // TODO
+        // let args = process.argv.slice(1)
+        // console.log('win32 args:', args)
+        // if (typeof args === "string") {
+        //     deepLinkUrl = process.argv.slice(1)
+        // }
     }
     createMenu();
 };
