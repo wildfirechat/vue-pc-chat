@@ -551,12 +551,19 @@ const createMainWindow = async () => {
         shell.openExternal(url);
     });
 
+    // open url in default browser, electron 22-
     mainWindow.webContents.on('will-navigate', (event, url) => {
         console.log('will-navigate', url)
         // do default action
         event.preventDefault();
         // console.log('navigate', url)
         shell.openExternal(url);
+    });
+
+    // open url in default browser, electron 22+
+    mainWindow.webContents.setWindowOpenHandler(details => {
+        shell.openExternal(details.url);
+        return {action: 'deny'}
     });
 
     mainWindow.on('close', e => {
