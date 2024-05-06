@@ -52,7 +52,7 @@
     "core-js": "^3.36.0",
     "detectrtc": "^1.4.1",
     "electron-screenshots": "0.5.11",
-    "electron-tabs": "^0.17.0",
+    "electron-tabs": "^1.0.4",
     "electron-window-state": "^5.0.3",
     "electron-windows-badge": "^1.1.0",
     "events": "^3.2.0",
@@ -78,7 +78,7 @@
     "vue-spinner": "^1.0.4",
     "vue-tippy": "^6.4.1",
     "vue3-virtual-scroll-list": "^0.2.1",
-    "ws": "^8.16.0",
+    "ws": "^8.17.0",
     "xss": "^1.0.14"
   },
   "optionalDependencies": {

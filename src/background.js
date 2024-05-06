@@ -931,6 +931,11 @@ const createMainWindow = async () => {
         startOpenPlatformServer(args.port);
     })
 
+    ipcMain.handle('getMediaSourceId', (event, args) => {
+        const senderWindow = BrowserWindow.fromWebContents(event.sender); // BrowserWindow or null
+        return senderWindow.getMediaSourceId();
+    });
+
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
@@ -1277,6 +1282,7 @@ function startOpenPlatformServer(port) {
     const WebSocket = require('ws');
     const wss = new WebSocket.Server({port: port ? port : 7983});
 
+    console.log('starting websocket server...');
     wss.on('connection', (ws) => {
         ws.on('message', (data) => {
             wss.clients.forEach((client) => {

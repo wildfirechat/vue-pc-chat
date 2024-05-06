@@ -6,7 +6,6 @@
  * 3. client 和 server 之间的交互，通过 websocket 进行中转
  *
  */
-const remote = require('@electron/remote');
 
 let callbackMap = new Map();
 let eventListeners = {};
@@ -14,7 +13,7 @@ let requestId = 0;
 let client;
 let windowId;
 
-function init() {
+async function init() {
     const WebSocket = require('ws');
     client = new WebSocket('ws://127.0.0.1:' + 7983 + '/');
     client.on('message', (data) => {
@@ -40,7 +39,8 @@ function init() {
         call: call,
         register: register,
     }
-    windowId = remote.getCurrentWindow().getMediaSourceId();
+
+    windowId = await require('electron').ipcRenderer.invoke('getMediaSourceId')
     console.log('bridgeClientImpl init')
 }
 
