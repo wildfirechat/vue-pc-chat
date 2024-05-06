@@ -2058,6 +2058,7 @@ let store = {
         });
         if (process.platform === 'linux') {
             this.updateLinuxTitle(count);
+            ipcRenderer.send(IPCEventType.UPDATE_BADGE, count)
         } else {
             ipcRenderer.send(IPCEventType.UPDATE_BADGE, count)
         }
