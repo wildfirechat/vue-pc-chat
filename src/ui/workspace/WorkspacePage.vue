@@ -1,19 +1,15 @@
 <template>
     <section class="workspace-page">
         <div class="workspace-container">
-            <div class="etabs-tabgroup">
-                <div class="etabs-tabs"></div>
-                <div class="etabs-buttons"></div>
-            </div>
-            <div class="etabs-views">
-            </div>
+            <tab-group></tab-group>
         </div>
     </section>
 </template>
 
 <script>
+// do not remove the following line
 import ElectronTabs from 'electron-tabs'
-import '../../../node_modules/electron-tabs/electron-tabs.css'
+import '../../../node_modules/electron-tabs/src/style.css'
 import {init} from './bridgeServerImpl'
 import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
@@ -110,8 +106,10 @@ export default {
                 webviewAttributes: {
                     allowpopups: true,
                     nodeintegration: true,
-                    webpreferences: 'contextIsolation=false',
+                    contextIsolation: false,
+                    webpreferences: 'nodeIntegration=true, contextIsolation=false',
                     url: url,
+                    preload: process.env.NODE_ENV === 'development' ?  `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js` : `file://${__dirname}/preload.js`
                 },
             });
             // tab.webview.addEventListener('new-window', (e) => {
@@ -135,11 +133,6 @@ export default {
                 // tab.webview.openDevTools();
             })
 
-            if (process.env.NODE_ENV === 'development') {
-                tab.webview.preload = `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js`;
-            } else {
-                tab.webview.preload = `file://${__dirname}/preload.js`;
-            }
         }
 
 
@@ -147,7 +140,7 @@ export default {
     },
 
     mounted() {
-        tabGroup = new ElectronTabs();
+        tabGroup = document.querySelector("tab-group");
         tabGroup.on('tab-active', this.onTabActive)
         tabGroup.on('tab-removed', () => {
             let tabs = tabGroup.getTabs();

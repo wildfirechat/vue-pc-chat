@@ -26,7 +26,7 @@ export function init(wfc, hostPage, wsPort) {
 
     client = new WebSocket('ws://127.0.0.1:' + wsPort + '/');
     client.onmessage = ((event) => {
-        event.data.text().then(data => {
+        event.data.text().then(async data => {
             let obj;
             try {
                 obj = JSON.parse(data);
@@ -34,7 +34,8 @@ export function init(wfc, hostPage, wsPort) {
                 console.error('parse ws data error', e);
                 return;
             }
-            if (remote.getCurrentWindow().getMediaSourceId() !== obj.windowId) {
+            let curWinId = await require('electron').ipcRenderer.invoke('getMediaSourceId');
+            if (curWinId !== obj.windowId) {
                 return;
             }
             //let obj = {type: 'wf-op-request', requestId, handlerName, args};
@@ -124,13 +125,13 @@ let toast = (text) => {
 
 }
 
-function _response(handlerName, appUrl, requestId, code, data) {
+async function _response(handlerName, appUrl, requestId, code, data) {
     let obj = {
         type: 'wf-op-response',
         handlerName,
         appUrl,
         requestId,
-        windowId: remote.getCurrentWindow().getMediaSourceId(),
+        windowId: await require('electron').ipcRenderer.invoke('getMediaSourceId'),
         args: {
             code,
             data
@@ -140,12 +141,12 @@ function _response(handlerName, appUrl, requestId, code, data) {
     client.send(JSON.stringify(obj));
 }
 
-function _notify(handlerName, appUrl, args) {
+async function _notify(handlerName, appUrl, args) {
     let obj = {
         type: 'wf-op-event',
         handlerName,
         appUrl,
-        windowId: remote.getCurrentWindow().getMediaSourceId(),
+        windowId: await require('electron').ipcRenderer.invoke('getMediaSourceId'),
         args
     }
     console.log('send event', obj)

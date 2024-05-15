@@ -327,10 +327,6 @@ function checkForUpdates() {
 
 function updateTray(unread = 0) {
     settings.showOnTray = true;
-    // linux 系统不支持 tray
-    if (process.platform === 'linux') {
-        return;
-    }
 
     if (settings.showOnTray) {
         if (tray
@@ -551,12 +547,19 @@ const createMainWindow = async () => {
         shell.openExternal(url);
     });
 
+    // open url in default browser, electron 22-
     mainWindow.webContents.on('will-navigate', (event, url) => {
         console.log('will-navigate', url)
         // do default action
         event.preventDefault();
         // console.log('navigate', url)
         shell.openExternal(url);
+    });
+
+    // open url in default browser, electron 22+
+    mainWindow.webContents.setWindowOpenHandler(details => {
+        shell.openExternal(details.url);
+        return {action: 'deny'}
     });
 
     mainWindow.on('close', e => {
@@ -924,6 +927,11 @@ const createMainWindow = async () => {
         startOpenPlatformServer(args.port);
     })
 
+    ipcMain.handle('getMediaSourceId', (event, args) => {
+        const senderWindow = BrowserWindow.fromWebContents(event.sender); // BrowserWindow or null
+        return senderWindow.getMediaSourceId();
+    });
+
     powerMonitor.on('resume', () => {
         isSuspend = false;
         mainWindow.webContents.send('os-resume');
@@ -1273,6 +1281,7 @@ function startOpenPlatformServer(port) {
     const WebSocket = require('ws');
     const wss = new WebSocket.Server({port: port ? port : 7983});
 
+    console.log('starting websocket server...');
     wss.on('connection', (ws) => {
         ws.on('message', (data) => {
             wss.clients.forEach((client) => {
