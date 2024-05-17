@@ -20,16 +20,15 @@
     "electron:dev": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
-    "cross-package-win": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 x64 && vue-cli-service electron:build --win --x64 -p never",
-    "cross-package-win32": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 ia32 && vue-cli-service electron:build --win --ia32 -p never",
-    "cross-package-mac": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin && vue-cli-service electron:build --mac -p never",
-    "cross-package-linux": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux x64 && vue-cli-service electron:build --linux --x64 -p never",
-    "cross-package-linux-arm64": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
-    "cross-package-linux-mips64el": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux mips64el && vue-cli-service electron:build --linux --arm64 -p never",
-    "cross-package-linux-loongarch64": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux loong64 && vue-cli-service electron:build --linux --arm64 -p never",
-    "cross-package-linux-sw64": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux sw_64 && vue-cli-service electron:build --linux --arm64 -p never",
-    "cross-package-all": "NODE_OPTIONS=--openssl-legacy-provider && node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64",
-    "preinstall": "npx npm-force-resolutions"
+    "cross-package-win": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 x64 && vue-cli-service electron:build --win --x64 -p never",
+    "cross-package-win32": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js win32 ia32 && vue-cli-service electron:build --win --ia32 -p never",
+    "cross-package-mac": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js darwin && vue-cli-service electron:build --mac -p never",
+    "cross-package-linux": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux x64 && vue-cli-service electron:build --linux --x64 -p never",
+    "cross-package-linux-arm64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux arm64 && vue-cli-service electron:build --linux --arm64 -p never",
+    "cross-package-linux-mips64el": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux mips64el && vue-cli-service electron:build --linux --arm64 -p never",
+    "cross-package-linux-loongarch64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux loong64 && vue-cli-service electron:build --linux --arm64 -p never",
+    "cross-package-linux-sw64": "node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js linux sw_64 && vue-cli-service electron:build --linux --arm64 -p never",
+    "cross-package-all": "node scripts/validate.js && node scripts/del.js ./dist_electron && npm run cross-package-mac && npm run cross-package-win && npm run cross-package-win32 && npm run cross-package-linux && npm run cross-package-linux-arm64"
   },
   "main": "background.js",
   "dependencies": {
@@ -85,6 +84,7 @@
     "electron-clipboard-ex": "^1.3.3"
   },
   "devDependencies": {
+    "@matthijsburgh/vue-cli-plugin-electron-builder": "^3.0.2",
     "@vue/cli-plugin-babel": "~5.0.8",
     "@vue/cli-service": "~5.0.8",
     "@vue/compiler-sfc": "^3.4.19",
@@ -97,11 +97,9 @@
     "electron-devtools-installer": "^3.1.0",
     "md5-file": "^5.0.0",
     "native-ext-loader": "^2.3.0",
-    "npm-force-resolutions": "0.0.10",
     "sass": "^1.71.1",
     "sass-loader": "^14.1.1",
-    "shelljs": "^0.8.4",
-    "vue-cli-plugin-electron-builder": "^2.0.0"
+    "shelljs": "^0.8.4"
   },
   "eslintConfig": {
     "root": true,
@@ -113,7 +111,7 @@
     ],
     "rules": {}
   },
-  "resolutions": {
-    "vue-cli-plugin-electron-builder/electron-builder": "22.14.5"
+  "overrides": {
+    "webpack": "5.91.0"
   }
 }
