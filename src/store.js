@@ -2101,12 +2101,11 @@ let store = {
 
 
 function _reset() {
-    // TODO
-    // conversationState._reset();
-    // contactState._reset();
-    // searchState._reset();
-    // pickState._reset();
-    // miscState._reset();
+    conversationState._reset();
+    contactState._reset();
+    searchState._reset();
+    pickState._reset();
+    miscState._reset();
 }
 
 window.__store = store;
