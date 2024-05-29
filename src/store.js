@@ -397,7 +397,7 @@ let store = {
             if (isMainWindow) {
                 ipcRenderer.on('deep-link', (event, args) => {
                     console.log('deep-link', args)
-                    if (!wfc.isLogin()){
+                    if (!wfc.isLogin()) {
                         return;
                     }
                     // 下面是示例
@@ -1165,7 +1165,7 @@ let store = {
         return loadNewMsg;
     },
 
-    loadConversationHistoryMessages(loadedCB, completeCB) {
+    loadConversationHistoryMessages(loadedCB, completeCB, enableLoadRemoteHistoryMessage = true) {
         if (!conversationState.currentConversationInfo) {
             return;
         }
@@ -1209,13 +1209,21 @@ let store = {
                 }
                 this._onloadConversationMessages(conversation, lmsgs)
                 if (lmsgs.length === 0) {
-                    loadRemoteHistoryMessageFunc();
+                    if (enableLoadRemoteHistoryMessage) {
+                        loadRemoteHistoryMessageFunc();
+                    } else {
+                        completeCB();
+                    }
                 } else {
                     // loadedCB();
                     setTimeout(() => loadedCB(), 200)
                 }
             } else {
-                loadRemoteHistoryMessageFunc();
+                if (enableLoadRemoteHistoryMessage) {
+                    loadRemoteHistoryMessageFunc();
+                } else {
+                    completeCB();
+                }
             }
         }, err => {
             completeCB();

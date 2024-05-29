@@ -34,7 +34,7 @@
   "dependencies": {
     "@electron/remote": "^2.0.1",
     "@imndx/v-emoji-picker-vue3": "^3.0.2",
-    "@imndx/vue-infinite-loading": "^3.0.0-alpha.0",
+    "@imndx/vue-infinite-loading": "^3.0.1-alpha",
     "@kyvg/vue3-notification": "^3.2.0",
     "@madogai/vue-context": "^8.2.1",
     "@nearform/heap-profiler": "^2.0.0",

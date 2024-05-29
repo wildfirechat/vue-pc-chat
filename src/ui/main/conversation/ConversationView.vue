@@ -276,6 +276,7 @@ export default {
             messageInputViewResized: false,
             unreadMessageCount: 0,
             isWindowAlwaysTop: currentWindow && currentWindow.isAlwaysOnTop(),
+            enableLoadRemoteHistoryMessage: !store.state.misc.isElectron, // web 端，本地没有消息存储，所以默认开启加载远程消息
         };
     },
 
@@ -715,12 +716,14 @@ export default {
         infiniteHandler($state) {
             console.log('to load more message');
             store.loadConversationHistoryMessages(() => {
-                console.log('loaded')
-                $state.loaded();
+                console.log('loaded', this.enableLoadRemoteHistoryMessage)
+                $state.loaded(!this.enableLoadRemoteHistoryMessage);
+                this.enableLoadRemoteHistoryMessage = true;
             }, () => {
                 console.log('complete')
                 $state.complete()
-            });
+                this.enableLoadRemoteHistoryMessage = true;
+            }, this.enableLoadRemoteHistoryMessage);
         },
 
         playVoice(message) {
@@ -871,6 +874,7 @@ export default {
         // 切换到新的会话
         if (this.conversationInfo && this.sharedConversationState.currentConversationInfo && !this.conversationInfo.conversation.equal(this.sharedConversationState.currentConversationInfo.conversation)) {
             this.showConversationInfo = false;
+            this.enableLoadRemoteHistoryMessage = false
             this.ongoingCalls = [];
             if (this.ongoingCallTimer) {
                 clearInterval(this.ongoingCallTimer);

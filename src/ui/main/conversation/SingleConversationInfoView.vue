@@ -56,6 +56,7 @@ export default {
         },
 
         clearConversationHistory() {
+            this.$parent.enableLoadRemoteHistoryMessage = false;
             wfc.clearMessages(this.conversationInfo.conversation);
         },
 
