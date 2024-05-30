@@ -98,7 +98,7 @@
                                   :input-options="inputOptions"
                                   :muted="muted"
                                   ref="messageInputView"/>
-                <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection"/>
+                <MultiSelectActionView v-show="sharedConversationState.enableMessageMultiSelection" :conversation-info="conversationInfo"/>
                 <SingleConversationInfoView
                     v-if="showConversationInfo &&  sharedConversationState.currentConversationInfo.conversation.type === 0"
                     v-v-on-click-outside="hideConversationInfo"
@@ -639,15 +639,19 @@ export default {
             this.$alert({
                 title: ' 删除消息',
                 content: '确定删除消息？',
-                confirmText: '本地删除',
-                cancelText: isSuperGroup ? '取消' : '远程删除',
+                confirmText: this.sharedPickState.isElectron ? '本地删除' : '删除',
+                cancelText: isSuperGroup || !this.sharedPickState.isElectron ? '取消' : '远程删除',
                 cancelCallback: () => {
-                    if (!isSuperGroup) {
+                    if (!(isSuperGroup || !this.sharedPickState.isElectron)) {
                         wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
                     }
                 },
                 confirmCallback: () => {
-                    wfc.deleteMessage(message.messageId);
+                    if (this.sharedPickState.isElectron) {
+                        wfc.deleteMessage(message.messageId);
+                    } else {
+                        wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
+                    }
                 }
             })
         },
@@ -874,7 +878,7 @@ export default {
         // 切换到新的会话
         if (this.conversationInfo && this.sharedConversationState.currentConversationInfo && !this.conversationInfo.conversation.equal(this.sharedConversationState.currentConversationInfo.conversation)) {
             this.showConversationInfo = false;
-            this.enableLoadRemoteHistoryMessage = false
+            this.enableLoadRemoteHistoryMessage = !isElectron()
             this.ongoingCalls = [];
             if (this.ongoingCallTimer) {
                 clearInterval(this.ongoingCallTimer);

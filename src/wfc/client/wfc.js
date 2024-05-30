@@ -283,23 +283,24 @@ export class WfcManager {
      * 获取用户在群里面的displayName
      * @param {string} groupId 群id
      * @param {string} userId 用户id
+     * @param {boolean} ignoreFriendAlias 是否忽略好友备注
      * @returns {string} 用户在群里面的displayName
      */
-    getGroupMemberDisplayName(groupId, userId) {
+    getGroupMemberDisplayName(groupId, userId, ignoreFriendAlias = false) {
         let userInfo = this.getUserInfo(userId, false, groupId);
         if (!userInfo) {
             return '<' + userId + '>';
         }
 
-        return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userId + '>'))
+        return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias && !ignoreFriendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userId + '>'))
     }
 
     getUserDisplayNameEx(userInfo) {
         return userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>');
     }
 
-    getGroupMemberDisplayNameEx(userInfo) {
-        return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>'))
+    getGroupMemberDisplayNameEx(userInfo, ignoreFriendAlias = false) {
+        return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias && !ignoreFriendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>'))
     }
 
     /**

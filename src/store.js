@@ -803,14 +803,18 @@ let store = {
         }
     },
 
-    deleteSelectedMessages() {
+    deleteSelectedMessages(deleteRemoteMessages = false) {
         conversationState.enableMessageMultiSelection = false;
         if (pickState.messages.length < 1) {
             return;
         }
         pickState.messages.sort((m1, m2) => m1.messageId - m2.messageId);
         pickState.messages.forEach(m => {
-            wfc.deleteMessage(m.messageId);
+            if (deleteRemoteMessages) {
+                wfc.deleteRemoteMessageByUid(m.messageUid);
+            } else {
+                wfc.deleteMessage(m.messageId);
+            }
         });
         pickState.messages.length = 0;
     },
@@ -1488,6 +1492,7 @@ let store = {
         userInfos = userInfos.map(u => {
             if (groupId) {
                 u._displayName = wfc.getGroupMemberDisplayNameEx(u);
+                u._displayNameIgnoreFriendAlias = wfc.getGroupMemberDisplayNameEx(u, true);
             } else {
                 u._displayName = wfc.getUserDisplayNameEx(u);
             }
