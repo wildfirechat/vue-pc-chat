@@ -6,6 +6,7 @@ const ASYNC_CALLBACK = 'protoAsyncCallback';
 const asyncProtoMethods = {
     getUserInfoEx: _asyncCall2('getUserInfoEx'),
     searchUser: _asyncCall2('searchUser'),
+    searchUserEx: _asyncCall2('searchUserEx'),
     setFavUser: _asyncCall2('setFavUser'),
     deleteFriend: _asyncCall2('deleteFriend'),
     handleFriendRequest: (event, args) => {
@@ -65,6 +66,7 @@ const asyncProtoMethods = {
     getMessagesByStatusV2: _asyncCall2('getMessagesByStatusV2'),
     getUserMessagesV2: _asyncCall2('getUserMessagesV2'),
     getUserMessagesExV2: _asyncCall2('getUserMessagesExV2'),
+    loadRemoteDomains : _asyncCall2('loadRemoteDomains'),
 
     sendSavedMessage: (event, args) => {
         proto.sendSavedMessage(...args.methodArgs,

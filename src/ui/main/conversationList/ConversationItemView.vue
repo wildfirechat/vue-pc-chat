@@ -348,7 +348,6 @@ export default {
     color: #262626;
     font-style: normal;
     font-weight: normal;
-    padding-right: 10px;
     flex: 1;
 }
 
