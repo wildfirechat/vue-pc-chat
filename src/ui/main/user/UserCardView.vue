@@ -184,6 +184,7 @@ export default {
 
 <style lang="css" scoped>
 .user-info-container {
+    pointer-events: auto !important;
     width: 300px;
     display: flex;
     flex-direction: column;
