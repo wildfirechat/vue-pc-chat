@@ -217,6 +217,15 @@ export class WfcManager {
     }
 
     /**
+    * 在双网环境中，获取当前连接的网络类型。仅当长连接建立时是准确的。如果长连接未建立，此值为上一次长连接建立时的值
+    *
+    * @returns 返回当前连接的网络类型，1是主网络；0未知；-1是备选网络
+    */
+    getConnectedNetworkType() {
+        return impl.getConnectedNetworkType();
+    }
+
+    /**
      * 设置协议栈短连接UA。
      *
      * @param {string} userAgent 协议栈短连接使用的UA
@@ -2048,6 +2057,27 @@ export class WfcManager {
      */
     async updateMessageStatus(messageId, status) {
         impl.updateMessageStatus(messageId, status);
+    }
+
+    /**
+     * 获取单个会话消息数量
+     * @param conversation
+     *
+     * @returns 返回此会话的消息数量。
+     */
+    getMessageCount(conversation) {
+        return impl.getMessageCount(conversation);
+    }
+
+    /**
+     * 获取指定类型和line的会话消息数量
+     * @param {[number]} types 想获取的会话类型，可选值参考{@link ConversationType}
+     * @param {[0]} lines 想获取哪些会话线路的会话，默认传[0]即可
+     *
+     * @returns 返回此会话的消息数量。
+     */
+    getConversationMessageCount(types, lines) {
+        return impl.getConversationMessageCount(types, lines);
     }
 
     /**
