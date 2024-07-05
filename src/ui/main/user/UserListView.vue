@@ -151,7 +151,7 @@ export default {
                 let domainId = WfcUtil.getExternalDomainId(user.uid);
                 let domainInfo = wfc.getDomainInfo(domainId);
                 return '@' + domainInfo.name;
-        }
+            }
             return '';
         },
     },

@@ -335,12 +335,25 @@ export class WfcManager {
      * @param {function (number)} fail 失败回调
      */
     getUserInfoEx(userId, refresh, success, fail) {
-        impl.getUserInfoEx(userId, refresh, (info) => {
-            if (!info.portrait || info.portrait.startsWith(Config.APP_SERVER)) {
-                info.portrait = this.defaultUserPortrait(info);
+        impl.getUserInfoEx(userId, refresh, success, fail);
             }
-            success && success(info);
-        }, fail);
+    /**
+     * 批量从服务端拉取用户信息
+     * @param {[string]} userIds 用户ids
+     * @param {function ([UserInfo])} successCB 成功回调
+     * @param {function (Number)} failCB 失败回调
+     */
+    getUserInfosEx(userIds, successCB, failCB) {
+        impl.getUserInfosEx(userIds, userInfos => {
+            userInfos.forEach((u) => {
+                if (!u.portrait || u.portrait.startsWith(Config.APP_SERVER)) {
+                    u.portrait = this.defaultUserPortrait(u);
+                }
+            });
+            successCB && successCB(userInfos);
+        }, err => {
+            failCB && failCB(err);
+        });
     }
 
     /**
