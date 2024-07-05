@@ -302,7 +302,7 @@ function setupProtoListener() {
 
     proto.setFriendRequestListener(_genProtoEventListener('friendRequestUpdate'));
     proto.setGroupInfoUpdateListener(_genProtoEventListener('groupInfoUpdate'));
-    proto.setGroupInfoUpdateListener(_genProtoEventListener('domainInfoUpdate'));
+    proto.setDomainInfoCallback(_genProtoEventListener('domainInfoUpdate'));
     proto.setSettingUpdateListener(_genProtoEventListener('settingUpdate'));
     proto.setChannelInfoUpdateListener(_genProtoEventListener('channelInfoUpdate'));
     proto.setGroupMemberUpdateListener(_genProtoEventListener('groupMemberUpdate'));
