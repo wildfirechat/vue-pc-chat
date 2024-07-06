@@ -6,7 +6,7 @@
                     <h2>{{ userInfo.displayName }}</h2>
                     <p v-if="isExternalDomainUser" class="single-line" style="color: #F0A040; border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName }}</p>
                 </div>
-                <label class="single-line">{{ $t('common.wfc_id') + ': ' + userInfo.name }}</label>
+                <label style="max-width: 200px; text-overflow: ellipsis" class="single-line">{{ $t('common.wfc_id') + ': ' + userInfo.name }}</label>
             </div>
             <div>
                 <img class="avatar" draggable="false" v-bind:src="userInfo.portrait" @click="pickFile"/>
