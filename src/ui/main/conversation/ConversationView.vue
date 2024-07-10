@@ -9,7 +9,7 @@
                     <div>
                         <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
                         <p class="single-line user-online-status" @click="clickConversationDesc">{{ targetUserOnlineStateDesc }}</p>
-                        <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc" >{{ domainName }}</p>
+                        <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
                     </div>
                     <div
                         v-bind:style="{marginTop:sharedMiscState.isElectronWindowsOrLinux ?  '30px' : '0'}"
@@ -55,8 +55,8 @@
                     <infinite-loading :identifier="loadingIdentifier" :distance="10" :force-use-infinite-wrapper="true" direction="top"
                                       @infinite="infiniteHandler">
                         <!--            <template slot="spinner">加载中...</template>-->
-                        <template slot="no-more">{{ $t('conversation.no_more_message') }}</template>
-                        <template slot="no-results">{{ $t('conversation.all_message_load') }}</template>
+                        <template #no-more>{{ $t('conversation.no_more_message') }}</template>
+                        <template #no-results>{{ $t('conversation.all_message_load') }}</template>
                     </infinite-loading>
                     <div v-for="(message) in sharedConversationState.currentConversationMessageList"
                          :key="message.messageId">
