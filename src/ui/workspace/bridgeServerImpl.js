@@ -1,5 +1,4 @@
 // import WebSocket from 'ws'
-import {remote} from "../../platform";
 
 /**
  * 大概流程

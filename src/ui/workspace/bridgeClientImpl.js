@@ -14,37 +14,42 @@ let client;
 let windowId;
 
 async function init() {
-    const WebSocket = require('ws');
-    client = new WebSocket('ws://127.0.0.1:' + 7983 + '/');
-    client.on('message', (data) => {
-        let obj;
-        try {
-            obj = JSON.parse(data);
-        } catch (e) {
-            console.error('parse ws data error', e);
-            return;
+    return new Promise(async (resolve, reject) => {
+
+        windowId = await require('electron').ipcRenderer.invoke('getMediaSourceId')
+
+        client = new WebSocket('ws://127.0.0.1:' + 7983 + '/');
+        client.onmessage =  async (ev) => {
+            let obj;
+            let data = await ev.data.text()
+            try {
+                obj = JSON.parse(data);
+            } catch (e) {
+                console.error('parse ws data error', e);
+                return;
+            }
+            if (obj.windowId !== windowId || obj.appUrl !== location.href) {
+                console.log('ignore wf-op data', obj);
+                return;
+            }
+            if (obj.type === 'wf-op-event') {
+                handleOpEvent(obj.handlerName, obj.args);
+            } else if (obj.type === 'wf-op-response') {
+                handleOpResponse(obj.requestId, obj.args)
+            }
         }
-        if (obj.windowId !== windowId || obj.appUrl !== location.href) {
-            console.log('ignore wf-op data', obj);
-            return;
+        client.onopen = () => {
+            resolve();
         }
-        if (obj.type === 'wf-op-event') {
-            handleOpEvent(obj.handlerName, obj.args);
-        } else if (obj.type === 'wf-op-response') {
-            handleOpResponse(obj.requestId, obj.args)
-        }
+
+        console.log('bridgeClientImpl init')
     })
-
-    window.__wf_bridge_ = {
-        call: call,
-        register: register,
-    }
-
-    windowId = await require('electron').ipcRenderer.invoke('getMediaSourceId')
-    console.log('bridgeClientImpl init')
 }
 
-function call(handlerName, args, callback) {
+async function call(handlerName, args, callback) {
+    if (!client) {
+        await init()
+    }
     let reqId = 0;
     if (callback && typeof callback === 'function') {
         reqId = requestId++;
@@ -74,4 +79,8 @@ function register(handlerName, callback) {
     eventListeners[handlerName] = callback;
 }
 
-init();
+window.__wf_bridge_ = {
+    call: call,
+    register: register,
+}
+console.log('export call and register')
