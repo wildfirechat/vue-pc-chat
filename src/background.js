@@ -90,6 +90,7 @@ let isMainWindowFocusedWhenStartScreenshot = false;
 let screenShotWindowId = 0;
 let isOsx = process.platform === 'darwin';
 let isWin = !isOsx;
+let userId = ''
 
 let isSuspend = false;
 let closeWindowToExit = true;
@@ -889,6 +890,10 @@ const createMainWindow = async () => {
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.center();
         mainWindowState.manage(mainWindow);
+
+        userId = args.userId
+        // for multi-instance
+        // app.requestSingleInstanceLock({userId: args.userId})
     });
 
     ipcMain.on(IPCEventType.LOGOUT, (event, args) => {
@@ -1033,12 +1038,18 @@ app.setName(pkg.name);
 const icon = `${workingDir}/images/dock.png`;
 isDevelopment && app.dock && app.dock.setIcon(icon);
 
+// comment the following for multi-instance, start
 if (!app.requestSingleInstanceLock()) {
     console.log('only allow start one instance!')
     app.quit()
 }
+// end
 
-app.on('second-instance', (event, argv) => {
+app.on('second-instance', (event, argv, workingDir, additionalData) => {
+    // for multi-instance
+    // if (additionalData && additionalData.userId && additionalData.userId === userId){
+    //     app.quit()
+    // }
     if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore()
         mainWindow.focus()

@@ -195,6 +195,7 @@ export default {
             }
 
             // 特殊用途，请勿打开
+            // 必须在 getClientId 之前调用，createPCLoginSession 会触发调用 getClientId，打开时，需重新设计起逻辑
             // wfc.setAppName('wfc-' + this.mobile);
             this.$refs.loginWithPasswordButton.disabled = true;
             this.loginStatus = 3;
@@ -375,17 +376,14 @@ export default {
                     this.$refs.loginWithAuthCodeButton.textContent = '数据同步中，可能需要数分钟...';
                 }
                 if (this.$refs.loginWithPasswordButton) {
-                    this.$refs.loginWithPasswordButton.textContent ='数据同步中，可能需要数分钟...';
+                    this.$refs.loginWithPasswordButton.textContent = '数据同步中，可能需要数分钟...';
                 }
             }
 
             if (status === ConnectionStatus.ConnectionStatusConnected) {
-                if (isElectron()) {
-                    ipcRenderer.send(IpcEventType.LOGIN, {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
-                }
                 this.$router.replace({path: "/home"});
                 if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
-                    isElectron() && ipcRenderer.send(IpcEventType.LOGIN, {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+                    isElectron() && ipcRenderer.send(IpcEventType.LOGIN, {userId: wfc.getUserId(), closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
                     if (this.enableAutoLogin) {
                         store.setEnableAutoLogin(this.enableAutoLogin)
                     }
