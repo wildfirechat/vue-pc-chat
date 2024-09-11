@@ -149,10 +149,18 @@ export class WfcManager {
     }
 
 
+    /**
+    * 断开连接。当切换用户时，需要先断开连接，等待几秒钟后再调用connect连接新用户。
+    */
     disconnect() {
         impl.disconnect();
     }
 
+    /**
+    * 设置包名。
+    * @param {String} packageName 包名
+    *
+    */
     setPackageName(packageName) {
         impl.setPackageName(packageName);
     }
@@ -245,14 +253,14 @@ export class WfcManager {
     }
 
     /**
-     * 设备从睡眠中恢复
+     * 设备从睡眠中恢复，一般是移动设备需要调用此方法和onAppSuspend方法。
      */
     onAppResume() {
         impl.onAppResume();
     }
 
     /**
-     * 设备进入睡眠状态
+     * 设备进入睡眠状态，一般是移动设备需要调用此方法和onAppSuspend方法。
      */
     onAppSuspend() {
         impl.onAppSuspend();
@@ -304,10 +312,21 @@ export class WfcManager {
         return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias && !ignoreFriendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userId + '>'))
     }
 
+    /**
+     * 获取用户的displayName
+     * @param {UserInfo} userInfo 用户信息
+     * @returns {string} 用户的displayName
+     */
     getUserDisplayNameEx(userInfo) {
         return userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>');
     }
 
+    /**
+     * 获取用户的displayName
+     * @param {UserInfo} userInfo 用户信息
+     * @param {boolean} ignoreFriendAlias 是否忽略好友备注。
+     * @returns {string} 用户的displayName
+     */
     getGroupMemberDisplayNameEx(userInfo, ignoreFriendAlias = false) {
         return userInfo.groupAlias ? userInfo.groupAlias : (userInfo.friendAlias && !ignoreFriendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>'))
     }
@@ -385,6 +404,16 @@ export class WfcManager {
         this.searchUserEx('', keyword, searchType, page, successCB, failCB);
     }
 
+    /**
+     * 服务端搜索用户
+     * @param {string} domainId 域ID
+     * @param {string} keyword 搜索关键字
+     * @param {number} searchType 搜索类型，可选值参考{@link SearchType}
+     * @param {number} page 页数，如果searchType是0，每次搜索20个，可以指定page。如果searchType非0，只能搜索一个，page无意义
+     * @param {function (keyword, [UserInfo])} successCB
+     * @param {function (number)}failCB
+     * @returns {Promise<void>}
+     */
     searchUserEx(domainId, keyword, searchType, page, successCB, failCB) {
         impl.searchUserEx(domainId, keyword, searchType, page, (keyword, userInfos) => {
             userInfos.forEach((u) => {
@@ -540,6 +569,11 @@ export class WfcManager {
         return impl.getFriendAlias(userId);
     }
 
+    /**
+     * 获取好友的Extra信息。
+     * @param {string} userId
+     * @returns {string}
+     */
     getFriendExtra(userId) {
         return impl.getFriendExtra(userId);
     }
@@ -604,7 +638,6 @@ export class WfcManager {
         }
         return info;
     }
-
 
     /**
      * 批量获取群信息
@@ -1084,47 +1117,6 @@ export class WfcManager {
     }
 
     /**
-     * 获取密聊信息
-     * @param {string} targetId
-     * @returns {SecretChatInfo}
-     */
-    getSecretChatInfo(targetId) {
-        return impl.getSecretChatInfo(targetId);
-    }
-
-    destroySecretChat(targetId, successCB, failCB) {
-        impl.destroySecretChat(targetId, successCB, failCB);
-    }
-
-    encodeSecretChatMediaData(targetId, mediaDataBuffer) {
-        return impl.encodeSecretChatMediaData(targetId, mediaDataBuffer);
-    }
-
-    decodeSecretChatMediaData(targetId, mediaDataBuffer) {
-        return impl.decodeSecretChatMediaData(targetId, mediaDataBuffer);
-    }
-
-    setSecretChatBurnTime(targetId, ms) {
-        impl.setSecretChatBurnTime(targetId, ms);
-    }
-
-    isEnableSecretChat() {
-        return impl.isEnableSecretChat();
-    }
-
-    getAppPath() {
-        return impl.getAppPath();
-    }
-
-    isUserEnableSecretChat() {
-        return impl.isUserEnableSecretChat();
-    }
-
-    setUserEnableSecretChat(enable, successCB, failCB) {
-        impl.setUserEnableSecretChat(enable, successCB, failCB);
-    }
-
-    /**
      * 修改频道信息
      * @param {string} channelId 频道id
      * @param {number} type 修改什么，可选值参考{@link ModifyChannelInfoType}
@@ -1205,6 +1197,91 @@ export class WfcManager {
      */
     async destoryChannel(channelId, successCB, failCB) {
         impl.destoryChannel(channelId, successCB, failCB);
+    }
+
+
+    /**
+     * 获取密聊信息
+     * @param {string} targetId 密聊ID
+     * @returns {SecretChatInfo}
+     */
+    getSecretChatInfo(targetId) {
+        return impl.getSecretChatInfo(targetId);
+    }
+
+    /**
+     * 销毁密聊
+     * @param {string} targetId 密聊ID
+     * @param {function (void)} successCB
+     * @param {function (number)} failCB
+     */
+    destroySecretChat(targetId, successCB, failCB) {
+        impl.destroySecretChat(targetId, successCB, failCB);
+    }
+
+    /**
+     * 使用密聊的密钥加密数据
+     * @param {string} targetId 密聊ID
+     * @param {string} mediaDataBuffer 待加密数据
+     * @returns {string} 加密后的数据
+     */
+    encodeSecretChatMediaData(targetId, mediaDataBuffer) {
+        return impl.encodeSecretChatMediaData(targetId, mediaDataBuffer);
+    }
+
+    /**
+     * 使用密聊的密钥解密数据
+     * @param {string} targetId 密聊ID
+     * @param {string} mediaDataBuffer 待解密数据
+     * @returns {string} 解密后的数据
+     */
+    decodeSecretChatMediaData(targetId, mediaDataBuffer) {
+        return impl.decodeSecretChatMediaData(targetId, mediaDataBuffer);
+    }
+
+    /**
+     * 设置密聊会话阅后即焚时间
+     * @param {string} targetId 密聊ID
+     * @param {number} ms 阅后即焚时间
+     *
+     */
+    setSecretChatBurnTime(targetId, ms) {
+        impl.setSecretChatBurnTime(targetId, ms);
+    }
+
+    /**
+     * IM服务是否开启密聊功能
+     * @returns {boolean}
+     */
+    isEnableSecretChat() {
+        return impl.isEnableSecretChat();
+    }
+
+    /**
+     * 当前用户是否开启密聊功能，仅在IM服务开启密聊能够下有效
+     * @returns {boolean}
+     */
+    isUserEnableSecretChat() {
+        return impl.isUserEnableSecretChat();
+    }
+
+    /**
+    * 设置当前用户是否开启密聊，仅在IM服务开启密聊能够下有效
+    * @param {boolean} enable 是否开启
+    * @param {function (void)} successCB
+    * @param {function (number)} failCB
+    *
+    */
+    setUserEnableSecretChat(enable, successCB, failCB) {
+        impl.setUserEnableSecretChat(enable, successCB, failCB);
+    }
+
+    /**
+    * 获取应用数据目录。
+    * @returns {String} 返回应用数据目录。
+    */
+    getAppPath() {
+        return impl.getAppPath();
     }
 
     /**
@@ -2036,7 +2113,6 @@ export class WfcManager {
         return impl.insertMessage(conversation, messageContent, status, notify, toUsers, serverTime);
     }
 
-
     /**
      * 插入消息
      * @param {Long} messageUid
@@ -2107,6 +2183,10 @@ export class WfcManager {
         impl.uploadMedia(fileName, fileOrData, mediaType, successCB, failCB, progressCB);
     }
 
+    /**
+    * 获取协议栈版本
+    * @returns {String} 协议栈版本
+    */
     getVersion() {
         return impl.getVersion();
     }
@@ -2187,9 +2267,8 @@ export class WfcManager {
         return impl.isGlobalDisableSyncDraft();
     }
 
-
     /**
-     *
+     * 设置是否禁止草稿多端同步。
      * @param disable
      * @param successCB
      * @param failCB
@@ -2198,6 +2277,10 @@ export class WfcManager {
         impl.setDisableSyncDraft(disable, successCB, failCB)
     }
 
+    /**
+    * 是否禁止草稿同步。
+    * @returns {boolean} 是否草稿同步。
+    */
     isDisableSyncDraft() {
         return impl.isDisableSyncDraft();
     }
@@ -2213,7 +2296,7 @@ export class WfcManager {
     }
 
     /**
-     *
+     * 获取会话的送达状态。
      * @param conversation
      * @return {Map<string, Long>}
      */
@@ -2222,7 +2305,7 @@ export class WfcManager {
     }
 
     /**
-     *
+     * 获取会话的阅读状态。
      * @param conversation
      * @return {Map<string, Long>}
      */
@@ -2301,13 +2384,15 @@ export class WfcManager {
         return impl.getHost();
     }
 
-
+    /**
+    * 获取加密后的clientId
+    */
     getEncodedClientId() {
         return impl.getEncodedClientId();
     }
 
     /**
-     *
+     *  加密数据。
      * @param {string} data 将要编码的数据
      * @returns {string} 编码结果，base64格式
      */
@@ -2316,7 +2401,7 @@ export class WfcManager {
     }
 
     /**
-     *
+     * 解密数据。
      * @param {string} encodedData 将要解码的数据，base64格式
      * @returns {null | string} 解码之后的数据
      */
@@ -2336,16 +2421,29 @@ export class WfcManager {
         this.sendConferenceRequestEx(sessionId, roomId, request, data, false, callback)
     }
 
+    /**
+    * 发送会议相关请求
+    * @param sessionId
+    * @param roomId
+    * @param request
+    * @param data
+    * @param advance
+    * @param callback
+    */
     sendConferenceRequestEx(sessionId, roomId, request, data, advance, callback) {
         impl.sendConferenceRequest(sessionId, roomId, request, data, advance, callback);
     }
 
+    /**
+    * 是否开启在线状态
+    * @returns {boolean}
+    */
     isUserOnlineStateEnabled() {
         return impl.isUserOnlineStateEnabled();
     }
 
     /**
-     *
+     * 订阅目标的在线状态。
      * @param {number} type 会话类型， 支持{@link ConversationType.Single}和{@link ConversationType.Group}
      * @param {string[]} targets 会话类型为单聊时，是用户 id列表；会话类型为群组时，是群组 id 列表
      * @param {number} duration 关注时间长度，单位是秒
@@ -2356,38 +2454,95 @@ export class WfcManager {
         impl.watchOnlineState(type, targets, duration, successCB, failCB);
     }
 
+    /**
+     * 取消订阅目标的在线状态。
+     * @param {number} type 会话类型， 支持{@link ConversationType.Single}和{@link ConversationType.Group}
+     * @param {string[]} targets 会话类型为单聊时，是用户 id列表；会话类型为群组时，是群组 id 列表
+     * @param {function(UserOnlineState[])} successCB
+     * @param {function(number)} failCB
+     */
     unwatchOnlineState(type, targets, successCB, failCB) {
         impl.unwatchOnlineState(type, targets, successCB, failCB);
     }
 
+    /**
+    * 设置当前用户的自定义状态。
+    * @param {number} customState 自定义状态值
+    * @param {String} customText 只定义状态文本
+    * @param {function()} successCB
+    * @param {function(number)} failCB
+    */
     setMyCustomState(customState, customText, successCB, failCB) {
         impl.setMyCustomState(customState, customText, successCB, failCB)
     }
 
+    /**
+    * 获取AuthCode。请参考 https://gitee.com/wfchat/open-platform
+    * @param {String} appId 应用ID
+    * @param {number} appType 应用类型
+    * @param {String} host 应用host
+    * @param {function(String)} successCB
+    * @param {function(number)} failCB
+    */
     getAuthCode(appId, appType, host, successCB, failCB) {
         impl.getAuthCode(appId, appType, host, successCB, failCB);
     }
 
+    /**
+    * 验证页面合法性。请参考 https://gitee.com/wfchat/open-platform
+    * @param {String} appId 应用ID
+    * @param {number} appType 应用类型
+    * @param {number} timestamp 时间戳
+    * @param {nonceStr} nonceStr 应用host
+    * @param {signature} signature 应用host
+    * @param {function()} successCB
+    * @param {function(number)} failCB
+    */
     configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB) {
         impl.configApplication(appId, appType, timestamp, nonceStr, signature, successCB, failCB);
     }
 
+    /**
+    * 客户端数据库开启事务
+    * @returns {boolean}
+    */
     beginTransaction() {
         return impl.beginTransaction();
     }
 
+    /**
+    * 客户端数据库提交事务
+    * @returns {boolean}
+    */
     commitTransaction() {
         return impl.commitTransaction();
     }
 
+    /**
+    * 客户端数据库回滚事务
+    * @returns {boolean}
+    */
     rollbackTransaction() {
         return impl.rollbackTransaction();
     }
 
+    /**
+    * 请求应用全局锁
+    * @param {String} lockId 锁的ID
+    * @param {number} duration 最长持有锁的时间
+    * @param {function()} successCB
+    * @param {function(number)} failCB
+    */
     requireLock(lockId, duration, successCB, failCB) {
         impl.requireLock(lockId, duration, successCB, failCB);
     }
 
+    /**
+    * 释放应用全局锁
+    * @param {String} lockId 锁的ID
+    * @param {function()} successCB
+    * @param {function(number)} failCB
+    */
     releaseLock(lockId, successCB, failCB) {
         impl.releaseLock(lockId, successCB, failCB);
     }
@@ -2433,7 +2588,6 @@ export class WfcManager {
     _getStore() {
         return impl._getStore();
     }
-
 
     /**
      * 内部使用，electron主窗口之外的，其他窗口调用，之后就可以使用wfc.js里面的所有接口了
@@ -2534,6 +2688,10 @@ export class WfcManager {
         //return `http://localhost:8888/avatar/group?request=${encodeURIComponent(req)}`
     }
 
+    /**
+    * 双网场景下，是否连到了主网。
+    * @returns {boolean}
+    */
     connectedToMainNetwork() {
         return impl.connectedToMainNetwork();
     }
