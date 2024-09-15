@@ -38,7 +38,6 @@ import EnterChannelChatMessageContent from "./wfc/messages/enterChannelChatMessa
 import ArticlesMessageContent from "./wfc/messages/articlesMessageContent";
 import NullUserInfo from "./wfc/model/nullUserInfo";
 import NullGroupInfo from "./wfc/model/nullGroupInfo";
-import {genGroupPortrait} from "./ui/util/imageUtil";
 import IPCEventType from "./ipcEventType";
 import NullChannelInfo from "./wfc/model/NullChannelInfo";
 import ModifyGroupSettingNotification from "./wfc/messages/notification/modifyGroupSettingNotification";
@@ -183,10 +182,6 @@ let store = {
             if (miscState.isMainWindow && !this.isConversationInCurrentWindow(msg.conversation)) {
                 return;
             }
-            if (!hasMore) {
-                this._reloadConversation(msg.conversation)
-            }
-            if (conversationState.currentConversationInfo && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
                 if (msg.messageContent instanceof DismissGroupNotification
                     || (msg.messageContent instanceof KickoffGroupMemberNotification && msg.messageContent.kickedMembers.indexOf(wfc.getUserId()) >= 0)
                     || (msg.messageContent instanceof QuitGroupNotification && msg.messageContent.operator === wfc.getUserId())
@@ -194,6 +189,10 @@ let store = {
                     this.setCurrentConversationInfo(null);
                     return;
                 }
+            if (!hasMore) {
+                this._reloadConversation(msg.conversation)
+            }
+            if (conversationState.currentConversationInfo && msg.conversation.equal(conversationState.currentConversationInfo.conversation)) {
                 if (msg.messageContent.type === MessageContentType.Typing) {
                     let groupId = msg.conversation.type === 1 ? msg.conversation.target : '';
                     let userInfo = wfc.getUserInfo(msg.from, false, groupId)
@@ -562,7 +561,7 @@ let store = {
         if (index >= 0) {
             Object.assign(conversationState.conversationInfoList[index], conversationInfo);
         } else {
-            if (insertIfNoExist && conversation.type !== ConversationType.ChatRoom) {
+            if (insertIfNoExist && gt(conversationInfo.timestamp, 0) && conversation.type !== ConversationType.ChatRoom) {
                 conversationState.conversationInfoList.push(conversationInfo);
             } else {
                 return conversationInfo;

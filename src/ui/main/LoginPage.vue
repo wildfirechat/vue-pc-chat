@@ -24,7 +24,7 @@
                 <div v-else-if="loginStatus === 1" class="scanned">
                     <p>{{ userName + $t('login.scan_qr_success') }}</p>
                     <p>{{ $t('login.confirm_login_tip') }}</p>
-                    <label>
+                    <label style="display: none">
                         {{ $t('login.remember_me') }}
                         <input type="checkbox" v-model="enableAutoLogin">
                     </label>
@@ -120,7 +120,7 @@ export default {
             appToken: '',
             lastAppToken: '',
             loginType: 0, // 0 扫码登录，1 密码登录，2 验证码登录
-            enableAutoLogin: false,
+            enableAutoLogin: Config.ENABLE_AUTO_LOGIN,
             mobile: '',
             password: '',
             authCode: '',
@@ -152,7 +152,7 @@ export default {
             }
         } else {
             isElectron() && ipcRenderer.send(IpcEventType.RESIZE_LOGIN_WINDOW);
-            this.createPCLoginSession(null);
+            this.refreshQrCode();
         }
     },
 
@@ -170,6 +170,15 @@ export default {
         },
         switchLoginType(type) {
             this.loginType = type;
+            if (this.loginType === 0) {
+                this.refreshQrCode();
+            } else {
+                if (this.qrCodeTimer) {
+                    clearInterval(this.qrCodeTimer);
+                    this.qrCodeTimer = 0;
+                }
+
+            }
         },
 
         async requestAuthCode() {
@@ -261,7 +270,6 @@ export default {
                     this.appToken = session.token;
                     if (!userId || session.status === 0/*服务端pc login session不存在*/) {
                         this.qrCode = jrQRCode.getQrBase64(WfcScheme.QR_CODE_PREFIX_PC_SESSION + session.token);
-                        this.refreshQrCode();
                     }
                     this.login();
                 })
@@ -276,6 +284,7 @@ export default {
         },
 
         async refreshQrCode() {
+            await this.createPCLoginSession(null);
             if (!this.qrCodeTimer) {
                 this.qrCodeTimer = setInterval(() => {
                     if (this.loginStatus === 3) {
@@ -349,7 +358,6 @@ export default {
             wfc.disconnect();
             clear();
 
-            this.createPCLoginSession(null);
             this.refreshQrCode();
         },
 
@@ -361,7 +369,15 @@ export default {
                 || status === ConnectionStatus.ConnectionStatusNotLicensed
                 || status === ConnectionStatus.ConnectionStatusTimeInconsistent
                 || status === ConnectionStatus.ConnectionStatusServerDown
+                || status === ConnectionStatus.ConnectionStatusUnconnected
                 || status === ConnectionStatus.ConnectionStatusTokenIncorrect) {
+                this.password = '';
+                this.authCode = '';
+                this.loginStatus = 0;
+                if (this.loginType === 0) {
+                    this.refreshQrCode();
+                }
+                if (status !== ConnectionStatus.ConnectionStatusLogout) {
                 console.error('连接失败', status, ConnectionStatus.desc(status));
                 this.cancel();
                 this.diagnose();
@@ -371,6 +387,7 @@ export default {
                 });
             }
 
+            }
             if (status === ConnectionStatus.ConnectionStatusReceiveing) {
                 if (this.$refs.loginWithAuthCodeButton) {
                     this.$refs.loginWithAuthCodeButton.textContent = '数据同步中，可能需要数分钟...';
@@ -381,6 +398,9 @@ export default {
             }
 
             if (status === ConnectionStatus.ConnectionStatusConnected) {
+                if (isElectron()) {
+                    ipcRenderer.send(IpcEventType.LOGIN, {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
+                }
                 this.$router.replace({path: "/home"});
                 if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
                     isElectron() && ipcRenderer.send(IpcEventType.LOGIN, {userId: wfc.getUserId(), closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
