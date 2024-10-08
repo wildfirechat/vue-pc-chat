@@ -69,6 +69,8 @@ export default class Config {
     // 需要专业版 im-server 才支持，是否打开语音对讲功能，和对讲机类似的功能，不是发送语音消息
     static ENABLE_PTT = true;
 
+    static ENABLE_MIX_MEDIA_MESSAGE = true;
+
     // 发送日志命令，当发送此文本消息时，会把协议栈日志发送到当前会话中，为空时关闭此功能。
     static SEND_LOG_COMMAND = '*#marslog#';
 
