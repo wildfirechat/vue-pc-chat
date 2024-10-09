@@ -641,15 +641,15 @@ export default {
             this.$alert({
                 title: ' 删除消息',
                 content: '确定删除消息？',
-                confirmText: this.sharedPickState.isElectron ? '本地删除' : '删除',
-                cancelText: isSuperGroup || !this.sharedPickState.isElectron ? '取消' : '远程删除',
+                confirmText: this.sharedMiscState.isElectron ? '本地删除' : '删除',
+                cancelText: isSuperGroup || !this.sharedMiscState.isElectron ? '取消' : '远程删除',
                 cancelCallback: () => {
-                    if (!(isSuperGroup || !this.sharedPickState.isElectron)) {
+                    if (!(isSuperGroup || !this.sharedMiscState.isElectron)) {
                         wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
                     }
                 },
                 confirmCallback: () => {
-                    if (this.sharedPickState.isElectron) {
+                    if (this.sharedMiscState.isElectron) {
                         wfc.deleteMessage(message.messageId);
                     } else {
                         wfc.deleteRemoteMessageByUid(message.messageUid, null, null)
