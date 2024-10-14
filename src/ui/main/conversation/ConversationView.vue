@@ -151,7 +151,7 @@
                     <li v-if="isQuotable(message)">
                         <a @click.prevent="quoteMessage(message)">{{ $t('common.quote') }}</a>
                     </li>
-                    <li>
+                    <li v-if="isMulticheckable(message)">
                         <a @click.prevent="multiSelect(message)">{{ $t('common.multi_select') }}</a>
                     </li>
                     <li v-if="isRecallable(message)">
@@ -229,6 +229,7 @@ import {imageThumbnail} from "../../util/imageUtil";
 import GroupInfo from "../../../wfc/model/groupInfo";
 import {vOnClickOutside} from '@vueuse/components'
 import WfcUtil from "../../../wfc/util/wfcUtil";
+import CallStartMessageContent from "../../../wfc/av/messages/callStartMessageContent";
 
 var amr;
 export default {
@@ -517,7 +518,8 @@ export default {
         },
 
         isForwardable(message) {
-            if (message && message.messageContent instanceof SoundMessageContent) {
+            if (message
+                && ((message.messageContent instanceof SoundMessageContent) || (message.messageContent instanceof CallStartMessageContent))) {
                 return false;
             }
             return true;
@@ -578,7 +580,14 @@ export default {
                 MessageContentType.Video,
                 MessageContentType.Composite_Message,
                 MessageContentType.Articles,
-                MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE].indexOf(message.messageContent.type) <= -1;
+                MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE].indexOf(message.messageContent.type) === -1;
+        },
+
+        isMulticheckable(message) {
+            if (!message) {
+                return false;
+            }
+            return [MessageContentType.Voice, MessageContentType.VOIP_CONTENT_TYPE_START].indexOf(message.messageContent.type) === -1;
         },
 
         copy(message) {

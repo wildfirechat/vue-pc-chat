@@ -43,6 +43,8 @@ import NullChannelInfo from "./wfc/model/NullChannelInfo";
 import ModifyGroupSettingNotification from "./wfc/messages/notification/modifyGroupSettingNotification";
 import {storeToRefs} from 'pinia'
 import {pstore} from './pstore'
+import CallStartMessageContent from "./wfc/av/messages/callStartMessageContent";
+import SoundMessageContent from "./wfc/messages/soundMessageContent";
 
 /**
  * 一些说明
@@ -182,13 +184,13 @@ let store = {
             if (miscState.isMainWindow && !this.isConversationInCurrentWindow(msg.conversation)) {
                 return;
             }
-                if (msg.messageContent instanceof DismissGroupNotification
-                    || (msg.messageContent instanceof KickoffGroupMemberNotification && msg.messageContent.kickedMembers.indexOf(wfc.getUserId()) >= 0)
-                    || (msg.messageContent instanceof QuitGroupNotification && msg.messageContent.operator === wfc.getUserId())
-                ) {
-                    this.setCurrentConversationInfo(null);
-                    return;
-                }
+            if (msg.messageContent instanceof DismissGroupNotification
+                || (msg.messageContent instanceof KickoffGroupMemberNotification && msg.messageContent.kickedMembers.indexOf(wfc.getUserId()) >= 0)
+                || (msg.messageContent instanceof QuitGroupNotification && msg.messageContent.operator === wfc.getUserId())
+            ) {
+                this.setCurrentConversationInfo(null);
+                return;
+            }
             if (!hasMore) {
                 this._reloadConversation(msg.conversation)
             }
@@ -837,6 +839,7 @@ let store = {
                         })
 
                     } else {
+                        message.messageContent = this._filterFowardMessageContent(message)
                         wfc.sendConversationMessage(conversation, message.messageContent);
                     }
                 });
@@ -2136,6 +2139,15 @@ let store = {
         })
     },
 
+    _filterFowardMessageContent(message) {
+        let content = message.messageContent
+        if (content instanceof CallStartMessageContent) {
+            content = new TextMessageContent(content.digest(message))
+        } else if (content instanceof SoundMessageContent) {
+            content = new TextMessageContent(content.digest(message) + ' ' + content.duration + "''");
+        }
+        return content
+    }
 }
 
 
