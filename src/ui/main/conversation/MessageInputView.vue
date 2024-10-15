@@ -727,7 +727,11 @@ export default {
 
             for (let i = 0; i < children.length; i++) {
                 let e = children[i]
-                e.replaceWith(e.alt)
+                if (e.tagName === 'BR') {
+                    e.replaceWith('\n')
+                } else {
+                    e.replaceWith(e.alt ? e.alt : '')
+                }
             }
             let draftText = clonedInput.innerHTML.trim();
 
