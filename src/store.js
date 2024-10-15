@@ -855,7 +855,11 @@ let store = {
                     title = '群的聊天记录';
                 }
                 compositeMessageContent.title = title;
-                compositeMessageContent.setMessages(messages);
+                let msgs = messages.map(m => {
+                    m.messageContent = this._filterForwardMessageContent(m)
+                    return m
+                })
+                compositeMessageContent.setMessages(msgs);
 
                 wfc.sendConversationMessage(conversation, compositeMessageContent);
             }
