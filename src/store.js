@@ -839,7 +839,7 @@ let store = {
                         })
 
                     } else {
-                        message.messageContent = this._filterFowardMessageContent(message)
+                        message.messageContent = this._filterForwardMessageContent(message)
                         wfc.sendConversationMessage(conversation, message.messageContent);
                     }
                 });
@@ -2139,7 +2139,7 @@ let store = {
         })
     },
 
-    _filterFowardMessageContent(message) {
+    _filterForwardMessageContent(message) {
         let content = message.messageContent
         if (content instanceof CallStartMessageContent) {
             content = new TextMessageContent(content.digest(message))
