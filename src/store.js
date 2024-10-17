@@ -360,7 +360,7 @@ let store = {
             }
         });
 
-        wfc.eventEmitter.on(EventType.MessageStatusUpdate, (message) => {
+        const messageStatusOrContentUpdateListener = (message) => {
             console.log('message status update', message)
             if (!this._isDisplayMessage(message)) {
                 return;
@@ -381,9 +381,12 @@ let store = {
 
             if (conversationState.currentConversationInfo.lastMessage && conversationState.currentConversationInfo.lastMessage.messageId === message.messageId) {
                 Object.assign(conversationState.currentConversationInfo.lastMessage, message);
-
             }
-        });
+        }
+
+        wfc.eventEmitter.on(EventType.MessageStatusUpdate, messageStatusOrContentUpdateListener);
+
+        wfc.eventEmitter.on(EventType.MessageContentUpdate, messageStatusOrContentUpdateListener);
 
 
         wfc.eventEmitter.on(EventType.MessageRead, (readEntries) => {
