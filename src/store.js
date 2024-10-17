@@ -45,6 +45,8 @@ import {storeToRefs} from 'pinia'
 import {pstore} from './pstore'
 import CallStartMessageContent from "./wfc/av/messages/callStartMessageContent";
 import SoundMessageContent from "./wfc/messages/soundMessageContent";
+import MixMultiMediaTextMessageContent from "./wfc/messages/mixMultiMediaTextMessageContent";
+import MixFileTextMessageContent from "./wfc/messages/mixFileTextMessageContent";
 
 /**
  * 一些说明
@@ -977,6 +979,88 @@ let store = {
                 autoplay: true,
             });
         }
+    },
+
+    /**
+     *
+     * @param conversation :Conversation 会话
+     * @param files : File[] 需要发送的媒体文件
+     * @param text : string 描述
+     * @return {Promise<void>}
+     */
+    async sendMixMediaMessage(conversation, files, text) {
+        console.log('sendMixMediaMessage', conversation, files, text);
+        let isAllImageOrVideoFile = true
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].type.indexOf('image') === -1 && files[i].type.indexOf('video') === -1) {
+                isAllImageOrVideoFile = false
+                break
+            }
+        }
+
+        let content;
+        let entries
+        if (isAllImageOrVideoFile) {
+            entries = await Promise.all(
+                files.map(async f => {
+                    let isImg = f.type.indexOf('image') >= 0
+                    let {thumbnail: it, width: iw, height: ih} = isImg ? await imageThumbnail(f) : await videoThumbnail(f);
+                    it = it ? it : Config.DEFAULT_THUMBNAIL_URL;
+                    return {
+                        url: '',
+                        type: isImg ? 'image' : 'video',
+                        thumbnail: it.split(',')[1],
+                        width: iw,
+                        height: ih,
+                        tmpFile: f,
+                    }
+                })
+            )
+
+            content = new MixMultiMediaTextMessageContent(entries, text)
+        } else {
+            entries = files.map(f => {
+                return {
+                    url: '',
+                    name: f.name,
+                    size: f.size,
+                    iv: f.type.indexOf('image') >= 0 || f.type.indexOf('video') >= 0,
+                    tmpFile: f,
+                }
+            })
+            content = new MixFileTextMessageContent(entries, text)
+        }
+        let msg = wfc.insertMessage(conversation, content, MessageStatus.Sending, true)
+
+        let entriesWithUrl = await Promise.all(
+            entries.map(entry => {
+                let file = entry.tmpFile;
+                return new Promise((resolve, reject) => {
+                    wfc.uploadMedia(file.name, file, file.type.indexOf('image') >= 0 ? MessageContentMediaType.Image : MessageContentMediaType.Video, remoteUrl => {
+                        entry.url = remoteUrl
+                        delete entry.tmpFile
+                        resolve(entry)
+                    }, err => {
+                        resolve(entry)
+                        console.error('upload file failed', f, err);
+                    }, (process, total) => {
+
+                    })
+                })
+            })
+        )
+        if (isAllImageOrVideoFile) {
+            content = new MixMultiMediaTextMessageContent(entriesWithUrl, text)
+        } else {
+            content = new MixFileTextMessageContent(entries, text)
+        }
+        wfc.updateMessageContent(msg.messageId, content)
+        msg.messageContent = content
+        wfc.sendSavedMessage(msg, 0, (messageUid, timestamp) => {
+
+        }, err => {
+            console.log('send msg failed', err)
+        })
     },
 
     /**
