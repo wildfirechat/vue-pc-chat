@@ -1009,6 +1009,10 @@ let store = {
                     let isImg = f.type.indexOf('image') >= 0
                     let {thumbnail: it, width: iw, height: ih} = isImg ? await imageThumbnail(f) : await videoThumbnail(f);
                     it = it ? it : Config.DEFAULT_THUMBNAIL_URL;
+                    if (it.length > 15 * 1024) {
+                        console.warn('generated thumbnail is too large, use default thumbnail', it.length);
+                        it = Config.DEFAULT_THUMBNAIL_URL;
+                    }
                     return {
                         url: '',
                         type: isImg ? 'image' : 'video',
