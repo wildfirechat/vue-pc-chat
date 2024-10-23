@@ -220,6 +220,14 @@ let store = {
                     return;
                 }
 
+                if (msg.content.notLoaded) {
+                    console.log('message not loaded, reset conversation message list')
+                    conversationState.currentConversationMessageList.length = 0
+                    conversationState.currentConversationOldestMessageId = 0
+                    conversationState.currentConversationOldestMessageUid = 0
+                    return;
+                }
+
                 // 会把下来加载更多加载的历史消息给清理了
                 let lastTimestamp = 0;
                 let msgListLength = conversationState.currentConversationMessageList.length;
