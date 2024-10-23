@@ -50,9 +50,11 @@
 3. git
 4. npm 6.14.15
 5. npm install --global --vs2019 --production windows-build-tools
+   > 本步安装windows开发环境的安装内容较多，如果网络情况不好可能需要等较长时间，选择早上网络较好时安装是个好的选择
+   > 
+   > 或参考[手动安装 windows-build-tools](./tools/readme.md)进行安装
 6. npm install -g node-gyp@8.3.0
 
-> 第5步安装windows开发环境的安装内容较多，如果网络情况不好可能需要等较长时间，选择早上网络较好时安装是个好的选择
 
 #### linux系统
 
