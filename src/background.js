@@ -15,7 +15,8 @@ import {
     screen,
     session,
     shell,
-    Tray
+    Tray,
+    desktopCapturer
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -937,6 +938,10 @@ const createMainWindow = async () => {
     ipcMain.handle('getMediaSourceId', (event, args) => {
         const senderWindow = BrowserWindow.fromWebContents(event.sender); // BrowserWindow or null
         return senderWindow.getMediaSourceId();
+    });
+
+    ipcMain.handle(IPCEventType.GET_SOURCE, (event, args) => {
+        return desktopCapturer.getSources(args)
     });
 
     powerMonitor.on('resume', () => {
