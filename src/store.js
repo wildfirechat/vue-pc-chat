@@ -1291,14 +1291,12 @@ let store = {
                         // 可能拉回来的时候，本地已经切换会话了
                         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
                             let filteredMsgs = msgs.filter(m => {
-                                let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid));
-                                return index === -1 && m.messageId !== 0
+                                return m.messageId !== 0 && conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid)) === -1
                             })
                             if (filteredMsgs.length === 0) {
                                 completeCB()
                                 return;
                             }
-                            console.log('xxxxx')
 
                             conversationState.currentConversationOldestMessageUid = filteredMsgs[0].messageUid;
                             this._onloadConversationMessages(conversation, filteredMsgs);
