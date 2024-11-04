@@ -1283,24 +1283,30 @@ let store = {
         console.log('loadConversationHistoryMessage', conversation, conversationState.currentConversationOldestMessageId, stringValue(conversationState.currentConversationOldestMessageUid));
         let loadRemoteHistoryMessageFunc = () => {
             wfc.loadRemoteConversationMessages(conversation, [], conversationState.currentConversationOldestMessageUid, 20,
-                (msgs, hasMore) => {
+                (msgs) => {
                     console.log('loadRemoteConversationMessages response', msgs.length);
                     if (msgs.length === 0) {
-                        // 拉回来的消息，本地全都有时，会走到这儿
-                        if (hasMore) {
-                            loadedCB();
-                        } else {
-                            completeCB();
-                        }
+                        completeCB();
                     } else {
                         // 可能拉回来的时候，本地已经切换会话了
                         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
-                            conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
-                            msgs = msgs.filter(m => m.messageId !== 0);
-                            this._onloadConversationMessages(conversation, msgs);
+                            let filteredMsgs = msgs.filter(m => {
+                                let index = conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid));
+                                return index === -1 && m.messageId !== 0
+                            })
+                            if (filteredMsgs.length === 0) {
+                                completeCB()
+                                return;
+                            }
+                            console.log('xxxxx')
+
+                            conversationState.currentConversationOldestMessageUid = filteredMsgs[0].messageUid;
+                            this._onloadConversationMessages(conversation, filteredMsgs);
+                            loadedCB();
                         }
-                        this._reloadConversation(conversation);
-                        loadedCB();
+                        if (!conversationState.currentConversationInfo.lastMessage) {
+                            this._reloadConversation(conversation);
+                        }
                     }
                 },
                 (error) => {
