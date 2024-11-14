@@ -5,8 +5,11 @@
                 <div @click="showNewFriends" class="category-item-container">
                     <i class="arrow right" v-bind:class="{down: sharedContactState.expandFriendRequestList}"></i>
                     <div class="category-item">
-                        <span class="title">{{ $t('contact.new_friend') }}</span>
-                        <span class="desc" v-if="sharedContactState.unreadFriendRequestCount > 0">{{ sharedContactState.unreadFriendRequestCount }}</span>
+                        <div>
+                            <span class="title">{{ $t('contact.new_friend') }}</span>
+                            <span class="tip">(上方搜索框，添加好友)</span>
+                        </div>
+                        <span class="desc" v-if="sharedContactState.unreadFriendRequestCount === 0">{{ sharedContactState.unreadFriendRequestCount }}</span>
                     </div>
                 </div>
                 <NewFriendListView v-if="sharedContactState.expandFriendRequestList"/>
@@ -237,7 +240,7 @@ export default {
     overflow: auto;
 }
 
-.contact-list::-webkit-scrollbar{
+.contact-list::-webkit-scrollbar {
     width: 0;
 }
 
