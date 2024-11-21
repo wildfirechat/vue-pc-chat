@@ -38,6 +38,7 @@ import CallAnswerMessageContent from '../av/messages/callAnswerMessageContent';
 import CallAnswerTMessageContent from '../av/messages/callAnswerTMessageContent';
 import CallByeMessageContent from '../av/messages/callByeMessageContent';
 import CallSignalMessageContent from '../av/messages/callSignalMessageContent';
+import RCInputEventMessageContent from '../av/messages/rcInputEventMessageContent';
 import CallModifyMessageContent from '../av/messages/callModifyMessageContent';
 import AddParticipantsMessageContent from "../av/messages/addParticipantsMessageContent";
 import MuteVideoMessageContent from "../av/messages/muteVideoMessageContent";
@@ -400,6 +401,12 @@ export default class MessageConfig {
             flag: PersistFlag.Transparent,
             type: MessageContentType.VOIP_CONTENT_TYPE_SIGNAL,
             contentClazz: CallSignalMessageContent,
+        },
+        {
+            name: 'rcInputEventMessageContent',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.VOIP_REMOTE_CONTROL_INPUT_EVENT,
+            contentClazz: RCInputEventMessageContent,
         },
         {
             name: 'callModifyMessageContent',

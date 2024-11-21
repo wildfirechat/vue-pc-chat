@@ -7,6 +7,7 @@ import {BrowserWindow, ipcRenderer, isElectron, remote} from "../../../platform"
 import ConversationType from "../../model/conversationType";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
+import wfrc from "../../client/wfrc";
 import MessageConfig from "../../client/messageConfig";
 import DetectRTC from 'detectrtc';
 import Config from "../../../config";
@@ -15,6 +16,7 @@ import Conversation from "../../../wfc/model/conversation";
 
 import CallEndReason from "./callEndReason";
 import CallByeMessageContent from "../messages/callByeMessageContent";
+import { log } from "console";
 
 // main window renderer process -> voip window renderer process
 // voip window renderer process -> main process -> main window renderer process
@@ -92,6 +94,55 @@ export class AvEngineKitProxy {
         orgContent.status = content.status;
         orgContent.audioOnly = content.audioOnly;
         wfc.updateMessageContent(msg.messageId, orgContent);
+    }
+    lastMouseX = 0;
+    lastMouseY = 0;
+    mouseMove(x, y) {
+        if(x != this.lastMouseX && y != this.lastMouseY) {
+            this.lastMouseX = x;
+            this.lastMouseY = y;
+            wfrc.onMouseMove(x, y);
+        }
+    }
+    rcReceiveInputListener = (event, datas) => {
+        if(datas instanceof Array) {
+            for (let i = 0; i < datas.length; i++) {  
+                handleRemoteInput(datas[i]);
+            }
+        } else {
+            this.handleRemoteInput(datas);
+        }
+    }
+
+    handleRemoteInput(data) {
+        console.log('on receive remote input event:', data);
+        if(data.e === 'keydown') {
+            wfrc.onKeyDown(data.c);
+        } else if(data.e === 'keyup') {
+            wfrc.onKeyUp(data.c);
+        } else if(data.e === 'click') {
+            wfrc.onMouseClick(data.btn);
+        } else if(data.e === 'mv') {
+            this.mouseMove(data.x, data.y);
+        } else if(data.e === 'mousedown') {
+            this.mouseMove(data.x, data.y);
+            wfrc.onMouseDown(data.btn);
+        } else if(data.e === 'mouseup') {
+            this.mouseMove(data.x, data.y);
+            wfrc.onMouseUp(data.btn);
+        } else if(data.e === 'wheel') {
+            wfrc.onMouseScroll(data.delta, data.axis);
+        } else {
+            console.log("Unknown event ${data.e}");
+        }
+    }
+
+    rcStartListener = (event, data) => {
+        wfrc.start();
+    }
+    
+    rcCloseListener = (event, data) => {
+        wfrc.stop();
     }
 
     sendConferenceRequestListener = (event, request) => {
@@ -209,6 +260,7 @@ export class AvEngineKitProxy {
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO
                 || content.type === MessageContentType.VOIP_Join_Call_Request
+                || content.type === MessageContentType.VOIP_REMOTE_CONTROL_INPUT_EVENT
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND
@@ -663,6 +715,9 @@ export class AvEngineKitProxy {
             console.log('ipcRenderer subscribe events');
             ipcRenderer.on('voip-message', this.sendVoipListener);
             ipcRenderer.on('conference-request', this.sendConferenceRequestListener);
+            ipcRenderer.on('rc_receive_input_event', this.rcReceiveInputListener)
+            ipcRenderer.on('rc_start', this.rcStartListener);
+            ipcRenderer.on('rc_close', this.rcCloseListener);
             ipcRenderer.on('update-call-start-message', this.updateCallStartMessageContentListener)
             ipcRenderer.on(/*IPCEventType.START_SCREEN_SHARE*/'start-screen-share', (event, args) => {
                 if (this.callWin) {

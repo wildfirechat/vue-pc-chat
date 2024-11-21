@@ -27,6 +27,7 @@ import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
+import {init as initRCMain} from "./wfc/remote_control_lib/rc_main";
 import createProtocol from "./createProtocol";
 
 console.log('start crash report', app.getPath('crashDumps'))
@@ -604,6 +605,20 @@ const createMainWindow = async () => {
         mainWindow.webContents.send('conference-request', args);
     });
 
+    ipcMain.on('rc_receive_input_event', (event, args) => {
+        console.log('main rc_receive_input_event', args);
+        mainWindow.webContents.send('rc_receive_input_event', args);
+    });
+
+    ipcMain.on('rc_start', (event, args) => {
+        // console.log('main voip-message event', args);
+        mainWindow.webContents.send('rc_start', args);
+    });
+
+    ipcMain.on('rc_close', (event, args) => {
+        // console.log('main voip-message event', args);
+        mainWindow.webContents.send('rc_close', args);
+    });
     ipcMain.on(IPCEventType.START_SCREEN_SHARE, (event, args) => {
         let pointer = screen.getCursorScreenPoint();
         let display = screen.getDisplayNearestPoint(pointer)
@@ -1089,8 +1104,41 @@ function registerLocalResourceProtocol() {
     });
 }
 
+function loadRC() {
+  let wfremotecontrol;
+
+  switch (process.platform) {
+      case 'linux':
+          throw new Error(`Unsupported platform: ${process.platform}`);
+          break;
+      case 'win32': {
+        switch (process.arch) {
+          case 'ia32':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-ia32-msvc.node');
+            break;
+          case 'x64':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-x64-msvc.node');
+        }
+        break;
+      }
+      case 'darwin': {
+        switch (process.arch) {
+          case 'arm64':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-arm64.node');
+            break;
+          case 'x64':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-x64.node');
+        }
+        break;
+      }
+      default:
+          throw new Error(`Unsupported platform: ${process.platform}`);
+  }
+  return wfremotecontrol;
+}
 app.on('ready', () => {
         initProtoMain(proto);
+        initRCMain(loadRC());
 
         createMainWindow();
 
