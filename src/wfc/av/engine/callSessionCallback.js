@@ -220,9 +220,12 @@ export default class CallSessionCallback {
     }
 
     /**
-     * 收到对方远程控制请求
+     * 收到对方远程控制请求，可以在此回调里面做一些提示等
+     * 调用{@linkcode Callession#acceptRemoteControlInvite} 接受邀请
+     * 调用{@linkcode Callession#rejectRemoteControlInvite} 拒绝邀请
      */
     onReceiveRemoteControlRequest() {
+        // TODO 弹出提示等，接受的话，调用
 
     }
 
@@ -238,6 +241,45 @@ export default class CallSessionCallback {
      */
     didAcceptRemoteControlRequest() {
 
+    }
+
+    didReceiveRemoteControlInputEvent(datas) {
+        console.log('on receive remote input event:', datas);
+        let dataArr = JSON.parse(datas)
+        for (const el of dataArr) {
+            let data = el.args;
+            console.log('on receive remote input event:', data);
+            if (data.e === 'keydown') {
+                wfrc.onKeyDown(data.c);
+            } else if (data.e === 'keyup') {
+                wfrc.onKeyUp(data.c);
+            } else if (data.e === 'click') {
+                wfrc.onMouseClick(data.btn);
+            } else if (data.e === 'mv') {
+                this._mouseMove(data.x, data.y);
+            } else if (data.e === 'mousedown') {
+                this._mouseMove(data.x, data.y);
+                wfrc.onMouseDown(data.btn);
+            } else if (data.e === 'mouseup') {
+                this._mouseMove(data.x, data.y);
+                wfrc.onMouseUp(data.btn);
+            } else if (data.e === 'wheel') {
+                wfrc.onMouseScroll(data.delta, data.axis);
+            } else {
+                console.log("Unknown event ${data.e}");
+            }
+        }
+    }
+
+    _lastMouseX = 0;
+    _lastMouseY = 0;
+
+    _mouseMove(x, y) {
+        if (x !== this._lastMouseX && y !== this._lastMouseY) {
+            this._lastMouseX = x;
+            this._lastMouseY = y;
+            wfrc.onMouseMove(x, y);
+        }
     }
 
     /**

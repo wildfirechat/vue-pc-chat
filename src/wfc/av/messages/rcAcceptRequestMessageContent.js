@@ -6,11 +6,11 @@ import MessageContent from '../../messages/messageContent';
 import MessageContentType from '../../messages/messageContentType';
 import wfc from "../../client/wfc"
 
-export default class RCInviteMessageContent extends MessageContent {
+export default class RcAcceptInviteMessageContent extends MessageContent {
     callId;
 
     constructor(callId) {
-        super(MessageContentType.VOIP_REMOTE_CONTROL_INVITE, 0, []);
+        super(MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_REQUEST, 0, []);
         this.callId = callId;
     }
 

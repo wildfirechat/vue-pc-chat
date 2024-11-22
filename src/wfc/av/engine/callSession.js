@@ -39,6 +39,17 @@ export default class CallSession {
     extra;
 
     /**
+     * 远程控制状态，单人视频通话时有效
+     * 0，idle
+     * 1，outgoing inviting，发送远程协助邀请
+     * 2, incoming inviting，收到远程协助邀请
+     * 3, outgoing request，发出远程控制请求
+     * 4, incoming request，收到远程控制请求
+     * 5, connected，远程协助/远程控制中
+     */
+    rcStatus = 0;
+
+    /**
      * 默认成员的视频流类型
      */
     defaultVideoType = VideoType.BIG_STREAM;
@@ -81,6 +92,13 @@ export default class CallSession {
      * @param {string} callExtra 通话附加信息
      */
     answer(audioOnly, callExtra) {
+    }
+
+    /**
+     * 接受远程控制请求
+     */
+    acceptRemoteControlRequest() {
+
     }
 
     /**
@@ -378,5 +396,7 @@ export default class CallSession {
 
     }
 
+    sendRemoteControlInputEvent(data) {
 
+    }
 }

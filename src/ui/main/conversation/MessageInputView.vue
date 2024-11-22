@@ -53,6 +53,9 @@
                         <li v-if="!inputOptions['disableVideoCall']">
                             <i @click="startVideoCall" class="icon-ion-ios-videocam"/>
                         </li>
+                        <li v-if="!inputOptions['disableVideoCall'] && conversationInfo.conversation.type === 0">
+                            <i @click="requestRemoteControl" class="icon-ion-android-desktop"/>
+                        </li>
                     </template>
                     <li v-if="!inputOptions['disableChannelMenu'] && conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length">
                         <i @click="toggleChannelMenu" class="icon-ion-android-menu"/>
@@ -133,6 +136,7 @@ import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
 import {currentWindow, fs} from "../../../platform";
 import {vOnClickOutside} from '@vueuse/components'
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
+import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 
 export default {
     name: "MessageInputView",
@@ -555,6 +559,10 @@ export default {
             console.log(`startVideoCall from mainWindow ${this.sharedMiscState.isMainWindow}`);
             let conversation = this.conversationInfo.conversation;
             this.$startVoipCall({audioOnly: false, conversation: conversation});
+        },
+
+        requestRemoteControl(){
+            avenginekitproxy.requestRemoteControl(this.conversationInfo.conversation);
         },
 
         toggleChannelMenu(toggle = true) {

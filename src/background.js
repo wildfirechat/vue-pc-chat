@@ -27,7 +27,7 @@ import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
-import {init as initRCMain} from "./wfc/remote_control_lib/rc_main";
+import {init as initRCMain} from "./wfc/rc/rc_main";
 import createProtocol from "./createProtocol";
 
 console.log('start crash report', app.getPath('crashDumps'))
@@ -605,24 +605,10 @@ const createMainWindow = async () => {
         mainWindow.webContents.send('conference-request', args);
     });
 
-    ipcMain.on('rc_receive_input_event', (event, args) => {
-        console.log('main rc_receive_input_event', args);
-        mainWindow.webContents.send('rc_receive_input_event', args);
-    });
-
-    ipcMain.on('rc_start', (event, args) => {
-        // console.log('main voip-message event', args);
-        mainWindow.webContents.send('rc_start', args);
-    });
-
-    ipcMain.on('rc_close', (event, args) => {
-        // console.log('main voip-message event', args);
-        mainWindow.webContents.send('rc_close', args);
-    });
     ipcMain.on(IPCEventType.START_SCREEN_SHARE, (event, args) => {
         let pointer = screen.getCursorScreenPoint();
         let display = screen.getDisplayNearestPoint(pointer)
-        mainWindow.webContents.send(IPCEventType.START_SCREEN_SHARE, {width: display.size.width});
+        mainWindow.webContents.send(IPCEventType.START_SCREEN_SHARE, {width: display.size.width, ...args});
     });
 
     ipcMain.on(IPCEventType.STOP_SCREEN_SHARE, (event, args) => {
