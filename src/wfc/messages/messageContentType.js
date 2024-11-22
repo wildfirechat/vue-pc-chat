@@ -98,8 +98,10 @@ export default class MessageContentType {
     static VOIP_Join_Call_Request = 417;
 
     static VOIP_REMOTE_CONTROL_INVITE = 430;
-    static VOIP_REMOTE_CONTROL_ACCEPT = 431;
-    static VOIP_REMOTE_CONTROL_ENT = 432;
+    static VOIP_REMOTE_CONTROL_REQUEST = 431;
+    static VOIP_REMOTE_CONTROL_ACCEPT = 432;
+    static VOIP_REMOTE_CONTROL_ENT = 433;
+
     static VOIP_REMOTE_CONTROL_INPUT_EVENT = 433;
     static MESSAGE_CONTENT_TYPE_FEED = 501;
     static MESSAGE_CONTENT_TYPE_COMMENT = 502;

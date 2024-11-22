@@ -6,14 +6,14 @@ import MessageContent from '../../messages/messageContent';
 import MessageContentType from '../../messages/messageContentType';
 import wfc from "../../client/wfc"
 
-export default class RCInputEventMessageContent extends MessageContent {
+export default class RcEndMessageContent extends MessageContent {
     callId;
-    data
+    reason;
 
-    constructor(callId, args) {
-        super(MessageContentType.VOIP_REMOTE_CONTROL_INPUT_EVENT, 0, []);
+    constructor(callId, reason) {
+        super(MessageContentType.VOIP_REMOTE_CONTROL_ENT, 0, []);
         this.callId = callId;
-        this.data = args;
+        this.reason = reason;
     }
 
     digest() {
@@ -22,14 +22,14 @@ export default class RCInputEventMessageContent extends MessageContent {
 
     encode() {
         let payload = super.encode();
-        payload.content = this.callId;
+        // payload.content = this.callId;
         payload.binaryContent = wfc.utf8_to_b64(JSON.stringify(this.data));
         return payload;
     }
 
     decode(payload) {
         super.decode(payload);
-        this.callId = payload.content;
+        // this.callId = payload.content;
         let json = wfc.b64_to_utf8(payload.binaryContent);
         this.data = JSON.parse(json);
     }

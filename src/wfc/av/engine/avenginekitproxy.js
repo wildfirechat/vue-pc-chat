@@ -107,7 +107,7 @@ export class AvEngineKitProxy {
     rcReceiveInputListener = (event, datas) => {
         if(datas instanceof Array) {
             for (let i = 0; i < datas.length; i++) {  
-                handleRemoteInput(datas[i]);
+                this.handleRemoteInput(datas[i]);
             }
         } else {
             this.handleRemoteInput(datas);
@@ -715,9 +715,6 @@ export class AvEngineKitProxy {
             console.log('ipcRenderer subscribe events');
             ipcRenderer.on('voip-message', this.sendVoipListener);
             ipcRenderer.on('conference-request', this.sendConferenceRequestListener);
-            ipcRenderer.on('rc_receive_input_event', this.rcReceiveInputListener)
-            ipcRenderer.on('rc_start', this.rcStartListener);
-            ipcRenderer.on('rc_close', this.rcCloseListener);
             ipcRenderer.on('update-call-start-message', this.updateCallStartMessageContentListener)
             ipcRenderer.on(/*IPCEventType.START_SCREEN_SHARE*/'start-screen-share', (event, args) => {
                 if (this.callWin) {

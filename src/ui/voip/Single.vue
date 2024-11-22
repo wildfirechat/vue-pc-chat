@@ -107,8 +107,8 @@
                         <img v-else @click="mute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
                         <p>静音</p>
                     </div>
-                    <div v-if="!audioOnly && false" class="action">
-                        <img @click="screenShare" class="action-img" src='@/assets/images/av_share.png'/>
+                    <div v-if="!audioOnly" class="action">
+                        <img @click="inviteRemoteControl" class="action-img" src='@/assets/images/av_share.png'/>
                     </div>
                     <div v-if="!audioOnly" class="action">
                         <img @click="down2voice" class="action-img" src='@/assets/images/av_float_audio.png'/>
@@ -326,6 +326,13 @@ export default {
                 // console.log('didReportAudioVolume', userId, volume)
             }
 
+            sessionCallback.onReceiveRemoteControlInvite = () => {
+                if (isElectron()) {
+                    this.session.acceptRemoteControlInvite();
+                    this.registerControlListener();
+                }
+            }
+
             avenginekit.sessionCallback = sessionCallback;
         },
 
@@ -366,6 +373,46 @@ export default {
 
         down2voice() {
             this.session.downgrade2Voice();
+        },
+        inviteRemoteControl() {
+            if (isElectron()) {
+                let beforeClose = (event) => {
+                    // What a gamble... 50% chance to cancel closing
+                    if (!event.params) {
+                        return;
+                    }
+                    if (event.params.source) {
+                        let source = event.params.source;
+                        let desktopShareOptions = {
+                            sourceId: source.id,
+                            // minWidth: 1280,
+                            // maxWidth: 1280,
+                            // minHeight: 720,
+                            // maxHeight: 720
+                        }
+                        this.session.startScreenShare(desktopShareOptions);
+                        this.session.inviteRemoteControl()
+                    }
+                };
+                this.$modal.show(
+                    ScreenOrWindowPicker,
+                    {
+                        title: '请选择需要被远程控制的桌面',
+                        desc: '将允许对方远程操作你选择的桌面',
+                        types: ['screen']
+                    }, null, {
+                        width: 360,
+                        height: 620,
+                        name: 'screen-window-picker-modal',
+                        clickToClose: false,
+                    }, {
+                        // 'before-open': beforeOpen,
+                        'before-close': beforeClose,
+                        // 'closed': closed,
+                    })
+            } else {
+                this.session.startScreenShare();
+            }
         },
         screenShare() {
             if (this.session.isScreenSharing()) {
@@ -416,6 +463,130 @@ export default {
             let sec = ~~((timestamp % 60));
             str += (sec < 10 ? "0" : "") + sec
             return str;
+        },
+
+        isCallConnected() {
+            //Todo
+            return true;
+        },
+
+        registerControlListener() {
+            let backupThis = this;
+            document.addEventListener('keydown', function (event) {
+                console.log(`key down: ${event.code}`);
+                if (backupThis.isCallConnected() && backupThis.session != undefined) {
+                    let options = {
+                        event: 'wf_rc_event',
+                        args: {
+                            e: 'keydown',
+                            c: event.code
+                        }
+                    };
+                    backupThis.session.onInputEvent(options);
+                }
+            });
+
+            document.addEventListener('keyup', function (event) {
+                console.log(`key up: ${event.code}`);
+                if (/* this.isCallConnected() */ backupThis.session != undefined) {
+                    let options = {
+                        event: 'wf_rc_event',
+                        args: {
+                            e: 'keyup',
+                            c: event.code
+                        }
+                    };
+                    backupThis.session.onInputEvent(options);
+                }
+            });
+            document.addEventListener('click', (event) => {
+                console.log(`Mouse click: ${event.button}, ${event.clientX}, ${event.clientY}`);
+                if (/* this.isCallConnected() */ backupThis.session != undefined) {
+                    let options = {
+                        event: 'wf_rc_event',
+                        args: {
+                            e: 'click',
+                            btn: event.button,
+                            x: event.clientX,
+                            y: event.clientY,
+                        }
+                    };
+                    backupThis.session.onInputEvent(options);
+                }
+            });
+            document.addEventListener('mousemove', (event) => {
+                console.log(`Mouse position: ${event.clientX}, ${event.clientY}`);
+                if (/* this.isCallConnected() */ backupThis.session != undefined) {
+                    let options = {
+                        event: 'wf_rc_event',
+                        args: {
+                            e: 'mv',
+                            x: event.clientX,
+                            y: event.clientY,
+                        }
+                    };
+                    backupThis.session.onInputEvent(options);
+                }
+            });
+
+            document.addEventListener('mousedown', (event) => {
+                console.log(`Mouse down: ${event.button}, ${event.clientX}, ${event.clientY}`);
+                if (/* this.isCallConnected() */ backupThis.session != undefined) {
+                    let options = {
+                        event: 'wf_rc_event',
+                        args: {
+                            e: 'mousedown',
+                            btn: event.button,
+                            x: event.clientX,
+                            y: event.clientY,
+                        }
+                    };
+                    backupThis.session.onInputEvent(options);
+                }
+            });
+
+            document.addEventListener('mouseup', (event) => {
+                console.log(`Mouse up: ${event.button}, ${event.clientX}, ${event.clientY}`);
+                if (/* this.isCallConnected() */ backupThis.session != undefined) {
+                    let options = {
+                        event: 'wf_rc_event',
+                        args: {
+                            e: 'mouseup',
+                            btn: event.button,
+                            x: event.clientX,
+                            y: event.clientY,
+                        }
+                    };
+                    backupThis.session.onInputEvent(options);
+                }
+            });
+
+            document.addEventListener('wheel', (event) => {
+                //deltaMode 0是按像素滚动，1是按行滚动，2是按页滚动。
+                //lib只能处理按行滚动，一次事件滚动一行
+                console.log(`Mouse wheel: ${event.deltaX}, ${event.deltaY}, ${event.deltaMode}`);
+                if (/* this.isCallConnected() */ this.session != undefined) {
+                    let delta;
+                    let axis;
+                    if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+                        delta = event.deltaX > 0 ? 1 : -1;
+                        axis = 0;
+                    } else {
+                        delta = event.deltaY > 0 ? 1 : -1;
+                        axis = 1;
+                    }
+
+                    let options = {
+                        event: 'wf_rc_event',
+                        args: {
+                            e: 'wheel',
+                            delta: delta,
+                            axis: axis,
+                        }
+                    };
+                    this.session.onInputEvent(options);
+                }
+            });
         }
     },
 
