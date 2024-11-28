@@ -97,6 +97,7 @@ import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlBu
 import ScreenShareControlView from "./ScreenShareControlView.vue";
 import store from "../../store";
 import wfrc from "../../wfc/client/wfrc";
+import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";
 
 export default {
     name: 'SingleRemoteControl',
@@ -220,7 +221,7 @@ export default {
                     } else {
                         // 主控
                         this.$nextTick(() => {
-                            this.registerControlInputEventListener()
+                            registerRemoteControlEventListener(this.session, this.$refs.remoteVideo)
                         })
                     }
                 } else if (state === CallState.STATUS_IDLE) {
@@ -257,6 +258,7 @@ export default {
                 this.session.closeVoipWindow();
                 this.session = null;
                 wfrc.stop()
+                unregisterRemoteControlEventListener()
             }
             sessionCallback.didVideoMuted = (userId, muted) => {
                 console.log('didVideoMuted', userId, muted);
@@ -387,189 +389,6 @@ export default {
             //Todo
             return true;
         },
-
-        registerControlInputEventListener() {
-            document.addEventListener('keydown', (event) => {
-                console.log(`key down: ${event.code}`);
-                if (this.isCallConnected() && this.session) {
-                    let options = {
-                        event: 'wf_rc_event',
-                        args: {
-                            e: 'keydown',
-                            c: event.code
-                        }
-                    };
-                    this.session.sendRemoteControlInputEvent(options);
-                }
-            });
-
-            document.addEventListener('keyup', (event) => {
-                console.log(`key up: ${event.code}`);
-                if (/* this.isCallConnected() */ this.session) {
-                    let options = {
-                        event: 'wf_rc_event',
-                        args: {
-                            e: 'keyup',
-                            c: event.code
-                        }
-                    };
-                    this.session.sendRemoteControlInputEvent(options);
-                }
-            });
-            // click 事件，应当由被控端，自行根据 mousedown and mouseup 触发
-            // this.$refs.remoteVideo.addEventListener('click', (event) => {
-            //     console.log(`Mouse click: ${event.button}, ${event.clientX}, ${event.clientY}`);
-            //     let xy = this._adjustRCXY(event)
-            //     if (!xy) {
-            //         return
-            //     }
-            //     if (/* this.isCallConnected() */ this.session) {
-            //         let options = {
-            //             event: 'wf_rc_event',
-            //             args: {
-            //                 e: 'click',
-            //                 btn: event.button,
-            //                 ...xy
-            //             }
-            //         };
-            //         this.session.sendRemoteControlInputEvent(options);
-            //     }
-            // });
-            this.$refs.remoteVideo.addEventListener('mousemove', (event) => {
-                // console.log(`Mouse position: ${event.clientX}, ${event.clientY}`);
-                let xy = this._adjustRCXY(event)
-                if (!xy) {
-                    return
-                }
-                if (/* this.isCallConnected() */ this.session) {
-                    let options = {
-                        event: 'wf_rc_event',
-                        args: {
-                            e: 'mv',
-                            ...xy
-                        }
-                    };
-                    this.session.sendRemoteControlInputEvent(options);
-                }
-            });
-
-            this.$refs.remoteVideo.addEventListener('mousedown', (event) => {
-                console.log(`Mouse down: ${event.button}, ${event.clientX}, ${event.clientY}`);
-                let xy = this._adjustRCXY(event)
-                if (!xy) {
-                    return
-                }
-
-                if (/* this.isCallConnected() */ this.session) {
-                    let options = {
-                        event: 'wf_rc_event',
-                        args: {
-                            e: 'mousedown',
-                            btn: event.button,
-                            ...xy
-                        }
-                    };
-                    this.session.sendRemoteControlInputEvent(options);
-                }
-            });
-
-            this.$refs.remoteVideo.addEventListener('mouseup', (event) => {
-                console.log(`Mouse up: ${event.button}, ${event.clientX}, ${event.clientY}`);
-                let xy = this._adjustRCXY(event)
-                if (!xy) {
-                    return
-                }
-
-                if (/* this.isCallConnected() */ this.session) {
-                    let options = {
-                        event: 'wf_rc_event',
-                        args: {
-                            e: 'mouseup',
-                            btn: event.button,
-                            ...xy
-                        }
-                    };
-                    this.session.sendRemoteControlInputEvent(options);
-                }
-            });
-
-            document.addEventListener('wheel', (event) => {
-                //deltaMode 0是按像素滚动，1是按行滚动，2是按页滚动。
-                //lib只能处理按行滚动，一次事件滚动一行
-                console.log(`Mouse wheel before: ${event.deltaX}, ${event.deltaY}, ${event.deltaMode}`);
-                if (/* this.isCallConnected() */ this.session) {
-                    this.deltaXSum += event.deltaX;
-                    this.deltaYSum += event.deltaY;
-
-                    if (Math.abs(this.deltaXSum) < 15 && Math.abs(this.deltaYSum) < 15) {
-                        return
-                    }
-                    console.log(`Mouse wheel: ${this.deltaYSum}, ${this.deltaYSum}, ${event.deltaMode}`);
-                    let delta;
-                    let axis;
-                    if (Math.abs(this.deltaXSum) > Math.abs(this.deltaYSum)) {
-                        delta = this.deltaXSum > 0 ? 1 : -1;
-                        axis = 0;
-                    } else {
-                        delta = this.deltaYSum > 0 ? 1 : -1;
-                        axis = 1;
-                    }
-
-                    this.deltaXSum = 0;
-                    this.deltaYSum = 0;
-
-                    let options = {
-                        event: 'wf_rc_event',
-                        args: {
-                            e: 'wheel',
-                            delta: delta,
-                            axis: axis,
-                        }
-                    };
-                    this.session.sendRemoteControlInputEvent(options);
-                }
-            });
-        },
-
-        _adjustRCXY(event) {
-            let x = event.offsetX;
-            let y = event.offsetY;
-            let rcSW = this.$refs.remoteVideo.videoWidth
-            let rcSH = this.$refs.remoteVideo.videoHeight
-            let videoElWidth = this.$refs.remoteVideo.clientWidth
-            let videoElHeight = this.$refs.remoteVideo.clientHeight;
-            let scaledVideoWidth = videoElWidth
-            let scaledVideoHeight = videoElHeight
-
-            // 保持宽高比缩放
-            // object-fit: contain;
-            let xMargin = 0
-            let yMargin = 0
-            if (rcSW / videoElWidth > rcSH / videoElHeight) {
-                // 宽度填满，缩放高度
-                scaledVideoHeight = rcSH / rcSW * videoElWidth;
-                yMargin = (videoElHeight - scaledVideoHeight)
-            } else {
-                scaledVideoWidth = videoElHeight / rcSH * rcSW
-                xMargin = (videoElWidth - scaledVideoWidth)
-            }
-
-            if (xMargin > 0 && (x < xMargin / 2 || x > xMargin / 2 + scaledVideoWidth)) {
-                return undefined
-            }
-
-            if (yMargin > 0 && (y < yMargin / 2 || y > yMargin / 2 + scaledVideoHeight)) {
-                return undefined
-            }
-
-            x = x - xMargin / 2
-            y = y - yMargin / 2
-
-            return {
-                x: x * rcSW / scaledVideoWidth,
-                y: y * rcSH / scaledVideoHeight
-            }
-        }
     },
 
     mounted() {

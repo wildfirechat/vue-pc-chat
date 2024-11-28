@@ -144,7 +144,7 @@ import IpcEventType from "../../ipcEventType";
 import wfrc from "../../wfc/client/wfrc";
 import RcEndReason from "../../wfc/av/engine/rcEndReason";
 import RCState from "../../wfc/av/engine/rcState";
-import registerRemoteControlEventListener from "./rcInputEventHelper";
+import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";
 
 export default {
     name: 'Single',
@@ -389,10 +389,9 @@ export default {
                     type: 'info'
                 })
                 this.session.stopScreenShare()
-                // 只有reason 为 hangup 时，才真正开始过远程协助/控制
-                if (reason === RcEndReason.REASON_HANGUP) {
-                    wfrc.stop()
-                }
+                // 其实，只有reason 为 hangup 时，才真正开始过远程协助/控制
+                wfrc.stop()
+                unregisterRemoteControlEventListener()
             }
 
             avenginekit.sessionCallback = sessionCallback;

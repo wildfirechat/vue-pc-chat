@@ -4,7 +4,7 @@
  * @param {HTMLVideoElement} remoteScreenVideoElement 渲染对方屏幕共享流的 video 元素
  */
 export default function registerRemoteControlEventListener(session, remoteScreenVideoElement) {
-    remoteScreenVideoElement.addEventListener('keydown', (event) => {
+    _keydownEventListener = (event) => {
         console.log(`key down: ${event.code}`);
         let options = {
             event: 'wf_rc_event',
@@ -14,9 +14,10 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             }
         };
         session.sendRemoteControlInputEvent(options);
-    });
+    }
+    document.addEventListener('keydown', _keydownEventListener);
 
-    remoteScreenVideoElement.addEventListener('keyup', (event) => {
+    _keyupEventListener = (event) => {
         console.log(`key up: ${event.code}`);
         let options = {
             event: 'wf_rc_event',
@@ -26,7 +27,8 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             }
         };
         session.sendRemoteControlInputEvent(options);
-    });
+    }
+    document.addEventListener('keyup', _keyupEventListener);
     // click 事件，应当由被控端，自行根据 mousedown and mouseup 触发
     // remoteScreenVideoElement.addEventListener('click', (event) => {
     //     console.log(`Mouse click: ${event.button}, ${event.clientX}, ${event.clientY}`);
@@ -132,6 +134,11 @@ export default function registerRemoteControlEventListener(session, remoteScreen
     });
 }
 
+export function unregisterRemoteControlEventListener() {
+    document.removeEventListener('keydown', _keydownEventListener);
+    document.removeEventListener('keyup', _keyupEventListener);
+}
+
 function _adjustRCXY(event, remoteScreenVideoElement) {
     let x = event.offsetX;
     let y = event.offsetY;
@@ -174,3 +181,6 @@ function _adjustRCXY(event, remoteScreenVideoElement) {
 
 let _deltaXSum = 0;
 let _deltaYSum = 0;
+
+let _keydownEventListener = null;
+let _keyupEventListener = null;

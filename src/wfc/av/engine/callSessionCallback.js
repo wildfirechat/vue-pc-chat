@@ -236,13 +236,6 @@ export default class CallSessionCallback {
         wfrc.start();
     }
 
-    /**
-     * 对方接受了远程控制请求
-     */
-    didAcceptRemoteControlRequest() {
-
-    }
-
     didReceiveRemoteControlInputEvent(datas) {
         console.log('on receive remote input event:', datas);
         let dataArr = JSON.parse(datas)
