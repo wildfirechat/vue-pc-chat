@@ -238,8 +238,8 @@ export default class CallSessionCallback {
 
     didReceiveRemoteControlInputEvent(datas) {
         console.log('on receive remote input event:', datas);
-        let dataArr = JSON.parse(datas)
-        for (const el of dataArr) {
+        // let dataArr = JSON.parse(datas)
+        for (const el of datas) {
             let data = el.args;
             console.log('on receive remote input event:', data);
             if (data.e === 'keydown') {
