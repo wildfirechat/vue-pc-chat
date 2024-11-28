@@ -9,7 +9,7 @@ export default class FriendRequest {
     extra;
     //    RequestStatus_Sent = 0,
     //    RequestStatus_Accepted = 1,
-    //    RequestStatus_Rejected = 3
+    //    RequestStatus_Rejected = 2
     status;
     readStatus;
     timestamp;
