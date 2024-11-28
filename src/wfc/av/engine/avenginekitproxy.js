@@ -174,6 +174,11 @@ export class AvEngineKitProxy {
             console.log('not enable multi call ');
             return;
         }
+        if(!isElectron() && msg.messageContent === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST){
+            console.log('only pc support remote control');
+            return;
+        }
+
         let now = (new Date()).valueOf();
         let delta = wfc.getServerDeltaTime();
         if (now - (numberValue(msg.timestamp) - delta) >= 90 * 1000) {
