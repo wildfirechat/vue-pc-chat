@@ -89,7 +89,7 @@
 import avenginekit from "../../wfc/av/internal/engine.min";
 import CallSessionCallback from "../../wfc/av/engine/callSessionCallback";
 import CallState from "../../wfc/av/engine/callState";
-import {isElectron} from "../../platform";
+import {ipcRenderer, isElectron} from "../../platform";
 import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
 import VideoType from "../../wfc/av/engine/videoType";
 import Config from "../../config";
@@ -219,7 +219,7 @@ export default {
 
                     if (!this.session.moCall) {
                         // 被控
-                        this.chooseScreenToBeRemoteControled()
+                        this.chooseScreenToBeRemoteControlled()
                     } else {
                         // 主控
                         this.$nextTick(() => {
@@ -332,44 +332,56 @@ export default {
             this.session.setAudioEnabled(enable)
         },
 
-        chooseScreenToBeRemoteControled() {
+        async chooseScreenToBeRemoteControlled() {
             if (isElectron()) {
-                let beforeClose = (event) => {
-                    // What a gamble... 50% chance to cancel closing
-                    if (!event.params) {
-                        // todo hangup
-                        return;
+
+                let startScreenShareAndListenRCEvent = (sourceId) => {
+                    let desktopShareOptions = {
+                        sourceId: sourceId,
+                        // minWidth: 1280,
+                        // maxWidth: 1280,
+                        // minHeight: 720,
+                        // maxHeight: 720
                     }
-                    if (event.params.source) {
-                        let source = event.params.source;
-                        let desktopShareOptions = {
-                            sourceId: source.id,
-                            // minWidth: 1280,
-                            // maxWidth: 1280,
-                            // minHeight: 720,
-                            // maxHeight: 720
+                    this.session.startScreenShare(desktopShareOptions);
+                    avenginekitproxy.emitToMain(IpcEventType.START_SCREEN_SHARE, {rc: true})
+                    wfrc.start()
+                }
+
+                let screens = await ipcRenderer.invoke(IpcEventType.GET_SOURCE, {types: ['screen'], fetchWindowIcons: false})
+                if (screens.length === 1) {
+                    startScreenShareAndListenRCEvent(screens[0].id);
+                } else {
+                    let beforeClose = (event) => {
+                        // What a gamble... 50% chance to cancel closing
+                        if (!event.params) {
+                            // TODO
+                            // FIXME
+                            // hangup
+                            return;
                         }
-                        this.session.startScreenShare(desktopShareOptions);
-                        avenginekitproxy.emitToMain(IpcEventType.START_SCREEN_SHARE, {rc: true})
-                        wfrc.start()
-                    }
-                };
-                this.$modal.show(
-                    ScreenOrWindowPicker,
-                    {
-                        title: '请选择允许被远程控制的桌面',
-                        desc: '将允许对方远程操作你选择的桌面',
-                        types: ['screen']
-                    }, null, {
-                        width: 360,
-                        height: 620,
-                        name: 'screen-window-picker-modal',
-                        clickToClose: false,
-                    }, {
-                        // 'before-open': beforeOpen,
-                        'before-close': beforeClose,
-                        // 'closed': closed,
-                    })
+                        if (event.params.source) {
+                            let source = event.params.source;
+                            startScreenShareAndListenRCEvent(source.id);
+                        }
+                    };
+                    this.$modal.show(
+                        ScreenOrWindowPicker,
+                        {
+                            title: '请选择允许被远程控制的桌面',
+                            desc: '将允许对方远程操作你选择的桌面',
+                            types: ['screen']
+                        }, null, {
+                            width: 360,
+                            height: 620,
+                            name: 'screen-window-picker-modal',
+                            clickToClose: false,
+                        }, {
+                            // 'before-open': beforeOpen,
+                            'before-close': beforeClose,
+                            // 'closed': closed,
+                        })
+                }
             } else {
                 // this.session.startScreenShare();
                 // not support
