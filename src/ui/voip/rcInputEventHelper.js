@@ -95,6 +95,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
                 ...xy
             }
         };
+        console.log('send mouse up event', options );
         session.sendRemoteControlInputEvent(options);
     });
 
