@@ -380,7 +380,7 @@ export default {
                 console.log('didRemoteControlEnd', reason)
                 let reasonTip = '远程协助结束了';
                 if (reason === RcEndReason.REASON_REJECT) {
-                    reasonTip = '对方拒绝了你得远程协助邀请'
+                    reasonTip = '对方拒绝了你的远程协助邀请'
                 } else if (reason === RcEndReason.REASON_HANGUP) {
                     reasonTip = '对方结束了远程协助'
                 }

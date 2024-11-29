@@ -44,7 +44,7 @@
                             <img class="avatar" :src="participantUserInfo.portrait">
                             <p>{{ participantUserInfo.displayName }}</p>
                             <p v-if="status === 1">等待对方接受远程控制请求</p>
-                            <p v-else-if="status === 2">请求远程控制你得桌面</p>
+                            <p v-else-if="status === 2">请求远程控制你的桌面</p>
                             <p v-else-if="status === 3">建立连接中...</p>
                         </div>
                     </div>
