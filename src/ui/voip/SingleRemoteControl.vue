@@ -98,6 +98,8 @@ import ScreenShareControlView from "./ScreenShareControlView.vue";
 import store from "../../store";
 import wfrc from "../../wfc/client/wfrc";
 import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";
+import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
+import IpcEventType from "../../ipcEventType";
 
 export default {
     name: 'SingleRemoteControl',
@@ -348,6 +350,7 @@ export default {
                             // maxHeight: 720
                         }
                         this.session.startScreenShare(desktopShareOptions);
+                        avenginekitproxy.emitToMain(IpcEventType.START_SCREEN_SHARE, {rc: true})
                         wfrc.start()
                     }
                 };
