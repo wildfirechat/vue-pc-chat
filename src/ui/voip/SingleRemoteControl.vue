@@ -70,16 +70,21 @@
                 </div>
 
                 <!--connected-->
-                <div v-if="status === 4" class="action-container">
-                    <div class="action">
-                        <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
+
+                <UseDraggable v-if="status === 4" class="floating-action-container">
+                    <p class="desc">控制</p>
+                    <div class="floating-actions">
+                        <div class="action">
+                            <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
+                            <p>结束远程控制</p>
+                        </div>
+                        <div class="action">
+                            <img v-if="!session.audioMuted" @click="mute" class="action-img" src='@/assets/images/av_mute.png'/>
+                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
+                            <p>静音</p>
+                        </div>
                     </div>
-                    <div class="action">
-                        <img v-if="!session.audioMuted" @click="mute" class="action-img" src='@/assets/images/av_mute.png'/>
-                        <img v-else @click="mute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
-                        <p>静音</p>
-                    </div>
-                </div>
+                </UseDraggable>
             </footer>
         </div>
     </div>
@@ -100,10 +105,15 @@ import wfrc from "../../wfc/client/wfrc";
 import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import IpcEventType from "../../ipcEventType";
+import {UseDraggable} from '@vueuse/components'
 
 export default {
     name: 'SingleRemoteControl',
-    components: {ScreenShareControlView, ElectronWindowsControlButtonView},
+    components: {
+        ScreenShareControlView,
+        ElectronWindowsControlButtonView,
+        UseDraggable
+    },
     data() {
         return {
             session: null,
@@ -473,6 +483,55 @@ export default {
 }
 
 .action-container .action {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    color: white;
+}
+
+.floating-action-container {
+    height: 100px;
+    min-width: 100px;
+    border-radius: 50px;
+    top: 10%;
+    left: 10%;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    background: #cccccc;
+}
+
+.floating-actions {
+    width: 400px;
+    justify-content: space-around;
+}
+
+.floating-action-container:not(:hover) .floating-actions {
+    background: #fff;
+    display: none;
+}
+
+.floating-action-container:hover .floating-actions {
+    display: flex;
+    flex-direction: row;
+}
+
+.floating-action-container:not(:hover) .desc {
+    display: flex;
+    justify-items: center;
+    align-items: center;
+}
+
+.floating-action-container:hover .desc {
+    display: none;
+}
+
+.floating-actions .action {
     flex: 1;
     display: flex;
     flex-direction: column;
