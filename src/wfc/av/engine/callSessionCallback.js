@@ -4,7 +4,7 @@
 
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
 import wfrc from "../../client/wfrc";
-import {RCEvent, RCEventArgs} from "../../../ui/voip/pb/rc"
+import {RCEvent, RCEventArgs} from "../../../ui/voip/pb/rcEvent"
 
 export default class CallSessionCallback {
 

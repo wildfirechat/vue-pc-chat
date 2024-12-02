@@ -17,7 +17,7 @@ $root.RCEvent = (function() {
      * @interface IRCEvent
      * @property {string} name RCEvent name
      * @property {Array.<number>|null} [numberArgs] RCEvent numberArgs
-     * @property {Array.<number>|null} [strArgs] RCEvent strArgs
+     * @property {Array.<string>|null} [strArgs] RCEvent strArgs
      */
 
     /**
@@ -55,7 +55,7 @@ $root.RCEvent = (function() {
 
     /**
      * RCEvent strArgs.
-     * @member {Array.<number>} strArgs
+     * @member {Array.<string>} strArgs
      * @memberof RCEvent
      * @instance
      */
@@ -91,7 +91,7 @@ $root.RCEvent = (function() {
                 writer.uint32(/* id 3, wireType 0 =*/24).int32(message.numberArgs[i]);
         if (message.strArgs != null && message.strArgs.length)
             for (var i = 0; i < message.strArgs.length; ++i)
-                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.strArgs[i]);
+                writer.uint32(/* id 4, wireType 2 =*/34).string(message.strArgs[i]);
         return writer;
     };
 
@@ -142,12 +142,7 @@ $root.RCEvent = (function() {
                 case 4:
                     if (!(message.strArgs && message.strArgs.length))
                         message.strArgs = [];
-                    if ((tag & 7) === 2) {
-                        var end2 = reader.uint32() + reader.pos;
-                        while (reader.pos < end2)
-                            message.strArgs.push(reader.int32());
-                    } else
-                        message.strArgs.push(reader.int32());
+                    message.strArgs.push(reader.string());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -199,8 +194,8 @@ $root.RCEvent = (function() {
             if (!Array.isArray(message.strArgs))
                 return "strArgs: array expected";
             for (var i = 0; i < message.strArgs.length; ++i)
-                if (!$util.isInteger(message.strArgs[i]))
-                    return "strArgs: integer[] expected";
+                if (!$util.isString(message.strArgs[i]))
+                    return "strArgs: string[] expected";
         }
         return null;
     };
@@ -231,7 +226,7 @@ $root.RCEvent = (function() {
                 throw TypeError(".RCEvent.strArgs: array expected");
             message.strArgs = [];
             for (var i = 0; i < object.strArgs.length; ++i)
-                message.strArgs[i] = object.strArgs[i] | 0;
+                message.strArgs[i] = String(object.strArgs[i]);
         }
         return message;
     };

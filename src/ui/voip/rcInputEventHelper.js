@@ -1,4 +1,4 @@
-import {RCEvent} from "./pb/rc";
+import {RCEvent} from "./pb/rcEvent";
 
 /**
  * 主控方注册远程控制/协助相关事件监听
