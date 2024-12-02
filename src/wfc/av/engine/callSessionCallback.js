@@ -242,12 +242,13 @@ export default class CallSessionCallback {
         console.log('xxxxx receive event', rcEvent);
         let eventName = rcEvent.name
         let numberArgs = rcEvent.numberArgs
+        let strArgs = rcEvent.strArgs
 
         console.log('on receive remote input event:', rcEventArrayBuffer);
         if (eventName === 'kd') {
-            wfrc.onKeyDown(...numberArgs);
+            wfrc.onKeyDown(...strArgs);
         } else if (eventName === 'ku') {
-            wfrc.onKeyUp(...numberArgs);
+            wfrc.onKeyUp(...strArgs);
         } else if (eventName === 'click') {
             // TODO
             // wfrc.onMouseClick(...data.args);

@@ -8,13 +8,13 @@ import {RCEvent} from "./pb/rc";
 export default function registerRemoteControlEventListener(session, remoteScreenVideoElement) {
     _keydownEventListener = (event) => {
         console.log(`key down: ${event.code}`);
-        _sendEventData(session, 'kd', event.code)
+        _sendEventData(session, 'kd', [], [event.code])
     }
     document.addEventListener('keydown', _keydownEventListener);
 
     _keyupEventListener = (event) => {
-        console.log(`key up: ${event.code}`);
-        _sendEventData(session, 'ku', event.code)
+        console.log(`key up: ${event.code}`, event);
+        _sendEventData(session, 'ku', [], [event.code])
     }
     document.addEventListener('keyup', _keyupEventListener);
     // click 事件，应当由被控端，自行根据 mousedown and mouseup 触发
@@ -41,7 +41,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             return
         }
         console.log(`mouse move: `, event.offsetX, event.offsetY, xy);
-        _sendEventData(session, 'mv', xy.x, xy.y);
+        _sendEventData(session, 'mv', [xy.x, xy.y]);
     });
 
     remoteScreenVideoElement.addEventListener('mousedown', (event) => {
@@ -51,7 +51,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             return
         }
 
-        _sendEventData(session, 'md', event.button, xy.x, xy.y);
+        _sendEventData(session, 'md', [event.button, xy.x, xy.y]);
     });
 
     remoteScreenVideoElement.addEventListener('mouseup', (event) => {
@@ -61,7 +61,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             return
         }
 
-        _sendEventData(session, 'mu', event.button, xy.x, xy.y);
+        _sendEventData(session, 'mu', [event.button, xy.x, xy.y]);
     });
 
     remoteScreenVideoElement.addEventListener('wheel', (event) => {
@@ -88,7 +88,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         _deltaXSum = 0;
         _deltaYSum = 0;
 
-        _sendEventData(session, 'wl', delta, axis)
+        _sendEventData(session, 'wl', [delta, axis])
     });
 }
 
@@ -137,13 +137,14 @@ function _adjustRCXY(event, remoteScreenVideoElement) {
     }
 }
 
-function _sendEventData(session, eventName, numberValues) {
+function _sendEventData(session, eventName, numberValues = [], strValues = []) {
     let rcEvent = RCEvent.create()
     rcEvent.name = eventName
-    rcEvent.numberArgs= [...numberValues]
+    rcEvent.numberArgs = numberValues
+    rcEvent.strArgs = strValues
     let buffer = RCEvent.encode(rcEvent).finish()
 
-    console.log('xxxxxxx buffer', buffer.length, buffer.byteLength)
+    console.log('xxxxxxx buffer', eventName, numberValues, buffer.length)
     session.sendRemoteControlInputEvent(buffer);
 }
 
