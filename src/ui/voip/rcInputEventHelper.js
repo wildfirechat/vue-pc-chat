@@ -9,7 +9,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
     _keydownEventListener = (event) => {
         console.log(`key down: ${event.code}`);
         let options = {
-            event: 'wf_rc_event',
+            event: 'rce',
             args: {
                 e: 'keydown',
                 c: event.code
@@ -23,7 +23,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
     _keyupEventListener = (event) => {
         console.log(`key up: ${event.code}`);
         let options = {
-            event: 'wf_rc_event',
+            event: 'rce',
             args: {
                 e: 'keyup',
                 c: event.code
@@ -41,7 +41,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
     //         return
     //     }
     //         let options = {
-    //             event: 'wf_rc_event',
+    //             event: 'rce',
     //             args: {
     //                 e: 'click',
     //                 btn: event.button,
@@ -58,7 +58,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         }
         console.log(`mouse move: `, event.offsetX, event.offsetY, xy);
         let options = {
-            event: 'wf_rc_event',
+            event: 'rce',
             args: {
                 e: 'mv',
                 ...xy
@@ -77,7 +77,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         }
 
         let options = {
-            event: 'wf_rc_event',
+            event: 'rce',
             args: {
                 e: 'mousedown',
                 btn: event.button,
@@ -96,7 +96,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         }
 
         let options = {
-            event: 'wf_rc_event',
+            event: 'rce',
             args: {
                 e: 'mouseup',
                 btn: event.button,
@@ -132,7 +132,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         _deltaYSum = 0;
 
         let options = {
-            event: 'wf_rc_event',
+            event: 'rce',
             args: {
                 e: 'wheel',
                 delta: delta,
@@ -192,7 +192,7 @@ function _adjustRCXY(event, remoteScreenVideoElement) {
 function _sendEventData(session, options) {
     let event = RCEvent.create()
     // let options = {
-    //     event: 'wf_rc_event',
+    //     event: 'rce',
     //     args: {
     //         e: 'keyup',
     //         c: event.code

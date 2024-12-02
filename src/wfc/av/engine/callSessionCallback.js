@@ -239,23 +239,6 @@ export default class CallSessionCallback {
 
     didReceiveRemoteControlInputEvent(datas) {
         let event = RCEvent.decode(new Uint8Array(datas));
-
-        // let event = RCEvent.create()
-        // // let options = {
-        // //     event: 'wf_rc_event',
-        // //     args: {
-        // //         e: 'keyup',
-        // //         c: event.code
-        // //     }
-        // // };
-        // event.eventCategory = options.event;
-        // let args = RCEventArgs.create()
-        // args.eventName = options.args.e
-        // args.values = [...Object.values(options.args)].slice(1)
-        // event.args = args
-        // let buffer = RCEvent.encode(event).finish()
-        // const buffer = Buffer.from(pb);
-
         console.log('xxxxx receive event', event);
         let data = {}
         let args = event.args;
@@ -270,7 +253,7 @@ export default class CallSessionCallback {
             if (data.e === 'keydown') {
                 wfrc.onKeyDown(...data.args);
             } else if (data.e === 'keyup') {
-                wfrc.onKeyUp(data.c);
+                wfrc.onKeyUp(...data.args);
             } else if (data.e === 'click') {
                 wfrc.onMouseClick(...data.args);
             } else if (data.e === 'mv') {
