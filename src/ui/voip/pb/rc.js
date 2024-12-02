@@ -9,245 +9,15 @@ var $Reader = $protobuf.Reader, $Writer = $protobuf.Writer, $util = $protobuf.ut
 // Exported root namespace
 var $root = $protobuf.roots["default"] || ($protobuf.roots["default"] = {});
 
-$root.RCEventArgs = (function() {
-
-    /**
-     * Properties of a RCEventArgs.
-     * @exports IRCEventArgs
-     * @interface IRCEventArgs
-     * @property {string} eventName RCEventArgs eventName
-     * @property {Array.<number>|null} [values] RCEventArgs values
-     */
-
-    /**
-     * Constructs a new RCEventArgs.
-     * @exports RCEventArgs
-     * @classdesc Represents a RCEventArgs.
-     * @implements IRCEventArgs
-     * @constructor
-     * @param {IRCEventArgs=} [properties] Properties to set
-     */
-    function RCEventArgs(properties) {
-        this.values = [];
-        if (properties)
-            for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                if (properties[keys[i]] != null)
-                    this[keys[i]] = properties[keys[i]];
-    }
-
-    /**
-     * RCEventArgs eventName.
-     * @member {string} eventName
-     * @memberof RCEventArgs
-     * @instance
-     */
-    RCEventArgs.prototype.eventName = "";
-
-    /**
-     * RCEventArgs values.
-     * @member {Array.<number>} values
-     * @memberof RCEventArgs
-     * @instance
-     */
-    RCEventArgs.prototype.values = $util.emptyArray;
-
-    /**
-     * Creates a new RCEventArgs instance using the specified properties.
-     * @function create
-     * @memberof RCEventArgs
-     * @static
-     * @param {IRCEventArgs=} [properties] Properties to set
-     * @returns {RCEventArgs} RCEventArgs instance
-     */
-    RCEventArgs.create = function create(properties) {
-        return new RCEventArgs(properties);
-    };
-
-    /**
-     * Encodes the specified RCEventArgs message. Does not implicitly {@link RCEventArgs.verify|verify} messages.
-     * @function encode
-     * @memberof RCEventArgs
-     * @static
-     * @param {IRCEventArgs} message RCEventArgs message or plain object to encode
-     * @param {$protobuf.Writer} [writer] Writer to encode to
-     * @returns {$protobuf.Writer} Writer
-     */
-    RCEventArgs.encode = function encode(message, writer) {
-        if (!writer)
-            writer = $Writer.create();
-        writer.uint32(/* id 1, wireType 2 =*/10).string(message.eventName);
-        if (message.values != null && message.values.length)
-            for (var i = 0; i < message.values.length; ++i)
-                writer.uint32(/* id 2, wireType 0 =*/16).int32(message.values[i]);
-        return writer;
-    };
-
-    /**
-     * Encodes the specified RCEventArgs message, length delimited. Does not implicitly {@link RCEventArgs.verify|verify} messages.
-     * @function encodeDelimited
-     * @memberof RCEventArgs
-     * @static
-     * @param {IRCEventArgs} message RCEventArgs message or plain object to encode
-     * @param {$protobuf.Writer} [writer] Writer to encode to
-     * @returns {$protobuf.Writer} Writer
-     */
-    RCEventArgs.encodeDelimited = function encodeDelimited(message, writer) {
-        return this.encode(message, writer).ldelim();
-    };
-
-    /**
-     * Decodes a RCEventArgs message from the specified reader or buffer.
-     * @function decode
-     * @memberof RCEventArgs
-     * @static
-     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-     * @param {number} [length] Message length if known beforehand
-     * @returns {RCEventArgs} RCEventArgs
-     * @throws {Error} If the payload is not a reader or valid buffer
-     * @throws {$protobuf.util.ProtocolError} If required fields are missing
-     */
-    RCEventArgs.decode = function decode(reader, length) {
-        if (!(reader instanceof $Reader))
-            reader = $Reader.create(reader);
-        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.RCEventArgs();
-        while (reader.pos < end) {
-            var tag = reader.uint32();
-            switch (tag >>> 3) {
-                case 1:
-                    message.eventName = reader.string();
-                    break;
-                case 2:
-                    if (!(message.values && message.values.length))
-                        message.values = [];
-                    if ((tag & 7) === 2) {
-                        var end2 = reader.uint32() + reader.pos;
-                        while (reader.pos < end2)
-                            message.values.push(reader.int32());
-                    } else
-                        message.values.push(reader.int32());
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-            }
-        }
-        if (!message.hasOwnProperty("eventName"))
-            throw $util.ProtocolError("missing required 'eventName'", { instance: message });
-        return message;
-    };
-
-    /**
-     * Decodes a RCEventArgs message from the specified reader or buffer, length delimited.
-     * @function decodeDelimited
-     * @memberof RCEventArgs
-     * @static
-     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-     * @returns {RCEventArgs} RCEventArgs
-     * @throws {Error} If the payload is not a reader or valid buffer
-     * @throws {$protobuf.util.ProtocolError} If required fields are missing
-     */
-    RCEventArgs.decodeDelimited = function decodeDelimited(reader) {
-        if (!(reader instanceof $Reader))
-            reader = new $Reader(reader);
-        return this.decode(reader, reader.uint32());
-    };
-
-    /**
-     * Verifies a RCEventArgs message.
-     * @function verify
-     * @memberof RCEventArgs
-     * @static
-     * @param {Object.<string,*>} message Plain object to verify
-     * @returns {string|null} `null` if valid, otherwise the reason why it is not
-     */
-    RCEventArgs.verify = function verify(message) {
-        if (typeof message !== "object" || message === null)
-            return "object expected";
-        if (!$util.isString(message.eventName))
-            return "eventName: string expected";
-        if (message.values != null && message.hasOwnProperty("values")) {
-            if (!Array.isArray(message.values))
-                return "values: array expected";
-            for (var i = 0; i < message.values.length; ++i)
-                if (!$util.isInteger(message.values[i]))
-                    return "values: integer[] expected";
-        }
-        return null;
-    };
-
-    /**
-     * Creates a RCEventArgs message from a plain object. Also converts values to their respective internal types.
-     * @function fromObject
-     * @memberof RCEventArgs
-     * @static
-     * @param {Object.<string,*>} object Plain object
-     * @returns {RCEventArgs} RCEventArgs
-     */
-    RCEventArgs.fromObject = function fromObject(object) {
-        if (object instanceof $root.RCEventArgs)
-            return object;
-        var message = new $root.RCEventArgs();
-        if (object.eventName != null)
-            message.eventName = String(object.eventName);
-        if (object.values) {
-            if (!Array.isArray(object.values))
-                throw TypeError(".RCEventArgs.values: array expected");
-            message.values = [];
-            for (var i = 0; i < object.values.length; ++i)
-                message.values[i] = object.values[i] | 0;
-        }
-        return message;
-    };
-
-    /**
-     * Creates a plain object from a RCEventArgs message. Also converts values to other types if specified.
-     * @function toObject
-     * @memberof RCEventArgs
-     * @static
-     * @param {RCEventArgs} message RCEventArgs
-     * @param {$protobuf.IConversionOptions} [options] Conversion options
-     * @returns {Object.<string,*>} Plain object
-     */
-    RCEventArgs.toObject = function toObject(message, options) {
-        if (!options)
-            options = {};
-        var object = {};
-        if (options.arrays || options.defaults)
-            object.values = [];
-        if (options.defaults)
-            object.eventName = "";
-        if (message.eventName != null && message.hasOwnProperty("eventName"))
-            object.eventName = message.eventName;
-        if (message.values && message.values.length) {
-            object.values = [];
-            for (var j = 0; j < message.values.length; ++j)
-                object.values[j] = message.values[j];
-        }
-        return object;
-    };
-
-    /**
-     * Converts this RCEventArgs to JSON.
-     * @function toJSON
-     * @memberof RCEventArgs
-     * @instance
-     * @returns {Object.<string,*>} JSON object
-     */
-    RCEventArgs.prototype.toJSON = function toJSON() {
-        return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-    };
-
-    return RCEventArgs;
-})();
-
 $root.RCEvent = (function() {
 
     /**
      * Properties of a RCEvent.
      * @exports IRCEvent
      * @interface IRCEvent
-     * @property {string} eventCategory RCEvent eventCategory
-     * @property {IRCEventArgs} args RCEvent args
+     * @property {string} name RCEvent name
+     * @property {Array.<number>|null} [numberArgs] RCEvent numberArgs
+     * @property {Array.<number>|null} [strArgs] RCEvent strArgs
      */
 
     /**
@@ -259,6 +29,8 @@ $root.RCEvent = (function() {
      * @param {IRCEvent=} [properties] Properties to set
      */
     function RCEvent(properties) {
+        this.numberArgs = [];
+        this.strArgs = [];
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
@@ -266,20 +38,28 @@ $root.RCEvent = (function() {
     }
 
     /**
-     * RCEvent eventCategory.
-     * @member {string} eventCategory
+     * RCEvent name.
+     * @member {string} name
      * @memberof RCEvent
      * @instance
      */
-    RCEvent.prototype.eventCategory = "";
+    RCEvent.prototype.name = "";
 
     /**
-     * RCEvent args.
-     * @member {IRCEventArgs} args
+     * RCEvent numberArgs.
+     * @member {Array.<number>} numberArgs
      * @memberof RCEvent
      * @instance
      */
-    RCEvent.prototype.args = null;
+    RCEvent.prototype.numberArgs = $util.emptyArray;
+
+    /**
+     * RCEvent strArgs.
+     * @member {Array.<number>} strArgs
+     * @memberof RCEvent
+     * @instance
+     */
+    RCEvent.prototype.strArgs = $util.emptyArray;
 
     /**
      * Creates a new RCEvent instance using the specified properties.
@@ -305,8 +85,13 @@ $root.RCEvent = (function() {
     RCEvent.encode = function encode(message, writer) {
         if (!writer)
             writer = $Writer.create();
-        writer.uint32(/* id 1, wireType 2 =*/10).string(message.eventCategory);
-        $root.RCEventArgs.encode(message.args, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+        writer.uint32(/* id 2, wireType 2 =*/18).string(message.name);
+        if (message.numberArgs != null && message.numberArgs.length)
+            for (var i = 0; i < message.numberArgs.length; ++i)
+                writer.uint32(/* id 3, wireType 0 =*/24).int32(message.numberArgs[i]);
+        if (message.strArgs != null && message.strArgs.length)
+            for (var i = 0; i < message.strArgs.length; ++i)
+                writer.uint32(/* id 4, wireType 0 =*/32).int32(message.strArgs[i]);
         return writer;
     };
 
@@ -341,21 +126,36 @@ $root.RCEvent = (function() {
         while (reader.pos < end) {
             var tag = reader.uint32();
             switch (tag >>> 3) {
-                case 1:
-                    message.eventCategory = reader.string();
-                    break;
                 case 2:
-                    message.args = $root.RCEventArgs.decode(reader, reader.uint32());
+                    message.name = reader.string();
+                    break;
+                case 3:
+                    if (!(message.numberArgs && message.numberArgs.length))
+                        message.numberArgs = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.numberArgs.push(reader.int32());
+                    } else
+                        message.numberArgs.push(reader.int32());
+                    break;
+                case 4:
+                    if (!(message.strArgs && message.strArgs.length))
+                        message.strArgs = [];
+                    if ((tag & 7) === 2) {
+                        var end2 = reader.uint32() + reader.pos;
+                        while (reader.pos < end2)
+                            message.strArgs.push(reader.int32());
+                    } else
+                        message.strArgs.push(reader.int32());
                     break;
                 default:
                     reader.skipType(tag & 7);
                     break;
             }
         }
-        if (!message.hasOwnProperty("eventCategory"))
-            throw $util.ProtocolError("missing required 'eventCategory'", { instance: message });
-        if (!message.hasOwnProperty("args"))
-            throw $util.ProtocolError("missing required 'args'", { instance: message });
+        if (!message.hasOwnProperty("name"))
+            throw $util.ProtocolError("missing required 'name'", { instance: message });
         return message;
     };
 
@@ -386,12 +186,21 @@ $root.RCEvent = (function() {
     RCEvent.verify = function verify(message) {
         if (typeof message !== "object" || message === null)
             return "object expected";
-        if (!$util.isString(message.eventCategory))
-            return "eventCategory: string expected";
-        {
-            var error = $root.RCEventArgs.verify(message.args);
-            if (error)
-                return "args." + error;
+        if (!$util.isString(message.name))
+            return "name: string expected";
+        if (message.numberArgs != null && message.hasOwnProperty("numberArgs")) {
+            if (!Array.isArray(message.numberArgs))
+                return "numberArgs: array expected";
+            for (var i = 0; i < message.numberArgs.length; ++i)
+                if (!$util.isInteger(message.numberArgs[i]))
+                    return "numberArgs: integer[] expected";
+        }
+        if (message.strArgs != null && message.hasOwnProperty("strArgs")) {
+            if (!Array.isArray(message.strArgs))
+                return "strArgs: array expected";
+            for (var i = 0; i < message.strArgs.length; ++i)
+                if (!$util.isInteger(message.strArgs[i]))
+                    return "strArgs: integer[] expected";
         }
         return null;
     };
@@ -408,12 +217,21 @@ $root.RCEvent = (function() {
         if (object instanceof $root.RCEvent)
             return object;
         var message = new $root.RCEvent();
-        if (object.eventCategory != null)
-            message.eventCategory = String(object.eventCategory);
-        if (object.args != null) {
-            if (typeof object.args !== "object")
-                throw TypeError(".RCEvent.args: object expected");
-            message.args = $root.RCEventArgs.fromObject(object.args);
+        if (object.name != null)
+            message.name = String(object.name);
+        if (object.numberArgs) {
+            if (!Array.isArray(object.numberArgs))
+                throw TypeError(".RCEvent.numberArgs: array expected");
+            message.numberArgs = [];
+            for (var i = 0; i < object.numberArgs.length; ++i)
+                message.numberArgs[i] = object.numberArgs[i] | 0;
+        }
+        if (object.strArgs) {
+            if (!Array.isArray(object.strArgs))
+                throw TypeError(".RCEvent.strArgs: array expected");
+            message.strArgs = [];
+            for (var i = 0; i < object.strArgs.length; ++i)
+                message.strArgs[i] = object.strArgs[i] | 0;
         }
         return message;
     };
@@ -431,14 +249,24 @@ $root.RCEvent = (function() {
         if (!options)
             options = {};
         var object = {};
-        if (options.defaults) {
-            object.eventCategory = "";
-            object.args = null;
+        if (options.arrays || options.defaults) {
+            object.numberArgs = [];
+            object.strArgs = [];
         }
-        if (message.eventCategory != null && message.hasOwnProperty("eventCategory"))
-            object.eventCategory = message.eventCategory;
-        if (message.args != null && message.hasOwnProperty("args"))
-            object.args = $root.RCEventArgs.toObject(message.args, options);
+        if (options.defaults)
+            object.name = "";
+        if (message.name != null && message.hasOwnProperty("name"))
+            object.name = message.name;
+        if (message.numberArgs && message.numberArgs.length) {
+            object.numberArgs = [];
+            for (var j = 0; j < message.numberArgs.length; ++j)
+                object.numberArgs[j] = message.numberArgs[j];
+        }
+        if (message.strArgs && message.strArgs.length) {
+            object.strArgs = [];
+            for (var j = 0; j < message.strArgs.length; ++j)
+                object.strArgs[j] = message.strArgs[j];
+        }
         return object;
     };
 

@@ -237,41 +237,33 @@ export default class CallSessionCallback {
         wfrc.start();
     }
 
-    didReceiveRemoteControlInputEvent(datas) {
-        let event = RCEvent.decode(new Uint8Array(datas));
-        console.log('xxxxx receive event', event);
-        let data = {}
-        let args = event.args;
-        data.e = args.eventName
-        data.args = args.values
+    didReceiveRemoteControlInputEvent(rcEventArrayBuffer) {
+        let rcEvent = RCEvent.decode(new Uint8Array(rcEventArrayBuffer));
+        console.log('xxxxx receive event', rcEvent);
+        let eventName = rcEvent.name
+        let numberArgs = rcEvent.numberArgs
 
-        console.log('on receive remote input event:', datas);
-        // let dataArr = JSON.parse(datas)
-        // for (const el of datas) {
-        //     let data = el.args;
-            console.log('on receive remote input event:', data);
-            if (data.e === 'keydown') {
-                wfrc.onKeyDown(...data.args);
-            } else if (data.e === 'keyup') {
-                wfrc.onKeyUp(...data.args);
-            } else if (data.e === 'click') {
-                wfrc.onMouseClick(...data.args);
-            } else if (data.e === 'mv') {
-                this._mouseMove(...data.args);
-            } else if (data.e === 'mousedown') {
-                let values = [...data.args];
-                this._mouseMove(...values.slice(1));
-                wfrc.onMouseDown(values[0]);
-            } else if (data.e === 'mouseup') {
-                let values = [...data.args];
-                this._mouseMove(...values.slice(1));
-                wfrc.onMouseUp(values[0]);
-            } else if (data.e === 'wheel') {
-                wfrc.onMouseScroll(...data.args);
-            } else {
-                console.log("Unknown event ${data.e}");
-            }
-        // }
+        console.log('on receive remote input event:', rcEventArrayBuffer);
+        if (eventName === 'kd') {
+            wfrc.onKeyDown(...numberArgs);
+        } else if (eventName === 'ku') {
+            wfrc.onKeyUp(...numberArgs);
+        } else if (eventName === 'click') {
+            // TODO
+            // wfrc.onMouseClick(...data.args);
+        } else if (eventName === 'mv') {
+            this._mouseMove(...numberArgs);
+        } else if (eventName === 'md') {
+            this._mouseMove(...numberArgs.slice(1));
+            wfrc.onMouseDown(numberArgs[0]);
+        } else if (eventName === 'mu') {
+            this._mouseMove(...numberArgs.slice(1));
+            wfrc.onMouseUp(numberArgs[0]);
+        } else if (eventName === 'wl') {
+            wfrc.onMouseScroll(...numberArgs);
+        } else {
+            console.log("Unknown event ", rcEvent);
+        }
     }
 
     _lastMouseX = 0;

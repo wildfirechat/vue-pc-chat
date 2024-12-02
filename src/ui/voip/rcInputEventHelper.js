@@ -1,4 +1,4 @@
-import {RCEvent, RCEventArgs} from "./pb/rc";
+import {RCEvent} from "./pb/rc";
 
 /**
  * 主控方注册远程控制/协助相关事件监听
@@ -8,29 +8,13 @@ import {RCEvent, RCEventArgs} from "./pb/rc";
 export default function registerRemoteControlEventListener(session, remoteScreenVideoElement) {
     _keydownEventListener = (event) => {
         console.log(`key down: ${event.code}`);
-        let options = {
-            event: 'rce',
-            args: {
-                e: 'keydown',
-                c: event.code
-            }
-        };
-        _sendEventData(session, options)
-        // session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, 'kd', event.code)
     }
     document.addEventListener('keydown', _keydownEventListener);
 
     _keyupEventListener = (event) => {
         console.log(`key up: ${event.code}`);
-        let options = {
-            event: 'rce',
-            args: {
-                e: 'keyup',
-                c: event.code
-            }
-        };
-        _sendEventData(session, options)
-        //session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, 'ku', event.code)
     }
     document.addEventListener('keyup', _keyupEventListener);
     // click 事件，应当由被控端，自行根据 mousedown and mouseup 触发
@@ -57,16 +41,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             return
         }
         console.log(`mouse move: `, event.offsetX, event.offsetY, xy);
-        let options = {
-            event: 'rce',
-            args: {
-                e: 'mv',
-                ...xy
-            }
-        };
-
-        // session.sendRemoteControlInputEvent(options);
-        _sendEventData(session, options)
+        _sendEventData(session, 'mv', xy.x, xy.y);
     });
 
     remoteScreenVideoElement.addEventListener('mousedown', (event) => {
@@ -76,16 +51,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             return
         }
 
-        let options = {
-            event: 'rce',
-            args: {
-                e: 'mousedown',
-                btn: event.button,
-                ...xy
-            }
-        };
-        _sendEventData(session, options)
-        //session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, 'md', event.button, xy.x, xy.y);
     });
 
     remoteScreenVideoElement.addEventListener('mouseup', (event) => {
@@ -95,16 +61,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
             return
         }
 
-        let options = {
-            event: 'rce',
-            args: {
-                e: 'mouseup',
-                btn: event.button,
-                ...xy
-            }
-        };
-        _sendEventData(session, options)
-        //session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, 'mu', event.button, xy.x, xy.y);
     });
 
     remoteScreenVideoElement.addEventListener('wheel', (event) => {
@@ -131,16 +88,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         _deltaXSum = 0;
         _deltaYSum = 0;
 
-        let options = {
-            event: 'rce',
-            args: {
-                e: 'wheel',
-                delta: delta,
-                axis: axis,
-            }
-        };
-        _sendEventData(session, options)
-        //session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, 'wl', delta, axis)
     });
 }
 
@@ -189,22 +137,11 @@ function _adjustRCXY(event, remoteScreenVideoElement) {
     }
 }
 
-function _sendEventData(session, options) {
-    let event = RCEvent.create()
-    // let options = {
-    //     event: 'rce',
-    //     args: {
-    //         e: 'keyup',
-    //         c: event.code
-    //     }
-    // };
-    event.eventCategory = options.event;
-    let args = RCEventArgs.create()
-    args.eventName = options.args.e
-    args.values = [...Object.values(options.args)].slice(1)
-    event.args = args
-    let buffer = RCEvent.encode(event).finish()
-    // const buffer = Buffer.from(pb);
+function _sendEventData(session, eventName, numberValues) {
+    let rcEvent = RCEvent.create()
+    rcEvent.name = eventName
+    rcEvent.numberArgs= [...numberValues]
+    let buffer = RCEvent.encode(rcEvent).finish()
 
     console.log('xxxxxxx buffer', buffer.length, buffer.byteLength)
     session.sendRemoteControlInputEvent(buffer);
