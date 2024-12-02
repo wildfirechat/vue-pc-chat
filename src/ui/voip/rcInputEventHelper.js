@@ -1,3 +1,5 @@
+import {RCEvent, RCEventArgs} from "./pb/rc";
+
 /**
  * 主控方注册远程控制/协助相关事件监听
  * @param {CallSession} session 当前音视频通话的 session
@@ -13,7 +15,8 @@ export default function registerRemoteControlEventListener(session, remoteScreen
                 c: event.code
             }
         };
-        session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, options)
+        // session.sendRemoteControlInputEvent(options);
     }
     document.addEventListener('keydown', _keydownEventListener);
 
@@ -26,7 +29,8 @@ export default function registerRemoteControlEventListener(session, remoteScreen
                 c: event.code
             }
         };
-        session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, options)
+        //session.sendRemoteControlInputEvent(options);
     }
     document.addEventListener('keyup', _keyupEventListener);
     // click 事件，应当由被控端，自行根据 mousedown and mouseup 触发
@@ -52,6 +56,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         if (!xy) {
             return
         }
+        console.log(`mouse move: `, event.offsetX, event.offsetY, xy);
         let options = {
             event: 'wf_rc_event',
             args: {
@@ -59,7 +64,9 @@ export default function registerRemoteControlEventListener(session, remoteScreen
                 ...xy
             }
         };
-        session.sendRemoteControlInputEvent(options);
+
+        // session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, options)
     });
 
     remoteScreenVideoElement.addEventListener('mousedown', (event) => {
@@ -77,7 +84,8 @@ export default function registerRemoteControlEventListener(session, remoteScreen
                 ...xy
             }
         };
-        session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, options)
+        //session.sendRemoteControlInputEvent(options);
     });
 
     remoteScreenVideoElement.addEventListener('mouseup', (event) => {
@@ -95,7 +103,8 @@ export default function registerRemoteControlEventListener(session, remoteScreen
                 ...xy
             }
         };
-        session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, options)
+        //session.sendRemoteControlInputEvent(options);
     });
 
     remoteScreenVideoElement.addEventListener('wheel', (event) => {
@@ -130,7 +139,8 @@ export default function registerRemoteControlEventListener(session, remoteScreen
                 axis: axis,
             }
         };
-        session.sendRemoteControlInputEvent(options);
+        _sendEventData(session, options)
+        //session.sendRemoteControlInputEvent(options);
     });
 }
 
@@ -174,9 +184,30 @@ function _adjustRCXY(event, remoteScreenVideoElement) {
     y = y - yMargin / 2
 
     return {
-        x: x * rcSW / scaledVideoWidth,
-        y: y * rcSH / scaledVideoHeight
+        x: Math.round(x * rcSW / scaledVideoWidth),
+        y: Math.round(y * rcSH / scaledVideoHeight)
     }
+}
+
+function _sendEventData(session, options) {
+    let event = RCEvent.create()
+    // let options = {
+    //     event: 'wf_rc_event',
+    //     args: {
+    //         e: 'keyup',
+    //         c: event.code
+    //     }
+    // };
+    event.eventCategory = options.event;
+    let args = RCEventArgs.create()
+    args.eventName = options.args.e
+    args.values = [...Object.values(options.args)].slice(1)
+    event.args = args
+    let buffer = RCEvent.encode(event).finish()
+    // const buffer = Buffer.from(pb);
+
+    console.log('xxxxxxx buffer', buffer.length, buffer.byteLength)
+    session.sendRemoteControlInputEvent(buffer);
 }
 
 let _deltaXSum = 0;

@@ -4,6 +4,7 @@
 
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
 import wfrc from "../../client/wfrc";
+import {RCEvent, RCEventArgs} from "../../../ui/voip/pb/rc"
 
 export default class CallSessionCallback {
 
@@ -237,31 +238,57 @@ export default class CallSessionCallback {
     }
 
     didReceiveRemoteControlInputEvent(datas) {
+        let event = RCEvent.decode(new Uint8Array(datas));
+
+        // let event = RCEvent.create()
+        // // let options = {
+        // //     event: 'wf_rc_event',
+        // //     args: {
+        // //         e: 'keyup',
+        // //         c: event.code
+        // //     }
+        // // };
+        // event.eventCategory = options.event;
+        // let args = RCEventArgs.create()
+        // args.eventName = options.args.e
+        // args.values = [...Object.values(options.args)].slice(1)
+        // event.args = args
+        // let buffer = RCEvent.encode(event).finish()
+        // const buffer = Buffer.from(pb);
+
+        console.log('xxxxx receive event', event);
+        let data = {}
+        let args = event.args;
+        data.e = args.eventName
+        data.args = args.values
+
         console.log('on receive remote input event:', datas);
         // let dataArr = JSON.parse(datas)
-        for (const el of datas) {
-            let data = el.args;
+        // for (const el of datas) {
+        //     let data = el.args;
             console.log('on receive remote input event:', data);
             if (data.e === 'keydown') {
-                wfrc.onKeyDown(data.c);
+                wfrc.onKeyDown(...data.args);
             } else if (data.e === 'keyup') {
                 wfrc.onKeyUp(data.c);
             } else if (data.e === 'click') {
-                wfrc.onMouseClick(data.btn);
+                wfrc.onMouseClick(...data.args);
             } else if (data.e === 'mv') {
-                this._mouseMove(data.x, data.y);
+                this._mouseMove(...data.args);
             } else if (data.e === 'mousedown') {
-                this._mouseMove(data.x, data.y);
-                wfrc.onMouseDown(data.btn);
+                let values = [...data.args];
+                this._mouseMove(...values.slice(1));
+                wfrc.onMouseDown(values[0]);
             } else if (data.e === 'mouseup') {
-                this._mouseMove(data.x, data.y);
-                wfrc.onMouseUp(data.btn);
+                let values = [...data.args];
+                this._mouseMove(...values.slice(1));
+                wfrc.onMouseUp(values[0]);
             } else if (data.e === 'wheel') {
-                wfrc.onMouseScroll(data.delta, data.axis);
+                wfrc.onMouseScroll(...data.args);
             } else {
                 console.log("Unknown event ${data.e}");
             }
-        }
+        // }
     }
 
     _lastMouseX = 0;
