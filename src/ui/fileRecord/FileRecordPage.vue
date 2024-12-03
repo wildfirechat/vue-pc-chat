@@ -1,5 +1,7 @@
 <template>
     <section>
+        <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
+                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <div class="file-record-page">
             <h2 class="title">文件记录</h2>
             <div class="file-record-container">
@@ -111,6 +113,7 @@ import InfiniteLoading from "@imndx/vue-infinite-loading";
 import {ipcRenderer, isElectron, currentWindow} from "../../platform";
 import UserListView from "../main/user/UserListView.vue";
 import IpcEventType from "../../ipcEventType";
+import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
 
 export default {
     name: "FileRecordPage",
@@ -130,6 +133,7 @@ export default {
             CATEGORY_ALL: 'all',
             CATEGORY_CONVERSATION: 'conversation',
             CATEGORY_SENDER: 'sender',
+            sharedMiscState: store.state.misc,
         }
     },
     methods: {
@@ -341,6 +345,7 @@ export default {
     },
 
     components: {
+        ElectronWindowsControlButtonView,
         UserListView,
         InfiniteLoading,
     }
