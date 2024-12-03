@@ -16,7 +16,10 @@
             <!--            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"-->
             <!--                                              :title="'野火会议'"-->
             <!--                                              :macos="!sharedMiscState.isElectronWindowsOrLinux"/>-->
-            <ScreenShareControlView v-if="session && session.screenSharing && session.rcStatus === 5" type="conference"/>
+            <ScreenShareControlView v-if="session && session.screenSharing && session.rcStatus === 5"
+                                    type="conference"
+                                    stop-screen-share-title="结束远程控制"
+                                    :stop-screen-share-func="hangup"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
         <div v-if="session && !(session.screenSharing && session.rcStatus === 5)" class="container" style="background: #292929">
