@@ -77,6 +77,12 @@ export default class WfcAVEngineKit {
     static FORCE_MEDIA_OVER_TCP = false;
 
     /**
+     * 没有麦克风和音频输出设备时，是否允许发起或参加音视频通话
+     * @type {boolean}
+     */
+    static ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER= true;
+
+    /**
      * 高级版音视频 SDK 有效
      * 是否强制采用 relay 模式
      * 具体请参考 {@link https://docs.wildfirechat.cn/blogs/%E9%9F%B3%E8%A7%86%E9%A2%91%E9%AB%98%E7%BA%A7%E7%89%88%E7%9A%84%E5%8D%95%E7%AB%AF%E5%8F%A3%E5%8C%96%E5%92%8C%E5%BC%BA%E5%88%B6TCP%E5%8C%96.html}
