@@ -4,7 +4,7 @@
 
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
 import wfrc from "../../client/wfrc";
-import {RCEvent, RCEventArgs} from "../../../ui/voip/pb/rcEvent"
+import {RCEvent, RCEventArgs} from "../../rc/pb/rcEvent"
 
 export default class CallSessionCallback {
 
@@ -237,33 +237,46 @@ export default class CallSessionCallback {
         wfrc.start();
     }
 
+    rcEventArray = []
+    rcEventInvokeInterval = 0
+
     didReceiveRemoteControlInputEvent(rcEventArrayBuffer) {
         let rcEvent = RCEvent.decode(new Uint8Array(rcEventArrayBuffer));
         console.log('xxxxx receive event', rcEvent);
-        let eventName = rcEvent.name
-        let numberArgs = rcEvent.numberArgs
-        let strArgs = rcEvent.strArgs
 
-        console.log('on receive remote input event:', rcEventArrayBuffer);
-        if (eventName === 'kd') {
-            wfrc.onKeyDown(...strArgs);
-        } else if (eventName === 'ku') {
-            wfrc.onKeyUp(...strArgs);
-        } else if (eventName === 'click') {
-            // TODO
-            // wfrc.onMouseClick(...data.args);
-        } else if (eventName === 'mv') {
-            this._mouseMove(...numberArgs);
-        } else if (eventName === 'md') {
-            this._mouseMove(...numberArgs.slice(1));
-            wfrc.onMouseDown(numberArgs[0]);
-        } else if (eventName === 'mu') {
-            this._mouseMove(...numberArgs.slice(1));
-            wfrc.onMouseUp(numberArgs[0]);
-        } else if (eventName === 'wl') {
-            wfrc.onMouseScroll(...numberArgs);
-        } else {
-            console.log("Unknown event ", rcEvent);
+        this.rcEventArray.push(rcEvent)
+        if(!this.rcEventInvokeInterval){
+            this.rcEventInvokeInterval = setInterval(() => {
+                rcEvent = this.rcEventArray.shift()
+                if(!rcEvent){
+                    return
+                }
+                let eventName = rcEvent.name
+                let numberArgs = rcEvent.numberArgs
+                let strArgs = rcEvent.strArgs
+
+                console.log('on receive remote input event:', rcEventArrayBuffer);
+                if (eventName === 'kd') {
+                    wfrc.onKeyDown(...strArgs);
+                } else if (eventName === 'ku') {
+                    wfrc.onKeyUp(...strArgs);
+                } else if (eventName === 'click') {
+                    // TODO
+                    // wfrc.onMouseClick(...data.args);
+                } else if (eventName === 'mv') {
+                    this._mouseMove(...numberArgs);
+                } else if (eventName === 'md') {
+                    this._mouseMove(...numberArgs.slice(1));
+                    wfrc.onMouseDown(numberArgs[0]);
+                } else if (eventName === 'mu') {
+                    this._mouseMove(...numberArgs.slice(1));
+                    wfrc.onMouseUp(numberArgs[0]);
+                } else if (eventName === 'wl') {
+                    wfrc.onMouseScroll(...numberArgs);
+                } else {
+                    console.log("Unknown event ", rcEvent);
+                }
+            }, 5)
         }
     }
 
