@@ -3,7 +3,7 @@
  */
 
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
-import wfrc from "../../client/wfrc";
+import wfrc from "../../rc/wfrc";
 import {RCEvent, RCEventArgs} from "../../rc/pb/rcEvent"
 
 export default class CallSessionCallback {
@@ -379,4 +379,5 @@ export default class CallSessionCallback {
         }
         return canvas.captureStream();
     }
+
 }

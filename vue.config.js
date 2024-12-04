@@ -77,6 +77,16 @@ module.exports = {
                         }
                         return options;
                     });
+                config.module
+                    .rule('native')
+                    .test(/\.node$/)
+                    .use('native-ext-loader')
+                    .loader('native-ext-loader')
+                    .options({
+                        //basePath: ['electron.asar', 'renderer']
+                        rewritePath: path.resolve(__dirname, ".")
+                    })
+                    .end();
             },
             // nodeIntegration: true,
             contextIsolation: false,

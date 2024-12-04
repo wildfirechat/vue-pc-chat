@@ -27,7 +27,6 @@ import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
-import {init as initRCMain} from "./wfc/rc/rc_main";
 import createProtocol from "./createProtocol";
 
 console.log('start crash report', app.getPath('crashDumps'))
@@ -1090,41 +1089,9 @@ function registerLocalResourceProtocol() {
     });
 }
 
-function loadRC() {
-  let wfremotecontrol;
-
-  switch (process.platform) {
-      case 'linux':
-          throw new Error(`Unsupported platform: ${process.platform}`);
-          break;
-      case 'win32': {
-        switch (process.arch) {
-          case 'ia32':
-            wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-ia32-msvc.node');
-            break;
-          case 'x64':
-            wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-x64-msvc.node');
-        }
-        break;
-      }
-      case 'darwin': {
-        switch (process.arch) {
-          case 'arm64':
-            wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-arm64.node');
-            break;
-          case 'x64':
-            wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-x64.node');
-        }
-        break;
-      }
-      default:
-          throw new Error(`Unsupported platform: ${process.platform}`);
-  }
-  return wfremotecontrol;
-}
 app.on('ready', () => {
         initProtoMain(proto);
-        initRCMain(loadRC());
+        // initRCMain(loadRC());
 
         createMainWindow();
 
