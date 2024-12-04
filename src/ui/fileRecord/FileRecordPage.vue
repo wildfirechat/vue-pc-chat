@@ -1,9 +1,6 @@
 <template>
     <section>
-        <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
-                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <div class="file-record-page">
-            <h2 class="title">文件记录</h2>
             <div class="file-record-container">
 
                 <div class="category-container">
@@ -355,8 +352,8 @@ export default {
 <style lang="css" scoped>
 
 .file-record-page {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     background-color: #f7f7f7;

@@ -207,8 +207,8 @@ export default {
 
 <style scoped>
 .message-history-page {
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background: #f3f3f3;
     display: flex;
     flex-direction: column;

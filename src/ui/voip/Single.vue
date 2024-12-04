@@ -13,9 +13,6 @@
             上线前，请部署 turn 服务，野火官方 turn 服务只能开发测试使用!!!
         </p>
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
-            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"
-                                              :title="'野火音视频通话'"
-                                              v-if="sharedMiscState.isElectronWindowsOrLinux"/>
             <ScreenShareControlView v-if="session && session.screenSharing && session.rcStatus === 5" type="conference"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>

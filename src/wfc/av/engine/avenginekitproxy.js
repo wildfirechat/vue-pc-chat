@@ -601,7 +601,7 @@ export class AvEngineKitProxy {
                     resizable: true,
                     maximizable: true,
                     transparent: !!isConference,
-                    frame: !(isConference || isWindowsOrLinux),
+                    frame: !isConference,
                     webPreferences: {
                         scrollBounce: false,
                         nativeWindowOpen: true,

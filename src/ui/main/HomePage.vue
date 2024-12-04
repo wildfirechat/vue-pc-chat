@@ -1,7 +1,5 @@
 <template>
     <div class="home-container" ref="home-container">
-        <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
-                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <div class="home">
             <section class="menu-container">
                 <div>
@@ -319,8 +317,8 @@ export default {
 
 .home {
     display: flex;
-    width: calc(100vw - var(--main-margin-left) - var(--main-margin-right));
-    height: calc(100vh - var(--main-margin-top) - var(--main-margin-bottom));
+    width: 100%;
+    height: 100%;
     justify-content: center;
     align-items: center;
     background-color: white;
