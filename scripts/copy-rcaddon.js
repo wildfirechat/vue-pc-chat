@@ -15,11 +15,7 @@ if (argv.length > 2) {
 
 switch (platform) {
     case "darwin":
-        if (arch === 'arm64') {
-            addonName += '.darwin-arm64'
-        } else {
-            addonName += '.darwin-x64'
-        }
+        addonName += '.darwin'
         break;
     case "linux":
         // addonName += '.linux'
