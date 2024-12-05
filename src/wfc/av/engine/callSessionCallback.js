@@ -4,7 +4,8 @@
 
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
 import wfrc from "../../rc/wfrc";
-import {RCEvent, RCEventArgs} from "../../rc/pb/rcEvent"
+import {simulateRemoteControlInputEvent} from "../../../ui/voip/rcInputEventHelper";
+import avenginekitproxy from "./avenginekitproxy";
 
 export default class CallSessionCallback {
 
@@ -237,43 +238,26 @@ export default class CallSessionCallback {
         wfrc.start();
     }
 
-    didReceiveRemoteControlInputEvent(rcEventArrayBuffer) {
-        let rcEvent = RCEvent.decode(new Uint8Array(rcEventArrayBuffer));
-        console.log('receive rc event', rcEvent);
-        let eventName = rcEvent.name
-        let numberArgs = rcEvent.numberArgs
-        let strArgs = rcEvent.strArgs
-
-        if (eventName === 'kd') {
-            wfrc.onKeyDown(...strArgs);
-        } else if (eventName === 'ku') {
-            wfrc.onKeyUp(...strArgs);
-        } else if (eventName === 'click') {
-            // TODO
-            // wfrc.onMouseClick(...data.args);
-        } else if (eventName === 'mv') {
-            this._mouseMove(...numberArgs);
-        } else if (eventName === 'md') {
-            this._mouseMove(...numberArgs.slice(1));
-            wfrc.onMouseDown(numberArgs[0]);
-        } else if (eventName === 'mu') {
-            this._mouseMove(...numberArgs.slice(1));
-            wfrc.onMouseUp(numberArgs[0]);
-        } else if (eventName === 'wl') {
-            wfrc.onMouseScroll(...numberArgs);
-        } else {
-            console.log("Unknown event ", rcEvent);
-        }
+    didReceiveRemoteControlInputEvent(rcEventBuffer) {
+        let retValue = simulateRemoteControlInputEvent(rcEventBuffer)
+        // TODO 根据 retValue 做一些提示
+        return retValue;
     }
 
-    _lastMouseX = 0;
-    _lastMouseY = 0;
-
-    _mouseMove(x, y) {
-        if (x !== this._lastMouseX && y !== this._lastMouseY) {
-            this._lastMouseX = x;
-            this._lastMouseY = y;
-            wfrc.onMouseMove(x, y);
+    didRemoteControlInputError(errorCode) {
+        // TODO
+        console.error('remote control error', errorCode);
+        // 进行提示
+        if(errorCode === -2){
+            this.$alert({
+                showIcon: false,
+                content: '请通知对方进行提权操作',
+                cancelCallback: () => {
+                    // do nothing
+                },
+                confirmCallback: () => {
+                }
+            })
         }
     }
 

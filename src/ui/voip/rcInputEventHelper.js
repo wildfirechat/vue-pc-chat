@@ -1,4 +1,5 @@
 import {RCEvent} from "../../wfc/rc/pb/rcEvent";
+import wfrc from "../../wfc/rc/wfrc";
 
 /**
  * 主控方注册远程控制/协助相关事件监听
@@ -147,6 +148,50 @@ function _sendEventData(session, eventName, numberValues = [], strValues = []) {
     console.log('xxxxxxx buffer', eventName, numberValues, buffer.length)
     session.sendRemoteControlInputEvent(buffer);
 }
+
+export function simulateRemoteControlInputEvent(rcEventBuffer) {
+    let rcEvent = RCEvent.decode(new Uint8Array(rcEventBuffer));
+    console.log('receive rc event', rcEvent);
+    let eventName = rcEvent.name
+    let numberArgs = rcEvent.numberArgs
+    let strArgs = rcEvent.strArgs
+
+    let retValue = 0
+
+    if (eventName === 'kd') {
+        retValue = wfrc.onKeyDown(...strArgs);
+    } else if (eventName === 'ku') {
+        retValue = wfrc.onKeyUp(...strArgs);
+    } else if (eventName === 'click') {
+        // TODO
+        // wfrc.onMouseClick(...data.args);
+    } else if (eventName === 'mv') {
+        retValue = _mouseMove(...numberArgs);
+    } else if (eventName === 'md') {
+        _mouseMove(...numberArgs.slice(1));
+        retValue = wfrc.onMouseDown(numberArgs[0]);
+    } else if (eventName === 'mu') {
+        _mouseMove(...numberArgs.slice(1));
+        retValue = wfrc.onMouseUp(numberArgs[0]);
+    } else if (eventName === 'wl') {
+        retValue = wfrc.onMouseScroll(...numberArgs);
+    } else {
+        console.log("Unknown event ", rcEvent);
+    }
+    return retValue
+}
+
+function _mouseMove(x, y) {
+    if (x !== _lastMouseX && y !== _lastMouseY) {
+        _lastMouseX = x;
+        _lastMouseY = y;
+        return wfrc.onMouseMove(x, y);
+    }
+    return 0
+}
+
+let _lastMouseX = 0;
+let _lastMouseY = 0;
 
 let _deltaXSum = 0;
 let _deltaYSum = 0;
