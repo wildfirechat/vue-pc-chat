@@ -155,7 +155,7 @@ import ScreenShareControlView from "./ScreenShareControlView.vue";
 import store from "../../store";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import IpcEventType from "../../ipcEventType";
-import wfrc from "../../wfc/client/wfrc";
+import wfrc from "../../wfc/rc/wfrc";
 import RcEndReason from "../../wfc/av/engine/rcEndReason";
 import RCState from "../../wfc/av/engine/rcState";
 import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";

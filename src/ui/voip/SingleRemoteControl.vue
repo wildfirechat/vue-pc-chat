@@ -104,7 +104,7 @@ import Config from "../../config";
 import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
 import ScreenShareControlView from "./ScreenShareControlView.vue";
 import store from "../../store";
-import wfrc from "../../wfc/client/wfrc";
+import wfrc from "../../wfc/rc/wfrc";
 import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import IpcEventType from "../../ipcEventType";

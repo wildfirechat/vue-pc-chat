@@ -7,7 +7,6 @@ import {BrowserWindow, ipcRenderer, isElectron, remote} from "../../../platform"
 import ConversationType from "../../model/conversationType";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
-import wfrc from "../../client/wfrc";
 import MessageConfig from "../../client/messageConfig";
 import DetectRTC from 'detectrtc';
 import Config from "../../../config";
