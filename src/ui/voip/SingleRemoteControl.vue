@@ -305,6 +305,21 @@ export default {
             sessionCallback.didReportAudioVolume = (userId, volume) => {
                 // console.log('didReportAudioVolume', userId, volume)
             }
+            sessionCallback.didRemoteControlInputError = (errorCode) => {
+                console.error('remote control error', errorCode);
+                // 进行提示
+                if(errorCode === -2) {
+                    this.$alert({
+                        showIcon: false,
+                        content: '请通知对方进行提权操作',
+                        cancelCallback: () => {
+                            // do nothing
+                        },
+                        confirmCallback: () => {
+                        }
+                    })
+                }
+            }
 
             avenginekit.sessionCallback = sessionCallback;
         },
