@@ -45,11 +45,11 @@ export class WfrcManager {
     }
 
     onKeyDown(key) {
-        this.rcAddon.onKeyDown(key);
+        this.rcAddon.onKeyEvent(key, 0);
     }
 
     onKeyUp(key) {
-        this.rcAddon.onKeyUp(key);
+        this.rcAddon.onKeyEvent(key, 1);
     }
 
     onMouseMove(x, y) {
