@@ -1,7 +1,5 @@
 <template>
     <div class="image-content-container">
-        <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
-                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <div v-if="!message">
             加载中...
         </div>
@@ -55,8 +53,6 @@ import MessageContentType from "../../wfc/messages/messageContentType";
 import {downloadFile} from "../../platformHelper";
 import ForwardType from "./conversation/message/forward/ForwardType";
 import {scaleDown} from "../util/imageUtil";
-import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
-import store from "../../store";
 
 export default {
     name: 'MultimediaPreviewPage',
@@ -74,7 +70,6 @@ export default {
             hasMoreNewMediaMessage: true,
             minWidth: 480,
             minHeight: 360,
-            sharedMiscState: store.state.misc,
         }
     },
 
@@ -236,7 +231,7 @@ export default {
         }
     },
 
-    components: {ElectronWindowsControlButtonView}
+    components: {}
 }
 
 </script>

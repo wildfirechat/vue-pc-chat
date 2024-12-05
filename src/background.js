@@ -1004,7 +1004,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
                 webviewTag: true,
                 webSecurity: webSecurity,
             },
-            frame: !isWin
+            // frame:false
         }
     );
     win.removeMenu();
@@ -1091,38 +1091,37 @@ function registerLocalResourceProtocol() {
 }
 
 function loadRC() {
-    let wfremotecontrol;
+  let wfremotecontrol;
 
-    switch (process.platform) {
-        case 'linux':
-            throw new Error(`Unsupported platform: ${process.platform}`);
+  switch (process.platform) {
+      case 'linux':
+          throw new Error(`Unsupported platform: ${process.platform}`);
+          break;
+      case 'win32': {
+        switch (process.arch) {
+          case 'ia32':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-ia32-msvc.node');
             break;
-        case 'win32': {
-            switch (process.arch) {
-                case 'ia32':
-                    wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-ia32-msvc.node');
-                    break;
-                case 'x64':
-                    wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-x64-msvc.node');
-            }
-            break;
+          case 'x64':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.win32-x64-msvc.node');
         }
-        case 'darwin': {
-            switch (process.arch) {
-                case 'arm64':
-                    wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-arm64.node');
-                    break;
-                case 'x64':
-                    wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-x64.node');
-            }
+        break;
+      }
+      case 'darwin': {
+        switch (process.arch) {
+          case 'arm64':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-arm64.node');
             break;
+          case 'x64':
+            wfremotecontrol = require('../rc_addon/wfremotecontrol.darwin-x64.node');
         }
-        default:
-            throw new Error(`Unsupported platform: ${process.platform}`);
-    }
-    return wfremotecontrol;
+        break;
+      }
+      default:
+          throw new Error(`Unsupported platform: ${process.platform}`);
+  }
+  return wfremotecontrol;
 }
-
 app.on('ready', () => {
         initProtoMain(proto);
         initRCMain(loadRC());

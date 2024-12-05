@@ -3,10 +3,11 @@
  */
 
 import EventType from "../../client/wfcEvent";
-import {BrowserWindow, ipcRenderer, isElectron, remote, isWindowsOrLinux} from "../../../platform";
+import {BrowserWindow, ipcRenderer, isElectron, remote} from "../../../platform";
 import ConversationType from "../../model/conversationType";
 import MessageContentType from "../../messages/messageContentType";
 import wfc from "../../client/wfc";
+import wfrc from "../../client/wfrc";
 import MessageConfig from "../../client/messageConfig";
 import DetectRTC from 'detectrtc';
 import Config from "../../../config";
@@ -15,6 +16,7 @@ import Conversation from "../../../wfc/model/conversation";
 
 import CallEndReason from "./callEndReason";
 import CallByeMessageContent from "../messages/callByeMessageContent";
+import {log} from "console";
 import WfcAVEngineKit from "./avenginekit";
 
 // main window renderer process -> voip window renderer process
@@ -87,7 +89,7 @@ export class AvEngineKitProxy {
         let content = message.content;
 
         let msg = wfc.getMessageByUid(messageUid);
-        if (!msg) {
+        if(!msg){
             return
         }
         let orgContent = msg.messageContent;
@@ -173,7 +175,7 @@ export class AvEngineKitProxy {
             console.log('not enable multi call ');
             return;
         }
-        if (!isElectron() && msg.messageContent === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST) {
+        if(!isElectron() && msg.messageContent === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST){
             console.log('only pc support remote control');
             return;
         }
@@ -601,7 +603,7 @@ export class AvEngineKitProxy {
                     resizable: true,
                     maximizable: true,
                     transparent: !!isConference,
-                    frame: !(isConference || isWindowsOrLinux),
+                    frame: !isConference,
                     webPreferences: {
                         scrollBounce: false,
                         nativeWindowOpen: true,

@@ -1,7 +1,5 @@
 <template>
     <section id="conversation-content" class="conversation-page">
-        <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
-                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <ConversationView class="conversation-view"/>
     </section>
 </template>
@@ -10,15 +8,9 @@
 import ConversationView from "./conversation/ConversationView";
 import Conversation from "../../wfc/model/conversation";
 import store from "../../store";
-import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
 
 export default {
     name: "ConversationFloatPage",
-    data(){
-        return {
-            sharedMiscState: store.state.misc,
-        }
-    },
     unmounted() {
         console.log('conversation float page destroyed')
     },
@@ -35,7 +27,6 @@ export default {
 
     methods: {},
     components: {
-        ElectronWindowsControlButtonView,
         ConversationView,
     },
 };

@@ -31,7 +31,6 @@ export const AppPath = require('@electron/remote').app.getAppPath();
 export const app = require('@electron/remote').app;
 export const screen = require('@electron/remote').screen
 export const clipboard = require('electron').clipboard;
-export const isWindowsOrLinux = process && (process.platform === 'win32' || process.platform === 'linux')
 
 // for web
 
