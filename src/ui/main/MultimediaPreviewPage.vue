@@ -1,9 +1,11 @@
 <template>
     <div class="image-content-container">
+        <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
+                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <div v-if="!message">
             加载中...
         </div>
-        <div v-else style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center">
+        <div v-else style="width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center">
             <img v-show="mediaLoaded === false"
                  alt=""
                  v-bind:src="'data:video/jpeg;base64,' + currentMedia.thumbnail">

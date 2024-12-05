@@ -1,50 +1,42 @@
 <template>
-    <div
-        style="width: 100vw; height: 100vh; overflow: hidden;">
-        <ElectronWindowsControlButtonView style="width: 100%; height: 30px; background: white"
-                                          ref="titleBar"
-                                          :title="'野火IM'"
-                                          :macos="!sharedMiscState.isElectronWindowsOrLinux"
-                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
-        <div id="app-main"
-             style="width: 100vw; height: calc(100vh - var(--main-margin-top))"
-             @contextmenu.prevent=""
-             @dragenter="$event.preventDefault()"
-             @dragover="$event.preventDefault()"
-             @drop="$event.preventDefault()"
-             v-visibility-change="visibilityChange">
-            <div v-if="!sharedMiscState.isElectron" id="blur-container" class="blur-container">
-                <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" id="blurred_mkvvpnf50"
-                     class="blured-img" viewBox="0 0 1920 875" preserveAspectRatio="none">
-                    <filter id="blur_mkvvpnf">
-                        <feGaussianBlur in="SourceGraphic" stdDeviation="50"></feGaussianBlur>
-                    </filter>
-                    <image x="0" y="0" width="100%" height="100%" externalResourcesRequired="true"
-                           xmlns:xlink="http://www.w3.org/1999/xlink"
-                           xlink:href="https://static.wildfirechat.net/web_wfc_bg2.jpeg"
-                           style="filter:url(#blur_mkvvpnf)" preserveAspectRatio="none"></image>
-                </svg>
-                <div class="blur-mask"></div>
-            </div>
-            <!--用来实现视频缩略图-->
-            <div id="styled_video_container" class="styled_video_container">
-                <video id="bgvid" playsinline autoplay muted loop crossorigin="anonymous">
-                    <!-- <source src="http://thenewcode.com/assets/videos/polina.webm" type="video/webm">
-                    <source src="http://thenewcode.com/assets/videos/polina.mp4" type="video/mp4"> -->
-                </video>
-            </div>
-
-            <CoolLightBox
-                v-if="!sharedMiscState.isElectron"
-                :items="sharedConversationState.previewMediaItems"
-                :index="sharedConversationState.previewMediaIndex"
-                :slideshow="false"
-                @close="sharedConversationState.previewMediaIndex = null">
-            </CoolLightBox>
-            <notifications v-if="sharedMiscState.isMainWindow"/>
-            <IpcMain v-if="sharedMiscState.isMainWindow && sharedMiscState.isElectron"/>
-            <router-view id="main-content-container" class="main-content-container"></router-view>
+    <div id="app-main"
+         style="width: 100vw; height: 100vh"
+         @contextmenu.prevent=""
+         @dragenter="$event.preventDefault()"
+         @dragover="$event.preventDefault()"
+         @drop="$event.preventDefault()"
+         v-visibility-change="visibilityChange">
+        <div v-if="!sharedMiscState.isElectron" id="blur-container" class="blur-container">
+            <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" id="blurred_mkvvpnf50"
+                 class="blured-img" viewBox="0 0 1920 875" preserveAspectRatio="none">
+                <filter id="blur_mkvvpnf">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="50"></feGaussianBlur>
+                </filter>
+                <image x="0" y="0" width="100%" height="100%" externalResourcesRequired="true"
+                       xmlns:xlink="http://www.w3.org/1999/xlink"
+                       xlink:href="https://static.wildfirechat.net/web_wfc_bg2.jpeg"
+                       style="filter:url(#blur_mkvvpnf)" preserveAspectRatio="none"></image>
+            </svg>
+            <div class="blur-mask"></div>
         </div>
+        <!--用来实现视频缩略图-->
+        <div id="styled_video_container" class="styled_video_container">
+            <video id="bgvid" playsinline autoplay muted loop crossorigin="anonymous">
+                <!-- <source src="http://thenewcode.com/assets/videos/polina.webm" type="video/webm">
+                <source src="http://thenewcode.com/assets/videos/polina.mp4" type="video/mp4"> -->
+            </video>
+        </div>
+
+        <CoolLightBox
+            v-if="!sharedMiscState.isElectron"
+            :items="sharedConversationState.previewMediaItems"
+            :index="sharedConversationState.previewMediaIndex"
+            :slideshow="false"
+            @close="sharedConversationState.previewMediaIndex = null">
+        </CoolLightBox>
+        <notifications v-if="sharedMiscState.isMainWindow"/>
+        <IpcMain v-if="sharedMiscState.isMainWindow && sharedMiscState.isElectron"/>
+        <router-view id="main-content-container" class="main-content-container"></router-view>
     </div>
 </template>
 
@@ -56,8 +48,6 @@ import './vendor/vue-cool-lightbox/dist/vue-cool-lightbox.min.css'
 import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
 import wfc from "./wfc/client/wfc";
-import {Notifications} from "@kyvg/vue3-notification";
-import ElectronWindowsControlButtonView from "./ui/common/ElectronWindowsControlButtonView.vue";
 
 export default {
     name: 'App',
@@ -140,8 +130,6 @@ export default {
     },
 
     components: {
-        ElectronWindowsControlButtonView,
-        Notifications,
         IpcMain,
         CoolLightBox,
     }
@@ -208,8 +196,11 @@ export default {
 
 .main-content-container {
     z-index: 999;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    width: calc(100vw - var(--main-margin-left) - var(--main-margin-right));
+    height: calc(100vh - var(--main-margin-top) - var(--main-margin-bottom));
+    top: 0;
+    left: 0;
     margin: var(--main-margin-top) var(--main-margin-right) var(--main-margin-bottom) var(--main-margin-left);
     display: flex;
     justify-content: center;

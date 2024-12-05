@@ -8,10 +8,8 @@
 <template>
     <div class="flex-column flex-align-center flex-justify-center voip-container" style="width: 100%; height: 100%" ref="rootContainer">
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
-            <!-- mac 下，要求是 frameless window，但又需要个标题栏，比较特殊，故单独添加标题栏 -->
             <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"
                                               :title="'野火会议'"
-                                              v-if="!sharedMiscState.isElectronWindowsOrLinux"
                                               :macos="!sharedMiscState.isElectronWindowsOrLinux"/>
             <ScreenShareControlView v-if="session && session.screenSharing" type="conference"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
@@ -619,7 +617,7 @@ export default {
             };
 
             if (isElectron()) {
-                avenginekit.setup(sessionCallback);
+            	avenginekit.setup(sessionCallback);
             } else {
                 avenginekit.sessionCallback = sessionCallback;
             }
@@ -723,8 +721,8 @@ export default {
 
         chat() {
             if (isElectron()) {
-                this.showConversationView = !this.showConversationView;
-                this.toggleSliderView();
+            	this.showConversationView = !this.showConversationView;
+            	this.toggleSliderView();
             } else {
                 let conversation = new Conversation(ConversationType.ChatRoom, this.session.callId, 0)
                 let chatroomInfo = new ChatRoomInfo();
@@ -1144,7 +1142,7 @@ export default {
                     sp = this.participantUserInfos.find(u => !u._isAudience && !u._isVideoMuted);
                 }
             }
-
+       
             if (sp) {
                 conferenceManager.currentFocusUser = sp;
             } else {
@@ -1320,9 +1318,7 @@ export default {
             window.addEventListener("mouseleave", (event) => {
                 currentWindow.setIgnoreMouseEvents(false);
             })
-            if (!this.sharedMiscState.isElectronWindowsOrLinux) {
-                this.$refs.rootContainer.style.setProperty('--conference-container-margin-top', '30px');
-            }
+            this.$refs.rootContainer.style.setProperty('--conference-container-margin-top', '30px');
         } else {
             this.$refs.rootContainer.style.setProperty('--conference-container-margin-top', '0px');
         }

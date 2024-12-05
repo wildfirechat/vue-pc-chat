@@ -13,6 +13,9 @@
             上线前，请部署 turn 服务，野火官方 turn 服务只能开发测试使用!!!
         </p>
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
+            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"
+                                              :title="'野火远程控制'"
+                                              v-if="sharedMiscState.isElectronWindowsOrLinux"/>
             <ScreenShareControlView v-if="session && session.screenSharing && session.rcStatus === 5"
                                     type="conference"
                                     stop-screen-share-title="结束远程控制"

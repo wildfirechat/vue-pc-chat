@@ -1,5 +1,7 @@
 <template>
     <section id="conversation-content" class="conversation-page">
+        <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
+                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
         <ConversationView class="conversation-view"/>
     </section>
 </template>
@@ -12,7 +14,7 @@ import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlBu
 
 export default {
     name: "ConversationFloatPage",
-    data() {
+    data(){
         return {
             sharedMiscState: store.state.misc,
         }
@@ -41,8 +43,8 @@ export default {
 
 <style lang="css" scoped>
 .conversation-page {
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
 }
 
 .conversation-view {

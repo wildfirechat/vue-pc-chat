@@ -1,6 +1,10 @@
 <template>
     <div>
         <div class="login-container">
+            <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
+                                              :maximizable="false"
+                                              v-if="sharedMiscState.isElectronWindowsOrLinux"/>
+
             <div class="drag-area"/>
             <div v-if="loginType === 0" class="qrcode-login-container">
                 <div class="qr-container" @click="regenerateQrCode">
@@ -374,14 +378,14 @@ export default {
                     this.refreshQrCode();
                 }
                 if (status !== ConnectionStatus.ConnectionStatusLogout) {
-                    console.error('连接失败', status, ConnectionStatus.desc(status));
-                    this.cancel();
-                    this.diagnose();
-                    this.$notify({
-                        text: '连接失败，请打开控制台，查看具体日志',
-                        type: 'error'
-                    });
-                }
+                console.error('连接失败', status, ConnectionStatus.desc(status));
+                this.cancel();
+                this.diagnose();
+                this.$notify({
+                    text: '连接失败，请打开控制台，查看具体日志',
+                    type: 'error'
+                });
+            }
 
             }
             if (status === ConnectionStatus.ConnectionStatusReceiveing) {
