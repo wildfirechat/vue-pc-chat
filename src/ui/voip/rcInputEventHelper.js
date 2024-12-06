@@ -1,4 +1,5 @@
-import {RCEvent} from "../../wfc/rc/pb/rcEvent";
+// import {RCEvent} from "../../wfc/rc/pb/rcEvent";
+import RCEvent from "../../wfc/rc/RCEvent";
 import wfrc from "../../wfc/rc/wfrc";
 
 /**
@@ -139,18 +140,18 @@ function _adjustRCXY(event, remoteScreenVideoElement) {
 }
 
 function _sendEventData(session, eventName, numberValues = [], strValues = []) {
-    let rcEvent = RCEvent.create()
+    let rcEvent = new RCEvent()
     rcEvent.name = eventName
     rcEvent.numberArgs = numberValues
     rcEvent.strArgs = strValues
-    let buffer = RCEvent.encode(rcEvent).finish()
+    let buffer = rcEvent.toArrayBuffer()
 
-    console.log('xxxxxxx buffer', eventName, numberValues, buffer.length)
+    console.log('buffer', eventName, numberValues, buffer.length)
     session.sendRemoteControlInputEvent(buffer);
 }
 
 export function simulateRemoteControlInputEvent(rcEventBuffer) {
-    let rcEvent = RCEvent.decode(new Uint8Array(rcEventBuffer));
+    let rcEvent = RCEvent.fromArrayBuffer(rcEventBuffer);
     console.log('receive rc event', rcEvent);
     let eventName = rcEvent.name
     let numberArgs = rcEvent.numberArgs
