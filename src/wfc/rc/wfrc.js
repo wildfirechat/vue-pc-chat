@@ -55,6 +55,10 @@ export class WfrcManager {
         return this.rcAddon.isStarted();
     }
 
+    isUac() {
+        return this.rcAddon.isUac();
+    }
+
     onTextInput(text) {
         return this.rcAddon.onTextInput(text);
     }
