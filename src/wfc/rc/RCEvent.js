@@ -22,33 +22,33 @@ export default class RCEvent {
             case 'mv':
                 array = new Uint8Array(5);
                 array[0] = RCEvent.MV_MASK;
-                array[1] = 0xFF00 & this.numberArgs[0];
+                array[1] = (0xFF00 & this.numberArgs[0]) >> 8;
                 array[2] = 0x00FF & this.numberArgs[0];
-                array[3] = 0xFF00 & this.numberArgs[1];
+                array[3] = (0xFF00 & this.numberArgs[1]) >> 8;
                 array[4] = 0x00FF & this.numberArgs[1];
                 break
             case 'wl':
                 array = new Uint8Array(5);
                 array[0] = RCEvent.WL_MASK
-                array[1] = 0xFF00 & this.numberArgs[0];
+                array[1] = (0xFF00 & this.numberArgs[0]) >> 8;
                 array[2] = 0x00FF & this.numberArgs[0];
-                array[3] = 0xFF00 & this.numberArgs[1];
+                array[3] = (0xFF00 & this.numberArgs[1]) >> 8;
                 array[4] = 0x00FF & this.numberArgs[1];
                 break
             case "md":
                 array = new Uint8Array(5);
                 array[0] = RCEvent.MD_MASK | (0x00FF & this.numberArgs[0]);
-                array[1] = 0xFF00 & this.numberArgs[1];
+                array[1] = (0xFF00 & this.numberArgs[1]) >> 8;
                 array[2] = 0x00FF & this.numberArgs[1];
-                array[3] = 0xFF00 & this.numberArgs[2];
+                array[3] = (0xFF00 & this.numberArgs[2]) >> 8;
                 array[4] = 0x00FF & this.numberArgs[2];
                 break
             case "mu":
                 array = new Uint8Array(5);
                 array[0] = RCEvent.MU_MASK | (0x00FF & this.numberArgs[0]);
-                array[1] = 0xFF00 & this.numberArgs[1];
+                array[1] = (0xFF00 & this.numberArgs[1]) >> 8;
                 array[2] = 0x00FF & this.numberArgs[1];
-                array[3] = 0xFF00 & this.numberArgs[2];
+                array[3] = (0xFF00 & this.numberArgs[2]) >> 8;
                 array[4] = 0x00FF & this.numberArgs[2];
                 break
             case "kd":
@@ -78,8 +78,12 @@ export default class RCEvent {
                 break
             case this.WL_MASK:
                 rcEvent.name = 'wl'
-                rcEvent.numberArgs[0] = (array[1] << 8) + array[2]
-                rcEvent.numberArgs[1] = (array[3] << 8) + array[4]
+                // 有符号
+                let uint8Arr = []
+                uint8Arr[0] = (array[1] << 8) + array[2]
+                uint8Arr[1] = (array[3] << 8) + array[4]
+                let int8Arr = new Int8Array(uint8Arr)
+                rcEvent.numberArgs = [...int8Arr]
                 break
             case this.MD_MASK:
                 rcEvent.name = 'md'
@@ -110,9 +114,10 @@ export default class RCEvent {
     }
 }
 
-// let rcEvent = new RcEvent()
-// rcEvent.name = 'ku'
-// //rcEvent.numberArgs = [111, 222]
-// rcEvent.strArgs = ['kcy']
+// let rcEvent = new RCEvent()
+// rcEvent.name = 'wl'
+// rcEvent.numberArgs = [ -8, 4]
+// // rcEvent.strArgs = ['kcy']
 // let buffer = rcEvent.toArrayBuffer()
-// console.log(RcEvent.fromArrayBuffer(buffer))
+// let e = RCEvent.fromArrayBuffer(buffer)
+// console.log('receive rcEvent', e);
