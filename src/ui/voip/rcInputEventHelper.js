@@ -182,7 +182,7 @@ export function simulateRemoteControlInputEvent(rcEventBuffer) {
 }
 
 function _mouseMove(x, y) {
-    if (x !== _lastMouseX && y !== _lastMouseY) {
+    if (x !== _lastMouseX || y !== _lastMouseY) {
         _lastMouseX = x;
         _lastMouseY = y;
         return wfrc.onMouseMove(x, y);
