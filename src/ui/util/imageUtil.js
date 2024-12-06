@@ -277,7 +277,7 @@ function imageThumbnail(file) {
                 reader.onerror = () => {
                     resolve(null);
                 }
-            }, 'image/jpeg', 0.4);
+            }, 'image/jpeg', 0.3);
         };
         img.onerror = () => {
             resolve(null);
@@ -326,7 +326,7 @@ function videoThumbnail(file) {
                         reader.onerror = () => {
                             resolve(null);
                         }
-                    }, 'image/jpeg', 0.4);
+                    }, 'image/jpeg', 0.3);
                 };
                 img.onerror = () => {
                     resolve(null);
