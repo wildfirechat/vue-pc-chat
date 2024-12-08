@@ -1,7 +1,0 @@
-syntax = "proto2";
-
-message RCEvent {
-    required string name = 2;
-    repeated int32 numberArgs = 3;
-    repeated string strArgs = 4;
-}
