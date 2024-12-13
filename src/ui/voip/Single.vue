@@ -144,6 +144,7 @@ export default {
             localStream: null,
             remoteStream: null,
             videoInputDeviceIndex: 0,
+            audioInputDeviceIndex: 0,
             autoPlayInterval: 0,
             showWebrtcTip: false,
 
@@ -337,6 +338,26 @@ export default {
             this.session.hangup();
         },
 
+        switchAudioInput() {
+            if (!this.session || this.session.isScreenSharing()) {
+                return;
+            }
+            // The order is significant - the default capture devices will be listed first.
+            // navigator.mediaDevices.enumerateDevices()
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                devices = devices.filter(d => d.kind === 'audioinput');
+                if (devices.length < 2) {
+                    console.log('switchAudioInput error, no more audio input device')
+                    return;
+                }
+                this.audioInputDeviceIndex++;
+                if (this.audioInputDeviceIndex >= devices.length) {
+                    this.audioInputDeviceIndex = 0;
+                }
+                this.session.setAudioInputDeviceId(devices[this.audioInputDeviceIndex].deviceId)
+                console.log('setAudioInputDeviceId', devices[this.audioInputDeviceIndex]);
+            })
+        },
         switchCamera() {
             if (!this.session || this.session.isScreenSharing()) {
                 return;
