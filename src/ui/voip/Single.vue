@@ -148,7 +148,7 @@ export default {
             videoInputDeviceIndex: 0,
             audioInputDeviceIndex: 0,
             autoPlayInterval: 0,
-            ringAudio: null
+            ringAudio: null,
             showVoipTip: true,
             voipTip: '',
             supportConference: avenginekit.startConference !== undefined,
