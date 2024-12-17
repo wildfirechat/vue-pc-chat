@@ -9,8 +9,10 @@
     <div class="flex-column flex-align-center flex-justify-center" style="background: #292929">
         <h1 style="display: none">Voip-single，运行在新的window，和主窗口数据是隔离的！！</h1>
 
-        <p class="webrtc-tip" v-if="showWebrtcTip">
-            上线前，请部署 turn 服务，野火官方 turn 服务只能开发测试使用!!!
+        <p class="webrtc-tip" v-if="showVoipTip">
+            <p>{{ supportConference ? '当前使用：多人版音视频' : '当前使用：高级版音视频' }}</p>
+            <p>多人版音视频 和 高级版音视频不互通，切换方法请参考: wfc/av/internal/README.MD</p>
+            <p>{{ voipTip }}</p>
         </p>
         <div v-if="session" class="container">
             <section class="full-height full-width">
@@ -146,9 +148,10 @@ export default {
             videoInputDeviceIndex: 0,
             audioInputDeviceIndex: 0,
             autoPlayInterval: 0,
-            showWebrtcTip: false,
-
             ringAudio: null
+            showVoipTip: true,
+            voipTip: '',
+            supportConference: avenginekit.startConference !== undefined,
         }
     },
     methods: {
@@ -442,17 +445,13 @@ export default {
 
     mounted() {
         console.log('single mounted')
-        let supportConference = avenginekit.startConference !== undefined
-        if (!supportConference) {
+        if (!this.supportConference) {
             let host = window.location.host;
             if (host.indexOf('wildfirechat.cn') === -1 && host.indexOf('localhost') === -1) {
                 for (const ice of Config.ICE_SERVERS) {
                     if (ice[0].indexOf('turn.wildfirechat.net') >= 0) {
                         // 显示自行部署 turn 提示
-                        this.showWebrtcTip = true;
-                        setTimeout(() => {
-                            this.showWebrtcTip = false;
-                        }, 10 * 1000)
+                        this.voipTip = '当前音视频 SDK 为多人版。多人版\n 上线前，请部署 turn 服务，野火官方 turn 服务只能开发测试使用!!!';
                         break
                     }
                 }
