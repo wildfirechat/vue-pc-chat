@@ -10,7 +10,7 @@
         <h1 style="display: none">Voip-single，运行在新的window，和主窗口数据是隔离的！！</h1>
 
         <div class="webrtc-tip" v-if="showVoipTip">
-            <p>{{ supportConference ? '当前使用：多人版音视频' : '当前使用：高级版音视频' }}</p>
+            <p>{{ supportConference ? '当前使用：高级版版音视频' : '当前使用：多人版音视频' }}</p>
             <p>多人版音视频 和 高级版音视频不互通，切换方法请参考: wfc/av/internal/README.MD</p>
             <p>{{ voipTip }}</p>
         </div>
