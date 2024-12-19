@@ -92,11 +92,15 @@ export default function registerRemoteControlEventListener(session, remoteScreen
 
         _sendEventData(session, 'wl', [delta, axis])
     });
+    if (process && process.platform === 'win32') {
+        _startMonitorUACStatus(this.session)
+    }
 }
 
 export function unregisterRemoteControlEventListener() {
     document.removeEventListener('keydown', _keydownEventListener);
     document.removeEventListener('keyup', _keyupEventListener);
+    _stopMonitorUACStatus()
 }
 
 function _adjustRCXY(event, remoteScreenVideoElement) {
@@ -150,8 +154,28 @@ function _sendEventData(session, eventName, numberValues = [], strValues = []) {
     session.sendRemoteControlInputEvent(buffer);
 }
 
-export function simulateRemoteControlInputEvent(rcEventBuffer) {
-    let rcEvent = RCEvent.fromArrayBuffer(rcEventBuffer);
+// only for windows
+function _startMonitorUACStatus(session) {
+    _uacMonitorInterval = setInterval(() => {
+        let isUac = wfrc.isUac();
+        if (isUac !== _lastUACStatus) {
+            let rcEvent = new RCEvent()
+            rcEvent.name = 'uac'
+            _lastUACStatus = isUac
+            _sendEventData(session, rcEvent, [isUac ? 1 : 0], [])
+        }
+    }, 1000)
+}
+
+function _stopMonitorUACStatus() {
+    _lastUACStatus = false
+    if (_uacMonitorInterval) {
+        clearInterval(_uacMonitorInterval);
+        _uacMonitorInterval = null;
+    }
+}
+
+export function simulateRemoteControlInputEvent(rcEvent) {
     console.log('receive rc event', rcEvent);
     let eventName = rcEvent.name
     let numberArgs = rcEvent.numberArgs
@@ -199,3 +223,5 @@ let _deltaYSum = 0;
 
 let _keydownEventListener = null;
 let _keyupEventListener = null;
+let _uacMonitorInterval = null;
+let _lastUACStatus = false

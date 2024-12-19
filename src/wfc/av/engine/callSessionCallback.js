@@ -4,8 +4,9 @@
 
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
 import wfrc from "../../rc/wfrc";
-import {simulateRemoteControlInputEvent} from "../../../ui/voip/rcInputEventHelper";
+import {simulateRemoteControlInputEvent} from "../../../ui/voip/rcEventHelper";
 import avenginekitproxy from "./avenginekitproxy";
+import RCEvent from "../../rc/RCEvent";
 
 export default class CallSessionCallback {
 
@@ -238,10 +239,23 @@ export default class CallSessionCallback {
         wfrc.start();
     }
 
-    didReceiveRemoteControlInputEvent(rcEventBuffer) {
-        let retValue = simulateRemoteControlInputEvent(rcEventBuffer)
-        // TODO 根据 retValue 做一些提示
-        return retValue;
+    didReceiveRemoteControlEvent(rcEventBuffer) {
+        let rcEvent = RCEvent.fromArrayBuffer(rcEventBuffer);
+        if (rcEvent.name === 'uac') {
+            this.didRemoteUACStatusChange(!!rcEvent.numberArgs[0]);
+            return 0
+        } else {
+            return simulateRemoteControlInputEvent(rcEvent)
+        }
+    }
+
+    /**
+     * 仅 windows 端有效
+     * 被控端 uac 状态改变回调
+     * @param isUac
+     */
+    didRemoteUACStatusChange(isUac) {
+
     }
 
     didRemoteControlInputError(errorCode) {

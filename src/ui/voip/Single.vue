@@ -158,7 +158,7 @@ import IpcEventType from "../../ipcEventType";
 import wfrc from "../../wfc/rc/wfrc";
 import RcEndReason from "../../wfc/av/engine/rcEndReason";
 import RCState from "../../wfc/av/engine/rcState";
-import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";
+import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcEventHelper";
 import {UseDraggable} from "@vueuse/components";
 
 export default {

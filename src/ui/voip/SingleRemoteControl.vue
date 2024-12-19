@@ -105,7 +105,7 @@ import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlBu
 import ScreenShareControlView from "./ScreenShareControlView.vue";
 import store from "../../store";
 import wfrc from "../../wfc/rc/wfrc";
-import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcInputEventHelper";
+import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcEventHelper";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import IpcEventType from "../../ipcEventType";
 import {UseDraggable} from '@vueuse/components'
@@ -305,11 +305,12 @@ export default {
             sessionCallback.didReportAudioVolume = (userId, volume) => {
                 // console.log('didReportAudioVolume', userId, volume)
             }
-            sessionCallback.didRemoteControlInputError = (errorCode) => {
-                console.error('remote control error', errorCode);
+            sessionCallback.didRemoteUACStatusChange = (isUac) => {
+                console.error('didRemoteUACStatusChange', isUac);
                 // 进行提示
-                if (errorCode === -2) {
+                if (isUac) {
                     this.$alert({
+                        name: 'uac-alert',
                         showIcon: false,
                         content: '请通知对方进行提权操作',
                         cancelCallback: () => {
@@ -318,6 +319,13 @@ export default {
                         confirmCallback: () => {
                         }
                     })
+                } else {
+                    this.$notify({
+                        content: '对方已提权',
+                        duration: 2000,
+                        type: 'success'
+                    })
+                    this.$modal.hide('uac-alert')
                 }
             }
 
