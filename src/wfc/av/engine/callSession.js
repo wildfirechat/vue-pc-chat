@@ -95,13 +95,6 @@ export default class CallSession {
     }
 
     /**
-     * 接受远程控制请求
-     */
-    acceptRemoteControlRequest() {
-
-    }
-
-    /**
      * 挂断
      */
     hangup() {
