@@ -105,9 +105,28 @@
                         <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
                     </div>
                     <div class="action">
-                        <img v-if="!session.audioMuted" @click="mute" class="action-img" src='@/assets/images/av_mute.png'/>
-                        <img v-else @click="mute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
-                        <p>静音</p>
+                        <tippy
+                            v-if="audioInputDevices.length > 1"
+                            :to="'#trigger-audioInputDevices'"
+                            placement="top"
+                            distant="7"
+                            interactive
+                            theme="light"
+                            arrow>
+                            <template #content>
+                                <div v-for="(device, index) in audioInputDevices" :key="index" class="audio-input-device-item" @click="switchAudioInput(device)">
+                                    {{ device.label  + (device.deviceId === currentAudioInputDeviceId ? ' (当前)' : '')}}
+                                </div>
+                            </template>
+                        </tippy>
+
+                        <div :id="'trigger-audioInputDevices'"
+                             ref="audioInputDeviceTippy"
+                             class="flex-column flex-align-center flex-justify-center">
+                            <img v-if="!session.audioMuted" @click="mute" class="action-img" src='@/assets/images/av_mute.png'/>
+                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
+                            <p>静音</p>
+                        </div>
                     </div>
                     <div v-if="!audioOnly && false" class="action">
                         <img @click="screenShare" class="action-img" src='@/assets/images/av_share.png'/>
@@ -147,6 +166,8 @@ export default {
             remoteStream: null,
             videoInputDeviceIndex: 0,
             audioInputDeviceIndex: 0,
+            currentAudioInputDeviceId: '',
+            audioInputDevices: [],
             autoPlayInterval: 0,
             ringAudio: null,
             showVoipTip: Config.SHOW_VOIP_TIP,
@@ -341,26 +362,13 @@ export default {
             this.session.hangup();
         },
 
-        switchAudioInput() {
-            if (!this.session || this.session.isScreenSharing()) {
-                return;
-            }
-            // The order is significant - the default capture devices will be listed first.
-            // navigator.mediaDevices.enumerateDevices()
-            navigator.mediaDevices.enumerateDevices().then(devices => {
-                devices = devices.filter(d => d.kind === 'audioinput');
-                if (devices.length < 2) {
-                    console.log('switchAudioInput error, no more audio input device')
-                    return;
-                }
-                this.audioInputDeviceIndex++;
-                if (this.audioInputDeviceIndex >= devices.length) {
-                    this.audioInputDeviceIndex = 0;
-                }
-                this.session.setAudioInputDeviceId(devices[this.audioInputDeviceIndex].deviceId)
-                console.log('setAudioInputDeviceId', devices[this.audioInputDeviceIndex]);
-            })
+        switchAudioInput(device) {
+            console.log('switchAudioInput', device);
+            this.currentAudioInputDeviceId = device.deviceId
+            this.session.setAudioInputDeviceId(device.deviceId)
+            this.$refs["audioInputDeviceTippy"]._tippy.hide();
         },
+
         switchCamera() {
             if (!this.session || this.session.isScreenSharing()) {
                 return;
@@ -443,7 +451,7 @@ export default {
         }
     },
 
-    mounted() {
+    async mounted() {
         console.log('single mounted')
         if (!this.supportConference) {
             let host = window.location.host;
@@ -462,6 +470,15 @@ export default {
             avenginekit.setup();
         }
         this.setupSessionCallback();
+
+        let devices = await navigator.mediaDevices.enumerateDevices()
+        let audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+        if (audioInputDevices.length > 0) {
+            let defaultAudioDevice = audioInputDevices.filter(d => d.deviceId === 'default')[0];
+            let defaultAudioDeviceGroupId = defaultAudioDevice.groupId;
+            this.audioInputDevices = audioInputDevices.filter(d => d.deviceId !== 'default');
+            this.currentAudioInputDeviceId = this.audioInputDevices.filter(d => d.groupId === defaultAudioDeviceGroupId)[0].deviceId;
+        }
     },
 
     computed: {
@@ -565,6 +582,24 @@ export default {
 .video {
     width: 100%;
     height: 100%;
+}
+
+.audio-input-device-item {
+    flex: 1;
+    height: 30px;
+    padding: 0 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+}
+
+.audio-input-device-item:not(:last-of-type) {
+    border-bottom: 1px solid #e0e0e0e5;
+}
+
+.audio-input-device-item:hover {
+    background: #e0e0e0e5;
 }
 
 .webrtc-tip {
