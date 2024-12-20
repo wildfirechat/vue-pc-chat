@@ -1,6 +1,8 @@
 <template>
     <section class="conversation-list">
         <virtual-list v-if="true" :data-component="conversationItemView" :data-sources="conversationInfoList" :data-key="conversationInfoKey"
+                      ref="virtualList"
+                      :onScroll="onScroll"
                       :estimate-size="30"
                       style="height: 100%; overflow-y: auto;"/>
 
@@ -58,6 +60,7 @@ export default {
             sharedConversationState: store.state.conversation,
             sharedMiscState: store.state.misc,
             conversationItemView: markRaw(ConversationItemView),
+            currentConversationInddex: 0,
         };
     },
 
@@ -65,10 +68,12 @@ export default {
         this.$eventBus.$on('showConversationContextMenu', ([event, conversationInfo]) => {
             this.showConversationItemContextMenu(event, conversationInfo);
         });
+        this.$eventBus.$on('scrollToNextUnreadConversation', this.scrollToNextUnreadConversation);
     },
 
     unmounted() {
         this.$eventBus.$off('showConversationContextMenu');
+        this.$eventBus.$off('scrollToNextUnreadConversation');
     },
 
     methods: {
@@ -95,7 +100,7 @@ export default {
         },
 
         showConversationItemContextMenu(event, conversationInfo) {
-            if (!this.$refs.menu){
+            if (!this.$refs.menu) {
                 return;
             }
             this.sharedConversationState.contextMenuConversationInfo = conversationInfo;
@@ -132,6 +137,35 @@ export default {
             store.addFloatingConversation(conversation);
             if (this.sharedConversationState.currentConversationInfo && this.sharedConversationState.currentConversationInfo.conversation.equal(conversation)) {
                 store.setCurrentConversation(null);
+            }
+        },
+
+        onScroll(e, params) {
+            console.log('onScroll', e, params)
+            if (params) {
+                this.currentConversationInddex = params.end
+            }
+        },
+
+        // 滑动到下一个未读会话
+        scrollToNextUnreadConversation() {
+            let currentConversationIndex = this.currentConversationInddex
+            let nextUnreadConversationIndex = this.conversationInfoList.findIndex((ci, index) => {
+                if (index <= currentConversationIndex) {
+                    return false;
+                }
+                return !ci.isSilent && ci._unread > 0
+            });
+
+            if (nextUnreadConversationIndex === -1 && currentConversationIndex > -1) {
+                nextUnreadConversationIndex = this.conversationInfoList.findIndex((ci, index) => {
+                    return !ci.isSilent && ci._unread > 0
+                });
+            }
+
+            console.log('scrollToNextUnreadConversation', this.currentConversationInddex, nextUnreadConversationIndex, this.$refs['virtualList'].getOffset())
+            if (nextUnreadConversationIndex > -1) {
+                this.$refs['virtualList'].scrollToIndex(nextUnreadConversationIndex);
             }
         }
     },
