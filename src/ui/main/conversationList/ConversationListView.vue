@@ -60,7 +60,7 @@ export default {
             sharedConversationState: store.state.conversation,
             sharedMiscState: store.state.misc,
             conversationItemView: markRaw(ConversationItemView),
-            currentConversationInddex: 0,
+            currentConversationIndex: 0,
         };
     },
 
@@ -143,13 +143,13 @@ export default {
         onScroll(e, params) {
             console.log('onScroll', e, params)
             if (params) {
-                this.currentConversationInddex = params.end
+                this.currentConversationIndex = params.end
             }
         },
 
         // 滑动到下一个未读会话
         scrollToNextUnreadConversation() {
-            let currentConversationIndex = this.currentConversationInddex
+            let currentConversationIndex = this.currentConversationIndex
             let nextUnreadConversationIndex = this.conversationInfoList.findIndex((ci, index) => {
                 if (index <= currentConversationIndex) {
                     return false;
@@ -163,7 +163,7 @@ export default {
                 });
             }
 
-            console.log('scrollToNextUnreadConversation', this.currentConversationInddex, nextUnreadConversationIndex, this.$refs['virtualList'].getOffset())
+            console.log('scrollToNextUnreadConversation', this.currentConversationIndex, nextUnreadConversationIndex, this.$refs['virtualList'].getOffset())
             if (nextUnreadConversationIndex > -1) {
                 this.$refs['virtualList'].scrollToIndex(nextUnreadConversationIndex);
             }
