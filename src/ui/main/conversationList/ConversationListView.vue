@@ -141,7 +141,6 @@ export default {
         },
 
         onScroll(e, params) {
-            console.log('onScroll', e, params)
             if (params) {
                 this.currentConversationIndex = params.end
             }
