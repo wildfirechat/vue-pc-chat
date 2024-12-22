@@ -491,13 +491,15 @@ let store = {
     },
 
     _loadDefaultData() {
-        this._loadFavGroupList();
-        this._loadChannelList();
-        this._loadFriendList();
-        this._loadFavContactList();
-        this._loadFriendRequest();
+        let loadOptions = miscState.subWindowLoadDataOptions;
+        let isMainWindow = miscState.isMainWindow;
+        (isMainWindow || loadOptions.loadFavContactList) && this._loadFavGroupList();
+        (isMainWindow || loadOptions.loadChannelList) && this._loadChannelList();
+        (isMainWindow || loadOptions.loadFriendList) && this._loadFriendList();
+        (isMainWindow || loadOptions.loadFavContactList) && this._loadFavContactList();
+        (isMainWindow || loadOptions.loadFriendRequestList) && this._loadFriendRequest();
+        (isMainWindow || loadOptions.loadDefaultConversationList) && this._loadDefaultConversationList();
         this._loadSelfUserInfo();
-        this._loadDefaultConversationList();
         this._loadUserLocalSettings();
         conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
         // if (conversationState.currentConversationInfo) {
@@ -1125,7 +1127,7 @@ let store = {
             case MessageContentMediaType.Image:
                 let {thumbnail: it, width: iw, height: ih} = await imageThumbnail(file);
                 it = it ? it : Config.DEFAULT_THUMBNAIL_URL;
-                console.log('image file',it.length, file )
+                console.log('image file', it.length, file)
                 if (it.length > 10 * 1024) {
                     console.warn('generated thumbnail is too large, use default thumbnail', it.length);
                     it = Config.DEFAULT_THUMBNAIL_URL;
