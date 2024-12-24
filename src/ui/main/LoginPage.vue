@@ -86,6 +86,13 @@
 
             <p v-if="sharedMiscState.isElectron" class="diagnose" @click="diagnose">诊断</p>
         </div>
+
+        <div v-if="showDiagnoseOverlay" class="diagnose-overlay">
+            <div class="diagnose-content">
+                <pre>{{ diagnoseResult }}</pre>
+                <button @click="closeDiagnoseOverlay">关闭</button>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -130,6 +137,9 @@ export default {
             routePort: '',
             longLinkHost: '',
             longLinkPort: '',
+
+            diagnoseResult: '',
+            showDiagnoseOverlay: false,
         }
     },
     created() {
@@ -378,14 +388,14 @@ export default {
                     this.refreshQrCode();
                 }
                 if (status !== ConnectionStatus.ConnectionStatusLogout) {
-                console.error('连接失败', status, ConnectionStatus.desc(status));
-                this.cancel();
-                this.diagnose();
-                this.$notify({
-                    text: '连接失败，请打开控制台，查看具体日志',
-                    type: 'error'
-                });
-            }
+                    console.error('连接失败', status, ConnectionStatus.desc(status));
+                    this.cancel();
+                    this.diagnose();
+                    this.$notify({
+                        text: '连接失败，请打开控制台，查看具体日志',
+                        type: 'error'
+                    });
+                }
 
             }
             if (status === ConnectionStatus.ConnectionStatusReceiveing) {
@@ -487,6 +497,12 @@ export default {
             }
 
             console.log('result', result);
+
+            this.diagnoseResult = configInfo + '\n' + result;
+            this.showDiagnoseOverlay = true
+        },
+        closeDiagnoseOverlay() {
+            this.showDiagnoseOverlay = false;
         }
     },
 
@@ -729,5 +745,37 @@ input::-webkit-inner-spin-button {
     color: lightcoral;
 }
 
+.diagnose-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
 
+.diagnose-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 100%;
+    max-height: 90%;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.diagnose-content pre {
+    width: 100%;
+    text-align: left;
+}
+
+.diagnose-content button {
+    margin-top: 20px;
+}
 </style>
