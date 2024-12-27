@@ -64,7 +64,7 @@ export default class RCEvent {
             case 'uac':
                 array = new Uint8Array(2);
                 array[0] = RCEvent.UAC_MASK;
-                array[2] = 0x00FF & this.numberArgs[1];
+                array[1] = 0x00FF & this.numberArgs[0];
                 break
             default:
                 break
@@ -116,7 +116,7 @@ export default class RCEvent {
                 break
             case this.UAC_MASK:
                 rcEvent.name = 'uac'
-                rcEvent.numberArgs[0] = array[1]
+                rcEvent.numberArgs[0] = 0x00FF && array[1]
                 break
             default:
                 break

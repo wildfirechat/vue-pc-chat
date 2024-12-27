@@ -158,7 +158,7 @@ import IpcEventType from "../../ipcEventType";
 import wfrc from "../../wfc/rc/wfrc";
 import RcEndReason from "../../wfc/av/engine/rcEndReason";
 import RCState from "../../wfc/av/engine/rcState";
-import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcEventHelper";
+import registerRemoteControlEventListener, {startMonitorUACStatus, stopMonitorUACStatus, unregisterRemoteControlEventListener} from "./rcEventHelper";
 import {UseDraggable} from "@vueuse/components";
 
 export default {
@@ -389,6 +389,9 @@ export default {
             sessionCallback.didAcceptRemoteControlInvite = () => {
                 avenginekitproxy.emitToMain(IpcEventType.START_SCREEN_SHARE, {rc: true})
                 wfrc.start()
+                if (process && process.platform === 'win32'){
+                    startMonitorUACStatus(this.session)
+                }
             }
 
             sessionCallback.didRemoteControlEnd = (reason) => {
@@ -406,7 +409,19 @@ export default {
                 this.session.stopScreenShare()
                 // 其实，只有reason 为 hangup 时，才真正开始过远程协助/控制
                 wfrc.stop()
+                if (process && process.platform === 'win32'){
+                    stopMonitorUACStatus()
+                }
                 unregisterRemoteControlEventListener()
+            }
+
+            sessionCallback.didRemoteUACStatusChange = (isUac) => {
+                if (isUac) {
+                    this.$notify({
+                        text: '请通知对方完成提权操作',
+                        type: 'info'
+                    })
+                }
             }
 
             avenginekit.sessionCallback = sessionCallback;

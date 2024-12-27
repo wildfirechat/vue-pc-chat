@@ -101,7 +101,7 @@ import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlBu
 import ScreenShareControlView from "./ScreenShareControlView.vue";
 import store from "../../store";
 import wfrc from "../../wfc/rc/wfrc";
-import registerRemoteControlEventListener, {unregisterRemoteControlEventListener} from "./rcEventHelper";
+import registerRemoteControlEventListener, {startMonitorUACStatus, stopMonitorUACStatus, unregisterRemoteControlEventListener} from "./rcEventHelper";
 import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
 import IpcEventType from "../../ipcEventType";
 import {UseDraggable} from '@vueuse/components'
@@ -269,6 +269,9 @@ export default {
                 this.session = null;
                 wfrc.stop()
                 unregisterRemoteControlEventListener()
+                if (process && process.platform === 'win32') {
+                    stopMonitorUACStatus(this.session)
+                }
             }
             sessionCallback.didVideoMuted = (userId, muted) => {
                 console.log('didVideoMuted', userId, muted);
@@ -377,6 +380,9 @@ export default {
                     this.session.startScreenShare(desktopShareOptions);
                     avenginekitproxy.emitToMain(IpcEventType.START_SCREEN_SHARE, {rc: true})
                     wfrc.start()
+                    if (process && process.platform === 'win32') {
+                        startMonitorUACStatus(this.session)
+                    }
                 }
 
                 let screens = await ipcRenderer.invoke(IpcEventType.GET_SOURCE, {types: ['screen'], fetchWindowIcons: false})
