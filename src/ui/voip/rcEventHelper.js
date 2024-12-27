@@ -8,13 +8,13 @@ import wfrc from "../../wfc/rc/wfrc";
  */
 export default function registerRemoteControlEventListener(session, remoteScreenVideoElement) {
     _keydownEventListener = (event) => {
-        console.log(`key down: ${event.code}`);
+        //console.log(`key down: ${event.code}`);
         _sendEventData(session, 'kd', [], [event.code])
     }
     document.addEventListener('keydown', _keydownEventListener);
 
     _keyupEventListener = (event) => {
-        console.log(`key up: ${event.code}`, event);
+        //console.log(`key up: ${event.code}`, event);
         _sendEventData(session, 'ku', [], [event.code])
     }
     document.addEventListener('keyup', _keyupEventListener);
@@ -41,12 +41,12 @@ export default function registerRemoteControlEventListener(session, remoteScreen
         if (!xy) {
             return
         }
-        console.log(`mouse move: `, event.offsetX, event.offsetY, xy);
+        //console.log(`mouse move: `, event.offsetX, event.offsetY, xy);
         _sendEventData(session, 'mv', [xy.x, xy.y]);
     });
 
     remoteScreenVideoElement.addEventListener('mousedown', (event) => {
-        console.log(`Mouse down: ${event.button}, ${event.clientX}, ${event.clientY}`);
+        //console.log(`Mouse down: ${event.button}, ${event.clientX}, ${event.clientY}`);
         let xy = _adjustRCXY(event, remoteScreenVideoElement)
         if (!xy) {
             return
@@ -56,7 +56,7 @@ export default function registerRemoteControlEventListener(session, remoteScreen
     });
 
     remoteScreenVideoElement.addEventListener('mouseup', (event) => {
-        console.log(`Mouse up: ${event.button}, ${event.clientX}, ${event.clientY}`);
+        //console.log(`Mouse up: ${event.button}, ${event.clientX}, ${event.clientY}`);
         let xy = _adjustRCXY(event, remoteScreenVideoElement)
         if (!xy) {
             return
@@ -68,14 +68,14 @@ export default function registerRemoteControlEventListener(session, remoteScreen
     remoteScreenVideoElement.addEventListener('wheel', (event) => {
         //deltaMode 0是按像素滚动，1是按行滚动，2是按页滚动。
         //lib只能处理按行滚动，一次事件滚动一行
-        console.log(`Mouse wheel before: ${event.deltaX}, ${event.deltaY}, ${event.deltaMode}`);
+        //console.log(`Mouse wheel before: ${event.deltaX}, ${event.deltaY}, ${event.deltaMode}`);
         _deltaXSum += event.deltaX;
         _deltaYSum += event.deltaY;
 
         if (Math.abs(_deltaXSum) < 15 && Math.abs(_deltaYSum) < 15) {
             return
         }
-        console.log(`Mouse wheel: ${_deltaYSum}, ${_deltaYSum}, ${event.deltaMode}`);
+        //console.log(`Mouse wheel: ${_deltaYSum}, ${_deltaYSum}, ${event.deltaMode}`);
         let delta;
         let axis;
         if (Math.abs(_deltaXSum) > Math.abs(_deltaYSum)) {
@@ -146,7 +146,7 @@ function _sendEventData(session, eventName, numberValues = [], strValues = []) {
     rcEvent.strArgs = strValues
     let buffer = rcEvent.toArrayBuffer()
 
-    console.log('buffer', eventName, numberValues, buffer.length)
+    //console.log('buffer', eventName, numberValues, buffer.length)
     session.sendRemoteControlInputEvent(buffer);
 }
 
@@ -158,7 +158,7 @@ export function startMonitorUACStatus(session) {
             _lastUACStatus = isUac
             _sendEventData(session, 'uac', [isUac ? 1 : 0], [])
         }
-    }, 1000)
+    }, 100)
 }
 
 // only for windows
@@ -171,7 +171,7 @@ export function stopMonitorUACStatus() {
 }
 
 export function simulateRemoteControlInputEvent(rcEvent) {
-    console.log('receive rc event', rcEvent);
+    // console.log('receive rc event', rcEvent);
     let eventName = rcEvent.name
     let numberArgs = rcEvent.numberArgs
     let strArgs = rcEvent.strArgs
