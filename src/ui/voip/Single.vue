@@ -418,7 +418,7 @@ export default {
             sessionCallback.didRemoteUACStatusChange = (isUac) => {
                 if (isUac) {
                     this.$notify({
-                        text: '请通知对方完成提权操作',
+                        text: '请通知对方点击确认，完成提权操作，否则将不能进一步操作',
                         type: 'info'
                     })
                 }

@@ -6,7 +6,7 @@
 <!--static STATUS_CONNECTED = 4;-->
 <!--}-->
 <template>
-    <div class="flex-column flex-align-center flex-justify-center">
+    <div class="flex-column flex-align-center flex-justify-center" style="background: #2d3033">
         <h1 style="display: none">Voip-single，运行在新的window，和主窗口数据是隔离的！！</h1>
 
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
@@ -310,7 +310,7 @@ export default {
                     this.$alert({
                         name: 'uac-alert',
                         showIcon: false,
-                        content: '请通知对方进行提权操作',
+                        content: '请通知对方进行提权操作，否则将不能进一步操作',
                         cancelCallback: () => {
                             // do nothing
                         },
