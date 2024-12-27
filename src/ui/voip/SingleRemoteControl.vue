@@ -9,9 +9,6 @@
     <div class="flex-column flex-align-center flex-justify-center">
         <h1 style="display: none">Voip-single，运行在新的window，和主窗口数据是隔离的！！</h1>
 
-        <p class="webrtc-tip" v-if="showWebrtcTip">
-            上线前，请部署 turn 服务，野火官方 turn 服务只能开发测试使用!!!
-        </p>
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
             <!--            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"-->
             <!--                                              :title="'野火会议'"-->
@@ -20,7 +17,6 @@
                                     type="conference"
                                     stop-screen-share-title="结束远程控制"
                                     :stop-screen-share-func="hangup"/>
-            <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
         <div v-if="session && !(session.screenSharing && session.rcStatus === 5)" class="container" style="background: #292929">
             <section class="full-height full-width">
@@ -129,7 +125,6 @@ export default {
             remoteStream: null,
             videoInputDeviceIndex: 0,
             autoPlayInterval: 0,
-            showWebrtcTip: false,
             sharedMiscState: store.state.misc,
 
             ringAudio: null,
@@ -444,22 +439,6 @@ export default {
 
     mounted() {
         console.log('single-rc mounted')
-        let supportConference = avenginekit.startConference !== undefined
-        if (!supportConference) {
-            let host = window.location.host;
-            if (host.indexOf('wildfirechat.cn') === -1 && host.indexOf('localhost') === -1) {
-                for (const ice of Config.ICE_SERVERS) {
-                    if (ice[0].indexOf('turn.wildfirechat.net') >= 0) {
-                        // 显示自行部署 turn 提示
-                        this.showWebrtcTip = true;
-                        setTimeout(() => {
-                            this.showWebrtcTip = false;
-                        }, 10 * 1000)
-                        break
-                    }
-                }
-            }
-        }
         // 必须
         if (isElectron()) {
             avenginekit.setup();
@@ -525,20 +504,20 @@ export default {
     left: 10%;
     padding: 20px 0;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     position: absolute;
     background: #cccccc;
+    cursor: move;
 }
 
 .floating-actions {
-    width: 400px;
+    width: 300px;
     justify-content: space-around;
 }
 
 .floating-action-container:not(:hover) .floating-actions {
-    background: #fff;
     display: none;
 }
 
@@ -549,12 +528,15 @@ export default {
 
 .floating-action-container:not(:hover) .desc {
     display: flex;
+    height: 100%;
+    padding: 20px;
     justify-items: center;
     align-items: center;
 }
 
 .floating-action-container:hover .desc {
-    display: none;
+    cursor: move;
+    padding: 20px;
 }
 
 .floating-actions .action {
@@ -564,6 +546,7 @@ export default {
     align-items: center;
     font-size: 12px;
     color: white;
+    cursor: auto;
 }
 
 .avatar {

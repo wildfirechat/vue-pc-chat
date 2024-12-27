@@ -652,20 +652,20 @@ export default {
     left: 10%;
     padding: 20px 0;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     position: absolute;
     background: #cccccc;
+    cursor: move;
 }
 
 .floating-actions {
-    width: 400px;
+    width: 300px;
     justify-content: space-around;
 }
 
 .floating-action-container:not(:hover) .floating-actions {
-    background: #fff;
     display: none;
 }
 
@@ -676,12 +676,15 @@ export default {
 
 .floating-action-container:not(:hover) .desc {
     display: flex;
+    height: 100%;
+    padding: 20px;
     justify-items: center;
     align-items: center;
 }
 
 .floating-action-container:hover .desc {
-    display: none;
+    cursor: move;
+    padding: 20px;
 }
 
 .floating-actions .action {
@@ -691,6 +694,7 @@ export default {
     align-items: center;
     font-size: 12px;
     color: white;
+    cursor: auto;
 }
 
 .avatar {

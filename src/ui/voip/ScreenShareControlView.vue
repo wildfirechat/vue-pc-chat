@@ -19,7 +19,7 @@
             <p>开启视频</p>
         </div>
         <div class="action">
-            <img @click="stopScreenShare" class="action-img" src='@/assets/images/av_video_answer.png'/>
+            <img @click="stopScreenShare" class="action-img" src='@/assets/images/av_hang_up.png'/>
             <p>{{ stopScreenShareTitle}}</p>
         </div>
     </div>
