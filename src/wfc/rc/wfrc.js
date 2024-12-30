@@ -18,84 +18,87 @@
  * 当-2时，需要被控电脑用户进行授权。可能会有连续多个，比如鼠标移动，需要注意不要重复。
  * </pre>
  */
-export class WfrcManager {
-    rcAddon
+// export class WfrcManager {
+//     rcAddon
+//
+//     constructor() {
+//         // this.rcAddon = this._loadthis.rcAddon()
+//     }
+//
+//     init(args = []) {
+//         //this.rcAddon = this._loadthis.rcAddon()
+//         // this.rcAddon.init(args);
+//     }
+//
+//     checkPermission() {
+//         return this.rcAddon.checkPermission();
+//     }
+//
+//     screenSize() {
+//         return this.rcAddon.screenSize();
+//     }
+//
+//     start() {
+//         console.log('wfrc start')
+//         if (!this.rcAddon) {
+//             this.rcAddon = require('../../../rc.node')
+//         }
+//         this.rcAddon.start();
+//     }
+//
+//     stop() {
+//         if (this.rcAddon) {
+//             this.rcAddon.stop();
+//         }
+//     }
+//
+//     isStarted() {
+//         return this.rcAddon.isStarted();
+//     }
+//
+//     isUac() {
+//         return this.rcAddon.isUac();
+//     }
+//
+//     onTextInput(text) {
+//         return this.rcAddon.onTextInput(text);
+//     }
+//
+//     onKeyDown(key) {
+//         return this.rcAddon.onKeyEvent(key, 0);
+//     }
+//
+//     onKeyUp(key) {
+//         return this.rcAddon.onKeyEvent(key, 1);
+//     }
+//
+//     onMouseMove(x, y) {
+//         return this.rcAddon.onMouseMove(x, y);
+//     }
+//
+//     onMouseScroll(delta, axis) {
+//         return this.rcAddon.onMouseScroll(delta, axis);
+//     }
+//
+//     /* Mouse button
+//       Left 0,
+//       Middle 1,
+//       Right 2
+//      */
+//     onMouseDown(button) {
+//         return this.rcAddon.onMouseClick(button, 0);
+//     }
+//
+//     onMouseUp(button) {
+//         return this.rcAddon.onMouseClick(button, 1);
+//     }
+//
+//     onMouseClick(button) {
+//         return this.rcAddon.onMouseClick(button, 1);
+//     }
+// }
+//
+// const self = new WfrcManager();
 
-    constructor() {
-        // this.rcAddon = this._loadthis.rcAddon()
-    }
-
-    init(args = []) {
-        //this.rcAddon = this._loadthis.rcAddon()
-        // this.rcAddon.init(args);
-    }
-
-    checkPermission() {
-        return this.rcAddon.checkPermission();
-    }
-
-    screenSize() {
-        return this.rcAddon.screenSize();
-    }
-
-    start() {
-        if (!this.rcAddon) {
-            this.rcAddon = require('../../../rc.node')
-        }
-        this.rcAddon.start();
-    }
-
-    stop() {
-        if (this.rcAddon) {
-            this.rcAddon.stop();
-        }
-    }
-
-    isStarted() {
-        return this.rcAddon.isStarted();
-    }
-
-    isUac() {
-        return this.rcAddon.isUac();
-    }
-
-    onTextInput(text) {
-        return this.rcAddon.onTextInput(text);
-    }
-
-    onKeyDown(key) {
-        return this.rcAddon.onKeyEvent(key, 0);
-    }
-
-    onKeyUp(key) {
-        return this.rcAddon.onKeyEvent(key, 1);
-    }
-
-    onMouseMove(x, y) {
-        return this.rcAddon.onMouseMove(x, y);
-    }
-
-    onMouseScroll(delta, axis) {
-        return this.rcAddon.onMouseScroll(delta, axis);
-    }
-
-    /* Mouse button
-      Left 0,
-      Middle 1,
-      Right 2
-     */
-    onMouseDown(button) {
-        return this.rcAddon.onMouseClick(button, 0);
-    }
-
-    onMouseUp(button) {
-        return this.rcAddon.onMouseClick(button, 1);
-    }
-
-    onMouseClick(button) {
-        return this.rcAddon.onMouseClick(button, 1);
-    }
-}
-
-const self = new WfrcManager();
-export default self;
+import rc from './rc.min'
+export default rc;
