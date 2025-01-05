@@ -15,7 +15,6 @@ import Conversation from "../../../wfc/model/conversation";
 
 import CallEndReason from "./callEndReason";
 import CallByeMessageContent from "../messages/callByeMessageContent";
-import {log} from "console";
 import WfcAVEngineKit from "./avenginekit";
 
 // main window renderer process -> voip window renderer process
@@ -203,7 +202,7 @@ export class AvEngineKitProxy {
                     this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
                 }
             }
-            if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
+            if (!this.isSupportVoip || (!Config.ENABLE_VOIP_WHEN_NO_MIC_OR_CAMERA && (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone)))) {
                 this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
                 return;
             }
@@ -409,7 +408,7 @@ export class AvEngineKitProxy {
             return;
         }
         console.log(`startCall speaker、microphone、webcam检测结果分别为：${this.hasSpeaker} , ${this.hasMicrophone}, ${this.hasWebcam}，如果不全为true，请检查硬件设备是否正常，否则通话可能存在异常`)
-        if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
+        if (!this.isSupportVoip || (!Config.ENABLE_VOIP_WHEN_NO_MIC_OR_CAMERA && (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone)))) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone, this.hasWebcam);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
@@ -469,7 +468,7 @@ export class AvEngineKitProxy {
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
-        if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
+        if (!this.isSupportVoip || (!Config.ENABLE_VOIP_WHEN_NO_MIC_OR_CAMERA && (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone)))) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
@@ -529,7 +528,7 @@ export class AvEngineKitProxy {
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
-        if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
+        if (!this.isSupportVoip || (!Config.ENABLE_VOIP_WHEN_NO_MIC_OR_CAMERA && (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone)))) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
