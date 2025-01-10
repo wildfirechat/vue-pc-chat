@@ -127,6 +127,14 @@ export class WfcManager {
     }
 
     /**
+     * 设置自定义心跳时长。仅当特殊场景下才需要使用，一般情况下不要设置。
+     * @param {int} sec 心跳的间隔，单位是秒，大于等于30秒，小于等于300秒。
+     */
+    setHeartBeatInterval(int sec) {
+        impl.setHeartBeatInterval(sec);
+    }
+
+    /**
      * 设置代理，只支持socks5代理
      *
      * @param {String} host       代理host，host和ip必须至少有一个。
