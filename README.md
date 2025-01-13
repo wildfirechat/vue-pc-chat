@@ -64,7 +64,7 @@
 4. binutils
 
 ## 开发
-
+> 项目请勿放到中文路径下，放到中文路径下时，依赖可能安装失败。
 1. `npm config ls` 查看`.npmrc`配置文件的路径
 2. 在`.npmrc`文件中，添加如下 Electron 和 node 镜像配置：
     ```
