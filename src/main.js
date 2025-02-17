@@ -66,7 +66,7 @@ app.use(CoolLightBox)
                 loadDefaultConversationList: false
             }
             // TODO 优化，有的窗口并不需要store，或者不需要加载所有默认数据
-            if (path.startsWith('/files')) {
+            if (path.startsWith('/files') || path.startsWith('/voip')) {
                 subWindowLoadDataOptions.loadFriendList = true
                 subWindowLoadDataOptions.loadDefaultConversationList = true
             }
