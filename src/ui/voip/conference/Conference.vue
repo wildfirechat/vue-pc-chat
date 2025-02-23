@@ -277,7 +277,7 @@ export default {
             conferenceManager: conferenceManager,
 
             // -1，默认布局，也就是宫格布局；0, 宫格视图；1，演讲者视图
-            currentLayout: -1,
+            currentLayout: 0,
 
             // 宫格视图
             currentGridPageIndex: 0,
