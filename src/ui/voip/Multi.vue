@@ -92,6 +92,7 @@
                 <!--connected-->
                 <div v-if="status === 4" class="duration-action-container">
                     <p>{{ duration }}</p>
+                    <p class="single-line"> {{ '正在讲话: ' + speakingUserName}}</p>
                     <div class="action-container">
 
                         <div class="action">
@@ -264,8 +265,15 @@ export default {
                 this.groupMemberUserInfos = groupMemberUserInfos;
 
                 this.$set(this.selfUserInfo, '_stream', null)
-                this.participantUserInfos.forEach(p => this.$set(p, "_stream", null))
-                this.groupMemberUserInfos.forEach(m => this.$set(m, "_stream", null))
+                this.$set(this.selfUserInfo, '_volume', 0)
+                this.participantUserInfos.forEach(p => {
+                    this.$set(p, "_stream", null);
+                    this.$set(p, '_volume', 0)
+                })
+                this.groupMemberUserInfos.forEach(p => {
+                    this.$set(p, "_stream", null);
+                    this.$set(p, '_volume', 0)
+                })
 
                 if (Config.ENABLE_MULTI_CALL_AUTO_JOIN && selfUserInfo.uid === initiatorUserInfo.uid) {
                     this.broadcastMultiCallOngoingTimer = setInterval(this.broadcastMultiCallOngoing, 1000)
@@ -297,6 +305,7 @@ export default {
                 let userInfo = wfc.getUserInfo(userId)
                 console.log('didParticipantJoined', userInfo)
                 userInfo._stream = null;
+                userInfo._volume = 0;
                 this.participantUserInfos.push(userInfo);
             }
 
@@ -355,6 +364,17 @@ export default {
                 }
             }
 
+            sessionCallback.didReportAudioVolume = (userId, volume) => {
+                if (userId === this.selfUserInfo.uid) {
+                    this.selfUserInfo._volume = volume;
+                } else {
+                    this.participantUserInfos.forEach(u => {
+                        if (u.uid === userId) {
+                            u._volume = volume;
+                        }
+                    })
+                }
+            }
             avenginekit.sessionCallback = sessionCallback;
         },
 
@@ -459,6 +479,7 @@ export default {
         },
 
         userName(user) {
+            let name = ''
             if (user.groupAlias) {
                 name = user.groupAlias;
             } else if (user.friendAlias) {
@@ -499,14 +520,30 @@ export default {
             }
             let escapeMillis = this.currentTimestamp - this.startTimestamp;
             return this.timestampFormat(escapeMillis)
+        },
+
+        speakingUserName() {
+            let maxVolume = this.selfUserInfo._volume;
+            let speakingUserInfo = this.selfUserInfo;
+            this.participantUserInfos.forEach(u => {
+                if (u._volume > maxVolume) {
+                    speakingUserInfo = u;
+                    maxVolume = u._volume;
         }
+            })
+            if (!maxVolume) {
+                return '';
+            }
+
+            return this.userName(speakingUserInfo);
+        },
     },
 
     mounted() {
         let supportConference = avenginekit.startConference !== undefined
         if (!supportConference) {
             let host = window.location.host;
-            if (host.indexOf('wildfirechat.cn') === -1 && host.indexOf('localhost') === -1) {
+            if (host.indexOf('wildfirechat.cn') === -1 && host.indexOf('localhost') === -1 && Config.ICE_SERVERS) {
                 for (const ice of Config.ICE_SERVERS) {
                     if (ice[0].indexOf('turn.wildfirechat.net') >= 0) {
                         // 显示自行部署 turn 提示

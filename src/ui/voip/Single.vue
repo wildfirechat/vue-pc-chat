@@ -93,7 +93,7 @@
                     <!--          </div>-->
                 </div>
                 <!--outgoing-->
-                <div v-if="status === 1" class="action-container">
+                <div v-if="status === 1 || status === 3" class="action-container">
                     <div class="action">
                         <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
                     </div>
@@ -455,7 +455,7 @@ export default {
         console.log('single mounted')
         if (!this.supportConference) {
             let host = window.location.host;
-            if (host.indexOf('wildfirechat.cn') === -1 && host.indexOf('localhost') === -1) {
+            if (host.indexOf('wildfirechat.cn') === -1 && host.indexOf('localhost') === -1 && Config.ICE_SERVERS) {
                 for (const ice of Config.ICE_SERVERS) {
                     if (ice[0].indexOf('turn.wildfirechat.net') >= 0) {
                         // 显示自行部署 turn 提示
@@ -475,8 +475,11 @@ export default {
         let audioInputDevices = devices.filter(device => device.kind === 'audioinput');
         if (audioInputDevices.length > 0) {
             let defaultAudioDevice = audioInputDevices.filter(d => d.deviceId === 'default')[0];
+            if(!defaultAudioDevice){
+                defaultAudioDevice = audioInputDevices[0]
+            }
             let defaultAudioDeviceGroupId = defaultAudioDevice.groupId;
-            this.audioInputDevices = audioInputDevices.filter(d => d.deviceId !== 'default');
+            this.audioInputDevices = audioInputDevices;
             this.currentAudioInputDeviceId = this.audioInputDevices.filter(d => d.groupId === defaultAudioDeviceGroupId)[0].deviceId;
         }
     },
