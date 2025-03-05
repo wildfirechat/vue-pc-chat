@@ -88,7 +88,7 @@ export class AvEngineKitProxy {
         let content = message.content;
 
         let msg = wfc.getMessageByUid(messageUid);
-        if(!msg){
+        if (!msg) {
             return
         }
         let orgContent = msg.messageContent;
@@ -174,7 +174,7 @@ export class AvEngineKitProxy {
             console.log('not enable multi call ');
             return;
         }
-        if(!isElectron() && msg.messageContent === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST){
+        if (!isElectron() && msg.messageContent === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST) {
             console.log('only pc support remote control');
             return;
         }
@@ -566,8 +566,11 @@ export class AvEngineKitProxy {
     }
 
     showCallUI(conversation, isConference, options) {
-        if(options.args.remoteControl && !isElectron()){
+        if (options.args.remoteControl && !isElectron()) {
             console.warn('web 端，不支持远程协助');
+            return
+        } else if(process && process.platform === 'linux'){
+            console.warn('远程协助功能，目前只支持 Windows 和 macOS');
             return
         }
         let type = isConference ? 'conference' : (options.args.remoteControl ? 'single-rc' : (conversation.type === ConversationType.Single ? 'single' : 'multi'));

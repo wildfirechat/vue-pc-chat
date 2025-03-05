@@ -564,6 +564,13 @@ export default {
 
         requestRemoteControl(){
             if(avenginekit.startConference){
+                if(process.platform === 'linux'){
+                    this.$notify({
+                        text:'远程协助，目前只支持 Windows 和 macOS',
+                        type:'error',
+                    })
+                    return
+                }
                 avenginekitproxy.requestRemoteControl(this.conversationInfo.conversation);
             }else {
                 this.$notify({
