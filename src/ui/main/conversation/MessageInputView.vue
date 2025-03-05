@@ -137,6 +137,7 @@ import {currentWindow, fs} from "../../../platform";
 import {vOnClickOutside} from '@vueuse/components'
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
+import avenginekit from "../../../wfc/av/internal/engine.min";
 
 export default {
     name: "MessageInputView",
@@ -562,7 +563,14 @@ export default {
         },
 
         requestRemoteControl(){
-            avenginekitproxy.requestRemoteControl(this.conversationInfo.conversation);
+            if(avenginekit.startConference){
+                avenginekitproxy.requestRemoteControl(this.conversationInfo.conversation);
+            }else {
+                this.$notify({
+                    text:'需要高级版音视频才支持远程协助',
+                    type:'error',
+                })
+            }
         },
 
         toggleChannelMenu(toggle = true) {
