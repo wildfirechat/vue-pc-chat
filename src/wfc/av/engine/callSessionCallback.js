@@ -3,6 +3,11 @@
  */
 
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
+import wfrc from "../../rc/wfrc";
+import {simulateRemoteControlInputEvent} from "../../../ui/voip/rcEventHelper";
+import avenginekitproxy from "./avenginekitproxy";
+import RCEvent from "../../rc/RCEvent";
+
 export default class CallSessionCallback {
 
     /**
@@ -84,7 +89,7 @@ export default class CallSessionCallback {
     /**
      * 屏幕共享结束回调
      */
-    didScreenShareEnded(){
+    didScreenShareEnded() {
 
     }
 
@@ -207,6 +212,65 @@ export default class CallSessionCallback {
 
     }
 
+    // 远程控制，依赖于高级版音视频，只支持单人视频通话
+
+    /**
+     * 收到对方远程协助邀请
+     */
+    onReceiveRemoteControlInvite() {
+        // TODO
+        // accept
+    }
+
+    /**
+     * 收到对方远程控制请求，可以在此回调里面做一些提示等
+     * 调用{@linkcode Callession#acceptRemoteControlInvite} 接受邀请
+     * 调用{@linkcode Callession#rejectRemoteControlInvite} 拒绝邀请
+     */
+    onReceiveRemoteControlRequest() {
+        // TODO 弹出提示等，接受的话，调用
+
+    }
+
+    /**
+     * 对方接收了远程协助邀请
+     */
+    didAcceptRemoteControlInvite() {
+        wfrc.start();
+    }
+
+    didReceiveRemoteControlEvent(rcEventBuffer) {
+        let rcEvent = RCEvent.fromArrayBuffer(rcEventBuffer);
+        if (rcEvent.name === 'uac') {
+            this.didRemoteUACStatusChange(!!rcEvent.numberArgs[0]);
+            return 0
+        } else {
+            return simulateRemoteControlInputEvent(rcEvent)
+        }
+    }
+
+    /**
+     * 仅 windows 端有效
+     * 被控端 uac 状态改变回调
+     * @param isUac
+     */
+    didRemoteUACStatusChange(isUac) {
+
+    }
+
+    didRemoteControlInputError(errorCode) {
+        // TODO
+        console.error('remote control error', errorCode);
+    }
+
+    /**
+     * 远程控制/协助结束
+     * @param reason
+     */
+    didRemoteControlEnd(reason) {
+        wfrc.stop();
+    }
+
     /**
      * 旋转视频流的具体实现方法，由{@link CallSession#rotate} 触发
      * @param {MediaStream} stream 待旋转的视频流
@@ -214,16 +278,16 @@ export default class CallSessionCallback {
      * @param {Object} scaleTo 可选，小流时有效， 值 固定为{width: 200, height: 200}
      * @return MediaStream 返回旋转之后的视频流
      */
-    onRotateStream(stream, ang, scaleTo = null){
+    onRotateStream(stream, ang, scaleTo = null) {
         console.log('onRotateStream capabilities', stream.getVideoTracks()[0].getCapabilities());
         const canvas = document.createElement("canvas");
-        Object.assign(canvas, { width: 200, height: 200 });
+        Object.assign(canvas, {width: 200, height: 200});
         const ctx = canvas.getContext("2d");
         const track = stream.getVideoTracks()[0];
         const drawOnCanvas = (image, width, height) => {
             // MediaStream's video size may change over time
             if (canvas.width !== width || canvas.height !== height) {
-                switch (ang){
+                switch (ang) {
                     case 90:
                         canvas.width = height;
                         canvas.height = width;
@@ -259,9 +323,9 @@ export default class CallSessionCallback {
         if (window.MediaStreamTrackProcessor) {
             const processor = new MediaStreamTrackProcessor(track);
             const reader = processor.readable.getReader();
-            reader.read().then(function readChunk({ done, value }) {
+            reader.read().then(function readChunk({done, value}) {
                 if (!done) {
-                    const { displayWidth, displayHeight } = value;
+                    const {displayWidth, displayHeight} = value;
                     drawOnCanvas(value, displayWidth, displayHeight);
                     value.close(); // close the VideoFrame when we're done with it
 
@@ -276,15 +340,16 @@ export default class CallSessionCallback {
             const scheduler = vid.requestVideoFrameCallback ?
                 (cb) => vid.requestVideoFrameCallback(cb) : requestAnimationFrame;
             const draw = () => {
-                const { videoWidth, videoHeight } = vid;
+                const {videoWidth, videoHeight} = vid;
                 drawOnCanvas(vid, videoWidth, videoHeight);
                 scheduler(draw);
             };
             vid.play().then(draw);
         }
-        if (scaleTo && scaleTo.width > 0 && scaleTo.height > 0){
+        if (scaleTo && scaleTo.width > 0 && scaleTo.height > 0) {
             ctx.scale(scaleTo.width / canvas.width, scaleTo.height / canvas.height);
         }
         return canvas.captureStream();
     }
+
 }

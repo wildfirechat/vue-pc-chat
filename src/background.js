@@ -22,11 +22,13 @@ import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
 import i18n from 'i18n';
 import proto from '../marswrapper.node';
+import rcProto from '../rc.node';
 
 import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
+import {init as initRCMain} from "./wfc/rc/rc_main";
 import createProtocol from "./createProtocol";
 
 console.log('start crash report', app.getPath('crashDumps'))
@@ -607,7 +609,7 @@ const createMainWindow = async () => {
     ipcMain.on(IPCEventType.START_SCREEN_SHARE, (event, args) => {
         let pointer = screen.getCursorScreenPoint();
         let display = screen.getDisplayNearestPoint(pointer)
-        mainWindow.webContents.send(IPCEventType.START_SCREEN_SHARE, {width: display.size.width});
+        mainWindow.webContents.send(IPCEventType.START_SCREEN_SHARE, {width: display.size.width, ...args});
     });
 
     ipcMain.on(IPCEventType.STOP_SCREEN_SHARE, (event, args) => {
@@ -1091,6 +1093,7 @@ function registerLocalResourceProtocol() {
 
 app.on('ready', () => {
         initProtoMain(proto);
+        initRCMain(rcProto);
 
         createMainWindow();
 

@@ -15,6 +15,8 @@ import Conversation from "../../../wfc/model/conversation";
 
 import CallEndReason from "./callEndReason";
 import CallByeMessageContent from "../messages/callByeMessageContent";
+import {log} from "console";
+import WfcAVEngineKit from "./avenginekit";
 
 // main window renderer process -> voip window renderer process
 // voip window renderer process -> main process -> main window renderer process
@@ -86,6 +88,9 @@ export class AvEngineKitProxy {
         let content = message.content;
 
         let msg = wfc.getMessageByUid(messageUid);
+        if(!msg){
+            return
+        }
         let orgContent = msg.messageContent;
         orgContent.connectTime = content.connectTime ? content.connectTime : orgContent.connectTime;
         orgContent.endTime = content.endTime ? content.endTime : orgContent.endTime;
@@ -169,6 +174,11 @@ export class AvEngineKitProxy {
             console.log('not enable multi call ');
             return;
         }
+        if(!isElectron() && msg.messageContent === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST){
+            console.log('only pc support remote control');
+            return;
+        }
+
         let now = (new Date()).valueOf();
         let delta = wfc.getServerDeltaTime();
         if (now - (numberValue(msg.timestamp) - delta) >= 90 * 1000) {
@@ -180,7 +190,7 @@ export class AvEngineKitProxy {
             console.log('in conference, ignore all other msg');
             return;
         }
-        if(content.notLoaded){
+        if (content.notLoaded) {
             console.log('message not loaded, ignore');
             return;
         }
@@ -193,7 +203,7 @@ export class AvEngineKitProxy {
                     this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
                 }
             }
-            if (!this.isSupportVoip || !this.hasMicrophone || !this.hasSpeaker) {
+            if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
                 this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
                 return;
             }
@@ -209,21 +219,29 @@ export class AvEngineKitProxy {
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT
                 || content.type === MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO
                 || content.type === MessageContentType.VOIP_Join_Call_Request
+                || content.type === MessageContentType.VOIP_REMOTE_CONTROL_INPUT_EVENT
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE
                 || content.type === MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND
+                || content.type === MessageContentType.VOIP_REMOTE_CONTROL_INVITE
+                || content.type === MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_INVITE
+                || content.type === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST
+                || content.type === MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_REQUEST
+                || content.type === MessageContentType.VOIP_REMOTE_CONTROL_END
             ) {
                 console.log("receive voip message", msg.messageContent.type, msg.messageContent.callId, msg.messageUid.toString(), msg);
                 if (msg.direction === 0
                     && content.type !== MessageContentType.VOIP_CONTENT_TYPE_END
                     && content.type !== MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
-                    && content.type !== MessageContentType.VOIP_CONTENT_TYPE_ACCEPT) {
+                    && content.type !== MessageContentType.VOIP_CONTENT_TYPE_ACCEPT
+                    && content.type !== MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_INVITE
+                    && content.type !== MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_REQUEST) {
                     return;
                 }
 
                 let participantUserInfos = [];
                 let selfUserInfo = wfc.getUserInfo(wfc.getUserId());
-                if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START) {
+                if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START || content.type === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST) {
                     this.conversation = msg.conversation;
                     this.callId = content.callId;
                     this.inviteMessageUid = msg.messageUid;
@@ -241,9 +259,15 @@ export class AvEngineKitProxy {
                     }
                     if (!this.callWin) {
                         if (this.conversation) {
+                            msg.participantUserInfos = participantUserInfos;
+                            msg.selfUserInfo = selfUserInfo;
+                            msg.timestamp = longValue(numberValue(msg.timestamp) - delta)
                             this.showCallUI(msg.conversation, false, {
                                 event: 'message',
-                                args: msg
+                                args: {
+                                    ...msg,
+                                    remoteControl: content.type === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST
+                                },
                             });
                         } else {
                             console.log('call ended')
@@ -295,7 +319,7 @@ export class AvEngineKitProxy {
                 if (this.callWin) {
                     let ignore = false;
                     // start,add消息，显示 ui 的时候，会传过去，这儿就不用再次传了
-                    if (MessageContentType.VOIP_CONTENT_TYPE_START === msg.messageContent.type) {
+                    if (MessageContentType.VOIP_CONTENT_TYPE_START === msg.messageContent.type || MessageContentType.VOIP_REMOTE_CONTROL_REQUEST === msg.messageContent.type) {
                         ignore = true
                     } else if (MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT === msg.messageContent.type && content.participants.indexOf(wfc.getUserId()) >= 0) {
                         ignore = true
@@ -356,6 +380,18 @@ export class AvEngineKitProxy {
     };
 
     /**
+     *  请求远程控制，仅高级版音视频 SDK 支持
+     * @param {Conversation} conversation 会话，支持单聊
+     */
+    requestRemoteControl(conversation) {
+        if (conversation.type !== ConversationType.Single) {
+            this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
+            return
+        }
+        this._startCall(conversation, false, [conversation.target], '', true)
+    }
+
+    /**
      * 发起音视频通话
      * @param {Conversation} conversation 会话
      * @param {Boolean} audioOnly 是否是音频通话
@@ -363,13 +399,17 @@ export class AvEngineKitProxy {
      * @param {string} callExtra 通话附加信息，会议版有效
      */
     startCall(conversation, audioOnly, participants, callExtra = '') {
+        this._startCall(conversation, audioOnly, participants, callExtra, false);
+    }
+
+    _startCall(conversation, audioOnly, participants, callExtra = '', remoteControl = false) {
         if (this.callWin) {
             console.log('voip call is ongoing');
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
         console.log(`startCall speaker、microphone、webcam检测结果分别为：${this.hasSpeaker} , ${this.hasMicrophone}, ${this.hasWebcam}，如果不全为true，请检查硬件设备是否正常，否则通话可能存在异常`)
-        if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone) {
+        if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone, this.hasWebcam);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
@@ -402,6 +442,7 @@ export class AvEngineKitProxy {
                 groupMemberUserInfos: groupMemberUserInfos,
                 participantUserInfos: participantUserInfos,
                 callExtra: callExtra,
+                remoteControl: remoteControl
             }
         });
     }
@@ -428,7 +469,7 @@ export class AvEngineKitProxy {
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
-        if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone) {
+        if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
@@ -488,7 +529,7 @@ export class AvEngineKitProxy {
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-1);
             return;
         }
-        if (!this.isSupportVoip || !this.hasSpeaker || !this.hasMicrophone) {
+        if (!this.isSupportVoip || (!WfcAVEngineKit.ENABLE_VOIP_WHEN_NO_MIC_AND_SPEAKER && (!this.hasSpeaker || !this.hasMicrophone))) {
             console.log('not support voip', this.isSupportVoip, this.hasSpeaker, this.hasMicrophone);
             this.onVoipCallErrorCallback && this.onVoipCallErrorCallback(-2);
             return;
@@ -525,7 +566,11 @@ export class AvEngineKitProxy {
     }
 
     showCallUI(conversation, isConference, options) {
-        let type = isConference ? 'conference' : (conversation.type === ConversationType.Single ? 'single' : 'multi');
+        if(options.args.remoteControl && !isElectron()){
+            console.warn('web 端，不支持远程协助');
+            return
+        }
+        let type = isConference ? 'conference' : (options.args.remoteControl ? 'single-rc' : (conversation.type === ConversationType.Single ? 'single' : 'multi'));
         this.type = type;
 
         let width = 360;
@@ -536,6 +581,12 @@ export class AvEngineKitProxy {
             case 'single':
                 width = 360;
                 height = 640;
+                break;
+            case 'single-rc':
+                width = 960;
+                height = 600;
+                minWidth = 800;
+                minHeight = 480;
                 break;
             case 'multi':
             case 'conference':
@@ -665,16 +716,23 @@ export class AvEngineKitProxy {
             ipcRenderer.on('conference-request', this.sendConferenceRequestListener);
             ipcRenderer.on('update-call-start-message', this.updateCallStartMessageContentListener)
             ipcRenderer.on(/*IPCEventType.START_SCREEN_SHARE*/'start-screen-share', (event, args) => {
+                console.log('start-screen-share args', args, this.callWin);
                 if (this.callWin) {
                     let screenWidth = args.width;
                     this.callWin.resizable = true;
                     this.callWin.closable = true;
-                    this.callWin.maximizable = false;
+                    this.callWin.maximizable = !!args.rc;
                     this.callWin.transparent = true;
-                    this.callWin.setMinimumSize(800, 800);
-                    this.callWin.setSize(800, 800);
+                    let mw = args.rc ? 800 : 800
+                    let mh = args.rc ? 200 : 800
+                    this.callWin.setMinimumSize(mw, mh);
+                    this.callWin.setSize(mw, mh);
                     // console.log('screen width', screen, screen.width);
-                    this.callWin.setPosition((screenWidth - 800) / 2, 0, true);
+                    if (args.rc) {
+                        this.callWin.minimize()
+                    } else {
+                        this.callWin.setPosition((screenWidth - 800) / 2, 0, true);
+                    }
                 }
             });
             ipcRenderer.on(/*IPCEventType.STOP_SCREEN_SHARE*/'stop-screen-share', (event, args) => {

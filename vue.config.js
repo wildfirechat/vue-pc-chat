@@ -77,6 +77,23 @@ module.exports = {
                         }
                         return options;
                     });
+                let rcAddonLoaderOptions = {}
+                if (process.env.NODE_ENV !== 'production') {
+                    rcAddonLoaderOptions = {
+                        rewritePath: path.resolve(__dirname, ".")
+                    }
+                } else {
+                    rcAddonLoaderOptions = {
+                        basePath: ['.']
+                    }
+                }
+                config.module
+                    .rule('native')
+                    .test(/\.node$/)
+                    .use('native-ext-loader')
+                    .loader('native-ext-loader')
+                    .options(rcAddonLoaderOptions)
+                    .end();
             },
             // nodeIntegration: true,
             contextIsolation: false,

@@ -38,6 +38,7 @@ import CallAnswerMessageContent from '../av/messages/callAnswerMessageContent';
 import CallAnswerTMessageContent from '../av/messages/callAnswerTMessageContent';
 import CallByeMessageContent from '../av/messages/callByeMessageContent';
 import CallSignalMessageContent from '../av/messages/callSignalMessageContent';
+import RCInputEventMessageContent from '../av/messages/rcInputEventMessageContent';
 import CallModifyMessageContent from '../av/messages/callModifyMessageContent';
 import AddParticipantsMessageContent from "../av/messages/addParticipantsMessageContent";
 import MuteVideoMessageContent from "../av/messages/muteVideoMessageContent";
@@ -71,6 +72,10 @@ import StreamingTextGeneratingMessageContent from "../messages/streamingTextGene
 import StreamingTextGeneratedMessageContent from "../messages/streamingTextGeneratedMessageContent";
 import MixMultiMediaTextMessageContent from "../messages/mixMultiMediaTextMessageContent";
 import MixFileTextMessageContent from "../messages/mixFileTextMessageContent";
+import RCInviteMessageContent from "../av/messages/rcInviteMessageContent";
+import RcAcceptInviteMessageContent from "../av/messages/rcAcceptInviteMessageContent";
+import RcEndMessageContent from "../av/messages/rcEndMessageContent";
+import RcRequestMessageContent from "../av/messages/rcRequestMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -448,6 +453,36 @@ export default class MessageConfig {
             flag: PersistFlag.Transparent,
             type: MessageContentType.VOIP_Join_Call_Request,
             contentClazz: JoinCallRequestMessageContent,
+        },
+        {
+            name: 'rcInviteMessageContent',
+            flag: PersistFlag.No_Persist,
+            type: MessageContentType.VOIP_REMOTE_CONTROL_INVITE,
+            contentClazz: RCInviteMessageContent,
+        },
+        {
+            name: 'rcAcceptInviteMessageContent',
+            flag: PersistFlag.No_Persist,
+            type: MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_INVITE,
+            contentClazz: RcAcceptInviteMessageContent,
+        },
+        {
+            name: 'rcRequestMessageContent',
+            flag: PersistFlag.No_Persist,
+            type: MessageContentType.VOIP_REMOTE_CONTROL_REQUEST,
+            contentClazz: RcRequestMessageContent,
+        },
+        {
+            name: 'rcInputEventMessageContent',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.VOIP_REMOTE_CONTROL_INPUT_EVENT,
+            contentClazz: RCInputEventMessageContent,
+        },
+        {
+            name: 'rcEndMessageContent',
+            flag: PersistFlag.No_Persist,
+            type: MessageContentType.VOIP_REMOTE_CONTROL_END,
+            contentClazz: RcEndMessageContent,
         },
         {
             name: 'markUnreadMessage',

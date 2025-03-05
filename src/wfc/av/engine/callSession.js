@@ -13,6 +13,7 @@ export default class CallSession {
     screenSharing = false
     audioOnly = false
 
+    moCall;
     startTime
     startMsgUid
 
@@ -38,6 +39,17 @@ export default class CallSession {
     extra;
 
     /**
+     * 远程控制状态，单人视频通话时有效
+     * 0，idle
+     * 1，outgoing inviting，发送远程协助邀请
+     * 2, incoming inviting，收到远程协助邀请
+     * 3, outgoing request，发出远程控制请求
+     * 4, incoming request，收到远程控制请求
+     * 5, connected，远程协助/远程控制中
+     */
+    rcStatus = 0;
+
+    /**
      * 默认成员的视频流类型
      */
     defaultVideoType = VideoType.BIG_STREAM;
@@ -45,7 +57,7 @@ export default class CallSession {
     /**
      * 播放来电响铃
      */
-    playIncomingRing () {
+    playIncomingRing() {
         // TODO
         //在界面初始化时播放来电铃声
     }
@@ -53,7 +65,7 @@ export default class CallSession {
     /**
      * 停止响铃
      */
-    stopIncomingRing () {
+    stopIncomingRing() {
         // TODO
         //再接听/语音接听/结束媒体时停止播放来电铃声，可能有多次，需要避免出问题
     }
@@ -63,14 +75,14 @@ export default class CallSession {
      * @param {[string]} newParticipantIds
      * @param {boolean}  autoAnswer 是否自动接听，默认 false
      */
-    inviteNewParticipants (newParticipantIds, targetClientId, autoAnswer) {
+    inviteNewParticipants(newParticipantIds, targetClientId, autoAnswer) {
     }
 
     /**
      * 接听来电
      * @deprecated  参考{@link answer}
      */
-    call () {
+    call() {
         this.answer(false, null);
     }
 
@@ -85,12 +97,12 @@ export default class CallSession {
     /**
      * 挂断
      */
-    hangup () {
+    hangup() {
     }
 
 
     // 回落到语音
-    downgrade2Voice () {
+    downgrade2Voice() {
     }
 
     /**
@@ -98,7 +110,7 @@ export default class CallSession {
      * @param enable
      * @deprecated 请使用{@link muteVideo}
      */
-    setVideoEnabled (enable) {
+    setVideoEnabled(enable) {
 
     }
 
@@ -106,7 +118,7 @@ export default class CallSession {
      * 打开或关闭摄像头
      * @param {boolean} mute true，关闭摄像头；false，打开摄像头
      */
-    muteVideo(mute){
+    muteVideo(mute) {
 
     }
 
@@ -115,7 +127,7 @@ export default class CallSession {
      * @param {boolean} enable
      * @deprecated 请使用{@link muteAudio}
      */
-    setAudioEnabled(enable){
+    setAudioEnabled(enable) {
 
     }
 
@@ -123,7 +135,7 @@ export default class CallSession {
      * 静音或取消静音
      * @param {boolean} mute true，静音；false，取消静音
      */
-    muteAudio(mute){
+    muteAudio(mute) {
 
     }
 
@@ -133,7 +145,7 @@ export default class CallSession {
      * @param {[string]} types 媒体源类型，可选screen、window
      * @return {Promise<DesktopCapturerSource[]>}
      */
-    getDesktopSources (types) {
+    getDesktopSources(types) {
 
     }
 
@@ -149,15 +161,15 @@ export default class CallSession {
      }} desktopShareOptions，sourceId 仅 pc 端有效，web 端无效；其他参数对应 getDisplayMedia(options) options.video，具体可以参考：https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getDisplayMedia
      * 开始屏幕共享
      */
-    async startScreenShare (desktopShareOptions) {
+    async startScreenShare(desktopShareOptions) {
 
     }
 
-    isScreenSharing () {
+    isScreenSharing() {
 
     }
 
-    stopScreenShare () {
+    stopScreenShare() {
 
     }
 
@@ -167,7 +179,7 @@ export default class CallSession {
      * @param {string} userId
      * @return {Subscriber}
      */
-    getPeerConnectionClient(userId){
+    getPeerConnectionClient(userId) {
         return this.getSubscriber(userId);
     }
 
@@ -178,20 +190,20 @@ export default class CallSession {
      * @param {boolean} screenSharing
      * @return {Subscriber}
      */
-    getSubscriber(userId, screenSharing){
+    getSubscriber(userId, screenSharing) {
     }
 
     /**
      * 获取参与者的通话信息列表
      */
-    getParticipantProfiles(){
+    getParticipantProfiles() {
 
     }
 
     /**
      * 获取自己的通话信息
      */
-    getSelfProfile(){
+    getSelfProfile() {
 
     }
 
@@ -236,7 +248,7 @@ export default class CallSession {
     /**
      * 关闭音视频通话窗口
      */
-    closeVoipWindow(){
+    closeVoipWindow() {
 
     }
 
@@ -245,7 +257,7 @@ export default class CallSession {
      * 设置音频输入设备，设置音频输出设备，请参考：https://developer.mozilla.org/en-US/docs/Web/API/Audio_Output_Devices_API
      * @param {string} audioDeviceId 音频设备 id
      */
-    setAudioInputDeviceId(audioDeviceId){
+    setAudioInputDeviceId(audioDeviceId) {
 
     }
 
@@ -254,7 +266,7 @@ export default class CallSession {
      * 设置音频输入设备
      * @param {string} videoDeviceId  视频设备 id
      */
-    setVideoInputDeviceId(videoDeviceId){
+    setVideoInputDeviceId(videoDeviceId) {
 
     }
 
@@ -263,7 +275,7 @@ export default class CallSession {
      * 设置输入 MediaStream
      * @param {MediaStream} stream
      */
-    setInputStream(stream){
+    setInputStream(stream) {
 
     }
 
@@ -271,7 +283,7 @@ export default class CallSession {
      * 切换摄像头，手机端有效
      * @return boolean true，支持切换摄像头，正在切换；false，不支持切换摄像头
      */
-    switchCamera(){
+    switchCamera() {
 
     }
 
@@ -280,7 +292,7 @@ export default class CallSession {
      * 设置视频最大码率
      * @param maxBitrateKbps
      */
-    setVideoMaxBitrate(maxBitrateKbps){
+    setVideoMaxBitrate(maxBitrateKbps) {
 
     }
 
@@ -290,7 +302,7 @@ export default class CallSession {
      * 相对于原始视频大小按比例缩小分辨率，具体可以参考{@link https://developer.mozilla.org/en-US/docs/Web/API/RTCRtpEncodingParameters/scaleResolutionDownBy}
      * @param {number} scalingFactor
      */
-    scaleVideoResolutionDownBy(scalingFactor){
+    scaleVideoResolutionDownBy(scalingFactor) {
 
     }
 
@@ -299,7 +311,7 @@ export default class CallSession {
      * 请在callState变为connected之后，调用
      * @param {number} ang 旋转角度，可选值为 0，90，180，270
      */
-    rotate(ang){
+    rotate(ang) {
 
     }
 
@@ -310,7 +322,7 @@ export default class CallSession {
      * @param {boolean} isScreenSharing 是否是屏幕共享
      * @param {VideoType} videoType 视频流类型
      */
-    setParticipantVideoType(userId, isScreenSharing, videoType){
+    setParticipantVideoType(userId, isScreenSharing, videoType) {
 
     }
 
@@ -319,6 +331,65 @@ export default class CallSession {
      * 正常不需要调用，仅当将通话界面直接渲染在当前界面时，需要调用
      */
     forceEndMedia() {
+
+    }
+
+    // 远程控制，依赖于高级版音视频，只支持单人视频通话
+    // 远程控制，主动方发起
+    // 远程协助，被控方发起
+
+    /**
+     *
+     * 邀请对方远程协助
+     */
+    inviteRemoteControl() {
+
+    }
+
+    /**
+     * 接受远程协助邀请
+     */
+    acceptRemoteControlInvite() {
+
+    }
+
+    /**
+     * 拒绝远程协助邀请
+     */
+    rejectRemoteControlInvite() {
+
+    }
+
+    /**
+     * 请求远程控制对方的桌面
+     */
+    requestRemoteControl() {
+
+    }
+
+    /**
+     * 接受远程桌面控制请求
+     */
+    acceptRemoteControlRequest() {
+
+    }
+
+    /**
+     * 拒绝远程桌面控制请求
+     */
+    rejectRemoteControlRequest() {
+
+    }
+
+    /**
+     * 结束远程控制或远程协助
+     * @param reason
+     */
+    endRemoteControl(reason) {
+
+    }
+
+    sendRemoteControlInputEvent(data) {
 
     }
 }

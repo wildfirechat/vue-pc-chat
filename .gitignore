@@ -2,6 +2,7 @@
 node_modules
 /dist
 marswrapper.node
+rc.node
 *.map
 
 

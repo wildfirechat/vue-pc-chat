@@ -16,6 +16,7 @@ import ConversationFloatPage from "./ui/main/ConversationFloatPage";
 import ConferencePortalPage from "./ui/voip/conference/ConferencePortalPage";
 import MessagePage from "./ui/main/MessagePage.vue";
 import MultimediaPreviewPage from "./ui/main/MultimediaPreviewPage.vue";
+import SingleRemoteControl from "./ui/voip/SingleRemoteControl.vue";
 
 const routers = [
     {
@@ -62,6 +63,11 @@ const routers = [
         name: 'voip-single',
         path: '/voip/single',
         component: Single,
+    },
+    {
+        name: 'voip-single-rc',
+        path: '/voip/single-rc',
+        component: SingleRemoteControl,
     },
     {
         name: 'voip-multi',
