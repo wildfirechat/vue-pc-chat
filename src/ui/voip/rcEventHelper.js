@@ -202,6 +202,8 @@ export function simulateRemoteControlInputEvent(rcEvent) {
 }
 
 function _mouseMove(x, y) {
+    x = x * window.devicePixelRatio;
+    y = y * window.devicePixelRatio;
     if (x !== _lastMouseX || y !== _lastMouseY) {
         _lastMouseX = x;
         _lastMouseY = y;
