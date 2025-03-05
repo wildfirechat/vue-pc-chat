@@ -566,6 +566,10 @@ export class AvEngineKitProxy {
     }
 
     showCallUI(conversation, isConference, options) {
+        if(options.args.remoteControl && !isElectron()){
+            console.warn('web 端，不支持远程协助');
+            return
+        }
         let type = isConference ? 'conference' : (options.args.remoteControl ? 'single-rc' : (conversation.type === ConversationType.Single ? 'single' : 'multi'));
         this.type = type;
 
