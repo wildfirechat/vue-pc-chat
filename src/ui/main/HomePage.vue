@@ -56,6 +56,11 @@
                                v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"
                                @click="go2Fav"></i>
                         </li>
+                        <li>
+                            <i class="icon-ion-images"
+                               v-bind:class="{active : this.$router.currentRoute.value.path === '/home/moments'}"
+                               @click="go2Moments"></i>
+                        </li>
                         <li v-if="sharedMiscState.isElectron && sharedMiscState.isCommercialServer">
                             <i class="icon-ion-ios-folder"
                                v-bind:class="{active : this.$router.currentRoute.value.path === '/home/files'}"
@@ -159,6 +164,13 @@ export default {
             }
             this.$router.replace("/home/fav");
             this.isSetting = false;
+        },
+        go2Moments() {
+            if (this.$router.currentRoute.value.path === '/home/moments') {
+                return;
+            }
+            this.$router.replace("/home/moments");
+            this.isSetting = false;  // This ensures the left menu stays visible
         },
         go2Files() {
             let hash = window.location.hash;

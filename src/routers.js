@@ -17,6 +17,7 @@ import ConferencePortalPage from "./ui/voip/conference/ConferencePortalPage";
 import MessagePage from "./ui/main/MessagePage.vue";
 import MultimediaPreviewPage from "./ui/main/MultimediaPreviewPage.vue";
 import SingleRemoteControl from "./ui/voip/SingleRemoteControl.vue";
+import MomentList from './ui/main/moment/MomentList.vue'
 
 const routers = [
     {
@@ -56,6 +57,24 @@ const routers = [
                 path: 'conference',
                 name: 'conference',
                 component: ConferencePortalPage,
+            },
+            {
+                path: 'moments',
+                name: 'moments',
+                component: MomentList,
+                children: [
+                    // {
+                    //     path: '',
+                    //     name: 'MomentList',
+                    //     component: MomentList
+                    // },
+                    // Add more moment related routes here as needed
+                    // {
+                    //   path: 'publish',
+                    //   name: 'PublishMoment',
+                    //   component: PublishMoment
+                    // }
+                ]
             },
         ]
     },
