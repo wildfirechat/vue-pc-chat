@@ -103,7 +103,6 @@ export default class MessageContentType {
     static VOIP_REMOTE_CONTROL_ACCEPT_REQUEST = 433;
     static VOIP_REMOTE_CONTROL_END = 434;
 
-    static VOIP_REMOTE_CONTROL_INPUT_EVENT = 433;
     static MESSAGE_CONTENT_TYPE_FEED = 501;
     static MESSAGE_CONTENT_TYPE_COMMENT = 502;
 
