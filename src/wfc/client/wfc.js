@@ -288,7 +288,14 @@ export class WfcManager {
      * @returns {[GroupInfo]} 参考{@link GroupInfo}
      */
     getFavGroupList() {
-        return impl.getMyGroupList();
+        let groupInfos = impl.getMyGroupList();
+        groupInfos.map(info => {
+            if (!info.portrait) {
+                info.portrait = this.defaultGroupPortrait(info);
+            }
+            return info;
+        })
+        return groupInfos;
     }
 
     /**
@@ -449,7 +456,14 @@ export class WfcManager {
      * @returns {[GroupSearchResult]}
      */
     searchGroups(keyword) {
-        return impl.searchGroups(keyword);
+        let results = impl.searchGroups(keyword);
+        results.forEach(r => {
+            let info = r.groupInfo;
+            if (!info.portrait) {
+                info.portrait = this.defaultGroupPortrait(info);
+            }
+        })
+        return results;
     }
 
     /**
@@ -1146,7 +1160,7 @@ export class WfcManager {
      * @param {function (number)} failCB
      */
     searchChannel(keyword, fuzzy, successCB, failCB) {
-        impl.searchChannel(keyword, successCB, failCB);
+        impl.searchChannel(keyword, fuzzy, successCB, failCB);
     }
 
     /**
@@ -2302,15 +2316,6 @@ export class WfcManager {
      */
     setUserEnableReceipt(enable, successCB, failCB) {
         impl.setUserEnableReceipt(enable, successCB, failCB);
-    }
-
-    /**
-     * 获取会话的送达状态。
-     * @param conversation
-     * @return {Map<string, Long>}
-     */
-    getConversationDelivery(conversation) {
-        return impl.getConversationDelivery(conversation);
     }
 
     /**
