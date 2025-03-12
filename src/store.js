@@ -508,6 +508,7 @@ let store = {
         this._loadSelfUserInfo();
         this._loadUserLocalSettings();
         conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
+        conversationState.isGroupMessageReceiptEnable = wfc.isGroupReceiptEnabled() && wfc.isUserReceiptEnabled();
         // if (conversationState.currentConversationInfo) {
         //     this._loadCurrentConversationMessages();
         // }
@@ -595,11 +596,12 @@ let store = {
         }
 
         if (conversationState.currentConversationInfo && conversationState.currentConversationInfo.conversation.equal(conversation)) {
-            conversationState.currentConversationInfo = conversationInfo;
+            let isClearConversationMessageHistory = !conversationInfo.lastMessage && !!conversationState.currentConversationInfo.lastMessage;
             // 清除聊天记录
-            if (!conversationInfo.lastMessage) {
+            if (isClearConversationMessageHistory) {
                 conversationState.currentConversationMessageList = [];
             }
+            conversationState.currentConversationInfo = conversationInfo;
         }
 
         // sort
@@ -1561,7 +1563,7 @@ let store = {
     _loadFriendList() {
         let friends = wfc.getMyFriendList(false);
         let fileHelperIndex = friends.indexOf(Config.FILE_HELPER_ID);
-        if (fileHelperIndex < 0) {
+        if (fileHelperIndex < 0 && Config.FILE_HELPER_ID) {
             friends.push(Config.FILE_HELPER_ID);
         }
         if (friends && friends.length > 0) {
