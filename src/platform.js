@@ -19,19 +19,86 @@ export function isElectron() {
     return false;
 }
 
-// pc
-export const remote = require('@electron/remote');
-export const ipcRenderer = require('electron').ipcRenderer;
-export const ipcMain = require('electron').ipcMain;
-export const shell = require('electron').shell;
-export const fs = require('file-system').fs;
-export const currentWindow = require('@electron/remote').getCurrentWindow();
-export const BrowserWindow = require('@electron/remote').BrowserWindow;
-export const AppPath = require('@electron/remote').app.getAppPath();
-export const app = require('@electron/remote').app;
-export const screen = require('@electron/remote').screen
+// pc - Electron APIs
+export const ipcRenderer = require('electron').ipcRenderer
+export const ipcMain = require('electron').ipcMain
+export const shell = require('electron').shell
+export const fs = require('file-system').fs
 export const clipboard = require('electron').clipboard;
 
-// for web
+const remoteWindow = (windowId) => {
+    return {
+        windowId: windowId,
+        close: () => ipcRenderer.send('window-control', {windowId: windowId, command: 'close'}),
+        minimize: () => ipcRenderer.send('window-control', {windowId, command: 'minimize'}),
+        maximize: () => ipcRenderer.send('window-control', {windowId, command: 'maximize'}),
+        unmaximize: () => ipcRenderer.send('window-control', {windowId, command: 'unmaximize'}),
+        isMaximized: () => ipcRenderer.sendSync('window-state', {windowId, command: 'isMaximized'}),
+        isMinimized: () => ipcRenderer.sendSync('window-state', {windowId, command: 'isMinimized'}),
+        isVisible: () => ipcRenderer.sendSync('window-state', {windowId, command: 'isVisible'}),
+        isDestroyed: () => ipcRenderer.sendSync('window-state', {windowId, command: 'isDestroyed'}),
+        isAlwaysOnTop: () => ipcRenderer.sendSync('window-state', {windowId, command: 'isAlwaysOnTop'}),
+        getMediaSourceId: () => ipcRenderer.sendSync('window-state', {windowId, command: 'getMediaSourceId'}),
+        getSize: () => ipcRenderer.sendSync('window-state', {windowId, command: 'getSize'}),
+        focus: () => ipcRenderer.send('window-control', {windowId, command: 'focus'}),
+        show: () => ipcRenderer.send('window-control', {windowId, command: 'show'}),
+        hide: () => ipcRenderer.send('window-control', {windowId, command: 'hide'}),
+        setOpacity: (opacity) => ipcRenderer.send('window-control', {windowId, command: 'setOpacity', args: opacity}),
+        setFullScreen: (flag) => ipcRenderer.send('window-control', {windowId, command: 'setFullScreen', args: flag}),
+        setAlwaysOnTop: (flag) => ipcRenderer.send('window-control', {windowId, command: 'setAlwaysOnTop', args: flag}),
+        setSize: (width, height, animate) => ipcRenderer.send('window-control', {windowId, command: 'setSize', args: [width, height, animate]}),
+        setMinimumSize: (width, height) => ipcRenderer.send('window-control', {windowId, command: 'setMinimumSize', args: [width, height]}),
+        setIgnoreMouseEvents: (ignore , options) => ipcRenderer.send('window-control', {windowId, command: 'setIgnoreMouseEvents', args: [ignore,options]}),
+        setPosition: (x, y, animate) => ipcRenderer.send('window-control', {windowId, command: 'setPosition', args: [x, y, animate]}),
+        center: () => ipcRenderer.send('window-control', {windowId, command: 'center'}),
+        removeMenu: () => ipcRenderer.send('window-control', {windowId, command: 'removeMenu'}),
+        // on: (event, listener) => {
+        //     ipcRenderer.on(`window-${windowId}`, (event, args) => {
+        //         if (event === event) {
+        //             listener(event, args);
+        //         }
+        //     })
+        // },
+        webContents: {
+            emit: (event, ...args) => ipcRenderer.send('webcontents-emit', {windowId, channel: event, args}),
+            // on: (channel, listener) => {
+            //     ipcRenderer.on(`window-${windowId}-webcontents-${channel}`, listener)
+            // },
+            send: (channel, ...args) => ipcRenderer.send('webcontents-send', {windowId, channel: channel, args}),
+            openDevTools: () => ipcRenderer.send('webcontents-openDevTools', {windowId}),
+            setZoomFactor: (factor) => ipcRenderer.send('webcontents-setZoomFactor', {windowId, args: factor}),
+        }
+    }
+}
 
-export const PostMessageEventEmitter = null;
+export const remote = {
+    getCurrentWindow: () => {
+        return remoteWindow();
+    },
+};
+
+export const currentWindow = remote.getCurrentWindow();
+export const BrowserWindow = {
+    new: async (windowOptions) => {
+        // ipcRenderer.sendSync('browser-window', 'new', options),
+        console.log('create-voip-window', windowOptions);
+        let windowId = await ipcRenderer.invoke('create-voip-window', windowOptions);
+        return remoteWindow(windowId);
+    },
+    getAllWindows: () => ipcRenderer.invoke('browser-window', 'getAllWindows'),
+    fromWebContents: () => null, // This can be implemented if needed with IPC
+};
+export const AppPath = ipcRenderer.sendSync('get-app-path');
+export const app = {
+    getPath: (name) => ipcRenderer.sendSync('app-get-path', name),
+    getAppPath: () => AppPath,
+    exit: (code) => ipcRenderer.send('app-exit', code),
+    setAppUserModelId: (id) => ipcRenderer.send('app-set-user-model-id', id)
+};
+export const screen = {
+    getPrimaryDisplay: () => ipcRenderer.sendSync('screen-sync', 'getPrimaryDisplay'),
+    getAllDisplays: () => ipcRenderer.sendSync('screen-sync', 'getAllDisplays'),
+    getDisplayNearestPoint: (point) => ipcRenderer.sendSync('screen-sync', 'getDisplayNearestPoint', point),
+    getDisplayMatching: (rect) => ipcRenderer.sendSync('screen-sync', 'getDisplayMatching', rect),
+    getCursorScreenPoint: () => ipcRenderer.sendSync('screen-sync', 'getCursorScreenPoint')
+};

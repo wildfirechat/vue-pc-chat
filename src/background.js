@@ -55,7 +55,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
-require('@electron/remote/main').initialize()
 
 let Locales = {};
 i18n.configure({
@@ -533,7 +532,6 @@ const createMainWindow = async () => {
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
-    require("@electron/remote/main").enable(mainWindow.webContents);
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
@@ -646,10 +644,6 @@ const createMainWindow = async () => {
         updateTray(count);
         app.badgeCount = count;
         //}
-    });
-    app.on('remote-require', (event, args) => {
-        // event.preventDefault();
-        event.returnValue = require('@electron/remote/main');
     });
 
     ipcMain.on(IPCEventType.FILE_PASTE, (event) => {
@@ -1012,7 +1006,6 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
-    require("@electron/remote/main").enable(win.webContents);
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)
@@ -1334,3 +1327,27 @@ function toBuffer(ab) {
     return buf;
 }
 
+// Add VOIP window management handlers
+ipcMain.handle('create-voip-window', async (event, windowOptions) => {
+    try {
+        const win = new BrowserWindow(windowOptions);
+        const winId = win.id;
+
+        // Set up listeners for window events
+        win.on('closed', () => {
+            event.sender.send(`voip-window-closed`);
+        });
+
+        win.webContents.on('did-finish-load', () => {
+            event.sender.send(`voip-window-webContents-did-finish-load`);
+        });
+        win.loadURL(windowOptions.url)
+
+        return win.id;
+    } catch (error) {
+        console.error('Error creating VOIP window:', error);
+        return null;
+    }
+});
+
+import './remote.js'
