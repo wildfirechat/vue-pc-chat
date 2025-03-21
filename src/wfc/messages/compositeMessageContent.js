@@ -10,7 +10,6 @@ import MessagePayload from "../messages/messagePayload";
 import {isElectron} from "../../platform";
 import ArticlesMessageContent from "./articlesMessageContent";
 import MessageContentMediaType from "./messageContentMediaType";
-import {app} from '../../platform'
 
 export default class CompositeMessageContent extends MediaMessageContent {
     title = '';
@@ -108,8 +107,14 @@ export default class CompositeMessageContent extends MediaMessageContent {
             let fileName = 'wcf-' + new Date().getTime() + '.data';
             this.file = new File([blob], fileName);
             if (isElectron()) {
-                this.localPath = app.getPath('temp') + fileName;
-                require('fs').writeFileSync(this.localPath, str);
+                let fs = require('fs');
+                let sep = require('path').sep;
+                let cmsDir = wfc.getAppPath() + sep + 'cms' + sep;
+                if(!fs.existsSync(cmsDir)){
+                    fs.mkdirSync(cmsDir);
+                }
+                this.localPath = cmsDir + fileName;
+                fs.writeFileSync(this.localPath, str);
                 payload.localMediaPath = this.localPath;
                 payload.mediaType = MessageContentType.File;
             }
