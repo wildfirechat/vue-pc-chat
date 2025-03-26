@@ -311,6 +311,13 @@ function setupProtoListener() {
     proto.setSecretMessageBurnStateListener(_genProtoEventListener('secretMessageStartBurn'),
         _genProtoEventListener('secretMessageBurned')
     );
+
+    try {
+      proto.setTrafficDataListener(_genProtoEventListener('trafficDataEvent'));
+      proto.setErrorEventListener(_genProtoEventListener('errorEventCallback'));
+    } catch (error) {
+      //可能SDK不支持
+    }
 }
 
 function _genProtoEventListener(protoEventName) {
