@@ -24,6 +24,8 @@ export default class Config {
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
     static APP_SERVER = 'https://app.wildfirechat.net';
 
+    static ASR_SERVER = 'https://app.wildfirechat.net/asr/api/recognize';
+
     // 组织结构服务地址，如果没有部署组织结构服务，或者不需要组织结构的话，可置为 null
     // 组织结构项目：https://github.com/wildfirechat/organization-platform 或 https://gitee.com/wfchat/organization-platform
     static ORGANIZATION_SERVER = 'https://org.wildfirechat.cn';

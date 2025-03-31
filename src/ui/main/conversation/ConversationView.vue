@@ -166,6 +166,9 @@
                     <li v-if="isLocalFile(message)">
                         <a @click.prevent="openDir(message)">{{ $t('common.open_dir') }}</a>
                     </li>
+                    <li v-if="isSupportSpeechToText(message)">
+                        <a @click.prevent="speechToText(message)">{{ $t('common.speech2text') }}</a>
+                    </li>
                 </vue-context>
                 <vue-context ref="messageSenderContextMenu" v-slot="{data: message}" :close-on-scroll="true" v-on:close="onMessageSenderContextMenuClose">
                     <!--          更多menu item，比如添加到通讯录等-->
@@ -588,6 +591,13 @@ export default {
             return false;
         },
 
+        isSupportSpeechToText(message) {
+            if (message && message.messageContent.type === MessageContentType.Voice && Config.ASR_SERVER) {
+                return true;
+            }
+            return false;
+        },
+
         isQuotable(message) {
             if (!message) {
                 return false;
@@ -642,6 +652,49 @@ export default {
         openDir(message) {
             let file = message.messageContent;
             shell.showItemInFolder(file.localPath);
+        },
+
+        async speechToText(message) {
+            let audioMessage = message.messageContent;
+            audioMessage._translation = '转换中...';
+            try {
+                const res = await fetch(Config.ASR_SERVER, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        url: audioMessage.remotePath,
+                        noReuse: true,
+                        noLlm: false,
+                    }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "*/*",
+                    },
+                });
+
+                if (!res.ok) {
+                    console.error('语音转文字失败:', res.ok);
+                    audioMessage._translation = '转换失败';
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let result = "";
+
+                while (true) {
+                    const {value, done} = await reader.read();
+                    if (done) break;
+
+                    let text = decoder.decode(value, {stream: true});
+                    text = text.trim();
+                    if (text) {
+                        result += text.trim().split('data:')[1];
+                        audioMessage._translation = result;
+                    }
+                }
+            } catch (error) {
+                console.error('语音转文字失败:', error);
+                audioMessage._translation = '转换失败';
+            }
         },
 
         recallMessage(message) {
@@ -765,6 +818,7 @@ export default {
             amr = new BenzAMRRecorder();
             let voice = message.messageContent;
             amr.initWithUrl(voice.remotePath).then(() => {
+                console.log('isxxxxxxxx p')
                 message._isPlaying = true;
                 amr.play();
             });
@@ -1229,3 +1283,4 @@ i.active {
     color: #3f64e4;
 }
 </style>
+

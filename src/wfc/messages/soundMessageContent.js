@@ -8,6 +8,8 @@ import MessageContentType from './messageContentType';
 
 export default class SoundMessageContent extends MediaMessageContent {
     duration;
+    // 本地使用
+    _translation = ''
 
     constructor(fileOrLocalPath, remotePath, duration) {
         super(MessageContentType.Voice, MessageContentMediaType.Voice, fileOrLocalPath, remotePath);
