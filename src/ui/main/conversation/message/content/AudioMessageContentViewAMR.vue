@@ -9,7 +9,8 @@
             <!--        <div class="dot"></div>-->
             <p v-if="message.direction === 1" class="duration">{{ duration }}"</p>
         </div>
-        <p v-if="message.messageContent._translation" class="translation">{{ message.messageContent._translation }}</p>
+        <ScaleLoader v-if="!message.messageContent._speechText && message.messageContent._speechToTextInProgress" :color="'#d2d2d2'" :height="'15px'" :width="'3px'" style="margin: 8px 10px"/>
+        <p v-if="message.messageContent._speechText" class="speechText">{{ message.messageContent._speechText }}</p>
     </div>
 </template>
 
@@ -115,7 +116,7 @@ export default {
     padding: 8px;
 }
 
-.translation {
+.speechText {
     color: #888888;
     margin: 8px 10px;
     padding: 8px 4px 8px 8px;

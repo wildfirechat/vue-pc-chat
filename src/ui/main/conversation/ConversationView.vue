@@ -59,6 +59,7 @@
                         <template #no-results>{{ $t('conversation.all_message_load') }}</template>
                     </infinite-loading>
                     <div v-for="(message) in sharedConversationState.currentConversationMessageList"
+                         :ref="message.messageId"
                          :key="message.messageId">
                         <!--todo 不同的消息类型 notification in out-->
 
@@ -168,6 +169,9 @@
                     </li>
                     <li v-if="isSupportSpeechToText(message)">
                         <a @click.prevent="speechToText(message)">{{ $t('common.speech2text') }}</a>
+                    </li>
+                    <li v-if="isSupportCancelSpeechToText(message)">
+                        <a @click.prevent="cancelSpeechToText(message)">{{ $t('common.cancelSpeech2text') }}</a>
                     </li>
                 </vue-context>
                 <vue-context ref="messageSenderContextMenu" v-slot="{data: message}" :close-on-scroll="true" v-on:close="onMessageSenderContextMenuClose">
@@ -592,7 +596,18 @@ export default {
         },
 
         isSupportSpeechToText(message) {
-            if (message && message.messageContent.type === MessageContentType.Voice && Config.ASR_SERVER) {
+            if (message
+                && message.messageContent.type === MessageContentType.Voice
+                && Config.ASR_SERVER
+                && !message.messageContent._speechText
+                && !message.messageContent._speechToTextInProgress) {
+                return true;
+            }
+            return false;
+        },
+
+        isSupportCancelSpeechToText(message) {
+            if (message && message.messageContent._speechText && !message.messageContent._speechToTextInProgress) {
                 return true;
             }
             return false;
@@ -653,16 +668,22 @@ export default {
             let file = message.messageContent;
             shell.showItemInFolder(file.localPath);
         },
+        async cancelSpeechToText(message) {
+            let audioMessage = message.messageContent;
+            audioMessage._speechText = '';
+        },
 
         async speechToText(message) {
             let audioMessage = message.messageContent;
-            audioMessage._translation = '转换中...';
+            audioMessage._speechText = '';
+            audioMessage._speechToTextInProgress = true;
+            this.scrollToMessageItemView(message)
             try {
                 const res = await fetch(Config.ASR_SERVER, {
                     method: "POST",
                     body: JSON.stringify({
                         url: audioMessage.remotePath,
-                        noReuse: true,
+                        noReuse: false,
                         noLlm: false,
                     }),
                     headers: {
@@ -673,7 +694,8 @@ export default {
 
                 if (!res.ok) {
                     console.error('语音转文字失败:', res.ok);
-                    audioMessage._translation = '转换失败';
+                    audioMessage._speechText = '转换失败';
+                    audioMessage._speechToTextInProgress = false;
                 }
 
                 const reader = res.body.getReader();
@@ -687,13 +709,28 @@ export default {
                     let text = decoder.decode(value, {stream: true});
                     text = text.trim();
                     if (text) {
-                        result += text.trim().split('data:')[1];
-                        audioMessage._translation = result;
+                        result += text.replaceAll('data:', '')
+                        console.log('speech2text', text, text.replaceAll('data:', ''));
+                        audioMessage._speechText = result;
+                        this.$nextTick(() => {
+                            this.scrollToMessageItemView(message)
+                        })
                     }
                 }
+                audioMessage._speechToTextInProgress = false;
             } catch (error) {
                 console.error('语音转文字失败:', error);
-                audioMessage._translation = '转换失败';
+                audioMessage._speechText = '转换失败';
+                audioMessage._speechToTextInProgress = false;
+            }
+        },
+
+        scrollToMessageItemView(message) {
+            if (this.$refs[message.messageId][0]) {
+                this.$refs[message.messageId][0].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                })
             }
         },
 
@@ -818,7 +855,6 @@ export default {
             amr = new BenzAMRRecorder();
             let voice = message.messageContent;
             amr.initWithUrl(voice.remotePath).then(() => {
-                console.log('isxxxxxxxx p')
                 message._isPlaying = true;
                 amr.play();
             });

@@ -170,7 +170,8 @@
         "month_12": "December",
         "wfc_id": "ID",
         "channel": "Channel",
-        "speech2text": "Speech To Text"
+        "speech2text": "Speech To Text",
+        "cancelSpeech2text": "Cancel Speech To Text"
     },
     "misc":{
         "beijing": "Beijing",
