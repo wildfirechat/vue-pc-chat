@@ -55,6 +55,7 @@ export class AvEngineKitProxy {
      * @param wfc
      */
     setup(wfc) {
+        console.log('avengineProxy, setup');
         if (this.wfc === wfc) {
             console.log('re-setup, just ignore');
             return;
@@ -166,6 +167,7 @@ export class AvEngineKitProxy {
 
     // 收到消息时，timestamp已经过修正，后面使用时，不用考虑和服务器的时间差
     onReceiveMessage = (msg) => {
+        console.log('avengineProxy, on receive message', msg);
         if (!Config.ENABLE_MULTI_VOIP_CALL && msg.conversation.type === ConversationType.Group) {
             console.log('not enable multi call ');
             return;
@@ -183,6 +185,7 @@ export class AvEngineKitProxy {
         let delta = wfc.getServerDeltaTime();
         if (now - (numberValue(msg.timestamp) - delta) >= 90 * 1000) {
             // 消息已失效，不做处理
+            console.log('avengineProxy, message outdated, just ignore', msg);
             return;
         }
         let content = msg.messageContent;

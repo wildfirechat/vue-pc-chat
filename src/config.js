@@ -24,6 +24,7 @@ export default class Config {
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
     static APP_SERVER = 'https://app.wildfirechat.net';
 
+    // 语音转文字服务地址，如果没有部署语音转文字服务，或者不需要语音转文字的话，可置为 null
     static ASR_SERVER = 'https://app.wildfirechat.net/asr/api/recognize';
 
     // 组织结构服务地址，如果没有部署组织结构服务，或者不需要组织结构的话，可置为 null

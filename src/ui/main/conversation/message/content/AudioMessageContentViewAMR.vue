@@ -51,7 +51,6 @@ export default {
             } else {
                 // make message._isPlaying reactive
                 this.$set(this.message, '_isPlaying', true)
-                console.log('xxxxxxxx isppp')
                 store.playVoice(this.message)
             }
         },
