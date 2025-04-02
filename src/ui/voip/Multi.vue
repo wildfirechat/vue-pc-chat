@@ -131,6 +131,7 @@ import MultiCallOngoingMessageContent from "../../wfc/av/messages/multiCallOngoi
 import VideoType from "../../wfc/av/engine/videoType";
 import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
+import EventType from "../../wfc/client/wfcEvent";
 
 export default {
     name: 'Multi',
@@ -510,6 +511,15 @@ export default {
                 let ongoing = new MultiCallOngoingMessageContent(this.session.callId, this.session.initiatorId, this.session.audioOnly, participants);
                 wfc.sendConversationMessage(this.session.conversation, ongoing);
             }
+        },
+
+        onUserInfosUpdate(userInfos = []) {
+            for (let i = 0; i < this.participantUserInfos.length; i++) {
+                let userInfo = userInfos.find(u => u.uid === this.participantUserInfos[i].uid);
+                if (userInfo) {
+                    Object.assign(this.participantUserInfos[i], userInfo);
+                }
+            }
         }
     },
 
@@ -561,6 +571,7 @@ export default {
         avenginekit.setup();
         }
         this.setupSessionCallback();
+        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
     },
 
     unmounted() {
@@ -570,6 +581,7 @@ export default {
         if (this.broadcastMultiCallOngoingTimer) {
             clearInterval(this.broadcastMultiCallOngoingTimer);
         }
+        wfc.eventEmitter.off(EventType.UserInfosUpdate, this.onUserInfosUpdate);
     }
 }
 </script>
