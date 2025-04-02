@@ -65,6 +65,9 @@ export default class Config {
     static OPEN_PLATFORM_WORK_SPACE_URL = 'https://open.wildfirechat.cn/work.html';
     static OPEN_PLATFORM_SERVE_PORT = 7983;
 
+    // AI 入口地址，如果不需要 AI 功能，置为 null 即可
+    static AI_PORTAL_URL = 'https://static.wildfirechat.cn/chatbox-web/index.html'
+
     // 允许主动加入多人音视频通话
     static ENABLE_MULTI_CALL_AUTO_JOIN = false;
 
