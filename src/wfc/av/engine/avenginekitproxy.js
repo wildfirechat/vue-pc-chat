@@ -572,7 +572,7 @@ export class AvEngineKitProxy {
         if (options.args.remoteControl && !isElectron()) {
             console.warn('web 端，不支持远程协助');
             return
-        } else if (process && process.platform === 'linux') {
+        } else if (process && process.platform === 'linux' && options.args.remoteControl) {
             console.warn('远程协助功能，目前只支持 Windows 和 macOS');
             return
         }
