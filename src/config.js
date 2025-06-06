@@ -54,6 +54,7 @@ export default class Config {
     // 如果语音消息很多，建议使用cdn
     static AMR_TO_MP3_SERVER_ADDRESS = Config.APP_SERVER + '/amr2mp3?path=';
     // 文件传输助手ID
+    // 不需要文件传输助手时，可以配置为 null
     static FILE_HELPER_ID = 'wfc_file_transfer';
 
     /**
