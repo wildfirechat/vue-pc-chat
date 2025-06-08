@@ -719,7 +719,7 @@ let store = {
             if (conversationState.currentConversationInfo) {
                 let conversation = conversationState.currentConversationInfo.conversation;
 
-                if(wfc.isUserOnlineStateEnabled()){
+                if (wfc.isUserOnlineStateEnabled() && ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target))) {
                     wfc.unwatchOnlineState(conversation.type, [conversation.target]);
                 }
                 if (conversation.type === ConversationType.Channel) {
@@ -742,7 +742,7 @@ let store = {
             return;
         }
         let conversation = conversationInfo.conversation;
-        if (wfc.isUserOnlineStateEnabled() && (conversation.type === ConversationType.Group || (conversation.type === ConversationType.Single && !wfc.isMyFriend(conversation.target)))) {
+        if (wfc.isUserOnlineStateEnabled() && ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target))) {
             wfc.watchOnlineState(conversation.type, [conversation.target], 1000, (states) => {
                 states.forEach((e => {
                     miscState.userOnlineStateMap.set(e.userId, e);
