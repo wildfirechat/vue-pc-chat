@@ -78,7 +78,10 @@ ipcMain.on('window-state', (event, args) => {
     } else {
         win = BrowserWindow.fromWebContents(event.sender);
     }
-    if (!win) return;
+    if (!win) {
+        event.returnValue = undefined;
+        return;
+    }
 
     switch (command) {
         case 'isMaximized':

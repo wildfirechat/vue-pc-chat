@@ -21,10 +21,8 @@ export function isElectron() {
 
 // pc - Electron APIs
 export const ipcRenderer = require('electron').ipcRenderer
-export const ipcMain = require('electron').ipcMain
 export const shell = require('electron').shell
 export const fs = require('file-system').fs
-export const clipboard = require('electron').clipboard;
 
 const remoteWindow = (windowId) => {
     return {
