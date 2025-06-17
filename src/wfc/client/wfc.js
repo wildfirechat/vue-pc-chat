@@ -515,6 +515,24 @@ export class WfcManager {
     }
 
     /**
+     * 清除好友请求
+     * @param direction 请求方向：0，发出的好友请求；1，收到的好友请求。
+     * @param beforeTime 清除指定时间之前的，单位毫秒，0是清掉所有的。
+     */
+    clearFriendRequest(direction, beforeTime) {
+        impl.clearFriendRequest(direction, beforeTime);
+    }
+
+    /**
+     * 删除一条好友请求
+     * @param userId 目标用户ID
+     * @param direction 请求方向：0，发出的好友请求；1，收到的好友请求。
+     */
+    deleteFriendRequest(userId, direction) {
+        impl.deleteFriendRequest(userId, direction);
+    }
+
+    /**
      * 删除好友
      * @param {string} userId 好友id
      * @param {function ()} successCB
