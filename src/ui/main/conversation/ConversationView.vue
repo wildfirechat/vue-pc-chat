@@ -996,7 +996,6 @@ export default {
         // 切换到新的会话
         if (this.conversationInfo && this.sharedConversationState.currentConversationInfo && !this.conversationInfo.conversation.equal(this.sharedConversationState.currentConversationInfo.conversation)) {
             this.showConversationInfo = false;
-            this.enableLoadRemoteHistoryMessage = !isElectron()
             this.ongoingCalls = [];
             if (this.ongoingCallTimer) {
                 clearInterval(this.ongoingCallTimer);
@@ -1004,6 +1003,7 @@ export default {
             }
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
+        this.enableLoadRemoteHistoryMessage = !isElectron() || this.conversationInfo.conversation.type === ConversationType.ChatRoom;
     },
 
     computed: {
