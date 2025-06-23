@@ -1302,6 +1302,7 @@ let store = {
         let conversation = conversationState.currentConversationInfo.conversation;
         console.log('loadConversationHistoryMessage', conversation, conversationState.currentConversationOldestMessageId, stringValue(conversationState.currentConversationOldestMessageUid));
         let loadRemoteHistoryMessageFunc = () => {
+            console.log('loadRemoteConversationMessages', conversation, conversationState.currentConversationOldestMessageUid);
             wfc.loadRemoteConversationMessages(conversation, [], conversationState.currentConversationOldestMessageUid, 20,
                 (msgs) => {
                     console.log('loadRemoteConversationMessages response', msgs.length);
