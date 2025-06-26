@@ -127,7 +127,6 @@ let store = {
             this._loadDefaultConversationList();
             this._loadFavContactList();
             this._loadFavGroupList();
-            this._loadChannelList();
             this.updateTray();
             // 清除远程消息时，WEB SDK会同时触发ConversationInfoUpdate 和 setting更新，但PC SDK不会，只会触发setting更新
             // if (isElectron()) {
@@ -1764,6 +1763,10 @@ let store = {
 
     toggleChannelList() {
         contactState.expandChanel = !contactState.expandChanel;
+        // 从服务端拉取，且比较耗性能，故展开时，才从刷新
+        if(contactState.expandChanel) {
+            this._loadChannelList();
+        }
     },
 
     toggleFriendRequestList() {
