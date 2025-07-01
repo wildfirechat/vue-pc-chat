@@ -512,9 +512,13 @@ let store = {
         this._loadUserLocalSettings();
         conversationState.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
         conversationState.isGroupMessageReceiptEnable = wfc.isGroupReceiptEnabled() && wfc.isUserReceiptEnabled();
-        // if (conversationState.currentConversationInfo) {
-        //     this._loadCurrentConversationMessages();
-        // }
+
+        // 休眠恢复之后，重新连接成功时，可能出现会话列表的 lastMessage 在会话界面未显示，需要判断是否需要重新加载当前会话的消息
+        if (conversationState.currentConversationInfo) {
+            if(gt(conversationState.currentConversationInfo.timestamp, 0) && (conversationState.currentConversationMessageList.length === 0 || !eq(conversationState.currentConversationInfo.timestamp, conversationState.currentConversationMessageList[conversationState.currentConversationMessageList.length - 1].timestamp))){
+                this._loadCurrentConversationMessages();
+            }
+        }
     },
 
     // conversation actions
