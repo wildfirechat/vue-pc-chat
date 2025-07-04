@@ -356,7 +356,7 @@ export default {
                 }
             };
             sessionCallback.didChangeInitiator = (initiator) => {
-              
+
                 this.initiatorUserInfo = wfc.getUserInfo(initiator);
                 if (this.selfUserInfo.uid === initiator) {
                     if (!this.broadcastMultiCallOngoingTimer) {
@@ -634,7 +634,7 @@ export default {
 }
 
 footer {
-    height: 160px;
+    height: 200px;
 }
 
 .duration-action-container {
