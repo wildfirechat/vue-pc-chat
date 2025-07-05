@@ -633,10 +633,6 @@ export default {
     color: white;
 }
 
-footer {
-    height: 200px;
-}
-
 .duration-action-container {
     display: flex;
     flex-direction: column;
