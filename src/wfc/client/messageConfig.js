@@ -75,6 +75,7 @@ import RCInviteMessageContent from "../av/messages/rcInviteMessageContent";
 import RcAcceptInviteMessageContent from "../av/messages/rcAcceptInviteMessageContent";
 import RcEndMessageContent from "../av/messages/rcEndMessageContent";
 import RcRequestMessageContent from "../av/messages/rcRequestMessageContent";
+import GroupRejectJoinNotificationContent from "../messages/notification/groupRejectJoinNotificationContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -350,6 +351,12 @@ export default class MessageConfig {
             flag: PersistFlag.No_Persist,
             type: MessageContentType.ModifyGroupSetting_Notification,
             contentClazz: ModifyGroupSettingNotification,
+        },
+        {
+            name: 'groupRejectJoinNotificationContent',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.RejectJoinGroup,
+            contentClazz: GroupRejectJoinNotificationContent,
         },
         {
             name: 'recall',
