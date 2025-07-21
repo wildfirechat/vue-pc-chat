@@ -2211,6 +2211,28 @@ export class WfcManager {
     }
 
     /**
+     * 获取指定时间段范围内每天的消息数量
+
+     * @param conversation 会话，不能为空。
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}。
+     * @param {number} startTime 开始时间，单位为秒。
+     * @param {number} endTime 结束时间，单位为秒。
+     *
+     * @returns 返回此时间段内会话的每天消息数量。
+     */
+    getMessageCountByDay(conversation, contentTypes, startTime, endTime) {
+        let countStr = protoProxy.invoke('getMessageCountByDay', JSON.stringify(conversation));
+        let countArr = JSON.parse(countStr);
+        let result = new Map();
+        if (countArr) {
+            countArr.forEach(e => {
+                result.set(e.key, e.value)
+            })
+        }
+        return result;
+    }
+
+    /**
      * 上传媒体文件
      * @param {string} fileName
      * @param {string | File} fileOrData dataUri，或者 base64格式的媒体数据，或者 File 对象
