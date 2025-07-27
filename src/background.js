@@ -22,13 +22,12 @@ import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
 import i18n from 'i18n';
 import proto from '../marswrapper.node';
-import rcProto from '../rc.node';
+// import rcProto from '../rc.node';
 
 import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
-import {init as initRCMain} from "./wfc/rc/rc_main";
 import createProtocol from "./createProtocol";
 
 console.log('start crash report', app.getPath('crashDumps'))
@@ -1086,7 +1085,7 @@ function registerLocalResourceProtocol() {
 
 app.on('ready', () => {
         initProtoMain(proto);
-        initRCMain(rcProto);
+        // initRCMain(rcProto);
 
         createMainWindow();
 
