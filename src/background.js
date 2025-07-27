@@ -16,7 +16,8 @@ import {
     session,
     shell,
     Tray,
-    desktopCapturer
+    desktopCapturer,
+    webContents
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -561,6 +562,7 @@ const createMainWindow = async () => {
 
     // open url in default browser, electron 22+
     mainWindow.webContents.setWindowOpenHandler(details => {
+        console.log('main windowOpenHandler', details)
         shell.openExternal(details.url);
         return {action: 'deny'}
     });
@@ -797,6 +799,17 @@ const createMainWindow = async () => {
             win.show();
             win.focus();
         }
+    });
+
+    ipcMain.on(IPCEventType.WORKSPACE_NEW_TAB_WEB_CONTENT, async (event, args) => {
+        console.log('on workspace-new-tab-web-content', args)
+        let id = args.id;
+        let _webContents = webContents.fromId(id)
+        _webContents.setWindowOpenHandler(details => {
+            console.log('workspace windowOpenHandler', details)
+            mainWindow.webContents.send(IPCEventType.WORKSPACE_ADD_NEW_TAB, {url: encodeURI(details.url), frameName: details.frameName})
+            return {action: 'deny'}
+        });
     });
 
     ipcMain.on(IPCEventType.showConversationMessageHistoryPage, async (event, args) => {
