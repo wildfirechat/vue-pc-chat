@@ -62,6 +62,7 @@
 2. python2.7X
 3. git
 4. binutils
+   > 未安装binutils，会导致打包失败，提示：need executable ar to convert dir to deb
 
 ## 开发
 > 项目请勿放到中文路径下，放到中文路径下时，依赖可能安装失败。
@@ -69,6 +70,7 @@
 2. 在`.npmrc`文件中，添加如下 Electron 和 node 镜像配置：
     ```
    ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
+   ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
    registry=https://registry.npmmirror.com/
    ```
 3. `npm install`或`npm ci`
@@ -207,6 +209,12 @@ npm run cross-package-mac
 21. Windows 打包失败，提示`ERR_ELECTRON_BUILDER_CANNOT_EXECUTE`
 
     每次打包之前，打开任务管理器，查看是否有`electron`进程运行，必须全部杀掉才能正常打包。可参考[github issue](https://github.com/electron-userland/electron-builder/issues/5134)
+22. ubuntu 24 上`npm run dev`时，提示`The SUID sandbox helper binary was found...`，无法正常启动
+    
+    可以在`package.json`文件里面 `--disable-background-timer-throttling` 后面添加 `--no-sandbox`临时解决，具体原因分析请参考[这个链接](https://github.com/electron/electron/issues/42510)
+23. ubuntu 24 上启动时，提示`he SUID sandbox helper binary was found...`，无法正常启动`
+
+    可以在启动命令后添加`--no-sandbox`
 
 ## 截图
 
