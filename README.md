@@ -86,14 +86,15 @@
 4. 项目目录下执行`npm run dev`
 
 ## 打包
-
+ > 请先参考 **开发** 前 3 步，安装相关依赖
+ 
 打包为当前平台架构软件
 
 ```
 npm run package
 ```
 
-## yarn
+> 如果使用 yarn，则使用如下方式打包：
 
 1. ```yarn install --ignore-engines```
 2. ```yarn run package```
