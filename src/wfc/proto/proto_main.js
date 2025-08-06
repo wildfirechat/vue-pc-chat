@@ -205,6 +205,15 @@ export function init(wfcProto) {
                 }
             }
         } else {
+            /**
+             * TODO
+             * 添加同步方法转异步的处理
+             * 一些约定
+             * 1. 方法名为原始的同步方法的方法名
+             * 2. 最后一个参数为callback，前面的参数为同步方法的参数。需要注意同步方法本身没有参数的情况
+             * 参考：searchMessageByTypesAsync
+             */
+
             console.error('invokeProtoAsync cannot found method', args.methodName);
         }
     })
