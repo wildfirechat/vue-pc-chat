@@ -1917,6 +1917,10 @@ export class WfcManager {
         return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser);
     }
 
+    searchMessageByTypesAsync(conversation, keyword, contentTypes, desc, limit, offset, withUser = '', resultCB = null) {
+        impl.searchMessageByTypesAsync(conversation, keyword, contentTypes, desc, limit, offset, withUser, resultCB);
+    }
+
     /**
      * 搜索消息
      * @param {Conversation} conversation 目标会话，如果为空搜索所有会话

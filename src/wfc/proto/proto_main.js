@@ -132,7 +132,11 @@ const asyncProtoMethods = {
             _genCallback(event, args.reqId, 0, true),
             _genCallback(event, args.reqId, 1, true),
             methodArgs[3])
-    }
+    },
+    searchMessageByTypesAsync :  (event, args) => {
+        let result = proto['searchMessageByTypes'](...(args.methodArgs.slice(0, args.methodArgs.length - 1)));
+        _genCallback(event, args.reqId, 0, true)(result);
+    },
 }
 
 function _asyncCall2(methodName) {
