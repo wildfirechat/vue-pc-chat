@@ -30,7 +30,10 @@
 ## 分支说明
 
 1. `master`：基于`Vue 3`开发，是未来的开发重心
-2. `vue2`：基于`Vue 2`开发，进入维护模式，不在开发新功能，鉴于`Vue 2`已经终止支持且不再维护，建议客户升级到`Vue 3`版本
+2. `vue2`：基于`Vue 2`开发，进入维护模式，不再开发新功能，鉴于`Vue 2`已经终止支持且不再维护，建议客户升级到`Vue 3`版本
+
+## 修复配置及替换 PC SDK
+1. 修改`config.js`里面的 
 
 ## 环境依赖
 
@@ -67,7 +70,8 @@
 ## 开发
 > 项目请勿放到中文路径下，放到中文路径下时，依赖可能安装失败。
 1. `npm config ls` 查看`.npmrc`配置文件的路径
-2. 在`.npmrc`文件中，添加如下 Electron 和 node 镜像配置：
+2. 在`.npmrc`文件中，添加相关镜像配置：
+    > 可通过`npm config list`查看`.npmrc`文件的位置，`npm config list`输出中的`; userconfig`行后面的即为`.npmrc`的文件路径
     ```
    ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
    ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
