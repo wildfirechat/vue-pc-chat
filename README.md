@@ -69,7 +69,9 @@
 
 ## 开发
 > 项目请勿放到中文路径下，放到中文路径下时，依赖可能安装失败。
-1. `npm config ls` 查看`.npmrc`配置文件的路径
+1. demo 默认只能连到官方服务，如果需要连到自行私有化部署到鹅服务的话，需要修改相关配置
+   1. 将`config.js`里面的 `APP_SERVER`修改为自己部署的`app-server`的地址
+   2. 用通过邮件获取到的 pc sdk，替换`proto_addon`目录下的对应文件
 2. 在`.npmrc`文件中，添加相关镜像配置：
     > 可通过`npm config list`查看`.npmrc`文件的位置，`npm config list`输出中的`; userconfig`行后面的即为`.npmrc`的文件路径
     ```
