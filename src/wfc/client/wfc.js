@@ -135,6 +135,14 @@ export class WfcManager {
     }
 
     /**
+     * 设置时间偏移。一般用于时间不正确的设备，可以设置时间偏移确保能够设备能够正常使用。
+     * @param {number} offset 单位秒，服务器时间-当前设备时间。
+     */
+    setTimeOffset(offset) {
+        impl.setTimeOffset(sec);
+    }
+
+    /**
      * 设置代理，只支持socks5代理
      *
      * @param {String} host       代理host，host和ip必须至少有一个。
