@@ -13,6 +13,7 @@ import pttClient from "../ptt/client/pttClient";
 import ConnectionStatus from "./connectionStatus";
 import EventType from "./wfcEvent";
 import NullUserInfo from "../model/nullUserInfo";
+import UserSettingScope from "./userSettingScope";
 
 
 export class WfcManager {
@@ -2638,6 +2639,16 @@ export class WfcManager {
      */
     loadRemoteDomains(successCB, failCB) {
         impl.loadRemoteDomains(successCB, failCB);
+    }
+
+    /**
+     * 上传用户本地角标数字到IM服务，当IM服务推送时，会把此数字发送到推送服务，从而让推送角标显示准确
+     * 应当在每次未读数变化时调用，但对服务器压力会比较大
+     *
+     * @param badgeNumber 角标数
+     */
+    uploadBadgeNumber(badgeNumber){
+        this.setUserSetting(UserSettingScope.Sync_Badge, '', badgeNumber + '', null, null)
     }
 
     /**
