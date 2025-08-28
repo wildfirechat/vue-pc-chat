@@ -456,7 +456,7 @@ let store = {
 
                 conversationState.downloadingMessages = conversationState.downloadingMessages.filter(v => !eq(v.messageUid, messageUid));
                 let msg = wfc.getMessageByUid(messageUid);
-                console.log('xxxxx downloaded file', msg)
+                console.log('downloaded file', msg)
                 if (msg) {
                     msg.messageContent.localPath = localPath;
                     wfc.updateMessageContent(msg.messageId, msg.messageContent);
