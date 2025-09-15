@@ -47,6 +47,7 @@ import CallStartMessageContent from "./wfc/av/messages/callStartMessageContent";
 import SoundMessageContent from "./wfc/messages/soundMessageContent";
 import MixMultiMediaTextMessageContent from "./wfc/messages/mixMultiMediaTextMessageContent";
 import MixFileTextMessageContent from "./wfc/messages/mixFileTextMessageContent";
+import Long from "long";
 
 /**
  * 一些说明
@@ -1314,15 +1315,15 @@ let store = {
                     } else {
                         // 可能拉回来的时候，本地已经切换会话了
                         if (conversation.equal(conversationState.currentConversationInfo.conversation)) {
+                            conversationState.currentConversationOldestMessageUid = msgs[0].messageUid;
                             let filteredMsgs = msgs.filter(m => {
                                 return m.messageId !== 0 && conversationState.currentConversationMessageList.findIndex(cm => eq(cm.messageUid, m.messageUid)) === -1
                             })
                             if (filteredMsgs.length === 0) {
-                                completeCB()
+                                loadedCB();
                                 return;
                             }
 
-                            conversationState.currentConversationOldestMessageUid = filteredMsgs[0].messageUid;
                             this._onloadConversationMessages(conversation, filteredMsgs);
                             loadedCB();
                         }
@@ -2298,4 +2299,5 @@ function _reset() {
 window.__store = store;
 window.stringValue = stringValue;
 window.longValue = longValue;
+window.fromString = Long.fromString;
 export default store
