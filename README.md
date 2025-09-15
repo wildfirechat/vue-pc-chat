@@ -32,9 +32,6 @@
 1. `master`：基于`Vue 3`开发，是未来的开发重心
 2. `vue2`：基于`Vue 2`开发，进入维护模式，不再开发新功能，鉴于`Vue 2`已经终止支持且不再维护，建议客户升级到`Vue 3`版本
 
-## 修复配置及替换 PC SDK
-1. 修改`config.js`里面的 
-
 ## 环境依赖
 
 #### mac系统
@@ -42,14 +39,14 @@
 1. 最新版本的Xcode
 2. nodejs v18.19.0
 3. npm v10.2.3
-4. python 2.7.X
+4. python 2.7.x
 5. git
 6. npm install -g node-gyp@8.3.0
 
 #### windows系统
 
 1. nodejs v18.19.0
-2. python 2.7.X
+2. python 2.7.x
 3. git
 4. npm 6.14.15
 5. npm install --global --vs2019 --production windows-build-tools
@@ -62,7 +59,7 @@
 #### linux系统
 
 1. nodejs v18.19.0
-2. python2.7X
+2. python2.7.x
 3. git
 4. binutils
    > 未安装binutils，会导致打包失败，提示：need executable ar to convert dir to deb
