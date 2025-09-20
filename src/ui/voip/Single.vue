@@ -67,6 +67,7 @@
                     </div>
                     <div class="remote-media-container">
                         <video v-if="status ===4"
+                               @click="switchVideoType()"
                                ref="remoteVideo"
                                class="video"
                                :srcObject.prop="remoteStream"
@@ -181,6 +182,8 @@ import RcEndReason from "../../wfc/av/engine/rcEndReason";
 import RCState from "../../wfc/av/engine/rcState";
 import registerRemoteControlEventListener, {startMonitorUACStatus, stopMonitorUACStatus, unregisterRemoteControlEventListener} from "./rcEventHelper";
 import {UseDraggable} from "@vueuse/components";
+import wfc from "../../wfc/client/wfc";
+import EventType from "../../wfc/client/wfcEvent";
 
 export default {
     name: 'Single',
@@ -614,6 +617,14 @@ export default {
             //Todo
             return true;
         },
+        onUserInfosUpdate(userInfos = []) {
+            for (let i = 0; i < this.participantUserInfos.length; i++) {
+                let userInfo = userInfos.find(u => u.uid === this.participantUserInfos[i].uid);
+                if (userInfo) {
+                    Object.assign(this.participantUserInfos[i], userInfo);
+                }
+            }
+        }
     },
 
     async mounted() {
@@ -647,11 +658,15 @@ export default {
             this.audioInputDevices = audioInputDevices;
             this.currentAudioInputDeviceId = this.audioInputDevices.filter(d => d.groupId === defaultAudioDeviceGroupId)[0].deviceId;
         }
+        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
+    },
+    beforeUnmount() {
+        wfc.eventEmitter.off(EventType.UserInfosUpdate, this.onUserInfosUpdate);
     },
 
     computed: {
         participantUserInfo() {
-            return this.session.participantUserInfos[0];
+            return this.participantUserInfos[0];
         },
 
         duration() {

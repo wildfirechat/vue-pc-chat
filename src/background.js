@@ -16,19 +16,19 @@ import {
     session,
     shell,
     Tray,
-    desktopCapturer
+    desktopCapturer,
+    webContents
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
 import i18n from 'i18n';
 import proto from '../marswrapper.node';
-import rcProto from '../rc.node';
+// import rcProto from '../rc.node';
 
 import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
-import {init as initRCMain} from "./wfc/rc/rc_main";
 import createProtocol from "./createProtocol";
 
 console.log('start crash report', app.getPath('crashDumps'))
@@ -55,7 +55,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
-require('@electron/remote/main').initialize()
 
 let Locales = {};
 i18n.configure({
@@ -533,7 +532,6 @@ const createMainWindow = async () => {
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
-    require("@electron/remote/main").enable(mainWindow.webContents);
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
@@ -564,6 +562,7 @@ const createMainWindow = async () => {
 
     // open url in default browser, electron 22+
     mainWindow.webContents.setWindowOpenHandler(details => {
+        console.log('main windowOpenHandler', details)
         shell.openExternal(details.url);
         return {action: 'deny'}
     });
@@ -646,10 +645,6 @@ const createMainWindow = async () => {
         updateTray(count);
         app.badgeCount = count;
         //}
-    });
-    app.on('remote-require', (event, args) => {
-        // event.preventDefault();
-        event.returnValue = require('@electron/remote/main');
     });
 
     ipcMain.on(IPCEventType.FILE_PASTE, (event) => {
@@ -804,6 +799,17 @@ const createMainWindow = async () => {
             win.show();
             win.focus();
         }
+    });
+
+    ipcMain.on(IPCEventType.WORKSPACE_NEW_TAB_WEB_CONTENT, async (event, args) => {
+        console.log('on workspace-new-tab-web-content', args)
+        let id = args.id;
+        let _webContents = webContents.fromId(id)
+        _webContents.setWindowOpenHandler(details => {
+            console.log('workspace windowOpenHandler', details)
+            mainWindow.webContents.send(IPCEventType.WORKSPACE_ADD_NEW_TAB, {url: encodeURI(details.url), frameName: details.frameName})
+            return {action: 'deny'}
+        });
     });
 
     ipcMain.on(IPCEventType.showConversationMessageHistoryPage, async (event, args) => {
@@ -1012,7 +1018,6 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
-    require("@electron/remote/main").enable(win.webContents);
     win.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)
@@ -1093,7 +1098,7 @@ function registerLocalResourceProtocol() {
 
 app.on('ready', () => {
         initProtoMain(proto);
-        initRCMain(rcProto);
+        // initRCMain(rcProto);
 
         createMainWindow();
 
@@ -1334,3 +1339,27 @@ function toBuffer(ab) {
     return buf;
 }
 
+// Add VOIP window management handlers
+ipcMain.handle('create-voip-window', async (event, windowOptions) => {
+    try {
+        const win = new BrowserWindow(windowOptions);
+        const winId = win.id;
+
+        // Set up listeners for window events
+        win.on('closed', () => {
+            event.sender.send(`voip-window-closed`);
+        });
+
+        win.webContents.on('did-finish-load', () => {
+            event.sender.send(`voip-window-webContents-did-finish-load`);
+        });
+        win.loadURL(windowOptions.url)
+
+        return win.id;
+    } catch (error) {
+        console.error('Error creating VOIP window:', error);
+        return null;
+    }
+});
+
+import './remote.js'

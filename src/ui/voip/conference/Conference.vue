@@ -250,6 +250,7 @@ import ChannelInfo from "../../../wfc/model/channelInfo";
 import ChatRoomInfo from "../../../wfc/model/chatRoomInfo";
 import {vOnClickOutside} from '@vueuse/components'
 import {markRaw} from "vue";
+import EventType from "../../../wfc/client/wfcEvent";
 
 export default {
     name: 'Conference',
@@ -395,13 +396,9 @@ export default {
 
             sessionCallback.didCreateLocalVideoTrack = (stream, screenShare) => {
                 console.log('didCreateLocalVideoTrack', screenShare)
-                if (screenShare) {
-                    this.selfUserInfo._screenShareStream = stream;
-                } else {
                     this.selfUserInfo._stream = stream;
                     this.selfUserInfo._screenShareStream = null;
                     this.selfUserInfo._isVideoMuted = false;
-                }
                 this.selfUserInfo._isScreenSharing = screenShare;
                 this.autoPlay();
             };
@@ -652,7 +649,7 @@ export default {
                     this.selfUserInfo._isAudience = false;
                 }
             } else {
-                if (this.session.videoMuted && !this.session.audience) {
+                if (this.session.videoMuted && !this.selfUserInfo._isScreenSharing && !this.session.audience) {
                     await this.session.switchAudience(true);
                     this.selfUserInfo._isAudience = true;
                 }
@@ -1020,6 +1017,15 @@ export default {
                 return;
             }
             this.showChooseLayoutView = false;
+        },
+
+        onUserInfosUpdate(userInfos = []) {
+            for (let i = 0; i < this.participantUserInfos.length; i++) {
+                let userInfo = userInfos.find(u => u.uid === this.participantUserInfos[i].uid);
+                if (userInfo) {
+                    Object.assign(this.participantUserInfos[i], userInfo);
+                }
+            }
         }
     },
 
@@ -1142,7 +1148,7 @@ export default {
                     sp = this.participantUserInfos.find(u => !u._isAudience && !u._isVideoMuted);
                 }
             }
-       
+
             if (sp) {
                 conferenceManager.currentFocusUser = sp;
             } else {
@@ -1212,7 +1218,7 @@ export default {
         },
         currentPageParticipants: {
             deep: true,
-            handler(newCurrentPageParticipants, oldCurrentPagePariticipants) {
+            handler(newCurrentPageParticipants, oldCurrentPageParticipants) {
                 if (this.audioOnly) {
                     return;
                 }
@@ -1240,8 +1246,12 @@ export default {
                     }
                 }
 
-                if (oldCurrentPagePariticipants) {
-                    oldCurrentPagePariticipants.forEach(u => {
+                if (oldCurrentPageParticipants) {
+                    oldCurrentPageParticipants.forEach(u => {
+                        let newIndex = newCurrentPageParticipants.findIndex(nu => nu.uid === u.uid && nu._isScreenSharing === u._isScreenSharing);
+                        if(newIndex > -1) {
+                            return;
+                        }
                         if (u.uid === this.selfUserInfo.uid || u._isAudience || u._isVideoMuted) {
                             return
                         }
@@ -1322,6 +1332,7 @@ export default {
         } else {
             this.$refs.rootContainer.style.setProperty('--conference-container-margin-top', '0px');
         }
+        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
     },
 
     unmounted() {
@@ -1332,6 +1343,7 @@ export default {
         this.$eventBus.$off('muteVideo');
         this.$eventBus.$off('muteAudio');
         this.conferenceManager.destroy();
+        wfc.eventEmitter.off(EventType.UserInfosUpdate, this.onUserInfosUpdate);
     }
 }
 </script>

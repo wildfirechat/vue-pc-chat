@@ -76,8 +76,14 @@
                                v-bind:class="{active : this.$router.currentRoute.value.path === '/home/conference'}"
                                @click="go2Conference"></i>
                         </li>
+                        <li v-if="aiPortalUrl">
+                            <i class="icon-ion-android-sunny"
+                               v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/ai'}"
+                               @click="go2AI"></i>
+                        </li>
                         <li>
-                            <i class="icon-ion-android-settings"
+                            <i v-show="this.$router.currentRoute.value.path !== '/home/ai'"
+                               class="icon-ion-android-settings"
                                v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"
                                @click="go2Setting"></i>
                         </li>
@@ -85,9 +91,10 @@
                 </nav>
             </section>
             <router-view v-slot="{ Component, route }">
-                <keep-alive>
+                <keep-alive v-show="route.path !== '/home/ai'">
                     <component :is="Component" :key="route.path"/>
                 </keep-alive>
+                <AI v-show="route.path === '/home/ai'"/>
             </router-view>
             <div v-if="sharedMiscState.connectionStatus === -1" class="unconnected">网络连接断开</div>
             <div class="drag-area" :style="dragAreaLeft"></div>
@@ -124,6 +131,8 @@ import Multi from "../voip/Multi.vue";
 import Conference from "../voip/conference/Conference.vue";
 import 'tippy.js/dist/tippy.css' // optional for styling
 import {UseDraggable} from '@vueuse/components'
+import AI from "./AI.vue";
+import Config from "../../config";
 
 var avenginkitSetuped = false;
 export default {
@@ -199,7 +208,13 @@ export default {
                 return;
             }
             this.$router.replace({path: "/home/conference"});
-            this.isSetting = true;
+            this.isSetting = false;
+        },
+        go2AI() {
+            if (this.$router.currentRoute.value.path !== '/home/ai') {
+                this.$router.replace({path: '/home/ai'});
+            }
+            this.isSetting = false;
         },
         go2Setting() {
             if (this.$router.currentRoute.path === '/home/setting') {
@@ -243,6 +258,9 @@ export default {
     },
 
     computed: {
+        aiPortalUrl() {
+            return Config.AI_PORTAL_URL
+        },
         unread() {
             let count = 0;
             this.shareConversationState.conversationInfoList.forEach(info => {
@@ -317,6 +335,7 @@ export default {
     },
 
     components: {
+        AI,
         Conference,
         Multi,
         Single,

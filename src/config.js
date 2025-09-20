@@ -24,6 +24,9 @@ export default class Config {
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
     static APP_SERVER = 'https://app.wildfirechat.net';
 
+    // 语音转文字服务地址，如果没有部署语音转文字服务，或者不需要语音转文字的话，可置为 null
+    static ASR_SERVER = 'https://app.wildfirechat.net/asr/api/recognize';
+
     // 组织结构服务地址，如果没有部署组织结构服务，或者不需要组织结构的话，可置为 null
     // 组织结构项目：https://github.com/wildfirechat/organization-platform 或 https://gitee.com/wfchat/organization-platform
     static ORGANIZATION_SERVER = 'https://org.wildfirechat.cn';
@@ -51,6 +54,7 @@ export default class Config {
     // 如果语音消息很多，建议使用cdn
     static AMR_TO_MP3_SERVER_ADDRESS = Config.APP_SERVER + '/amr2mp3?path=';
     // 文件传输助手ID
+    // 不需要文件传输助手时，可以配置为 null
     static FILE_HELPER_ID = 'wfc_file_transfer';
 
     /**
@@ -62,6 +66,9 @@ export default class Config {
     // 如果不支持工作台，将其置空即可
     static OPEN_PLATFORM_WORK_SPACE_URL = 'https://open.wildfirechat.cn/work.html';
     static OPEN_PLATFORM_SERVE_PORT = 7983;
+
+    // AI 入口地址，如果不需要 AI 功能，置为 null 即可
+    static AI_PORTAL_URL = 'https://static.wildfirechat.cn/chatbox-web/index.html'
 
     // 允许主动加入多人音视频通话
     static ENABLE_MULTI_CALL_AUTO_JOIN = false;

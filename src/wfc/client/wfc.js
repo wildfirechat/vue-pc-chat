@@ -13,6 +13,7 @@ import pttClient from "../ptt/client/pttClient";
 import ConnectionStatus from "./connectionStatus";
 import EventType from "./wfcEvent";
 import NullUserInfo from "../model/nullUserInfo";
+import UserSettingScope from "./userSettingScope";
 
 
 export class WfcManager {
@@ -132,6 +133,14 @@ export class WfcManager {
      */
     setHeartBeatInterval(sec) {
         impl.setHeartBeatInterval(sec);
+    }
+
+    /**
+     * 设置时间偏移。一般用于时间不正确的设备，可以设置时间偏移确保能够设备能够正常使用。
+     * @param {number} offset 单位秒，服务器时间-当前设备时间。
+     */
+    setTimeOffset(offset) {
+        impl.setTimeOffset(sec);
     }
 
     /**
@@ -288,7 +297,14 @@ export class WfcManager {
      * @returns {[GroupInfo]} 参考{@link GroupInfo}
      */
     getFavGroupList() {
-        return impl.getMyGroupList();
+        let groupInfos = impl.getMyGroupList();
+        groupInfos.map(info => {
+            if (!info.portrait) {
+                info.portrait = this.defaultGroupPortrait(info);
+            }
+            return info;
+        })
+        return groupInfos;
     }
 
     /**
@@ -449,7 +465,14 @@ export class WfcManager {
      * @returns {[GroupSearchResult]}
      */
     searchGroups(keyword) {
-        return impl.searchGroups(keyword);
+        let results = impl.searchGroups(keyword);
+        results.forEach(r => {
+            let info = r.groupInfo;
+            if (!info.portrait) {
+                info.portrait = this.defaultGroupPortrait(info);
+            }
+        })
+        return results;
     }
 
     /**
@@ -498,6 +521,24 @@ export class WfcManager {
      */
     clearUnreadFriendRequestStatus() {
         impl.clearUnreadFriendRequestStatus();
+    }
+
+    /**
+     * 清除好友请求
+     * @param direction 请求方向：0，发出的好友请求；1，收到的好友请求。
+     * @param beforeTime 清除指定时间之前的，单位毫秒，0是清掉所有的。
+     */
+    clearFriendRequest(direction, beforeTime) {
+        impl.clearFriendRequest(direction, beforeTime);
+    }
+
+    /**
+     * 删除一条好友请求
+     * @param userId 目标用户ID
+     * @param direction 请求方向：0，发出的好友请求；1，收到的好友请求。
+     */
+    deleteFriendRequest(userId, direction) {
+        impl.deleteFriendRequest(userId, direction);
     }
 
     /**
@@ -1146,7 +1187,7 @@ export class WfcManager {
      * @param {function (number)} failCB
      */
     searchChannel(keyword, fuzzy, successCB, failCB) {
-        impl.searchChannel(keyword, successCB, failCB);
+        impl.searchChannel(keyword, fuzzy, successCB, failCB);
     }
 
     /**
@@ -1885,6 +1926,10 @@ export class WfcManager {
         return impl.searchMessageByTypes(conversation, keyword, contentTypes, desc, limit, offset, withUser);
     }
 
+    searchMessageByTypesAsync(conversation, keyword, contentTypes, desc, limit, offset, withUser = '', resultCB = null) {
+        impl.searchMessageByTypesAsync(conversation, keyword, contentTypes, desc, limit, offset, withUser, resultCB);
+    }
+
     /**
      * 搜索消息
      * @param {Conversation} conversation 目标会话，如果为空搜索所有会话
@@ -2179,6 +2224,28 @@ export class WfcManager {
     }
 
     /**
+     * 获取指定时间段范围内每天的消息数量
+
+     * @param conversation 会话，不能为空。
+     * @param {[number]} contentTypes 消息类型列表，可选值参考{@link MessageContentType}。
+     * @param {number} startTime 开始时间，单位为秒。
+     * @param {number} endTime 结束时间，单位为秒。
+     *
+     * @returns 返回此时间段内会话的每天消息数量。
+     */
+    getMessageCountByDay(conversation, contentTypes, startTime, endTime) {
+        let countStr = protoProxy.invoke('getMessageCountByDay', JSON.stringify(conversation));
+        let countArr = JSON.parse(countStr);
+        let result = new Map();
+        if (countArr) {
+            countArr.forEach(e => {
+                result.set(e.key, e.value)
+            })
+        }
+        return result;
+    }
+
+    /**
      * 上传媒体文件
      * @param {string} fileName
      * @param {string | File} fileOrData dataUri，或者 base64格式的媒体数据，或者 File 对象
@@ -2302,15 +2369,6 @@ export class WfcManager {
      */
     setUserEnableReceipt(enable, successCB, failCB) {
         impl.setUserEnableReceipt(enable, successCB, failCB);
-    }
-
-    /**
-     * 获取会话的送达状态。
-     * @param conversation
-     * @return {Map<string, Long>}
-     */
-    getConversationDelivery(conversation) {
-        return impl.getConversationDelivery(conversation);
     }
 
     /**
@@ -2581,6 +2639,16 @@ export class WfcManager {
      */
     loadRemoteDomains(successCB, failCB) {
         impl.loadRemoteDomains(successCB, failCB);
+    }
+
+    /**
+     * 上传用户本地角标数字到IM服务，当IM服务推送时，会把此数字发送到推送服务，从而让推送角标显示准确
+     * 应当在每次未读数变化时调用，但对服务器压力会比较大
+     *
+     * @param badgeNumber 角标数
+     */
+    uploadBadgeNumber(badgeNumber){
+        this.setUserSetting(UserSettingScope.Sync_Badge, '', badgeNumber + '', null, null)
     }
 
     /**

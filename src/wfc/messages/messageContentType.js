@@ -80,6 +80,7 @@ export default class MessageContentType {
     static ModifyGroupExtra_Notification = 122;
     static ModifyGroupMemberExtra_Notification = 123;
     static ModifyGroupSetting_Notification = 124;
+    static RejectJoinGroup = 125;
 
     static VOIP_CONTENT_TYPE_START = 400;
     static VOIP_CONTENT_TYPE_END = 402;
@@ -103,7 +104,6 @@ export default class MessageContentType {
     static VOIP_REMOTE_CONTROL_ACCEPT_REQUEST = 433;
     static VOIP_REMOTE_CONTROL_END = 434;
 
-    static VOIP_REMOTE_CONTROL_INPUT_EVENT = 433;
     static MESSAGE_CONTENT_TYPE_FEED = 501;
     static MESSAGE_CONTENT_TYPE_COMMENT = 502;
 

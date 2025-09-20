@@ -18,6 +18,7 @@ import MessagePage from "./ui/main/MessagePage.vue";
 import MultimediaPreviewPage from "./ui/main/MultimediaPreviewPage.vue";
 import SingleRemoteControl from "./ui/voip/SingleRemoteControl.vue";
 import MomentList from './ui/main/moment/MomentList.vue'
+import AI from "./ui/main/AI.vue";
 
 const routers = [
     {
@@ -76,6 +77,11 @@ const routers = [
                     // }
                 ]
             },
+            {
+                path: 'ai',
+                name: 'AI',
+                component: AI,
+            }
         ]
     },
     {

@@ -1,7 +1,7 @@
 {
   "name": "wf-pc-chat",
   "company": "wildfire",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "description": "WF IM PC Client",
   "appId": "cn.wildfire.chat",
   "private": true,
@@ -32,7 +32,6 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@electron/remote": "^2.0.1",
     "@imndx/v-emoji-picker-vue3": "^3.0.2",
     "@imndx/vue-infinite-loading": "^3.0.1-alpha",
     "@kyvg/vue3-notification": "^3.2.0",

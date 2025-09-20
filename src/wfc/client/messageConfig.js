@@ -38,7 +38,6 @@ import CallAnswerMessageContent from '../av/messages/callAnswerMessageContent';
 import CallAnswerTMessageContent from '../av/messages/callAnswerTMessageContent';
 import CallByeMessageContent from '../av/messages/callByeMessageContent';
 import CallSignalMessageContent from '../av/messages/callSignalMessageContent';
-import RCInputEventMessageContent from '../av/messages/rcInputEventMessageContent';
 import CallModifyMessageContent from '../av/messages/callModifyMessageContent';
 import AddParticipantsMessageContent from "../av/messages/addParticipantsMessageContent";
 import MuteVideoMessageContent from "../av/messages/muteVideoMessageContent";
@@ -76,6 +75,7 @@ import RCInviteMessageContent from "../av/messages/rcInviteMessageContent";
 import RcAcceptInviteMessageContent from "../av/messages/rcAcceptInviteMessageContent";
 import RcEndMessageContent from "../av/messages/rcEndMessageContent";
 import RcRequestMessageContent from "../av/messages/rcRequestMessageContent";
+import GroupRejectJoinNotificationContent from "../messages/notification/groupRejectJoinNotificationContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -353,6 +353,12 @@ export default class MessageConfig {
             contentClazz: ModifyGroupSettingNotification,
         },
         {
+            name: 'groupRejectJoinNotificationContent',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.RejectJoinGroup,
+            contentClazz: GroupRejectJoinNotificationContent,
+        },
+        {
             name: 'recall',
             flag: PersistFlag.Persist,
             type: MessageContentType.RecallMessage_Notification,
@@ -471,12 +477,6 @@ export default class MessageConfig {
             flag: PersistFlag.No_Persist,
             type: MessageContentType.VOIP_REMOTE_CONTROL_REQUEST,
             contentClazz: RcRequestMessageContent,
-        },
-        {
-            name: 'rcInputEventMessageContent',
-            flag: PersistFlag.Transparent,
-            type: MessageContentType.VOIP_REMOTE_CONTROL_INPUT_EVENT,
-            contentClazz: RCInputEventMessageContent,
         },
         {
             name: 'rcEndMessageContent',

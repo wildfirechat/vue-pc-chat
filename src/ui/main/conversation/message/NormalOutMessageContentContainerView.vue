@@ -226,7 +226,13 @@ export default {
         },
 
         shouldShowMessageReceipt() {
-            return this.sharedConversationState.isMessageReceiptEnable && ["FireRobot", Config.FILE_HELPER_ID].indexOf(this.message.conversation.target) < 0;
+            let show = false;
+            if (this.message.conversation.type === ConversationType.Group) {
+                show = this.sharedConversationState.isGroupMessageReceiptEnable;
+            } else if (this.message.conversation.type === ConversationType.Single) {
+                show = this.sharedConversationState.isMessageReceiptEnable && ["FireRobot", Config.FILE_HELPER_ID].indexOf(this.message.conversation.target) < 0;
+            }
+            return show;
         }
     },
 

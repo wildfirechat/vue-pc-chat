@@ -15,15 +15,15 @@ import Conversation from "../../../wfc/model/conversation";
 
 import CallEndReason from "./callEndReason";
 import CallByeMessageContent from "../messages/callByeMessageContent";
-import {log} from "console";
 import WfcAVEngineKit from "./avenginekit";
 
-// main window renderer process -> voip window renderer process
+// main window renderer process -> main process -> voip window renderer process
 // voip window renderer process -> main process -> main window renderer process
 export class AvEngineKitProxy {
     wfc;
     queueEvents = [];
     callWin;
+    callWindowId;
     isVoipWindowReady = false;
     type;
 
@@ -55,6 +55,7 @@ export class AvEngineKitProxy {
      * @param wfc
      */
     setup(wfc) {
+        console.log('avengineProxy, setup');
         if (this.wfc === wfc) {
             console.log('re-setup, just ignore');
             return;
@@ -166,6 +167,7 @@ export class AvEngineKitProxy {
 
     // 收到消息时，timestamp已经过修正，后面使用时，不用考虑和服务器的时间差
     onReceiveMessage = (msg) => {
+        console.log('avengineProxy, on receive message', msg);
         if (!Config.ENABLE_MULTI_VOIP_CALL && msg.conversation.type === ConversationType.Group) {
             console.log('not enable multi call ');
             return;
@@ -183,6 +185,7 @@ export class AvEngineKitProxy {
         let delta = wfc.getServerDeltaTime();
         if (now - (numberValue(msg.timestamp) - delta) >= 90 * 1000) {
             // 消息已失效，不做处理
+            console.log('avengineProxy, message outdated, just ignore', msg);
             return;
         }
         let content = msg.messageContent;
@@ -565,11 +568,11 @@ export class AvEngineKitProxy {
         });
     }
 
-    showCallUI(conversation, isConference, options) {
+    async showCallUI(conversation, isConference, options) {
         if (options.args.remoteControl && !isElectron()) {
             console.warn('web 端，不支持远程协助');
             return
-        } else if(process && process.platform === 'linux'){
+        } else if (process && process.platform === 'linux' && options.args.remoteControl) {
             console.warn('远程协助功能，目前只支持 Windows 和 macOS');
             return
         }
@@ -602,42 +605,8 @@ export class AvEngineKitProxy {
                 break;
         }
         if (isElectron()) {
-            let win = new BrowserWindow(
-                {
-                    width: width,
-                    height: height,
-                    minWidth: minWidth,
-                    minHeight: minHeight,
-                    resizable: true,
-                    maximizable: true,
-                    transparent: !!isConference,
-                    frame: !isConference,
-                    webPreferences: {
-                        scrollBounce: false,
-                        nativeWindowOpen: true,
-                        nodeIntegration: true,
-                        contextIsolation: false,
-                    },
-                }
-            );
-            this.callWin = win;
-            this.isVoipWindowReady = false;
-            // const remoteMain = require("@electron/remote").require("@electron/remote/main");
-            const remoteMain = remote.require("@electron/remote/main");
-            remoteMain.enable(win.webContents);
 
-            win.webContents.on('did-finish-load', () => {
-                this.onVoipWindowReady();
-            });
-
-            if (localStorage.getItem("enable_voip_debug")) {
-                win.webContents.openDevTools();
-            }
-            win.on('close', () => {
-                this.onVoipWindowClose();
-            });
-
-            // win.loadURL(path.join('file://', AppPath, 'src/index.html?' + type));
+            // Load URL through main process
             let hash = window.location.hash;
             let url = window.location.origin;
             if (hash) {
@@ -646,11 +615,49 @@ export class AvEngineKitProxy {
                 url += "/voip"
             }
             url += '/' + type + '?t=' + new Date().getTime()
-            win.loadURL(url);
+            let windowOptions = {
+                width: width,
+                height: height,
+                minWidth: minWidth,
+                minHeight: minHeight,
+                resizable: true,
+                maximizable: true,
+                transparent: !!isConference,
+                frame: !isConference,
+                url: url,
+                webPreferences: {
+                    scrollBounce: false,
+                    nativeWindowOpen: true,
+                    nodeIntegration: true,
+                    contextIsolation: false,
+                },
+            };
+
+            console.log('create-voip-window')
             console.log('voip windows url', url)
-            win.show();
-            win.removeMenu();
-            this.emitToVoip(options.event, options.args);
+            // We're now sending a request to the main process to create the window
+            this.callWin = await BrowserWindow.new(windowOptions);
+
+            this.isVoipWindowReady = false;
+
+            if (localStorage.getItem("enable_voip_debug")) {
+                this.callWin.webContents.openDevTools();
+            }
+
+            // this.callWin.show();
+            // this.callWin.removeMenu();
+            // this.emitToVoip(options.event, options.args);
+
+            // Set up listener for window close
+            ipcRenderer.once(`voip-window-closed`, () => {
+                this.onVoipWindowClose();
+            });
+
+            ipcRenderer.once(`voip-window-webContents-did-finish-load`, () => {
+                this.emitToVoip(options.event, options.args);
+                this.onVoipWindowReady();
+            });
+
         } else {
             this.callWin = window;
             console.log('windowEmitter subscribe events');
@@ -688,6 +695,7 @@ export class AvEngineKitProxy {
         if (!this.callWin) {
             return;
         }
+        this.isVoipWindowReady = false;
         setTimeout(() => {
             this.onVoipCallStatusCallback && this.onVoipCallStatusCallback(this.conversation, false);
             this.conversation = null;
@@ -699,7 +707,6 @@ export class AvEngineKitProxy {
             this.participants = [];
             this.queueEvents = [];
             this.callWin = null;
-            this.isVoipWindowReady = false;
             this.voipEventRemoveAllListeners('voip-message', 'conference-request', 'update-call-start-message', 'start-screen-share');
         }, 2000);
     }

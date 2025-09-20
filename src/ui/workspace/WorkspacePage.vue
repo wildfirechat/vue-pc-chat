@@ -15,6 +15,8 @@ import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
 import {ipcRenderer, remote} from "../../platform";
 import IpcEventType from "../../ipcEventType";
+import { ipcMain } from "electron";
+import IPCEventType from "../../ipcEventType";
 
 let tabGroup = null;
 
@@ -86,7 +88,7 @@ export default {
             ipcRenderer.send(IpcEventType.OPEN_H5_APP_WINDOW, {url: url, hostUrl: args.hostUrl})
         },
 
-        addTab(url, closable = true) {
+        addTab(url, closable = true, name = '工作台') {
             let tabs = tabGroup.getTabs();
             let found = false;
             for (let tab of tabs) {
@@ -97,7 +99,7 @@ export default {
                 }
             }
             let tab = tabGroup.addTab({
-                title: "工作台",
+                title: name,
                 //src: args.url ? args.url : args,
                 src: url,
                 visible: true,
@@ -115,6 +117,7 @@ export default {
             // tab.webview.addEventListener('new-window', (e) => {
             //     // TODO 判断是否需要用默认浏览器打开
             //     console.log('new-window', e.url)
+            //     e.preventDefault();
             // });
             //
             // tab.webview.addEventListener('update-target-url', event => {
@@ -130,7 +133,9 @@ export default {
                 tab.setTitle(e.title);
             })
             tab.webview.addEventListener('dom-ready', (e) => {
-                // tab.webview.openDevTools();
+                //tab.webview.openDevTools();
+                let webContentsId = tab.webview.getWebContentsId();
+                ipcRenderer.send(IpcEventType.WORKSPACE_NEW_TAB_WEB_CONTENT , {id: webContentsId})
             })
 
         }
@@ -152,6 +157,11 @@ export default {
         this.addTab(this.url, false);
         this.tabGroup = tabGroup;
         init(wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
+
+        ipcRenderer.on(IpcEventType.WORKSPACE_ADD_NEW_TAB, async (event, args) => {
+            let url = decodeURI(args.url);
+            this.addTab(url, true, args.frameName);
+        })
     },
 
     computed: {}
