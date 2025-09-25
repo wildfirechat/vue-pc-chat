@@ -37,7 +37,7 @@ export default class WfcAVEngineKit {
      * 是否启用 datachannel
      * @type {boolean}
      */
-    static ENABLE_DATA_CHANNEL = true
+    static ENABLE_DATA_CHANNEL = false
 
     /**
      禁止双流模式下，小流低帧率。默认为false，小流的帧率为8fps。当为true时使用 {@link SMALL_STREAM_FPS}， 或者使用同大流一样的帧率
