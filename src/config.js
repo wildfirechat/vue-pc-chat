@@ -65,6 +65,7 @@ export default class Config {
     static SECRET_CHAT_MEDIA_DECODE_SERVER_PORT = 7982;
     // 如果不支持工作台，将其置空即可
     static OPEN_PLATFORM_WORK_SPACE_URL = 'https://open.wildfirechat.cn/work.html';
+    // background.js#startOpenPlatformServer 里面写死了 7983 端口，如果改动这个端口的话，要一起改动
     static OPEN_PLATFORM_SERVE_PORT = 7983;
 
     // AI 入口地址，如果不需要 AI 功能，置为 null 即可
