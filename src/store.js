@@ -2062,6 +2062,13 @@ let store = {
     },
 
     // clone一下，别影响到好友列表
+    /**
+     * @deprecated
+     * @param groupId
+     * @param includeSelf
+     * @param sortByPinyin
+     * @return {*}
+     */
     getGroupMemberUserInfos(groupId, includeSelf = true, sortByPinyin = false) {
 
         let memberIds = wfc.getGroupMemberIds(groupId);
@@ -2117,6 +2124,21 @@ let store = {
             userInfos = this._patchAndSortUserInfos(userInfosCloneCopy, '');
         } else if (conversation.type === 1) {
             userInfos = this.getGroupMemberUserInfos(conversation.target, true);
+        }
+        return userInfos;
+    },
+
+    async getConversationMemberUsrInfosAsync(conversation) {
+        let userInfos = [];
+        if (conversation.type === 0) {
+            if (conversation.target !== contactState.selfUserInfo.uid) {
+                userInfos.push(wfc.getUserInfo(wfc.getUserId(), false));
+            }
+            userInfos.push(wfc.getUserInfo(conversation.target, false));
+            let userInfosCloneCopy = userInfos.map(u => Object.assign({}, u));
+            userInfos = this._patchAndSortUserInfos(userInfosCloneCopy, '');
+        } else if (conversation.type === 1) {
+            userInfos = await this.getGroupMemberUserInfosAsync(conversation.target, true);
         }
         return userInfos;
     },

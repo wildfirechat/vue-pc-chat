@@ -98,7 +98,7 @@ export default {
     },
     data() {
         return {
-            groupMemberUserInfos: store.getConversationMemberUsrInfos(this.conversationInfo.conversation),
+            groupMemberUserInfos: [],
             filterQuery: '',
             sharedContactState: store.state.contact,
             sharedMiscState: store.state.misc,
@@ -110,7 +110,7 @@ export default {
         }
     },
 
-    mounted() {
+    async mounted() {
         wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onUserInfosUpdate)
         wfc.eventEmitter.on(EventType.ReceiveMessage, this.onReceiveMessage)
@@ -118,6 +118,8 @@ export default {
 
         let userInfo = wfc.getUserInfo(wfc.getUserId(), false, this.conversationInfo.conversation.target);
         this.groupAlias = userInfo.groupAlias ? userInfo.groupAlias : userInfo.displayName;
+
+        this.groupMemberUserInfos = await store.getConversationMemberUsrInfosAsync(this.conversationInfo.conversation)
     },
 
     beforeUnmount() {
