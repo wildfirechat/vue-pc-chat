@@ -2082,6 +2082,29 @@ let store = {
         }
     },
 
+    getGroupMemberUserInfosAsync(groupId, includeSelf = true, sortByPinyin = false) {
+        return new Promise((resolve, reject) => {
+            let memberIds = wfc.getGroupMemberIds(groupId);
+            wfc.getUserInfosAsync(memberIds, groupId, userInfos => {
+                if (!includeSelf) {
+                    userInfos = userInfos.filter(u => u.uid !== wfc.getUserId())
+                }
+                let userInfosCloneCopy = userInfos.map(u => Object.assign({}, u));
+                if (sortByPinyin) {
+                    resolve(this._patchAndSortUserInfos(userInfosCloneCopy, groupId));
+                } else {
+                    let compareFn = (u1, u2) => {
+                        let index1 = memberIds.findIndex(id => id === u1.uid)
+                        let index2 = memberIds.findIndex(id => id === u2.uid)
+                        return index1 - index2;
+                    }
+                    //resolve(userInfosCloneCopy)
+                    resolve(this._patchAndSortUserInfos(userInfosCloneCopy, groupId, compareFn));
+                }
+            });
+        })
+    },
+
     // clone一下，别影响到好友列表
     getConversationMemberUsrInfos(conversation) {
         let userInfos = [];

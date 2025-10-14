@@ -656,7 +656,7 @@ export default {
             }
         },
 
-        initMention(conversation) {
+        async initMention(conversation) {
             if (this.convMuted) {
                 return;
             }
@@ -681,7 +681,7 @@ export default {
                 searchKey: this.$t('conversation.all_people') + 'suoyouren' + 'syr'
             });
 
-            let groupMemberUserInfos = store.getGroupMemberUserInfos(conversation.target, false);
+            let groupMemberUserInfos = await store.getGroupMemberUserInfosAsync(conversation.target, false);
             groupMemberUserInfos.forEach((e) => {
                 mentionMenuItems.push({
                     key: e._displayName,
