@@ -416,6 +416,17 @@ export class WfcManager {
         return userInfos;
     }
 
+    getUserInfosAsync(userIds, groupId, callback) {
+        impl.getUserInfosAsync(userIds, groupId, userInfos => {
+            userInfos.forEach((u) => {
+                if (!u.portrait) {
+                    u.portrait = this.defaultUserPortrait(u);
+                }
+            });
+            callback(userInfos)
+        });
+    }
+
     /**
      * 服务端搜索用户
      * @param {string} keyword 搜索关键字

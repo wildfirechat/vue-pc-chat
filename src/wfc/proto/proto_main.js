@@ -133,10 +133,6 @@ const asyncProtoMethods = {
             _genCallback(event, args.reqId, 1, true),
             methodArgs[3])
     },
-    searchMessageByTypesAsync :  (event, args) => {
-        let result = proto['searchMessageByTypes'](...(args.methodArgs.slice(0, args.methodArgs.length - 1)));
-        _genCallback(event, args.reqId, 0, true)(result);
-    },
 }
 
 function _asyncCall2(methodName) {
@@ -154,6 +150,19 @@ function _genCallback(event, reqId, index, done) {
             reqId,
             cbIndex: index,
             done,
+            cbArgs: cbArgs
+        }
+        event.sender.send(ASYNC_CALLBACK, obj);
+    }
+}
+
+function _sync2async(event, reqId) {
+    return (...cbArgs) => {
+        // send back to renderer window
+        //_asyncCallback(event, reqId, index, done, cbArgs);
+        let obj = {
+            code: 0,
+            reqId,
             cbArgs: cbArgs
         }
         event.sender.send(ASYNC_CALLBACK, obj);
@@ -206,7 +215,6 @@ export function init(wfcProto) {
             }
         } else {
             /**
-             * TODO
              * 添加同步方法转异步的处理
              * 一些约定
              * 1. 方法名为原始的同步方法的方法名
@@ -214,7 +222,10 @@ export function init(wfcProto) {
              * 参考：searchMessageByTypesAsync
              */
 
-            console.error('invokeProtoAsync cannot found method', args.methodName);
+            let result = proto[ args.methodName](...args.methodArgs.slice(0, args.methodArgs.length - 1));
+            _genCallback(event, args.reqId, 0, true)(result);
+
+            console.log('sync2async', args.methodName);
         }
     })
 
