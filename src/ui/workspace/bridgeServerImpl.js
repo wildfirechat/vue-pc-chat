@@ -72,10 +72,7 @@ let openUrl = (args) => { // addTab or open new window?
 }
 
 let getAuthCode = (args, appUrl, requestId) => {
-    let host = new URL(appUrl).host;
-    if (host.indexOf(':') > 0) {
-        host = host.substring(0, host.indexOf(':'))
-    }
+    let host = new URL(appUrl).hostname;
     mWfc.getAuthCode(args.appId, args.appType, host, (authCode) => {
         console.log('authCode', authCode);
         _response('getAuthCode', appUrl, requestId, 0, authCode);
