@@ -681,16 +681,24 @@ export default {
                 searchKey: this.$t('conversation.all_people') + 'suoyouren' + 'syr'
             });
 
-            let groupMemberUserInfos = await store.getGroupMemberUserInfosAsync(conversation.target, false);
-            groupMemberUserInfos.forEach((e) => {
-                mentionMenuItems.push({
-                    key: e._displayName,
-                    keyIgnoreFriendAlias: e._displayNameIgnoreFriendAlias,
-                    value: '@' + e.uid,
-                    avatar: e.portrait,
-                    searchKey: e._displayName + e._pinyin + e._firstLetters,
+            // 超大群，弹出@时，显示所有群成员意义不大，但会导致性能问题，故限制
+            if(groupInfo.memberCount  < 500){
+                let groupMemberUserInfos = await store.getGroupMemberUserInfosAsync(conversation.target, false);
+                groupMemberUserInfos.forEach((e) => {
+                    mentionMenuItems.push({
+                        key: e._displayName,
+                        keyIgnoreFriendAlias: e._displayNameIgnoreFriendAlias,
+                        value: '@' + e.uid,
+                        avatar: e.portrait,
+                        searchKey: e._displayName + e._pinyin + e._firstLetters,
+                    });
                 });
-            });
+            } else {
+                this.$notify({
+                    text:'超大群，@时暂不支持弹出群成员列表',
+                    type:'warn'
+                })
+            }
 
             this.tribute = new Tribute({
                 values: mentionMenuItems,
