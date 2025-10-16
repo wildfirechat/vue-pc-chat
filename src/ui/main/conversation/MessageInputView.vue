@@ -683,7 +683,12 @@ export default {
 
             // 超大群，弹出@时，显示所有群成员意义不大，但会导致性能问题，故限制
             if(groupInfo.memberCount  < 500){
-                let groupMemberUserInfos = await store.getGroupMemberUserInfosAsync(conversation.target, false);
+                let groupMemberUserInfos;
+                if(isElectron()){
+                    groupMemberUserInfos = await store.getGroupMemberUserInfosAsync(conversation.target, false);
+                } else {
+                    groupMemberUserInfos = store.getGroupMemberUserInfos(conversation.target, false);
+                }
                 groupMemberUserInfos.forEach((e) => {
                     mentionMenuItems.push({
                         key: e._displayName,

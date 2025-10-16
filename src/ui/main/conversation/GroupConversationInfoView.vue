@@ -110,7 +110,7 @@ export default {
         }
     },
 
-    async mounted() {
+    mounted() {
         wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onUserInfosUpdate)
         wfc.eventEmitter.on(EventType.ReceiveMessage, this.onReceiveMessage)
@@ -119,7 +119,7 @@ export default {
         let userInfo = wfc.getUserInfo(wfc.getUserId(), false, this.conversationInfo.conversation.target);
         this.groupAlias = userInfo.groupAlias ? userInfo.groupAlias : userInfo.displayName;
 
-        this.groupMemberUserInfos = await store.getConversationMemberUsrInfosAsync(this.conversationInfo.conversation)
+        this.loadGroupMemberUserInfos();
     },
 
     beforeUnmount() {
@@ -293,6 +293,18 @@ export default {
 
         clearRemoteConversationHistory() {
             wfc.clearRemoteConversationMessages(this.conversationInfo.conversation);
+        },
+
+        async loadGroupMemberUserInfos(){
+            let groupId = this.conversationInfo.conversation.target;
+            let memberIds = wfc.getGroupMemberIds(groupId, true);
+            const step = 500;
+            for (let i = 0; i < memberIds.length;) {
+                let ids = memberIds.slice(i, i + step)
+                i += step;
+                let userInfos = await store.getPartialGroupMembersInfoAsync(groupId, ids)
+                this.groupMemberUserInfos.push(...userInfos);
+            }
         }
     },
 
@@ -310,11 +322,15 @@ export default {
         },
 
         clickGroupMemberItemFunc() {
+            console.log('clickGroupMemberItemFunc');
             let groupInfo = this.conversationInfo.conversation._target;
             let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, wfc.getUserId());
             if (groupInfo.privateChat === 1 && [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) === -1) {
                 return () => {
                     // 群里面，禁止发起私聊
+                    this.$notify({
+                        text: '禁止发起私聊'
+                    })
                 };
             }
             return null;
