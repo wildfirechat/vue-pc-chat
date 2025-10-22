@@ -341,8 +341,8 @@ export class WfcManager {
      * @param {UserInfo} userInfo 用户信息
      * @returns {string} 用户的displayName
      */
-    getUserDisplayNameEx(userInfo) {
-        return userInfo.friendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>');
+    getUserDisplayNameEx(userInfo, ignoreFriendAlias = false) {
+        return userInfo.friendAlias && !ignoreFriendAlias ? userInfo.friendAlias : (userInfo.displayName ? userInfo.displayName : '<' + userInfo.uid + '>');
     }
 
     /**
