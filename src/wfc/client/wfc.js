@@ -798,6 +798,50 @@ export class WfcManager {
     }
 
     /**
+     * 分批获取群成员信息
+     *
+     * @param groupId 群ID
+     * @param types 群成员类型，nil为所有
+     * @param offset offset
+     * @param count 群成员类型个数
+     * @return 群成员信息列表
+     */
+    getGroupMembersEx2(groupId, offset, count, types = []) {
+        return impl.getGroupMembersEx2(groupId, offset, count, types);
+    }
+
+    /**
+     * 获取群成员数量
+     *
+     * @param groupId 群ID
+     * @param types 群成员类型，nil为所有
+     * @return 群成员的数量
+     */
+    getGroupMembersCount(groupId, types = []) {
+        return impl.getGroupMembersCount(groupId, types);
+    }
+
+    /**
+     * 获取群成员ID
+     *
+     * @param groupId 群ID
+     * @param types 群成员类型，nil为所有
+     * @return 群成员ID列表
+     */
+    getGroupMemberIdsEx(groupId, types = []) {
+        return impl.getGroupMemberIdsEx(groupId, types);
+    }
+
+    /**
+     * 从远程服务同步群组成员
+     *
+     * @param groupId 群ID
+     */
+    loadGroupMemberFromRemote(groupId) {
+        impl.loadGroupMemberFromRemote(groupId);
+    }
+
+    /**
      * 将用户从群里移除
      * @param {string} groupId 群id
      * @param {[string]} memberIds 将要被移除的群成员id列表
