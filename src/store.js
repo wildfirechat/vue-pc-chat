@@ -1632,6 +1632,7 @@ let store = {
                 u._displayNameIgnoreFriendAlias = wfc.getGroupMemberDisplayNameEx(u, true);
             } else {
                 u._displayName = wfc.getUserDisplayNameEx(u);
+                u._displayNameIgnoreFriendAlias = u.displayName
             }
             u._pinyin = convert(u._displayName, {style: 0}).join('').trim().toLowerCase();
             let firstLetter = u._pinyin[0];
