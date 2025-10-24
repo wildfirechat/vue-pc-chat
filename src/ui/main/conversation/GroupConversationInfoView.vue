@@ -87,6 +87,7 @@ import EventType from "../../../wfc/client/wfcEvent";
 import appServerApi from "../../../api/appServerApi";
 import MessageContentMediaType from "../../../wfc/messages/messageContentMediaType";
 import MessageContentType from "../../../wfc/messages/messageContentType";
+import {isElectron} from "../../../platform";
 
 export default {
     name: "GroupConversationInfoView",
@@ -297,13 +298,17 @@ export default {
 
         async loadGroupMemberUserInfos(){
             let groupId = this.conversationInfo.conversation.target;
-            let memberIds = wfc.getGroupMemberIds(groupId, true);
-            const step = 500;
-            for (let i = 0; i < memberIds.length;) {
-                let ids = memberIds.slice(i, i + step)
-                i += step;
-                let userInfos = await store.getPartialGroupMembersInfoAsync(groupId, ids)
-                this.groupMemberUserInfos.push(...userInfos);
+            if(isElectron()){
+                let memberIds = wfc.getGroupMemberIds(groupId, true);
+                const step = 500;
+                for (let i = 0; i < memberIds.length;) {
+                    let ids = memberIds.slice(i, i + step)
+                    i += step;
+                    let userInfos = await store.getPartialGroupMembersInfoAsync(groupId, ids)
+                    this.groupMemberUserInfos.push(...userInfos);
+                }
+            } else {
+              this.groupMemberUserInfos = store.getGroupMemberUserInfos(groupId);
             }
         }
     },
