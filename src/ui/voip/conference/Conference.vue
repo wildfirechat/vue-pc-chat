@@ -438,7 +438,7 @@ export default {
                     p = this.participantUserInfos[i];
                     if (p.uid === userId && p._isScreenSharing === screenSharing) {
                         p._stream = stream;
-                        p._isVideoMuted = false;
+                        // p._isVideoMuted = false;
                         p._stream.timestamp = new Date().getTime();
                         break;
                     }
