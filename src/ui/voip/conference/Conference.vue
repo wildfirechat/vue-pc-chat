@@ -454,7 +454,12 @@ export default {
             };
 
             sessionCallback.didParticipantJoined = (userId, screenSharing) => {
-                console.log('didParticipantJoined', userId, screenSharing)
+                console.log('didParticipantJoined', userId, screenSharing, this.participantUserInfos.length)
+                let index = this.participantUserInfos.findIndex(p => p.uid === userId && p._isScreenSharing === screenSharing);
+                if(index >= 0) {
+                    return;
+                }
+
                 let userInfo = wfc.getUserInfo(userId);
                 let subscriber = this.session.getSubscriber(userId, screenSharing);
                 userInfo._stream = subscriber.stream;
