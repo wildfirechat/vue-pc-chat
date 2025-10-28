@@ -438,7 +438,9 @@ export default {
                     p = this.participantUserInfos[i];
                     if (p.uid === userId && p._isScreenSharing === screenSharing) {
                         p._stream = stream;
-                        // p._isVideoMuted = false;
+                        let s = this.session.getSubscriber(userId, screenSharing);
+                        p._isVideoMuted = s.videoMuted;
+                        p._isAudioMuted = s.audioMuted;
                         p._stream.timestamp = new Date().getTime();
                         break;
                     }
@@ -582,14 +584,16 @@ export default {
                         this.selfUserInfo._isVideoMuted = this.session.videoMuted;
                         return;
                     }
-                    let s = this.session.getSubscriber(p);
+                    p = p.startsWith('screen_sharing_') ? p.substring('screen_sharing_'.length) : p;
+                    let screenSharing = p.startsWith('screen_sharing_');
+                    let s = this.session.getSubscriber(p, screenSharing);
                     if (!s) {
                         return;
                     }
-                    console.log('conference', 'didMuteStateChanged', p, s.videoMuted, s.audioMuted);
+                    console.log('conference', 'didMuteStateChanged', p, screenSharing, s.videoMuted, s.audioMuted);
                     this.participantUserInfos.forEach(u => {
-                        if (u.uid === p && u._isScreenSharing === false) {
-                            let subscriber = this.session.getSubscriber(p);
+                        if (u.uid === p && u._isScreenSharing === screenSharing) {
+                            let subscriber = this.session.getSubscriber(p, screenSharing);
                             u._isVideoMuted = subscriber.videoMuted;
                             u._isAudioMuted = subscriber.audioMuted;
                             if (this.speakingVideoParticipant && this.speakingVideoParticipant.uid === u.uid) {
