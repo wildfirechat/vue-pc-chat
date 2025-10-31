@@ -166,12 +166,8 @@ export default class Message {
                 msg.direction = 0;
                 msg.status = MessageStatus.Sent;
             } else {
-                if (obj.conversation.type === ConversationType.Single) {
-                    msg.conversation = new Conversation(obj.conversation.type, obj.fromUser, obj.conversation.line);
-                } else {
-                    msg.conversation = new Conversation(obj.conversation.type, obj.conversation.target, obj.conversation.line);
-                }
-
+                msg.conversation = new Conversation(obj.conversation.type, obj.conversation.target, obj.conversation.line);
+     
                 // in
                 msg.direction = 1;
                 msg.status = MessageStatus.Unread;
