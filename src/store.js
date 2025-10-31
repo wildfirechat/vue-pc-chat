@@ -1348,6 +1348,7 @@ let store = {
                 }
                 this._onloadConversationMessages(conversation, lmsgs)
                 if (lmsgs.length === 0) {
+                    console.log('getMessageV2, no more new local messages, try to load remote history message', enableLoadRemoteHistoryMessage);
                     if (enableLoadRemoteHistoryMessage) {
                         loadRemoteHistoryMessageFunc();
                     } else {
@@ -1358,6 +1359,7 @@ let store = {
                     setTimeout(() => loadedCB(), 200)
                 }
             } else {
+                console.log('getMessageV2, no more local messages, try to load remote history message', enableLoadRemoteHistoryMessage);
                 if (enableLoadRemoteHistoryMessage) {
                     loadRemoteHistoryMessageFunc();
                 } else {
@@ -1365,6 +1367,7 @@ let store = {
                 }
             }
         }, err => {
+            console.error('getMessagesV2 error', err);
             completeCB();
         });
     },
