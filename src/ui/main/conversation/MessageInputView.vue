@@ -56,7 +56,10 @@
                     <li style="position: relative;">
                         <!-- 录音动画提示 -->
                         <transition name="fade-slide">
-                            <div v-if="isRecording" class="recording-indicator">
+                            <div v-if="isRecording" 
+                                 class="recording-indicator"
+                                 @mouseenter="onRecordingIndicatorEnter"
+                                 @mouseleave="onRecordingIndicatorLeave">
                                 <div class="recording-content">
                                     <div class="wave-container">
                                         <div class="wave-bar" v-for="i in 5" :key="i" :style="{animationDelay: (i * 0.1) + 's'}"></div>
@@ -64,7 +67,7 @@
                                     <span class="recording-text">录音中</span>
                                     <span class="recording-time">{{ recordingTime }}</span>
                                 </div>
-                                <div class="recording-tip">松开发送</div>
+                                <div class="recording-tip" :class="{cancel: isRecordingCancelMode}">{{ isRecordingCancelMode ? '松开取消发送' : '松开发送' }}</div>
                             </div>
                         </transition>
                         <i id="voice" v-bind:class="{active: isRecording}" @mousedown="recordAudio(true)"
@@ -194,6 +197,7 @@ export default {
             recordingTime: '00:00',
             recordingTimer: null,
             recordingStartTime: 0,
+            isRecordingCancelMode: false,
             pttTime: '00:00',
             pttTimer: null,
             pttStartTime: 0,
@@ -1006,7 +1010,7 @@ export default {
             }
             this.recordingTime = '00:00';
         },
-        
+
         startPttTimer() {
             this.pttStartTime = Date.now();
             this.pttTime = '00:00';
@@ -1017,7 +1021,7 @@ export default {
                 this.pttTime = `${minutes}:${seconds}`;
             }, 100);
         },
-        
+
         stopPttTimer() {
             if (this.pttTimer) {
                 clearInterval(this.pttTimer);
@@ -1026,13 +1030,47 @@ export default {
             this.pttTime = '00:00';
         },
         
+        onRecordingIndicatorEnter() {
+            this.isRecordingCancelMode = true;
+        },
+        
+        onRecordingIndicatorLeave() {
+            this.isRecordingCancelMode = false;
+        },
+
         handleMouseUp() {
             if (this.isPttTalking) {
                 this.requestPttTalk(false);
             } else if (this.isRecording) {
-                this.recordAudio(false);
+                if (this.isRecordingCancelMode) {
+                    // 取消录音
+                    this.cancelRecording();
+                } else {
+                    // 正常发送录音
+                    this.recordAudio(false);
+                }
             }
             window.removeEventListener('mouseup', this.handleMouseUp)
+        },
+        
+        cancelRecording() {
+            this.isRecording = false;
+            this.isRecordingCancelMode = false;
+            this.stopRecordingTimer();
+            if (this.amrRecorder) {
+                // 取消录音，不发送，直接清空 recorder
+                try {
+                    // 尝试停止录音但不获取结果
+                    this.amrRecorder.finishRecord();
+                } catch (e) {
+                    console.log('取消录音', e);
+                }
+                this.amrRecorder = null;
+            }
+            this.$notify({
+                text: '已取消录音',
+                type: 'info'
+            });
         },
 
         setupConversationInput() {
@@ -1382,6 +1420,13 @@ i:hover {
     font-size: 11px;
     text-align: center;
     margin-top: 2px;
+    transition: all 0.3s ease;
+}
+
+.recording-tip.cancel {
+    color: #ff6b6b;
+    font-weight: 600;
+    transform: scale(1.05);
 }
 
 /* 淡入淡出动画 */
