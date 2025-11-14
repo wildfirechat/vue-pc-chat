@@ -271,7 +271,7 @@ export default {
             messageInputViewResized: false,
             unreadMessageCount: 0,
             isWindowAlwaysTop: currentWindow && currentWindow.isAlwaysOnTop(),
-            enableLoadRemoteHistoryMessage: true,
+            enableLoadRemoteHistoryMessage: !store.state.misc.isElectron, // web 端，本地没有消息存储，所以默认开启加载远程消息
             messageItemView: markRaw(MessageItemView),
             isLoadingHistory: false,
             overflow: false,
@@ -1062,7 +1062,7 @@ export default {
             }
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
-        this.enableLoadRemoteHistoryMessage = true;
+        this.enableLoadRemoteHistoryMessage = !isElectron() || this.conversationInfo.conversation.type === ConversationType.ChatRoom;
     },
 
     computed: {
