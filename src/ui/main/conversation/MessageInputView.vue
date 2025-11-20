@@ -1464,5 +1464,6 @@ i:hover {
 <style scoped>
 .emoji-picker {
     box-shadow: 5px 5px 20px 0 #C0C0C0;
+    --ep-color-active: #3f64e4 !important;
 }
 </style>

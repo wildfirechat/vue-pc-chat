@@ -9,8 +9,8 @@
                 <p class="content">{{ message.messageContent.digest(message) }}</p>
             </div>
         </div>
-        <div class="send-message-container">
-            <input placeholder="说点什么..." @change="sendMessage" v-model.trim="text">
+        <div class="send-message-container cursor-default" >
+            <input ref="msgInput" placeholder="说点什么..." @change="sendMessage" v-model.trim="text" @click="onInputClick">
         </div>
     </div>
 </template>
@@ -70,6 +70,10 @@ export default {
     },
 
     methods: {
+        onInputClick(e) {
+            e.stopPropagation();
+            this.$refs.msgInput?.focus();
+        },
         sendMessage() {
             let conversation = new Conversation(ConversationType.ChatRoom, this.session.callId, 0);
             wfc.sendConversationMessage(conversation, new TextMessageContent(this.text))
