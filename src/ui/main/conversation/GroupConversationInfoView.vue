@@ -4,7 +4,7 @@
             <div class="group-portrait-container">
                 <p>群头像</p>
                 <img :src="conversationInfo.conversation._target.portrait" @click="pickFile"/>
-                <input v-if="enableEditGroupNameOrAnnouncement" ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
+                <input v-if="enableModifyGroupNameAndPortrait" ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
                        accept="image/png, image/jpeg"
                        style="display: none">
             </div>
@@ -12,7 +12,7 @@
                 {{ $t('conversation.group_name') }}
                 <input type="text"
                        ref="groupNameInput"
-                       :disabled="!enableEditGroupNameOrAnnouncement"
+                       :disabled="!enableModifyGroupNameAndPortrait"
                        v-model="newGroupName"
                        @keyup.enter="updateGroupName"
                        :placeholder="conversationInfo.conversation._target._displayName">
@@ -21,7 +21,7 @@
                 {{ $t('conversation.group_announcement') }}
                 <input type="text"
                        ref="groupAnnouncementInput"
-                       :disabled="!enableEditGroupNameOrAnnouncement"
+                       :disabled="!enableModifyAnnouncement"
                        @keyup.enter='updateGroupAnnouncement'
                        v-model.trim="newGroupAnnouncement"
                        :placeholder="groupAnnouncement">
@@ -55,9 +55,9 @@
                 <p>{{ $t('conversation.remove_member') }}</p>
             </div>
             <UserListView :users="users"
-                         :show-category-label="false"
-                         :click-user-item-func="clickGroupMemberItemFunc"
-                         :padding-left="'20px'"
+                          :show-category-label="false"
+                          :click-user-item-func="clickGroupMemberItemFunc"
+                          :padding-left="'20px'"
             />
         </div>
         <div v-if="sharedMiscState.isElectron" @click="clearConversationHistory" class="conversation-action-item">
@@ -131,10 +131,10 @@ export default {
 
     components: {UserListView},
     methods: {
-        onReceiveMessage(msg, hasMore){
-            if(msg.conversation.equal(this.conversationInfo.conversation) && msg.messageContent.type === MessageContentType.RejectJoinGroup){
+        onReceiveMessage(msg, hasMore) {
+            if (msg.conversation.equal(this.conversationInfo.conversation) && msg.messageContent.type === MessageContentType.RejectJoinGroup) {
                 let content = msg.messageContent;
-                if(content.operator === wfc.getUserId()){
+                if (content.operator === wfc.getUserId()) {
                     this.$notify({
                         text: content.formatNotification(msg),
                         type: 'warn'
@@ -185,7 +185,7 @@ export default {
                 })
                 .catch(err => {
                     console.log('getGroupAnnouncement', err)
-                    if (this.enableEditGroupNameOrAnnouncement) {
+                    if (this.enableModifyAnnouncement) {
                         this.groupAnnouncement = this.$t('conversation.click_to_edit_group_announcement');
                     }
                 })
@@ -262,7 +262,7 @@ export default {
         },
 
         pickFile() {
-            if (!this.enableEditGroupNameOrAnnouncement) {
+            if (!this.enableModifyGroupNameAndPortrait) {
                 this.$notify({
                     text: '群主或管理员，才能更新头像',
                     type: 'warn'
@@ -296,9 +296,9 @@ export default {
             wfc.clearRemoteConversationMessages(this.conversationInfo.conversation);
         },
 
-        async loadGroupMemberUserInfos(){
+        async loadGroupMemberUserInfos() {
             let groupId = this.conversationInfo.conversation.target;
-            if(isElectron()){
+            if (isElectron()) {
                 let memberIds = wfc.getGroupMemberIds(groupId, true);
                 const step = 500;
                 for (let i = 0; i < memberIds.length;) {
@@ -308,7 +308,7 @@ export default {
                     this.groupMemberUserInfos.push(...userInfos);
                 }
             } else {
-              this.groupMemberUserInfos = store.getGroupMemberUserInfos(groupId);
+                this.groupMemberUserInfos = store.getGroupMemberUserInfos(groupId);
             }
         }
     },
@@ -384,11 +384,24 @@ export default {
 
         },
 
-        enableEditGroupNameOrAnnouncement() {
+        enableModifyGroupNameAndPortrait() {
             let groupInfo = this.conversationInfo.conversation._target;
             if (groupInfo.type === GroupType.Organization) {
                 return false;
+            } else if (groupInfo.type === GroupType.Restricted) {
+                let selfUid = wfc.getUserId();
+                let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
+                if (groupMember) {
+                    return [GroupMemberType.Manager, GroupMemberType.Owner].indexOf(groupMember.type) >= 0;
+                } else {
+                    return false;
+                }
+            } else {
+                return true;
             }
+        },
+
+        enableModifyAnnouncement() {
             let selfUid = wfc.getUserId();
             let groupMember = wfc.getGroupMember(this.conversationInfo.conversation.target, selfUid);
             if (groupMember) {
@@ -476,7 +489,7 @@ header label input {
     background-color: transparent;
 }
 
-header label input::-webkit-input-placeholder{
+header label input::-webkit-input-placeholder {
     color: #7F7F7F;
 }
 
