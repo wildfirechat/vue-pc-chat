@@ -1049,6 +1049,8 @@ export default {
             }
         }
         if ((!this.conversationInfo && this.sharedConversationState.currentConversationInfo) || !this.conversationInfo.conversation.equal(this.sharedConversationState.currentConversationInfo.conversation)) {
+            // 切换会话，强制设置
+            this.isLoadingHistory = false;
             this.onScrollToTop()
         }
 
