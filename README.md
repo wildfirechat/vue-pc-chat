@@ -112,6 +112,9 @@ npm run package
 ## 交叉打包
 
 打包为其它平台架构软件
+> 1. macOS 可交叉打包 Windows 和 Linux
+> 2. Linux 可能交叉打包 Windows
+> 3. Windows 不能交叉打包
 
 ```
 #打包windows系统amd64架构
@@ -126,8 +129,6 @@ npm run cross-package-linux
 #打包linux系统arm64架构
 npm run cross-package-linux-arm64
 
-#打包mac系统
-npm run cross-package-mac
 ```
 
 ## Electron版本
