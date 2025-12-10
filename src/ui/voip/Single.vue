@@ -421,6 +421,8 @@ export default {
                     startMonitorUACStatus(this.session)
                 }
             }
+            sessionCallback.didGetStats = (userId, reports) => {
+            }
 
             sessionCallback.didRemoteControlEnd = (reason) => {
                 console.log('didRemoteControlEnd', reason)
