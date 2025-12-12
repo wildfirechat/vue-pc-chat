@@ -70,7 +70,7 @@
    1. 将`config.js`里面的 `APP_SERVER`修改为自己部署的`app-server`的地址
    2. 用通过邮件获取到的 pc sdk，替换`proto_addon`目录下的对应文件
 2. 在`.npmrc`文件中，添加相关镜像配置：
-    > 可通过`npm config list`查看`.npmrc`文件的位置，`npm config list`输出中的`; userconfig`行后面的即为`.npmrc`的文件路径
+    > 可通过`npm config list -l`查看`.npmrc`文件的位置，`npm config list`输出中的`; userconfig`行后面的即为`.npmrc`的文件路径
     ```
    ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
    ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
