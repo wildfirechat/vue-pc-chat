@@ -94,6 +94,7 @@
 打包为当前平台架构软件
 
 ```
+// arm64 Linux平台，不支持直接打包，需要在 amd64 Linux 进行交叉打包
 npm run package
 ```
 
@@ -218,6 +219,10 @@ npm run cross-package-linux-arm64
 23. ubuntu 24 上启动时，提示`he SUID sandbox helper binary was found...`，无法正常启动`
 
     可以在启动命令后添加`--no-sandbox`
+
+24. arm64 版 UOS 上启动失败，通过终端启动时，提示：` error while loading shared libraries: libz.so: cannot open shared object file: No such file or directory`
+
+    `sudo apt install zlib1g zlib1g-dev`
 
 ## 截图
 
