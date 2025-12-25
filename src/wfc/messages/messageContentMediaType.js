@@ -12,4 +12,9 @@ export default class MessageContentMediaType {
     static Favorite = 6;
     static Sticker = 7;
     static Moments = 8;
+    //为客户扩展预留的类型
+    static CUSTOM1 = 9;
+    static CUSTOM2 = 10;
+    static CUSTOM3 = 11;
+
 }
