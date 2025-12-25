@@ -474,7 +474,7 @@ export default {
                 // 动态添加的属性不是 reactive 的，故直接创建个新的对象
                 // 其实这个问题很奇怪，只有发起会议，第一次进入该会议的时候，其他端加入，参与者列表会不刷新；重新进入等，都一切正常
                 this.participantUserInfos.push(Object.assign(new UserInfo(), userInfo));
-                console.log('joined', userInfo, subscriber.audience, this.participantUserInfos.length);
+                console.log('joined', userInfo, subscriber, subscriber.audience, this.participantUserInfos.length);
             }
 
             sessionCallback.didParticipantLeft = (userId, endReason, screenSharing) => {
