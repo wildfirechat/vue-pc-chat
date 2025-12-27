@@ -708,11 +708,7 @@ export class WfcManager {
      */
     getGroupInfos(groupIds, refresh = false) {
         let infos = impl.getGroupInfos(groupIds, refresh);
-        infos.forEach(info => {
-            if (!info.portrait) {
-                info.portrait = this.defaultGroupPortrait(info);
-            }
-        })
+        // 此处会批量获取，如果生成默认头像，可能会导致性能问题。留到显示时，再去生成头像
         return infos;
     }
 

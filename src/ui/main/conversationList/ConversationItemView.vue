@@ -252,7 +252,9 @@ export default {
                 if (info.conversation._target.portrait) {
                     return info.conversation._target.portrait;
                 } else {
-                    return this.groupPortrait;
+                    let dp = wfc.defaultGroupPortrait(info.conversation._target);
+                    info.conversation._target.portrait = dp;
+                    return dp;
                 }
             } else {
                 return info.conversation._target.portrait;

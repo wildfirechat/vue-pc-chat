@@ -324,11 +324,10 @@ function setupProtoListener() {
     proto.setConnectionStatusListener((status) => {
         connectionStatusEventListener = _genProtoEventListener("connectionStatus");
         if (lastActiveTime === 0 && status === 1) {
-            lastActiveTime = Math.ceil(new Date().getTime() / 1000);
-
             let delayTime = 0;
             try {
                 delayTime = _preloadDefaultData();
+                lastActiveTime = Math.ceil(new Date().getTime() / 1000);
                 console.log("wait preloadDefaultData", delayTime);
             } catch (e) {
                 console.error("preloadDefaultData exception ", e, e.message);
@@ -413,23 +412,22 @@ function _preloadDefaultData() {
         }
     })
     let uids = Array.from(userIdSet);
-    let newUserCount = 0
     for (let i = 0; i < uids.length / 2000; i++) {
-        let infos = _getUserInfos(uids.slice(2000 * i, (i + 1) * 2000), '');
-        newUserCount += infos.filter(info => info.updateDt === 0).length
-        // console.log('to preload userIds', uids.slice(2000 * i, (i + 1) * 2000))
+        _getUserInfos(uids.slice(2000 * i, (i + 1) * 2000), '');
     }
+    let newUserCount = uids.length;
 
-    let newGroupCount = 0;
-    let groupInfos = _getGroupInfos(groupIdIds, false)
-    newGroupCount = groupInfos.filter(groupInfo => groupInfo.updateDt === 0).length
-    groupIdIds.forEach(groupId => {
-        _getGroupMembers(groupId, false);
-    })
+    let newGroupCount = groupIdIds.length;
+    _getGroupInfos(groupIdIds, false);
+
+    // groupIdIds.forEach(groupId => {
+    //     _getGroupMembers(groupId, false);
+    // })
     // channelIds.forEach(channelId => {
     //     self.getChannelInfo(channelId)
     // })
 
+    console.log('preloadDefaultData summary', newUserCount, newGroupCount);
     let estimatedTime = 0;
     // 超过一周没有活跃，就预加载数据
     if (new Date().getTime() / 1000 - lastActiveTime > 7 * 24 * 60 * 60) {
