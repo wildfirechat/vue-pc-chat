@@ -3,6 +3,10 @@ import {BrowserWindow, ipcMain} from 'electron';
 let proto;
 const ASYNC_CALLBACK = 'protoAsyncCallback';
 
+let lastActiveTime = 0; // 单位是秒
+let connectionStatusEventListener;
+let _friendIds = [];
+
 const asyncProtoMethods = {
     getUserInfoEx: _asyncCall2('getUserInfoEx'),
     searchUser: _asyncCall2('searchUser'),
@@ -66,7 +70,7 @@ const asyncProtoMethods = {
     getMessagesByStatusV2: _asyncCall2('getMessagesByStatusV2'),
     getUserMessagesV2: _asyncCall2('getUserMessagesV2'),
     getUserMessagesExV2: _asyncCall2('getUserMessagesExV2'),
-    loadRemoteDomains : _asyncCall2('loadRemoteDomains'),
+    loadRemoteDomains: _asyncCall2('loadRemoteDomains'),
 
     sendSavedMessage: (event, args) => {
         proto.sendSavedMessage(...args.methodArgs,
@@ -176,12 +180,16 @@ export function init(wfcProto) {
 
     ipcMain.on('invokeProtoMethod', (event, args) => {
         try {
+            let protoRetValue = proto[args.methodName](...args.methodArgs)
             event.returnValue = {
                 code: 0,
-                value: proto[args.methodName](...args.methodArgs)
+                value: protoRetValue
             };
             if (args.methodName === 'updateMessageStatus') {
                 _notifyMessageStatusUpdate(args.methodArgs[0])
+            } else if (args.methodName === 'connect') {
+                lastActiveTime = protoRetValue;
+                console.log('lastActiveTime', lastActiveTime);
             }
         } catch (e) {
             console.log('invokeProtoMethod ' + args.methodName + ' error', args, e.message)
@@ -222,10 +230,9 @@ export function init(wfcProto) {
              * 参考：searchMessageByTypesAsync
              */
 
-            let result = proto[ args.methodName](...args.methodArgs.slice(0, args.methodArgs.length - 1));
+            let result = proto[args.methodName](...args.methodArgs.slice(0, args.methodArgs.length - 1));
             _genCallback(event, args.reqId, 0, true)(result);
 
-            console.log('sync2async', args.methodName);
         }
     })
 
@@ -309,7 +316,21 @@ function _notifyMessageStatusUpdate(messageId) {
 
 function setupProtoListener() {
 
-    proto.setConnectionStatusListener(_genProtoEventListener('connectionStatus'));
+    proto.setConnectionStatusListener((status) => {
+        connectionStatusEventListener = _genProtoEventListener("connectionStatus");
+        if (lastActiveTime === 0 && status === 1) {
+            try {
+                let delayTime = _preloadDefaultData()
+                setTimeout(() => {
+                    connectionStatusEventListener(status);
+                }, delayTime)
+            } catch (e) {
+                console.error('preloadDefaultData exception ', e, e.message);
+            }
+        } else {
+            connectionStatusEventListener(status);
+        }
+    });
     proto.setConnectToServerListener(_genProtoEventListener('connectToServer'), _genProtoEventListener('connectedToServer'));
     //proto.setReceiveMessageListener(self.onReceiveMessage, self.onRecallMessage, self.onDeleteRemoteMessage, self.onUserReceivedMessage, self.onUserReadedMessage);
     proto.setReceiveMessageListener(_genProtoEventListener('onReceiveMessage'),
@@ -329,7 +350,10 @@ function setupProtoListener() {
     proto.setDomainInfoCallback(_genProtoEventListener('domainInfoUpdate'));
     proto.setSettingUpdateListener(_genProtoEventListener('settingUpdate'));
     proto.setChannelInfoUpdateListener(_genProtoEventListener('channelInfoUpdate'));
-    proto.setGroupMemberUpdateListener(_genProtoEventListener('groupMemberUpdate'));
+    proto.setGroupMemberUpdateListener((groupId, groupMembersStr) => {
+        _preloadGroupMemberUserInfos(groupId, groupMembersStr);
+        _genProtoEventListener("groupMemberUpdate")(groupId, groupMembersStr);
+    });
 
     proto.setSecretChatStateListener(_genProtoEventListener('secretChatStateChange'));
     proto.setSecretMessageBurnStateListener(_genProtoEventListener('secretMessageStartBurn'),
@@ -337,10 +361,91 @@ function setupProtoListener() {
     );
 
     try {
-      proto.setTrafficDataListener(_genProtoEventListener('trafficDataEvent'));
-      proto.setErrorEventListener(_genProtoEventListener('errorEventCallback'));
+        proto.setTrafficDataListener(_genProtoEventListener('trafficDataEvent'));
+        proto.setErrorEventListener(_genProtoEventListener('errorEventCallback'));
     } catch (error) {
-      //可能SDK不支持
+        //可能SDK不支持
+    }
+}
+
+// 预加载数据
+// 拉取会话相关用户、群信息
+// 自己的用户信息
+// 获取所有好友、好友请求的用户信息
+function _preloadDefaultData() {
+    console.log('preloadDefaultData');
+    let requests = _getIncommingFriendRequest();
+    let userIdSet = new Set();
+    requests.forEach((fr) => {
+        userIdSet.add(fr.target);
+    });
+    requests = _getOutgoingFriendRequest();
+    requests.forEach((fr) => {
+        userIdSet.add(fr.target);
+    });
+
+    let friendIds = _getMyFriendList(false);
+    friendIds.forEach(uid => userIdSet.add(uid));
+
+    let conversationInfoList = _getConversationList([0, 1, 3], [0, 1, 2]);
+    let groupIdIds = [];
+    let channelIds = [];
+    conversationInfoList.forEach(info => {
+        if (info.conversationType === 0) {
+            userIdSet.add(info.target);
+        } else if (info.conversationType === 1) {
+            groupIdIds.push(info.target);
+        } else if (info.conversationType === 3) {
+            channelIds.push(info.target);
+        }
+        if (info.lastMessage && info.lastMessage.fromUser) {
+            userIdSet.add(info.lastMessage.fromUser);
+        }
+    })
+    let uids = Array.from(userIdSet);
+    let newUserCount = 0
+    for (let i = 0; i < uids.length / 2000; i++) {
+        let infos = _getUserInfos(uids.slice(2000 * i, (i + 1) * 2000), '');
+        newUserCount += infos.filter(info => info.updateDt === 0).length
+        // console.log('to preload userIds', uids.slice(2000 * i, (i + 1) * 2000))
+    }
+
+    let newGroupCount = 0;
+    let groupInfos = _getGroupInfos(groupIdIds, false)
+    newGroupCount = groupInfos.filter(groupInfo => groupInfo.updateDt === 0).length
+    // groupIdIds.forEach(groupId => {
+    //     _getGroupMembers(groupId, false);
+    // })
+    // channelIds.forEach(channelId => {
+    //     self.getChannelInfo(channelId)
+    // })
+
+    let estimatedTime = 0;
+    // 超过一周没有活跃，就预加载数据
+    if (new Date().getTime() / 1000 - lastActiveTime > 7 * 24 * 60 * 60) {
+        // 每 2000 人 4 秒
+        estimatedTime += Math.round(newUserCount / 2000) * 4
+        // 每 10 个群 2 秒
+        estimatedTime += Math.round(newGroupCount / 10) * 2
+
+        return Math.min(60, estimatedTime) * 1000;
+    } else {
+        return 0;
+    }
+}
+
+let _preloadedUserIds = new Set();
+let _preloadedGroupIds= new Set();
+
+function _preloadGroupMemberUserInfos(groupId, groupMembersStr) {
+    // console.log('preloadGroupMemberUserInfos', groupId);
+    let memberIds = [];
+    let arr = JSON.parse(groupMembersStr);
+    arr.forEach((e) => {
+        memberIds.push(e.memberId);
+    });
+    for (let i = 0; i < memberIds.length / 2000; i++) {
+        _getUserInfos(memberIds.slice(2000 * i, (i + 1) * 2000), "");
     }
 }
 
@@ -357,4 +462,71 @@ function _genProtoEventListener(protoEventName) {
             })
         }
     }
+}
+
+function _getIncommingFriendRequest() {
+    let result = proto.getIncommingFriendRequest();
+    return JSON.parse(result);
+}
+
+function _getOutgoingFriendRequest() {
+    let result = proto.getOutgoingFriendRequest();
+    return JSON.parse(result);
+}
+
+function _getMyFriendList(fresh = false) {
+    if (!fresh && _friendIds.length > 0) {
+        return _friendIds;
+    }
+    let idsStr = proto.getMyFriendList(fresh);
+    if (idsStr !== '') {
+        _friendIds = JSON.parse(idsStr);
+    }
+    return _friendIds;
+}
+
+function _getConversationList(types, lines) {
+    let conversationListStr = proto.getConversationInfos(types, lines);
+    return JSON.parse(conversationListStr);
+}
+
+function _getUserInfos(userIds, groupId = '') {
+    userIds = userIds.filter(uid => !_preloadedUserIds.has(uid))
+    userIds.forEach(uid => {
+        _preloadedUserIds.add(uid);
+    })
+    if(userIds.length === 0) {
+        return
+    }
+    console.log("preloadUserInfos", userIds.length, userIds);
+    let userInfoStrs = proto.getUserInfos(userIds, groupId);
+    if (userInfoStrs && userInfoStrs !== '') {
+        return JSON.parse(userInfoStrs);
+    }
+    return [];
+}
+
+function _getGroupInfos(groupIds, fresh = false) {
+    groupIds = groupIds.filter((gid) => !_preloadedGroupIds.has(gid));
+    groupIds.forEach((gid) => {
+        _preloadedGroupIds.add(gid);
+    });
+    if (groupIds.length === 0) {
+        return [];
+    }
+    console.log("preloadGroupInfos", groupIds.length);
+    let groupInfoStrs = proto.getGroupInfos(groupIds, fresh);
+    if (groupInfoStrs && groupInfoStrs !== '') {
+        return JSON.parse(groupInfoStrs);
+    }
+    return [];
+}
+
+function _getGroupMembers(groupId, fresh = false) {
+    console.log('preloadGroupMembers', groupId.length);
+    let memberIdsStr = proto.getGroupMembers(groupId, fresh);
+    if (memberIdsStr && memberIdsStr.length > 0) {
+        return JSON.parse(memberIdsStr);
+    }
+    return [];
 }
