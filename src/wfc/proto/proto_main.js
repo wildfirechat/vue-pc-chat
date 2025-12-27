@@ -190,6 +190,11 @@ export function init(wfcProto) {
             } else if (args.methodName === 'connect') {
                 lastActiveTime = protoRetValue;
                 console.log('lastActiveTime', lastActiveTime);
+            } else if (args.methodName === 'disconnect') {
+                lastActiveTime = 0
+                _friendIds = [];
+                _preloadedUserIds = new Set();
+                _preloadedGroupIds = new Set();
             }
         } catch (e) {
             console.log('invokeProtoMethod ' + args.methodName + ' error', args, e.message)
@@ -319,14 +324,19 @@ function setupProtoListener() {
     proto.setConnectionStatusListener((status) => {
         connectionStatusEventListener = _genProtoEventListener("connectionStatus");
         if (lastActiveTime === 0 && status === 1) {
+            lastActiveTime = Math.ceil(new Date().getTime() / 1000);
+
+            let delayTime = 0;
             try {
-                let delayTime = _preloadDefaultData()
-                setTimeout(() => {
-                    connectionStatusEventListener(status);
-                }, delayTime)
+                delayTime = _preloadDefaultData();
+                console.log("wait preloadDefaultData", delayTime);
             } catch (e) {
-                console.error('preloadDefaultData exception ', e, e.message);
+                console.error("preloadDefaultData exception ", e, e.message);
             }
+            setTimeout(() => {
+                console.log("connectionStatus ", status);
+                connectionStatusEventListener(status);
+            }, delayTime)
         } else {
             connectionStatusEventListener(status);
         }
@@ -413,9 +423,9 @@ function _preloadDefaultData() {
     let newGroupCount = 0;
     let groupInfos = _getGroupInfos(groupIdIds, false)
     newGroupCount = groupInfos.filter(groupInfo => groupInfo.updateDt === 0).length
-    // groupIdIds.forEach(groupId => {
-    //     _getGroupMembers(groupId, false);
-    // })
+    groupIdIds.forEach(groupId => {
+        _getGroupMembers(groupId, false);
+    })
     // channelIds.forEach(channelId => {
     //     self.getChannelInfo(channelId)
     // })
@@ -435,7 +445,7 @@ function _preloadDefaultData() {
 }
 
 let _preloadedUserIds = new Set();
-let _preloadedGroupIds= new Set();
+let _preloadedGroupIds = new Set();
 
 function _preloadGroupMemberUserInfos(groupId, groupMembersStr) {
     // console.log('preloadGroupMemberUserInfos', groupId);
@@ -492,13 +502,13 @@ function _getConversationList(types, lines) {
 
 function _getUserInfos(userIds, groupId = '') {
     userIds = userIds.filter(uid => !_preloadedUserIds.has(uid))
+    if (userIds.length === 0) {
+        return [];
+    }
     userIds.forEach(uid => {
         _preloadedUserIds.add(uid);
     })
-    if(userIds.length === 0) {
-        return
-    }
-    console.log("preloadUserInfos", userIds.length, userIds);
+    console.log("preloadUserInfos", userIds.length);
     let userInfoStrs = proto.getUserInfos(userIds, groupId);
     if (userInfoStrs && userInfoStrs !== '') {
         return JSON.parse(userInfoStrs);
@@ -507,13 +517,13 @@ function _getUserInfos(userIds, groupId = '') {
 }
 
 function _getGroupInfos(groupIds, fresh = false) {
-    groupIds = groupIds.filter((gid) => !_preloadedGroupIds.has(gid));
-    groupIds.forEach((gid) => {
-        _preloadedGroupIds.add(gid);
-    });
+    groupIds = groupIds.filter(gid => !_preloadedGroupIds.has(gid));
     if (groupIds.length === 0) {
         return [];
     }
+    groupIds.forEach((gid) => {
+        _preloadedGroupIds.add(gid);
+    });
     console.log("preloadGroupInfos", groupIds.length);
     let groupInfoStrs = proto.getGroupInfos(groupIds, fresh);
     if (groupInfoStrs && groupInfoStrs !== '') {
