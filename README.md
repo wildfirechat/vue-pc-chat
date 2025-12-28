@@ -114,7 +114,7 @@ npm run package
 
 打包为其它平台架构软件
 > 1. macOS 可交叉打包 Windows 和 Linux
-> 2. Linux 可能交叉打包 Windows
+> 2. Linux 可交叉打包 Windows
 > 3. Windows 不能交叉打包
 
 ```
@@ -134,7 +134,8 @@ npm run cross-package-linux-arm64
 
 ## Electron版本
 
-目前`master`分支默认使用的 Electron 版本是`22.3.27`，`22.3.27`是最后一个支持`Windows 7`的版本，如果不需要支持`Windows 7`，可自行升级到更新的 Electron 版本
+1. 目前`master`分支默认使用的 Electron 版本是`22.3.27`，`22.3.27`是最后一个支持`Windows 7`的版本，如果不需要支持`Windows 7`，可自行升级到更新的 Electron 版本
+2. Electron 22.3.27 在 macOS 26 上可能有性能问题，可以自行升级，具体请参考：https://github.com/electron/electron/issues/48311
 
 ## 音视频
 
