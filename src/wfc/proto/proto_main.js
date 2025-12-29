@@ -455,6 +455,12 @@ function _preloadGroupMemberUserInfos(groupId, groupMembersStr) {
     for (let i = 0; i < memberIds.length / 2000; i++) {
         _getUserInfos(memberIds.slice(2000 * i, (i + 1) * 2000), "");
     }
+    try {
+      proto.setJoinGroupRequestUpdateCallback(_genProtoEventListener('trafficDataEvent'));
+    } catch (error) {
+      //可能SDK不支持
+    }
+
 }
 
 function _genProtoEventListener(protoEventName) {

@@ -60,4 +60,6 @@ export default class EventType {
     static SecretChatStateChange = 'secretChatStateChange';
     // function (domainInfo) {}
     static DomainInfoUpdate = 'domainInfoUpdate';
+    // function (domainInfo) {}
+    static JoinGroupRequestUpdate = 'joinGroupRequestUpdate';
 }

@@ -1049,6 +1049,97 @@ export class WfcManager {
     }
 
     /**
+     * 发送加群邀请
+     * 
+     * @param {string} groupId 群组ID
+     * @param {[string]} memberIds 被邀请成员ID列表
+     * @param {string} reason 
+     * @param {string} extra 
+     * @param {function ()} successCB 
+     * @param {function (number)} failCB 
+     */
+    sendJoinGroupRequest(groupId, memberIds, reason, extra, successCB, failCB) {
+        impl.sendJoinGroupRequest(groupId, memberIds, reason, extra, successCB, failCB);
+    }
+
+    /**
+     * 处理加群邀请
+     * 
+     * @param {string} groupId 群组ID
+     * @param {string} memberId 被邀请成员ID，不能为空
+     * @param {string} inviter 邀请人，不能为空 
+     * @param {int}} status 1是同意，2是拒绝。不能有其他值 
+     * @param {string} memberExtra 同意时，群组成员的extra
+     * @param {function ()} successCB 
+     * @param {function (number)} failCB 
+     */
+    handleJoinGroupRequest(groupId, memberId, inviter, status, memberExtra, successCB, failCB) {
+        impl.handleJoinGroupRequest(groupId, memberId, inviter, status, memberExtra, successCB, failCB);
+    }
+
+    /**
+     * 获取收到的加群请求
+     * 
+     * @param groupId 群组ID，不能为空
+     * @param memberId 被邀请成员ID，可以为空，为空时获取群内所有邀请。
+     * @param status 状态，0是未处理，1是已同意，2是已拒绝。-1是所有。
+     * 
+     * @returns {[JoinGroupRequest]}
+     */
+    getJoinGroupRequests(groupId, memberId, status) {
+        return impl.getJoinGroupRequests(groupId, memberId, status);
+    }
+
+    /**
+     * 清理加群请求列表
+     * 
+     * @param groupId 群组ID，不能为空
+     * @param memberId 被邀请成员ID，可以为空，为空时清理群内所有邀请。
+     * @param status 状态，0是未处理，1是已同意，2是已拒绝。-1是所有。
+     */
+    clearJoinGroupRequest(groupId, memberId, inviter) {
+        return impl.clearJoinGroupRequest(groupId, memberId, inviter);
+    }
+
+    /**
+     * 获取所有加群请求的未读数
+     * 
+     * @returns {int}
+     */
+    getAllJoinGroupRequestUnread() {
+        return impl.getAllJoinGroupRequestUnread();
+    }
+
+    /**
+     * 获取指定群内的加群请求的未读数
+     * 
+     * @param {string} groupId 群组成员ID
+     * @returns {int}
+     */
+    getJoinGroupRequestUnread(groupId) {
+        return impl.getJoinGroupRequestUnread(groupId);
+    }
+
+    /**
+     * 清理指定群内的加群请求的未读数
+     * 
+     * @param {string} groupId 群组成员ID
+     */
+    clearJoinGroupRequestUnread(groupId) {
+        impl.clearJoinGroupRequestUnread(groupId);
+    }
+
+    /**
+     * 清理远端的加群申请
+     * 
+     * @param {function ()} successCB 
+     * @param {function (number)} failCB 
+     */
+    clearRemoteJoinGroupRequest(successCB, failCB) {
+        impl.clearRemoteJoinGroupRequest(successCB, failCB);
+    }
+
+    /**
      * 获取用户设置，保存格式可以理解为：scope + key => value
      * @param {number} scope 命名空间，可选值参考{@link UserSettingScope}
      * @param {string} key key
