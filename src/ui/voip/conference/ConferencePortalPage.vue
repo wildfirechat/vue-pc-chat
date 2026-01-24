@@ -180,8 +180,14 @@ export default {
             let beforeClose = (event) => {
                 console.log('Closing...', event, event.params)
             };
-            let closed = (event) => {
-                console.log('Close...', event)
+            let closed = (ev) => {
+                if (ev.params && ev.params.destroy) {
+                    if (ev.params && ev.params.destroy) {
+                        console.log("destroy, reload");
+                        this.loadFavConferences();
+                    }
+                }
+                console.log("Close...", event);
             };
             this.$modal.show(
                 ConferenceInfoView,

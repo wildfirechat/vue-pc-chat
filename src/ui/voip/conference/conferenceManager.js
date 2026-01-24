@@ -503,6 +503,15 @@ class ConferenceManager {
         localStorage.setItem('historyConfList', JSON.stringify(historyList, null, ''));
     }
 
+    removeHistory(conferenceInfo) {
+        console.log('removeHistory', conferenceInfo);
+        let tmp = localStorage.getItem('historyConfList');
+        let historyList = JSON.parse(tmp);
+        historyList = historyList ? historyList : [];
+        historyList = historyList.filter(info => info.conferenceId !== conferenceInfo.conferenceId);
+        localStorage.setItem('historyConfList', JSON.stringify(historyList, null, ''));
+    }
+
     getHistoryConference() {
         let tmp = localStorage.getItem('historyConfList');
         let historyList = JSON.parse(tmp);

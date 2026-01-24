@@ -45,7 +45,7 @@
         </div>
 
         <div class="action-container">
-            <button class="destroy" v-if="enableDestroy">
+            <button class="destroy" v-if="enableDestroy" @click="destroyConference">
                 销毁会议
             </button>
             <button ref="favButton" v-if="new Date().getTime() < conferenceInfo.startTime * 1000" @click="favConference">
@@ -65,8 +65,8 @@
 import wfc from "../../../wfc/client/wfc";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import conferenceApi from "../../../api/conferenceApi";
-import conferenceManager from "./conferenceManager";
 import {copyText} from "../../util/clipboard";
+import conferenceManager from "./conferenceManager";
 
 export default {
     name: "ConferenceInfoView",
@@ -81,6 +81,7 @@ export default {
             enableVideo: false,
             enableAudio: false,
             ownerName: '',
+            selfUserId: wfc.getUserId(),
         }
     },
     mounted() {
@@ -112,6 +113,12 @@ export default {
                 text: '会议号已复制',
                 type: 'info'
             });
+        },
+
+        async destroyConference(){
+            await conferenceApi.destroyConference(this.conferenceInfo.conferenceId)
+            conferenceManager.removeHistory(this.conferenceInfo)
+            this.$modal.hide('conference-info-modal', {destroy: true});
         }
     },
     computed: {
@@ -128,12 +135,13 @@ export default {
             return date.toString();
         },
         audience() {
-            return !(this.conferenceInfo.owner === conferenceManager.selfUserId || !this.conferenceInfo.audience || this.conferenceInfo.allowSwitchMode)
+            return !(this.conferenceInfo.owner === this.selfUserId || !this.conferenceInfo.audience || this.conferenceInfo.allowSwitchMode)
                 // Safari 浏览器，不支持直接静音自动播放音视频
                 || navigator.vendor.indexOf('Apple') > 0
         },
         enableDestroy() {
-            return this.conferenceInfo.owner === conferenceManager.selfUserId && new Date().getTime() < this.conferenceInfo.startTime * 1000;
+            console.log('conferenceInfo', this.conferenceInfo, this.selfUserId);
+            return this.conferenceInfo.owner === this.selfUserId;
         }
     }
 }
