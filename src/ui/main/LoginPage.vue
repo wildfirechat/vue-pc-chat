@@ -93,6 +93,14 @@
                 <button @click="closeDiagnoseOverlay">关闭</button>
             </div>
         </div>
+
+        <!-- 滑动验证对话框 -->
+        <SlideVerifyDialog
+            ref="slideVerifyDialog"
+            @verify-success="onSlideVerifySuccess"
+            @verify-failed="onSlideVerifyFailed"
+            @load-failed="onSlideVerifyLoadFailed"
+        />
     </div>
 </template>
 
@@ -114,6 +122,7 @@ import organizationServerApi from "../../api/organizationServerApi";
 import WfcScheme from "../../wfcScheme";
 import axios from "axios";
 import avenginekit from "../../wfc/av/internal/engine.min";
+import SlideVerifyDialog from "../common/SlideVerifyDialog.vue";
 
 export default {
     name: 'LoginPage',
@@ -140,6 +149,11 @@ export default {
 
             diagnoseResult: '',
             showDiagnoseOverlay: false,
+
+            // 滑动验证相关
+            hasSlideVerifiedForCode: false, // 是否已通过滑动验证（用于验证码登录）
+            cachedSlideVerifyToken: null,  // 缓存的验证token
+            pendingLoginAction: null,      // 待执行的登录操作
         }
     },
     created() {
@@ -187,25 +201,36 @@ export default {
                     clearInterval(this.qrCodeTimer);
                     this.qrCodeTimer = 0;
                 }
-
+                // 切换登录模式时，重置验证标志
+                this.hasSlideVerifiedForCode = false;
+                this.cachedSlideVerifyToken = null;
             }
         },
 
         async requestAuthCode() {
-            appServerApi.requestAuthCode(this.mobile)
-                .then(response => {
-                    this.$notify({
-                        text: '发送验证码成功',
-                        type: 'info'
-                    });
-                })
-                .catch(err => {
-                    this.$notify({
-                        title: '发送验证码失败',
-                        text: err.message,
-                        type: 'error'
-                    });
-                })
+            // 显示滑动验证
+            this.$refs.slideVerifyDialog.show();
+            this.pendingLoginAction = () => {
+                appServerApi.requestAuthCode(this.mobile, this.cachedSlideVerifyToken)
+                    .then(response => {
+                        this.$notify({
+                            text: '发送验证码成功',
+                            type: 'info'
+                        });
+                        // 标记已通过滑动验证
+                        this.hasSlideVerifiedForCode = true;
+                    })
+                    .catch(err => {
+                        // 发送失败，重置验证标志
+                        this.hasSlideVerifiedForCode = false;
+                        this.cachedSlideVerifyToken = null;
+                        this.$notify({
+                            title: '发送验证码失败',
+                            text: err.message,
+                            type: 'error'
+                        });
+                    })
+            };
         },
 
         async loginWithPassword() {
@@ -216,26 +241,35 @@ export default {
             // 特殊用途，请勿打开
             // 必须在 getClientId 之前调用，createPCLoginSession 会触发调用 getClientId，打开时，需重新设计起逻辑
             // wfc.setAppName('wfc-' + this.mobile);
-            this.$refs.loginWithPasswordButton.disabled = true;
-            this.loginStatus = 3;
-            appServerApi.loinWithPassword(this.mobile, this.password)
-                .then(res => {
-                    const {userId, token, portrait} = res
-                    this.firstTimeConnect = wfc.connect(userId, token);
-                    setItem('userId', userId);
-                    setItem('token', token);
-                    setItem("userPortrait", portrait);
-                })
-                .catch(err => {
-                    console.log('loginWithPassword err', err)
-                    this.password = '';
-                    this.loginStatus = 0;
-                    this.$notify({
-                        title: '登录失败',
-                        text: err.message,
-                        type: 'error'
-                    });
-                })
+
+            // 显示滑动验证
+            this.$refs.slideVerifyDialog.show();
+            this.pendingLoginAction = () => {
+                this.$refs.loginWithPasswordButton.disabled = true;
+                this.loginStatus = 3;
+                appServerApi.loinWithPassword(this.mobile, this.password, this.cachedSlideVerifyToken)
+                    .then(res => {
+                        const {userId, token, portrait} = res
+                        this.firstTimeConnect = wfc.connect(userId, token);
+                        setItem('userId', userId);
+                        setItem('token', token);
+                        setItem("userPortrait", portrait);
+                    })
+                    .catch(err => {
+                        console.log('loginWithPassword err', err)
+                        this.$refs.loginWithPasswordButton.disabled = false;
+                        this.password = '';
+                        this.loginStatus = 0;
+                        // 登录失败，重置验证标志
+                        this.hasSlideVerifiedForCode = false;
+                        this.cachedSlideVerifyToken = null;
+                        this.$notify({
+                            title: '登录失败',
+                            text: err.message,
+                            type: 'error'
+                        });
+                    })
+            };
         },
 
         async loginWithAuthCode() {
@@ -243,10 +277,23 @@ export default {
                 return;
             }
 
+            // 如果已经通过滑动验证（发送验证码时已验证），直接登录
+            if (this.hasSlideVerifiedForCode && this.cachedSlideVerifyToken) {
+                this.performAuthCodeLogin();
+                return;
+            }
+
+            // 显示滑动验证
+            this.$refs.slideVerifyDialog.show();
+            this.pendingLoginAction = () => {
+                this.performAuthCodeLogin();
+            };
+        },
+
+        performAuthCodeLogin() {
             this.$refs.loginWithAuthCodeButton.disabled = true;
             this.loginStatus = 3;
-            //wfc.setAppName('wfc-' + this.mobile);
-            appServerApi.loginWithAuthCode(this.mobile, this.authCode)
+            appServerApi.loginWithAuthCode(this.mobile, this.authCode, this.cachedSlideVerifyToken)
                 .then(res => {
                     const {userId, token, portrait} = res;
                     this.firstTimeConnect = wfc.connect(userId, token);
@@ -255,8 +302,12 @@ export default {
                     setItem("userPortrait", portrait);
                 })
                 .catch(err => {
+                    this.$refs.loginWithAuthCodeButton.disabled = false;
                     this.authCode = '';
                     this.loginStatus = 0;
+                    // 登录失败，重置验证标志
+                    this.hasSlideVerifiedForCode = false;
+                    this.cachedSlideVerifyToken = null;
                     this.$notify({
                         title: '登录失败',
                         text: err.message,
@@ -368,6 +419,11 @@ export default {
             wfc.disconnect();
             clear();
 
+            // 重置滑动验证状态
+            this.hasSlideVerifiedForCode = false;
+            this.cachedSlideVerifyToken = null;
+            this.pendingLoginAction = null;
+
             this.refreshQrCode();
         },
 
@@ -438,16 +494,6 @@ export default {
         },
 
         async diagnose() {
-            // TODO
-            // app-server
-            // api/version
-            // tcp ping
-            if (!isElectron()) {
-                return;
-            }
-
-            console.log('diagnose...')
-
             let configInfo = '';
             configInfo += `APP-Server: ${Config.APP_SERVER}\n`
             configInfo += `Route-Host: ${this.routeHost}\n`
@@ -501,8 +547,33 @@ export default {
             this.diagnoseResult = configInfo + '\n' + result;
             this.showDiagnoseOverlay = true
         },
+
         closeDiagnoseOverlay() {
             this.showDiagnoseOverlay = false;
+        },
+
+        // 滑动验证事件处理
+        onSlideVerifySuccess(token) {
+            this.cachedSlideVerifyToken = token;
+            if (this.pendingLoginAction) {
+                this.pendingLoginAction();
+                this.pendingLoginAction = null;
+            }
+        },
+
+        onSlideVerifyFailed() {
+            // 验证失败，不关闭窗口，让用户重试
+        },
+
+        onSlideVerifyLoadFailed() {
+            // 加载验证码失败
+            this.cachedSlideVerifyToken = null;
+            this.pendingLoginAction = null;
+            this.$notify({
+                title: '加载验证码失败',
+                text: '请稍后重试',
+                type: 'error'
+            });
         }
     },
 
@@ -530,6 +601,7 @@ export default {
     components: {
         ElectronWindowsControlButtonView,
         ClipLoader,
+        SlideVerifyDialog,
     }
 
 }
