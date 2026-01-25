@@ -2322,7 +2322,7 @@ export class WfcManager {
      * @return {Message} 插入的消息
      */
     insertMessageEx(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra) {
-        return impl.insertMessage(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra);
+        return impl.insertMessageEx(messageUid, conversation, fromUser, messageContent, status, serverTime, localExtra);
     }
 
     /**

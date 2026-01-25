@@ -78,6 +78,9 @@
                     <a @click.prevent="showResetPasswordDialog()">短信验证码验证</a>
                 </li>
             </vue-context>
+            <a class="button" target="_blank" @click.prevent="showBackupRestoreDialog">
+                备份与恢复
+            </a>
             <a class="button" target="_blank" @click="logout">
                 {{ $t('setting.exit_switch_user') }}
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
@@ -121,6 +124,7 @@ import {ipcRenderer, isElectron} from "../../../platform";
 import {getItem, setItem} from "../../util/storageHelper";
 import ChangePasswordView from "./ChangePasswordView";
 import ResetPasswordView from "./ResetPasswordView";
+import BackupRestoreView from "./BackupRestoreView";
 import {shell} from "../../../platform";
 import IpcEventType from "../../../ipcEventType";
 import avenginekit from "../../../wfc/av/internal/engine.min";
@@ -198,6 +202,21 @@ export default {
                     'before-open': beforeOpen,
                     'before-close': beforeClose,
                     'closed': closed,
+                })
+        },
+
+        showBackupRestoreDialog() {
+            this.$modal.show(
+                BackupRestoreView,
+                {}, null, {
+                    name: 'backup-restore-modal',
+                    width: 560,
+                    height: 380,
+                    clickToClose: true,
+                }, {
+                    'closed': () => {
+                        console.log('Backup restore dialog closed');
+                    }
                 })
         },
 

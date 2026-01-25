@@ -123,7 +123,7 @@ export function numberValue(l) {
 /**
  *
  * 由于Java long类型，在js里面，不能用number类型表示，故js里面采用js long对象表示
- * java long数据和js long对象序列成json格式的字符串时，格式并一样，为了处理跨平台需求，
+ * java long数据和js long对象序列成json格式的字符串时，格式并不一样，为了处理跨平台需求，
  * 将序列化后的json格式字符串
  * java long "uid":12345678
  *

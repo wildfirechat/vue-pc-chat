@@ -76,6 +76,10 @@ import RcAcceptInviteMessageContent from "../av/messages/rcAcceptInviteMessageCo
 import RcEndMessageContent from "../av/messages/rcEndMessageContent";
 import RcRequestMessageContent from "../av/messages/rcRequestMessageContent";
 import GroupRejectJoinNotificationContent from "../messages/notification/groupRejectJoinNotificationContent";
+import BackupRequestNotificationContent from "../messages/backup/backupRequestNotificationContent";
+import BackupResponseNotificationContent from "../messages/backup/backupResponseNotificationContent";
+import RestoreRequestNotificationContent from "../messages/backup/restoreRequestNotificationContent";
+import RestoreResponseNotificationContent from "../messages/backup/restoreResponseNotificationContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -543,7 +547,30 @@ export default class MessageConfig {
             flag: PersistFlag.Persist_And_Count,
             type: MessageContentType.MESSAGE_CONTENT_TYPE_MIX_MULTI_MEDIA_TEXT,
             contentClazz: MixMultiMediaTextMessageContent,
-        }
-
+        },
+                {
+            name: 'backupRequestNotification',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.MESSAGE_CONTENT_TYPE_BACKUP_REQUEST, // 613
+            contentClazz: BackupRequestNotificationContent,
+        },
+        {
+            name: 'backupResponseNotification',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.MESSAGE_CONTENT_TYPE_BACKUP_RESPONSE, // 612
+            contentClazz: BackupResponseNotificationContent,
+        },
+        {
+            name: 'restoreRequestNotification',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.MESSAGE_CONTENT_TYPE_RESTORE_REQUEST, // 610
+            contentClazz: RestoreRequestNotificationContent,
+        },
+        {
+            name: 'restoreResponseNotification',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.MESSAGE_CONTENT_TYPE_RESTORE_RESPONSE, // 611
+            contentClazz: RestoreResponseNotificationContent,
+        },
     ];
 }
