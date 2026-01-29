@@ -97,7 +97,7 @@ export default {
 }
 
 .content {
-    font-size: 14px;
+    font-size: 12px;
     padding: 10px;
     flex: 1;
 }
