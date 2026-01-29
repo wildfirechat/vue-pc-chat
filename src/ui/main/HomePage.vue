@@ -154,6 +154,7 @@ import AI from "./AI.vue";
 import Config from "../../config";
 import MessageContentType from "../../wfc/messages/messageContentType";
 import BackupResponseNotificationContent from "../../wfc/messages/backup/backupResponseNotificationContent";
+import BackupHelper from "../../backup/backupHelper";
 
 var avenginkitSetuped = false;
 export default {
@@ -167,7 +168,6 @@ export default {
             fileWindow: null,
             voipProxy: avenginekitproxy,
             currentBackupRequest: null, // 当前正在处理的备份请求
-            backupServer: null, // HTTP服务器实例
             backupProgress: {
                 active: false,
                 currentFile: 0,
@@ -176,11 +176,7 @@ export default {
                 currentFileName: '',
                 backupPath: ''
             }, // 备份进度状态
-            completionTimer: null, // 备份完成计时器
-            expectedFileCount: 0, // 预期的文件总数
-            isBackupCompleting: false, // 防止重复完成备份
             currentRestoreRequest: null, // 当前正在处理的恢复请求
-            backupSaveDir: null // 当前备份保存目录（收到metadata.json时创建）
         };
     },
 
@@ -286,13 +282,15 @@ export default {
         },
 
         onReceiveMessage(msg) {
-            // 检查是否是备份请求消息
-            if (msg.content && msg.content.type === MessageContentType.MESSAGE_CONTENT_TYPE_BACKUP_REQUEST) {
-                this.showBackupConfirmDialog(msg);
-            }
-            // 检查是否是恢复请求消息
-            else if (msg.content && msg.content.type === MessageContentType.MESSAGE_CONTENT_TYPE_RESTORE_REQUEST) {
-                this.showRestoreConfirmDialog(msg);
+            if (isElectron()) {
+                // 检查是否是备份请求消息
+                if (msg.content && msg.content.type === MessageContentType.MESSAGE_CONTENT_TYPE_BACKUP_REQUEST) {
+                    this.showBackupConfirmDialog(msg);
+                }
+                // 检查是否是恢复请求消息
+                else if (msg.content && msg.content.type === MessageContentType.MESSAGE_CONTENT_TYPE_RESTORE_REQUEST) {
+                    this.showRestoreConfirmDialog(msg);
+                }
             }
         },
 
@@ -428,7 +426,7 @@ export default {
             }
 
             // 启动HTTP服务器
-            this.startRestoreServer().then((serverInfo) => {
+            BackupHelper.startRestoreServer().then((serverInfo) => {
                 // 发送同意消息
                 const RestoreResponseNotificationContent = require('../../wfc/messages/backup/restoreResponseNotificationContent').default;
                 const response = RestoreResponseNotificationContent.createApprovedResponse(
@@ -479,7 +477,7 @@ export default {
             }
 
             // 启动HTTP服务器
-            this.startBackupServer().then((serverInfo) => {
+            BackupHelper.startBackupServer().then((serverInfo) => {
                 // 发送同意消息
                 const response = BackupResponseNotificationContent.createApprovedResponse(
                     serverInfo.ip,
@@ -528,565 +526,40 @@ export default {
             this.backupProgress.percent = 0;
             this.backupProgress.currentFileName = '准备接收...';
             this.backupProgress.backupPath = '';
-            this.expectedFileCount = 0; // 重置预期的文件数量
-            this.isBackupCompleting = false; // 重置完成标志
-            this.backupSaveDir = null; // 重置保存目录，等待收到metadata.json时创建
 
-            // 启动完成检测计时器（30秒无新文件则认为完成）
-            this.resetCompletionTimer();
-        },
+            BackupHelper.removeAllListeners();
 
-        resetCompletionTimer() {
-            // 清除之前的计时器
-            if (this.completionTimer) {
-                clearTimeout(this.completionTimer);
-            }
-
-            // 设置新的计时器（30秒无新文件）
-            this.completionTimer = setTimeout(() => {
-                this.onBackupComplete();
-            }, 30000);
-        },
-
-        onBackupComplete() {
-            // 防止重复调用
-            if (this.isBackupCompleting) {
-                console.log('备份已在完成中，跳过重复调用');
-                return;
-            }
-
-            this.isBackupCompleting = true;
-
-            // 备份完成
-            this.backupProgress.active = false;
-
-            this.$notify({
-                title: '备份完成',
-                text: `已成功接收 ${this.backupProgress.currentFile} 个文件\n保存位置: ${this.backupProgress.backupPath}`,
-                type: 'success',
-                duration: 5000
-            });
-
-            // 关闭HTTP服务器
-            this.closeBackupServer();
-
-            // 清理保存目录引用
-            this.backupSaveDir = null;
-
-            // 重置标志
-            setTimeout(() => {
-                this.isBackupCompleting = false;
-            }, 1000);
-        },
-
-        startBackupServer() {
-            return new Promise((resolve, reject) => {
-                try {
-                    // 如果已有服务器在运行，先关闭
-                    if (this.backupServer) {
-                        try {
-                            this.backupServer.close();
-                        } catch (e) {
-                            console.error('关闭旧服务器失败:', e);
-                        }
-                        this.backupServer = null;
-                    }
-
-                    // 在渲染进程中直接创建HTTP服务器
-                    const http = require('http');
-                    const fs = require('fs');
-                    const os = require('os');
-                    const path = require('path');
-
-                    // 获取本机IP地址
-                    const getLocalIP = () => {
-                        const interfaces = os.networkInterfaces();
-                        for (const name of Object.keys(interfaces)) {
-                            for (const iface of interfaces[name]) {
-                                if (iface.family === 'IPv4' && !iface.internal) {
-                                    return iface.address;
-                                }
-                            }
-                        }
-                        return '127.0.0.1';
-                    };
-
-                    const ip = getLocalIP();
-                    const maxRetries = 10; // 最多重试10次
-                    let retryCount = 0;
-
-                    // 生成随机端口的函数
-                    const getRandomPort = () => {
-                        return Math.floor(Math.random() * (60000 - 10000 + 1)) + 10000;
-                    };
-
-                    // 尝试启动服务器
-                    const tryStartServer = (port) => {
-                        // 创建HTTP服务器
-                        const server = http.createServer((req, res) => {
-                            if (req.method === 'POST' && req.url === '/backup') {
-                                const chunks = [];
-                                let size = 0;
-
-                                req.on('data', (chunk) => {
-                                    chunks.push(chunk);
-                                    size += chunk.length;
-                                }).on('end', async () => {
-                                    try {
-                                        const buffer = Buffer.concat(chunks);
-                                        // 解析单个文件并保存
-                                        this.saveBackupFile(buffer);
-
-                                        // 返回成功响应
-                                        res.writeHead(200, {'Content-Type': 'text/plain'});
-                                        res.end('OK');
-                                    } catch (error) {
-                                        console.error('保存备份文件失败:', error);
-                                        res.writeHead(500, {'Content-Type': 'text/plain'});
-                                        res.end('Error');
-                                    }
-                                });
-                            } else if (req.method === 'POST' && req.url === '/backup_complete') {
-                                // 备份完成请求
-                                const chunks = [];
-
-                                req.on('data', (chunk) => {
-                                    chunks.push(chunk);
-                                }).on('end', () => {
-                                    try {
-                                        const buffer = Buffer.concat(chunks);
-                                        // 读取文件数量（4字节，小端序）
-                                        const expectedFileCount = buffer.readInt32LE(0);
-                                        const receivedFileCount = this.backupProgress.currentFile;
-
-                                        // 保存预期的文件数量
-                                        this.expectedFileCount = expectedFileCount;
-
-                                        console.log(`收到备份完成通知，iOS端发送 ${expectedFileCount} 个文件，PC端已接收 ${receivedFileCount} 个文件`);
-
-                                        // 先返回成功响应给iOS端
-                                        res.writeHead(200, {'Content-Type': 'text/plain'});
-                                        res.end('OK');
-
-                                        // 检查文件数量是否匹配
-                                        if (receivedFileCount >= expectedFileCount) {
-                                            // 文件数量匹配，完成备份
-                                            setTimeout(() => {
-                                                this.onBackupComplete();
-                                            }, 100);
-                                        } else {
-                                            // 文件数量不匹配，等待接收完成
-                                            console.log(`等待接收剩余文件... (还差 ${expectedFileCount - receivedFileCount} 个)`);
-
-                                            // 重置超时计时器，如果30秒内还没收到就强制完成
-                                            this.resetCompletionTimer();
-                                        }
-                                    } catch (error) {
-                                        console.error('处理备份完成请求失败:', error);
-                                        res.writeHead(500, {'Content-Type': 'text/plain'});
-                                        res.end('Error');
-                                    }
-                                });
-                            } else {
-                                res.writeHead(404);
-                                res.end('Not Found');
-                            }
-                        });
-
-                        server.listen(port, '0.0.0.0', () => {
-                            console.log(`备份服务器已启动: ${ip}:${port}`);
-                            this.backupServer = server; // 保存服务器引用
-                            resolve({ ip, port });
-                        });
-
-                        server.on('error', (error) => {
-                            console.error(`端口 ${port} 启动失败:`, error.code);
-                            retryCount++;
-
-                            if (retryCount < maxRetries) {
-                                // 换个端口重试
-                                const newPort = getRandomPort();
-                                console.log(`尝试第 ${retryCount} 次，使用端口 ${newPort}`);
-                                tryStartServer(newPort);
-                            } else {
-                                // 达到最大重试次数，放弃
-                                console.error('已达到最大重试次数，启动服务器失败');
-                                this.backupServer = null;
-                                reject(new Error(`启动备份服务器失败，已尝试 ${maxRetries} 个端口，请重启应用后重试`));
-                            }
-                        });
-                    };
-
-                    // 开始尝试启动服务器
-                    const initialPort = getRandomPort();
-                    console.log(`初次尝试启动服务器，端口: ${initialPort}`);
-                    tryStartServer(initialPort);
-
-                } catch (error) {
-                    console.error('启动服务器异常:', error);
-                    this.backupServer = null;
-                    reject(error);
-                }
-            });
-        },
-
-        closeBackupServer() {
-            // 安全关闭服务器
-            if (this.backupServer) {
-                try {
-                    // 使用 .bind() 确保 this 上下文正确
-                    const close = this.backupServer.close.bind(this.backupServer);
-                    close();
-                    console.log('备份服务器已关闭');
-                } catch (e) {
-                    console.error('关闭服务器错误:', e);
-                }
-                this.backupServer = null;
-            }
-        },
-
-        startRestoreServer() {
-            return new Promise((resolve, reject) => {
-                try {
-                    const http = require('http');
-                    const fs = require('fs');
-                    const os = require('os');
-                    const path = require('path');
-
-                    // 获取本机IP地址
-                    const getLocalIP = () => {
-                        const interfaces = os.networkInterfaces();
-                        for (const name of Object.keys(interfaces)) {
-                            for (const iface of interfaces[name]) {
-                                if (iface.family === 'IPv4' && !iface.internal) {
-                                    return iface.address;
-                                }
-                            }
-                        }
-                        return '127.0.0.1';
-                    };
-
-                    const ip = getLocalIP();
-                    const maxRetries = 10;
-                    let retryCount = 0;
-
-                    // 生成随机端口的函数
-                    const getRandomPort = () => {
-                        return Math.floor(Math.random() * (60000 - 10000 + 1)) + 10000;
-                    };
-
-                    // 获取备份列表的函数
-                    const getBackupList = () => {
-                        const backupDir = this.getBackupDirectory();
-                        const receivedDir = path.join(backupDir, 'received');
-
-                        if (!fs.existsSync(receivedDir)) {
-                            return [];
-                        }
-
-                        const backups = [];
-                        const subdirs = fs.readdirSync(receivedDir).filter(f => {
-                            const stat = fs.statSync(path.join(receivedDir, f));
-                            return stat.isDirectory() && f.startsWith('backup_');
-                        });
-
-                        for (const subdir of subdirs) {
-                            const backupPath = path.join(receivedDir, subdir);
-                            const metadataPath = path.join(backupPath, 'metadata.json');
-
-                            // 如果没有metadata.json文件，跳过此备份
-                            if (!fs.existsSync(metadataPath)) {
-                                console.log('跳过没有metadata.json的备份:', subdir);
-                                continue;
-                            }
-
-                            let backupInfo = {
-                                name: subdir,
-                                time: subdir.replace('backup_', '').replace(/-/g, ':'),
-                                path: backupPath,
-                                deviceName: '',
-                                fileCount: 0,
-                                conversationCount: 0,
-                                messageCount: 0,
-                                mediaFileCount: 0,
-                                mediaSize: 0
-                            };
-
-                            // 读取metadata.json
-                            try {
-                                const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-                                if (metadata.statistics) {
-                                    backupInfo.conversationCount = metadata.statistics.totalConversations || 0;
-                                    backupInfo.messageCount = metadata.statistics.totalMessages || 0;
-                                    backupInfo.mediaFileCount = metadata.statistics.mediaFileCount || 0;
-                                    backupInfo.mediaSize = metadata.statistics.mediaTotalSize || 0;
-                                }
-                                // 如果metadata中有backupTime，使用它
-                                if (metadata.backupTime) {
-                                    backupInfo.time = metadata.backupTime;
-                                }
-                                // 添加设备名称
-                                if (metadata.deviceName) {
-                                    backupInfo.deviceName = metadata.deviceName;
-                                }
-                            } catch (e) {
-                                console.error('读取metadata.json失败，跳过备份:', subdir, e);
-                                continue;
-                            }
-
-                            // 统计文件数量（用于显示）
-                            const countFiles = (dir) => {
-                                let totalCount = 0;
-                                const items = fs.readdirSync(dir);
-                                for (const item of items) {
-                                    const fullPath = path.join(dir, item);
-                                    const stat = fs.statSync(fullPath);
-                                    if (stat.isDirectory()) {
-                                        totalCount += countFiles(fullPath);
-                                    } else {
-                                        totalCount++;
-                                    }
-                                }
-                                return totalCount;
-                            };
-
-                            backupInfo.fileCount = countFiles(backupPath);
-                            backups.push(backupInfo);
-                        }
-
-                        // 按时间排序（最新的在前）
-                        backups.sort((a, b) => {
-                            const timeA = new Date(a.time || 0).getTime();
-                            const timeB = new Date(b.time || 0).getTime();
-                            return timeB - timeA;
-                        });
-
-                        return backups;
-                    };
-
-                    // 尝试启动服务器
-                    const tryStartServer = (port) => {
-                        const server = http.createServer((req, res) => {
-                            if (req.method === 'GET' && req.url === '/restore_list') {
-                                // 返回备份列表
-                                try {
-                                    const backupList = getBackupList();
-                                    res.writeHead(200, {'Content-Type': 'application/json'});
-                                    res.end(JSON.stringify(backupList));
-                                } catch (error) {
-                                    console.error('获取备份列表失败:', error);
-                                    res.writeHead(500, {'Content-Type': 'text/plain'});
-                                    res.end('Error');
-                                }
-                            } else if (req.method === 'GET' && req.url.startsWith('/restore_metadata?')) {
-                                // 返回metadata.json文件
-                                const url = new URL(req.url, `http://${req.headers.host}`);
-                                const backupPath = url.searchParams.get('path');
-
-                                if (!backupPath) {
-                                    res.writeHead(400, {'Content-Type': 'text/plain'});
-                                    res.end('Missing backup path');
-                                    return;
-                                }
-
-                                const metadataPath = path.join(backupPath, 'metadata.json');
-
-                                if (!fs.existsSync(metadataPath)) {
-                                    res.writeHead(404, {'Content-Type': 'text/plain'});
-                                    res.end('Metadata file not found');
-                                    return;
-                                }
-
-                                // 发送metadata.json
-                                const stat = fs.statSync(metadataPath);
-                                const readStream = fs.createReadStream(metadataPath);
-                                res.writeHead(200, {
-                                    'Content-Type': 'application/json',
-                                    'Content-Length': stat.size
-                                });
-                                readStream.pipe(res);
-                            } else if (req.method === 'GET' && req.url.startsWith('/restore_file?')) {
-                                // 返回备份文件
-                                const url = new URL(req.url, `http://${req.headers.host}`);
-                                const filePath = url.searchParams.get('path');
-
-                                if (!filePath) {
-                                    res.writeHead(400, {'Content-Type': 'text/plain'});
-                                    res.end('Missing file path');
-                                    return;
-                                }
-
-                                if (!fs.existsSync(filePath)) {
-                                    res.writeHead(404, {'Content-Type': 'text/plain'});
-                                    res.end('File not found');
-                                    return;
-                                }
-
-                                // 发送文件
-                                const stat = fs.statSync(filePath);
-                                const readStream = fs.createReadStream(filePath);
-                                res.writeHead(200, {
-                                    'Content-Type': 'application/octet-stream',
-                                    'Content-Length': stat.size
-                                });
-                                readStream.pipe(res);
-                            } else {
-                                res.writeHead(404);
-                                res.end('Not Found');
-                            }
-                        });
-
-                        server.listen(port, '0.0.0.0', () => {
-                            console.log(`恢复服务器已启动: ${ip}:${port}`);
-                            this.backupServer = server;
-                            resolve({ ip, port });
-                        });
-
-                        server.on('error', (error) => {
-                            console.error(`端口 ${port} 启动失败:`, error.code);
-                            retryCount++;
-
-                            if (retryCount < maxRetries) {
-                                const newPort = getRandomPort();
-                                console.log(`尝试第 ${retryCount} 次，使用端口 ${newPort}`);
-                                tryStartServer(newPort);
-                            } else {
-                                console.error('已达到最大重试次数，启动服务器失败');
-                                this.backupServer = null;
-                                reject(new Error(`启动恢复服务器失败，已尝试 ${maxRetries} 个端口，请重启应用后重试`));
-                            }
-                        });
-                    };
-
-                    const initialPort = getRandomPort();
-                    console.log(`初次尝试启动恢复服务器，端口: ${initialPort}`);
-                    tryStartServer(initialPort);
-
-                } catch (error) {
-                    console.error('启动恢复服务器异常:', error);
-                    this.backupServer = null;
-                    reject(error);
-                }
-            });
-        },
-
-        getBackupDirectory() {
-            // 获取备份目录路径
-            const path = require('path');
-
-            // 使用从 platform 导入的 app 对象获取用户数据目录
-            const userData = app.getPath('userData');
-            const backupDir = path.join(userData, 'Backups');
-
-            // 确保目录存在
-            const fs = require('fs');
-            if (!fs.existsSync(backupDir)) {
-                fs.mkdirSync(backupDir, {recursive: true});
-            }
-
-            return backupDir;
-        },
-
-        saveBackupFile(buffer) {
-            const fs = require('fs');
-            const path = require('path');
-
-            let offset = 0;
-
-            // 读取相对路径长度 (4字节，小端序)
-            const pathLength = buffer.readInt32LE(offset);
-            offset += 4;
-
-            // 读取相对路径
-            const relativePath = buffer.slice(offset, offset + pathLength).toString('utf8');
-            offset += pathLength;
-
-            // 读取文件数据长度 (8字节，小端序)
-            const dataLengthLow = buffer.readInt32LE(offset);
-            offset += 4;
-            const dataLengthHigh = buffer.readInt32LE(offset);
-            offset += 4;
-
-            // 组合成64位整数
-            const dataLength = BigInt(dataLengthLow) + (BigInt(dataLengthHigh) << BigInt(32));
-
-            // 读取文件数据
-            const dataStart = offset;
-            const dataEnd = Number(BigInt(dataStart) + dataLength);
-            const fileData = buffer.slice(dataStart, dataEnd);
-
-            // 检查是否是第一个文件（metadata.json）
-            const fileName = path.basename(relativePath);
-            if (fileName === 'metadata.json' && this.backupSaveDir === null) {
-                // 第一个文件是metadata.json，创建保存目录
-                const backupDir = path.join(this.getBackupDirectory(), 'received');
-                const date = new Date();
-                const timestamp = date.toISOString().replace(/[:.]/g, '-').slice(0, -5);
-                this.backupSaveDir = path.join(backupDir, `backup_${timestamp}`);
-
-                // 创建目录
-                if (!fs.existsSync(this.backupSaveDir)) {
-                    fs.mkdirSync(this.backupSaveDir, {recursive: true});
-                }
-
-                // 更新进度窗口中的备份路径
-                this.backupProgress.backupPath = this.backupSaveDir;
-
-                // 显示通知
+            BackupHelper.on('start', (data) => {
+                this.backupProgress.backupPath = data.path;
                 this.$notify({
                     title: '开始接收备份',
                     text: `正在接收移动端备份...`,
                     type: 'info',
                     duration: 3000
                 });
-            }
+            });
 
-            // 如果还没有创建保存目录（不是以metadata.json开头），则创建一个
-            if (this.backupSaveDir === null) {
-                const backupDir = path.join(this.getBackupDirectory(), 'received');
-                const date = new Date();
-                const timestamp = date.toISOString().replace(/[:.]/g, '-').slice(0, -5);
-                this.backupSaveDir = path.join(backupDir, `backup_${timestamp}`);
+            BackupHelper.on('progress', (data) => {
+                this.backupProgress.currentFile = data.currentFile;
+                this.backupProgress.currentFileName = data.currentFileName;
+                this.backupProgress.backupPath = data.backupPath;
+            });
 
-                // 创建目录
-                if (!fs.existsSync(this.backupSaveDir)) {
-                    fs.mkdirSync(this.backupSaveDir, {recursive: true});
-                }
-
-                // 更新进度窗口中的备份路径
-                this.backupProgress.backupPath = this.backupSaveDir;
-            }
-
-            // 创建文件路径
-            const filePath = path.join(this.backupSaveDir, relativePath);
-            const fileDir = path.dirname(filePath);
-
-            // 确保目录存在
-            if (!fs.existsSync(fileDir)) {
-                fs.mkdirSync(fileDir, {recursive: true});
-            }
-
-            // 写入文件
-            fs.writeFileSync(filePath, fileData);
-
-            console.log(`已保存: ${relativePath} (${dataLength} 字节)`);
-
-            // 更新进度
-            this.backupProgress.currentFile++;
-            this.backupProgress.currentFileName = path.basename(relativePath);
-
-            // 检查是否已接收完所有文件
-            if (this.expectedFileCount > 0 && this.backupProgress.currentFile >= this.expectedFileCount) {
-                // 已接收所有文件，延迟一下完成备份
-                console.log(`已接收所有 ${this.backupProgress.currentFile} 个文件，准备完成备份`);
-                setTimeout(() => {
-                    this.onBackupComplete();
-                }, 200);
-            } else {
-                // 重置完成计时器（每次收到文件都重置）
-                this.resetCompletionTimer();
-            }
+            BackupHelper.on('complete', (data) => {
+                this.backupProgress.active = false;
+                this.$notify({
+                    title: '备份完成',
+                    text: `已成功接收 ${data.count} 个文件\n保存位置: ${data.path}`,
+                    type: 'success',
+                    duration: 5000
+                });
+                BackupHelper.closeBackupServer();
+            });
         },
+
+
+
+
     },
 
     computed: {
@@ -1166,13 +639,8 @@ export default {
         wfc.eventEmitter.removeListener(EventType.ConnectionStatusChanged, this.onConnectionStatusChange);
         wfc.eventEmitter.removeListener(EventType.ReceiveMessage, this.onReceiveMessage);
 
-        // 关闭备份服务器
-        this.closeBackupServer();
-
-        // 清除完成计时器
-        if (this.completionTimer) {
-            clearTimeout(this.completionTimer);
-            this.completionTimer = null;
+        if (isElectron()) {
+            BackupHelper.closeBackupServer();
         }
 
         console.log('home destroy')
