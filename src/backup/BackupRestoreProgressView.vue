@@ -75,9 +75,9 @@
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-import wfc from "../../../wfc/client/wfc";
-import {app} from "../../../platform";
-import Message from "../../../wfc/messages/message";
+import wfc from "../wfc/client/wfc";
+import {app} from "../platform";
+import Message from "../wfc/messages/message";
 
 export default {
     name: "BackupRestoreProgressView",

@@ -75,11 +75,11 @@
 </template>
 
 <script>
-import wfc from "../../../wfc/client/wfc";
-import {app} from "../../../platform";
+import wfc from "../wfc/client/wfc";
+import {app} from "../platform";
 import ConversationBackupItemView from "./ConversationBackupItemView.vue";
-import store from "../../../store";
-import {stringValue} from "../../../wfc/util/longUtil";
+import store from "../store";
+import {stringValue} from "../wfc/util/longUtil";
 
 export default {
     name: "ConversationSelectForBackup",

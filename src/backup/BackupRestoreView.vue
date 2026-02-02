@@ -43,7 +43,7 @@
 import BackupListView from "./BackupListView.vue";
 import ConversationSelectForBackup from "./ConversationSelectForBackup.vue";
 import BackupRestoreProgressView from "./BackupRestoreProgressView.vue";
-import {shell} from "../../../platform";
+import {shell} from "../platform";
 
 export default {
     name: "BackupRestoreView",
@@ -143,7 +143,7 @@ export default {
         openBackupDirectory() {
             try {
                 const path = require('path');
-                const {app} = require("../../../platform");
+                const {app} = require("../platform");
 
                 // 获取备份目录
                 const userData = app.getPath('userData');

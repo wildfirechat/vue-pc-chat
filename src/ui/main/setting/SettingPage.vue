@@ -124,7 +124,7 @@ import {ipcRenderer, isElectron} from "../../../platform";
 import {getItem, setItem} from "../../util/storageHelper";
 import ChangePasswordView from "./ChangePasswordView";
 import ResetPasswordView from "./ResetPasswordView";
-import BackupRestoreView from "./BackupRestoreView";
+import BackupRestoreView from "../../../backup/BackupRestoreView.vue";
 import {shell} from "../../../platform";
 import IpcEventType from "../../../ipcEventType";
 import avenginekit from "../../../wfc/av/internal/engine.min";

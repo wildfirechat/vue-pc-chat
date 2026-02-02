@@ -25,7 +25,6 @@ import Alert from "./ui/common/Alert.js";
 import Picker from "./ui/common/Picker";
 import Forward from "./ui/common/Forward";
 import Voip from "./ui/common/Voip";
-import BackupListView from "./ui/main/setting/BackupListView.vue";
 import VirtualList from "vue3-virtual-scroll-list";
 import xss from "xss";
 import mitt from 'mitt'
@@ -115,7 +114,6 @@ app.use(
 app.use(VueContext);
 app.component("vue-context", VueContext)
 app.component('virtual-list', VirtualList);
-app.component('backup-list', BackupListView);
 
 app.use(VModal);
 
@@ -163,7 +161,7 @@ const xssOptions = (() => {
     };
 })();
 
-app.config.globalProperties.$xss = (html) => {	
+app.config.globalProperties.$xss = (html) => {
     return xss(html, xssOptions);
 };
 

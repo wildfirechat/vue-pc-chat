@@ -56,7 +56,7 @@
 <script>
 const fs = require('fs');
 const path = require('path');
-const {app} = require('../../../platform');
+const {app} = require('../platform');
 
 export default {
     name: "BackupListView",

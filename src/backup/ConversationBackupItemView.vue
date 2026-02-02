@@ -21,8 +21,8 @@
 </template>
 
 <script>
-import wfc from "../../../wfc/client/wfc";
-import Config from "../../../config";
+import wfc from "../wfc/client/wfc";
+import Config from "../config";
 
 export default {
     name: "ConversationBackupItemView",
