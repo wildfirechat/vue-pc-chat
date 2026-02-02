@@ -10,20 +10,14 @@
                     <p>{{ $t('conversation.create_group') }}</p>
                 </div>
                 <p>{{ $t('conversation.recent_conversation') }}</p>
-                <ul class="conversation-list" v-if="conversationInfos.length">
-                    <li v-for="(conversationInfo, index) in conversationInfos"
-                        :key="index">
-                        <div class="conversation-item"
-                             @click.stop="onConversationItemClick(conversationInfo.conversation)">
-                            <input class="checkbox" v-bind:value="conversationInfo.conversation" type="checkbox"
-                                   v-model="sharedPickState.conversations" placeholder="">
-                            <div class="header">
-                                <img class="avatar" :src="conversationInfo.conversation._target.portrait" alt=""/>
-                            </div>
-                            <p class="title single-line">{{ conversationInfo.conversation._target._displayName }}</p>
-                        </div>
-                    </li>
-                </ul>
+                <virtual-list
+                    v-if="conversationInfos.length"
+                    :data-component="conversationItemComponent"
+                    :data-sources="conversationInfos"
+                    :data-key="conversationKey"
+                    :estimate-size="70"
+                    style="height: 100%; overflow-y: auto;">
+                </virtual-list>
             </section>
         </section>
         <section class="checked-conversation-list-container">
@@ -60,6 +54,8 @@
 <script>
 import store from "../../../../../store";
 import ForwardMessageView from "./ForwardMessageView.vue";
+import ConversationPickItem from "./ConversationPickItem.vue";
+import {markRaw} from "vue";
 
 export default {
     name: "ForwardMessageByPickConversationView",
@@ -80,6 +76,7 @@ export default {
             sharedPickState: store.state.pick,
             query: '',
             sharedSearchState: store.state.search,
+            conversationItemComponent: markRaw(ConversationPickItem),
         }
     },
     methods: {
@@ -88,6 +85,10 @@ export default {
         },
         unpConversation(conversation) {
             store.pickOrUnpickConversation(conversation, false);
+        },
+
+        conversationKey(conversationInfo) {
+            return conversationInfo.id;
         },
 
         showForwardByCreateConversationModal() {
@@ -121,15 +122,23 @@ export default {
 
     computed: {
         conversationInfos() {
+            let infos;
             if (this.query && this.query.trim()) {
-                return store.filterConversation(this.query)
+                infos = store.filterConversation(this.query)
             } else {
-                return this.sharedConversation.conversationInfoList;
+                infos = this.sharedConversation.conversationInfoList;
             }
+            // Add id to each item for virtual-list
+            return infos.map((info, index) => ({
+                ...info,
+                id: `${info.conversation.type}_${info.conversation.target}_${info.conversation.line}_${index}`
+            }));
         }
     },
 
-    components: {ForwardMessageView},
+    components: {
+        ForwardMessageView
+    },
 }
 </script>
 
@@ -179,60 +188,20 @@ export default {
 }
 
 .conversation-list-container {
-    overflow: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .conversation-list-container > p {
-    position: sticky;
     background-color: #f7f7f7;
     font-size: 12px;
     color: #888888;
-    z-index: 1;
-    top: 0;
     padding-left: 15px;
-}
-
-.conversation-item {
-    width: 100%;
-    height: 70px;
-    display: flex;
-    flex-direction: row;
-    border-bottom: 1px solid #eeeeee;
-    align-items: center;
-    justify-content: flex-start;
-    padding-left: 15px;
-}
-
-.conversation-item:active {
-    background-color: #d6d6d6;
-}
-
-.conversation-item .header {
-    height: 100%;
-    padding: 10px 12px 10px 15px;
-}
-
-.conversation-item .header .avatar {
-    position: relative;
-    width: 45px;
-    height: 45px;
-    display: inline-block;
-    top: 50%;
-    background: #d6d6d6;
-    transform: translateY(-50%);
-    border-radius: 3px;
-}
-
-.conversation-item .title {
-    font-size: 14px;
-    color: #262626;
-    font-style: normal;
-    font-weight: normal;
-    padding-right: 10px;
-}
-
-.checkbox {
-    margin-right: 0;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    flex-shrink: 0;
 }
 
 .checked-conversation-list-container {
