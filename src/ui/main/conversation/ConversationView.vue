@@ -997,6 +997,7 @@ export default {
         // 监听来自 MessageItemView 的事件
         this.$eventBus.$on('open-message-context-menu', this.openMessageContextMenu);
         this.$eventBus.$on('open-message-sender-context-menu', this.openMessageSenderContextMenu);
+        this.$eventBus.$on('reedit-message', this.reedit);
 
         this.$eventBus.$on('send-file', args => {
             let fileMessageContent = new FileMessageContent(null, args.remoteUrl, args.name, args.size);
@@ -1020,6 +1021,7 @@ export default {
         this.$eventBus.$off('forward-fav');
         this.$eventBus.$off('open-message-context-menu', this.openMessageContextMenu);
         this.$eventBus.$off('open-message-sender-context-menu', this.openMessageSenderContextMenu);
+        this.$eventBus.$off('reedit-message', this.reedit);
         wfc.eventEmitter.removeListener(EventType.ReceiveMessage, this.onReceiveMessage);
     },
 

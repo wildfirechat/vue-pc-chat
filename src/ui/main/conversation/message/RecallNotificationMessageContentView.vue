@@ -54,7 +54,7 @@ export default {
             }
         },
         reedit() {
-            this.$parent.reedit(this.message);
+            this.$eventBus.$emit('reedit-message', this.message);
         }
     },
     components: {}
