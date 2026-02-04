@@ -12,11 +12,13 @@ import wfc from "../../client/wfc";
  * iOS端请求备份到PC端时发送此通知
  */
 export default class BackupRequestNotificationContent extends NotificationMessageContent {
-    constructor(conversationsJson, includeMedia, timestamp) {
+    conversationCount = 0;
+    messageCount = 0;
+    timestamp = 0;
+    includeMedia = false;
+
+    constructor() {
         super(MessageContentType.MESSAGE_CONTENT_TYPE_BACKUP_REQUEST);
-        this.conversationsJson = conversationsJson;
-        this.includeMedia = includeMedia;
-        this.timestamp = timestamp;
     }
 
     // 会话界面显示通知时，将显示本函数的返回值
@@ -31,7 +33,8 @@ export default class BackupRequestNotificationContent extends NotificationMessag
     encode() {
         let payload = super.encode();
         let obj = {
-            c: this.conversationsJson || '',
+            cc: this.conversationCount || 0,
+            mc: this.conversationCount || 0,
             m: this.includeMedia || false,
             t: this.timestamp || 0
         };
@@ -43,7 +46,8 @@ export default class BackupRequestNotificationContent extends NotificationMessag
         super.decode(payload);
         let json = wfc.b64_to_utf8(payload.binaryContent);
         let obj = JSON.parse(json);
-        this.conversationsJson = obj.c || '';
+        this.conversationCount = obj.cc || 0;
+        this.messageCount = obj.mc || 0;
         this.includeMedia = obj.m || false;
         this.timestamp = obj.t || 0;
     }

@@ -40,7 +40,9 @@ class BackupHelper extends EventEmitter {
                 this.currentFileCount = 0;
                 this.expectedFileCount = 0;
                 this.isBackupCompleting = false;
-                this.resetCompletionTimer();
+                if (this.completionTimer) {
+                    clearTimeout(this.completionTimer);
+                }
 
                 // Get local IP
                 const getLocalIP = () => {
@@ -162,10 +164,10 @@ class BackupHelper extends EventEmitter {
             clearTimeout(this.completionTimer);
         }
 
-        // Set new timer (30 seconds without new files)
+        // Set new timer (60 seconds without new files)
         this.completionTimer = setTimeout(() => {
             this.onBackupComplete();
-        }, 30000);
+        }, 60000);
     }
 
     onBackupComplete() {
@@ -241,8 +243,6 @@ class BackupHelper extends EventEmitter {
         }
 
         fs.writeFileSync(filePath, fileData);
-
-        console.log(`Saved: ${relativePath} (${dataLength} bytes)`);
 
         this.currentFileCount++;
 

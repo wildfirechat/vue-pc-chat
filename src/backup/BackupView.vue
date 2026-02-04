@@ -81,21 +81,9 @@ export default {
 
         showBackupConfirmDialog(msg) {
             const content = msg.messageContent;
-            let conversations = [];
-            try {
-                conversations = JSON.parse(content.conversationsJson || "[]");
-            } catch (e) {
-                console.error("解析会话列表失败", e);
-                conversations = [];
-            }
-
-            const totalMessages = conversations.reduce(
-                (sum, conv) => sum + (conv.messageCount || 0),
-                0
-            );
             const includeMediaText = content.includeMedia ? "包含" : "不包含";
 
-            const message = `iOS端请求将备份保存到电脑端\n\n会话数量: ${conversations.length}\n消息总数: ${totalMessages}\n${includeMediaText}媒体文件\n\n是否开始备份？`;
+            const message = `iOS端请求将备份保存到电脑端\n\n会话数量: ${content.conversationCount}\n消息总数: ${content.messageCount}\n${includeMediaText}媒体文件\n\n是否开始备份？`;
 
             // 保存当前请求
             this.currentBackupRequest = msg;
