@@ -1,8 +1,11 @@
 <template>
-    <div class="streaming-text-message-container"
-         v-bind:class="{out:message.direction === 0}">
-        <p class="text" v-html="this.$xss(this.textContent)" @mouseup="mouseUp" @contextmenu="preventContextMenuTextSelection"></p>
-        <FadeLoader :loading="message.messageContent.type === 14" color="#848484" style="margin:10px" width="3px" height="8px" margin="2px" radius="8px"></FadeLoader>
+    <div>
+        <div class="streaming-text-message-container"
+            v-bind:class="{out:message.direction === 0}">
+            <p class="text" v-html="this.$xss(this.textContent)" @mouseup="mouseUp" @contextmenu="preventContextMenuTextSelection"></p>
+            <FadeLoader :loading="message.messageContent.type === 14" color="#848484" style="margin:10px" width="3px" height="8px" margin="2px" radius="8px"></FadeLoader>
+        </div>
+        <p class="ai-content-tip">本内容由 AI 生成</p>
     </div>
 </template>
 
@@ -123,6 +126,12 @@ export default {
 
 .streaming-text-message-container .text >>> .emoji {
     vertical-align: middle;
+}
+
+.ai-content-tip{
+    margin: 5px 10px 0;
+    font-size: 12px;
+    color: #999;
 }
 
 </style>
