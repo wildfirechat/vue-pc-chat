@@ -8,10 +8,8 @@
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import {parser as emojiParse} from "../../../../util/emoji";
-import helper from "../../../../util/helper";
 import FadeLoader from 'vue-spinner/src/FadeLoader.vue'
-//import {marked} from "marked";
+import {marked} from "marked";
 
 export default {
     name: "StreamingTextMessageContentView",
@@ -54,15 +52,7 @@ export default {
     computed: {
         textContent() {
             let content = this.message.messageContent.digest(this.message).trim();
-            let lines = content.replace(/\r\n/g, '\n').split('\n');
-            if (lines.length > 1) {
-                content = lines.map(line => `<span>${helper.escapeHtml(line)}</span>\n`).reduce((total, cv, ci, arr) => total + cv, '');
-            } else {
-                content = helper.escapeHtml(content)
-            }
-
-            content = emojiParse(content);
-            // tmp = marked.parse(tmp);
+            content = marked.parse(content);
             if (content.indexOf('<img') >= 0) {
                 content = content.replace(/<img/g, '<img style="max-width:400px;"')
                 return content;
