@@ -48,6 +48,8 @@ import SoundMessageContent from "./wfc/messages/soundMessageContent";
 import MixMultiMediaTextMessageContent from "./wfc/messages/mixMultiMediaTextMessageContent";
 import MixFileTextMessageContent from "./wfc/messages/mixFileTextMessageContent";
 import Long from "long";
+import StreamingTextGeneratedMessageContent from './wfc/messages/streamingTextGeneratedMessageContent'
+import StreamingTextGeneratingMessageContent from './wfc/messages/streamingTextGeneratingMessageContent'
 
 /**
  * 一些说明
@@ -187,6 +189,8 @@ let store = {
             if (miscState.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing) {
                 return;
             }
+            this._handleStreamingTextMessage(msg);
+
             if (miscState.isMainWindow && !this.isConversationInCurrentWindow(msg.conversation)) {
                 return;
             }
@@ -1296,6 +1300,13 @@ let store = {
             }
         });
         conversationState.currentConversationMessageList = newMsgs.concat(conversationState.currentConversationMessageList);
+
+        let streamingTextGeneratingMessage = conversationState.streamingTextGeneratingMessages.get(this._conversationKey(conversation));
+        if(streamingTextGeneratingMessage){
+            this._patchMessage(streamingTextGeneratingMessage, lastTimestamp);
+            conversationState.currentConversationMessageList.push(streamingTextGeneratingMessage);
+        }
+
         return loadNewMsg;
     },
 
@@ -2367,6 +2378,18 @@ let store = {
             content = new TextMessageContent(content.digest(message) + ' ' + content.duration + "''");
         }
         return content
+    },
+
+    _handleStreamingTextMessage(msg){
+        if(msg.messageContent instanceof StreamingTextGeneratingMessageContent) {
+            conversationState.streamingTextGeneratingMessages.set(this._conversationKey(msg.conversation), msg);
+        } else if(msg.messageContent instanceof  StreamingTextGeneratedMessageContent){
+            conversationState.streamingTextGeneratingMessages.delete(this._conversationKey(msg.conversation));
+        }
+    },
+
+    _conversationKey(conv){
+        return `${conv.type}-${conv.target}-${conv.line}`
     }
 }
 
