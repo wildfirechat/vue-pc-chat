@@ -1182,6 +1182,15 @@ export class WfcManager {
     }
 
     /**
+     * 当前设备是否被锁定
+     * 
+     * @returns 是否被锁定
+     */
+    isLocked() {
+        return "1" === this.getUserSetting(Lock_PC, impl.getClientId());
+    }
+
+    /**
      * 是否全局免打扰
      * @returns {boolean}
      */
