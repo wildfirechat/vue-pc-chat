@@ -177,6 +177,7 @@ export const pstore = defineStore('store-p', () => {
         config: Config,
         userOnlineStateMap: new Map(),
         enableOpenWorkSpace: !!(Config.OPEN_PLATFORM_WORK_SPACE_URL),
+        isLocked: false,
 
         _reset() {
             this.connectionStatus = ConnectionStatus.ConnectionStatusUnconnected;
@@ -195,6 +196,7 @@ export const pstore = defineStore('store-p', () => {
             this.isVoipOngoing = false;
             this.config = Config;
             this.userOnlineStateMap = new Map();
+            this.isLocked = false;
         }
     })
 

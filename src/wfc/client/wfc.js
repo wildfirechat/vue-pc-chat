@@ -1187,7 +1187,7 @@ export class WfcManager {
      * @returns 是否被锁定
      */
     isLocked() {
-        return "1" === this.getUserSetting(Lock_PC, impl.getClientId());
+        return "1" === this.getUserSetting(UserSettingScope.Lock_PC, impl.getClientId());
     }
 
     /**

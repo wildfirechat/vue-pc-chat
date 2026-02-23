@@ -90,6 +90,8 @@ let store = {
         store.state.misc = miscState;
 
         miscState.connectionStatus = wfc.getConnectionStatus();
+        // 初始化时检查锁定状态
+        miscState.isLocked = wfc.isLocked();
         wfc.eventEmitter.on(EventType.ConnectionStatusChanged, (status) => {
             console.log('store ConnectionStatusChanged', status)
             contactState.isEnableMesh = wfc.isEnableMesh();
@@ -98,6 +100,8 @@ let store = {
             miscState.isDisableSyncDraft = wfc.isDisableSyncDraft();
             try {
                 if (status === ConnectionStatus.ConnectionStatusConnected) {
+                    // 连接成功后检查锁定状态
+                    miscState.isLocked = wfc.isLocked();
                     this._loadDefaultData();
 
                     this.updateTray();
@@ -127,6 +131,12 @@ let store = {
 
         wfc.eventEmitter.on(EventType.SettingUpdate, () => {
             console.log('store SettingUpdate')
+            // 检查锁定状态变化
+            const newLockedState = wfc.isLocked();
+            if (miscState.isLocked !== newLockedState) {
+                miscState.isLocked = newLockedState;
+                console.log('lock state changed:', newLockedState);
+            }
             this._loadDefaultConversationList();
             this._loadFavContactList();
             this._loadFavGroupList();
