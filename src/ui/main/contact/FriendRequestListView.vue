@@ -113,9 +113,10 @@ export default {
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 3px;
+    object-fit: cover;
 }
 
 .new-friend-item {

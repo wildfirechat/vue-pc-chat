@@ -81,7 +81,8 @@ export default {
 .label p {
     padding: 5px 5px 5px 0;
     border-bottom: 1px solid #e0e0e0;
-    font-size: 13px;
+    font-size: 10px;
+    color: #7F7F7F;
 }
 
 .contact-item {
