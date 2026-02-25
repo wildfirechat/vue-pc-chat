@@ -58,6 +58,10 @@ export default {
     align-items: center;
 }
 
+.organization-item:hover {
+    background-color: #EAEAEA;
+}
+
 .organization-item.active {
     background-color: #d6d6d6;
 }

@@ -270,6 +270,10 @@ export default {
     background-color: #f8f8f8;
 }
 
+.conversation-item-container:hover{
+    background-color: #EAEAEA;
+}
+
 .conversation-item-container.drag {
     border: 1px solid #4168e0;
 }
@@ -280,6 +284,10 @@ export default {
 
 .conversation-item-container.top {
     background-color: #EBEBEB;
+}
+
+.conversation-item-container.top:hover{
+    background-color: #DEDEDE;
 }
 
 .conversation-item-container.highlight {
@@ -317,6 +325,7 @@ export default {
     top: 50%;
     transform: translateY(-50%);
     border-radius: 3px;
+    object-fit: cover;
 }
 
 .header .badge {

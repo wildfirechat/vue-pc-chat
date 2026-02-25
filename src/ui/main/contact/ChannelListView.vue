@@ -47,6 +47,10 @@ export default {
     align-items: center;
 }
 
+.channel-item:hover{
+    background-color: #EAEAEA;
+}
+
 .channel-item.active {
     background-color: #d6d6d6;
 }

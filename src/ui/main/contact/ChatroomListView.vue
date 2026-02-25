@@ -2,7 +2,7 @@
     <section>
         <ul>
             <li v-for="(chatroom, index) in chatroomList" :key="index" @click="showChatroom(chatroom)">
-                <div class="organization-item"
+                <div class="chatroom-item"
                      v-bind:class="{active: sharedContactState.currentChatroom && sharedContactState.currentChatroom.chatRoomId === chatroom.chatRoomId}">
                     <img class="avatar" :src="chatroom.portrait ? chatroom.portrait : defaultPortraitUrl">
                     <span class="single-line">{{ chatroom.title}}</span>
@@ -60,7 +60,7 @@ export default {
     border-radius: 3px;
 }
 
-.organization-item {
+.chatroom-item {
     height: 50px;
     padding: 5px 10px 5px 30px;
     display: flex;
@@ -68,11 +68,15 @@ export default {
     align-items: center;
 }
 
-.organization-item.active {
+.chatroom-item:hover{
+    background-color: #EAEAEA;
+}
+
+.chatroom-item.active {
     background-color: #d6d6d6;
 }
 
-.organization-item span {
+.chatroom-item span {
     margin-left: 10px;
 }
 

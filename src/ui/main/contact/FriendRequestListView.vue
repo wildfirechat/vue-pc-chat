@@ -133,7 +133,7 @@ export default {
 }
 
 .new-friend-item-container:hover {
-    background-color: #d6d6d6;
+    background-color: #EAEAEA;
 }
 
 .new-friend-item .info {

@@ -47,6 +47,10 @@ export default {
     align-items: center;
 }
 
+.group-item:hover{
+    background-color: #EAEAEA;
+}
+
 .group-item.active {
     background-color: #d6d6d6;
 }

@@ -23,7 +23,6 @@
 <script>
 import store from "../../../store";
 import Config from "../../../config";
-import ConversationType from "../../../wfc/model/conversationType";
 import WfcUtil from "../../../wfc/util/wfcUtil";
 import wfc from "../../../wfc/client/wfc";
 
@@ -86,11 +85,15 @@ export default {
 }
 
 .contact-item {
-    padding: 5px 5px 5px 30px;
+    padding: 10px 5px 10px 30px;
     display: flex;
     width: 100%;
     font-size: 13px;
     align-items: center;
+}
+
+.contact-item:hover{
+    background-color: #EAEAEA
 }
 
 .contact-item span {
@@ -116,8 +119,9 @@ export default {
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: 3px;
+    object-fit: cover;
 }
 </style>
