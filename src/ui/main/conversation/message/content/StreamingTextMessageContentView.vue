@@ -81,7 +81,7 @@ export default {
 
 .streaming-text-message-container >>> p {
     user-select: text;
-    white-space: pre-line;
+    //white-space: pre-line;
 }
 
 .streaming-text-message-container >>> .loading {
