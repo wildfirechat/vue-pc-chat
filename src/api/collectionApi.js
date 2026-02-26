@@ -4,6 +4,10 @@ import wfc from "../wfc/client/wfc";
 
 export class CollectionApi {
 
+    _groupIdPayload(groupId) {
+        return groupId ? {groupId} : {};
+    }
+
     createCollection(groupId, title, desc, template, expireType, expireAt, maxParticipants) {
         return this._post('/api/collections', {
             groupId,
@@ -16,26 +20,23 @@ export class CollectionApi {
         })
     }
 
-    getCollection(collectionId) {
-        return this._post(`/api/collections/${collectionId}/detail`, {
-            // Android sends groupId if available, but it seems optional or for permission check
-        })
+    getCollection(collectionId, groupId) {
+        return this._post(`/api/collections/${collectionId}/detail`, this._groupIdPayload(groupId))
     }
 
-    joinCollection(collectionId, content) {
+    joinCollection(collectionId, groupId, content) {
         return this._post(`/api/collections/${collectionId}/join`, {
+            ...this._groupIdPayload(groupId),
             content
         })
     }
 
-    deleteCollectionEntry(collectionId, userId) {
-        // Android calls this /delete, and doesn't seem to pass userId in body,
-        // implying it deletes the current user's entry.
-        return this._post(`/api/collections/${collectionId}/delete`, {})
+    deleteCollectionEntry(collectionId, groupId) {
+        return this._post(`/api/collections/${collectionId}/delete`, this._groupIdPayload(groupId))
     }
 
-    closeCollection(collectionId) {
-        return this._post(`/api/collections/${collectionId}/close`, {})
+    closeCollection(collectionId, groupId) {
+        return this._post(`/api/collections/${collectionId}/close`, this._groupIdPayload(groupId))
     }
 
     async _post(path, data = {}) {

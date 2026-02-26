@@ -858,10 +858,15 @@ const createMainWindow = async () => {
             url = 'app://./index.html#/collection';
         }
 
+        const queryParams = [];
+        if (args.collectionId) {
+            queryParams.push(`collectionId=${args.collectionId}`);
+        }
         if (args.groupId) {
-            url += `?groupId=${args.groupId}`;
-        } else if (args.collectionId) {
-            url += `?collectionId=${args.collectionId}`;
+            queryParams.push(`groupId=${args.groupId}`);
+        }
+        if (queryParams.length > 0) {
+            url += `?${queryParams.join('&')}`;
         }
 
         if (!collectionWindow) {

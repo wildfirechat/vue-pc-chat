@@ -42,6 +42,7 @@
 import Message from "../../../../../wfc/messages/message";
 import IpcEventType from "../../../../../ipcEventType";
 import {ipcRenderer} from 'electron';
+import Config from '../../../../../config'
 
 export default {
     name: "CollectionMessageContentView",
@@ -81,8 +82,16 @@ export default {
             return String(template).replace('%d', count);
         },
         onClick() {
+            if(!Config.COLLECTION_SERVER){
+                this.$notify({
+                    text: '未配置接龙服务地址',
+                    type: 'error',
+                })
+                return;
+            }
             ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
-                collectionId: this.message.messageContent.collectionId
+                collectionId: this.message.messageContent.collectionId,
+                groupId: this.message.messageContent.groupId
             });
         }
     }

@@ -218,15 +218,16 @@ export default {
         this.form.expireAtStr = tomorrow.toISOString().slice(0, 16);
 
         let query = this.$route.query;
-        if (query.groupId) {
-            this.mode = 'create';
-            this.groupId = query.groupId;
-            document.title = this.$t('collection.create_collection');
-        } else if (query.collectionId) {
+        if (query.collectionId) {
             this.mode = 'detail';
             document.title = this.$t('collection.collection_detail');
             this.collectionId = query.collectionId;
+            this.groupId = query.groupId || '';
             this.fetchCollection();
+        } else if (query.groupId) {
+            this.mode = 'create';
+            this.groupId = query.groupId;
+            document.title = this.$t('collection.create_collection');
         }
     },
     methods: {
@@ -259,9 +260,12 @@ export default {
         async fetchCollection() {
             this.loading = true;
             try {
-                this.collection = await collectionApi.getCollection(this.collectionId);
+                this.collection = await collectionApi.getCollection(this.collectionId, this.groupId);
                 if (!this.collection.entries) {
                     this.collection.entries = [];
+                }
+                if (!this.groupId && this.collection.groupId) {
+                    this.groupId = this.collection.groupId;
                 }
                 this.updateMyEntryState();
             } catch (e) {
@@ -298,14 +302,14 @@ export default {
                 if (this.hasJoined && content === '') {
                     // Delete
                     if(confirm(this.$t('collection.confirm_delete_entry'))) {
-                        await collectionApi.deleteCollectionEntry(this.collectionId, this.selfUid);
+                        await collectionApi.deleteCollectionEntry(this.collectionId, this.groupId);
                     } else {
                         this.loading = false;
                         return;
                     }
                 } else {
                     // Join or Update
-                    await collectionApi.joinCollection(this.collectionId, content);
+                    await collectionApi.joinCollection(this.collectionId, this.groupId, content);
                 }
                 await this.fetchCollection();
                 this.closeWindow(); // Android finishes activity on success
