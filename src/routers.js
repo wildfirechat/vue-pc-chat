@@ -18,6 +18,7 @@ import MessagePage from "./ui/main/MessagePage.vue";
 import MultimediaPreviewPage from "./ui/main/MultimediaPreviewPage.vue";
 import SingleRemoteControl from "./ui/voip/SingleRemoteControl.vue";
 import AI from "./ui/main/AI.vue";
+import CollectionPage from "./ui/collection/CollectionPage.vue";
 
 const routers = [
     {
@@ -124,7 +125,11 @@ const routers = [
         name: 'conversation-window',
         path: '/conversation-window',
         component: ConversationFloatPage,
-
+    },
+    {
+        name: 'collection',
+        path: '/collection',
+        component: CollectionPage,
     }
 ]
 export default routers

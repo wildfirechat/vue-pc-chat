@@ -80,6 +80,7 @@ import BackupRequestNotificationContent from "../messages/backup/backupRequestNo
 import BackupResponseNotificationContent from "../messages/backup/backupResponseNotificationContent";
 import RestoreRequestNotificationContent from "../messages/backup/restoreRequestNotificationContent";
 import RestoreResponseNotificationContent from "../messages/backup/restoreResponseNotificationContent";
+import CollectionMessageContent from "../messages/collectionMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -571,6 +572,12 @@ export default class MessageConfig {
             flag: PersistFlag.Transparent,
             type: MessageContentType.MESSAGE_CONTENT_TYPE_RESTORE_RESPONSE, // 611
             contentClazz: RestoreResponseNotificationContent,
+        },
+        {
+            name: 'collection',
+            flag: PersistFlag.Persist_And_Count,
+            type: MessageContentType.Collection,
+            contentClazz: CollectionMessageContent,
         },
     ];
 }

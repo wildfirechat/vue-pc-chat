@@ -23,6 +23,7 @@ const IpcEventType = {
     START_SCREEN_SHARE: 'start-screen-share',
     STOP_SCREEN_SHARE: 'stop-screen-share',
     GET_SOURCE: 'get-source',
+    SHOW_COLLECTION_WINDOW: 'show-collection-window',
 }
 
 module.exports = IpcEventType

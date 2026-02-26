@@ -56,7 +56,7 @@
                     <li style="position: relative;">
                         <!-- 录音动画提示 -->
                         <transition name="fade-slide">
-                            <div v-if="isRecording" 
+                            <div v-if="isRecording"
                                  class="recording-indicator"
                                  @mouseenter="onRecordingIndicatorEnter"
                                  @mouseleave="onRecordingIndicatorLeave">
@@ -72,6 +72,9 @@
                         </transition>
                         <i id="voice" v-bind:class="{active: isRecording}" @mousedown="recordAudio(true)"
                            class="icon-ion-android-microphone record-icon"/>
+                    </li>
+                    <li v-if="isCollectionEnable && conversationInfo.conversation.type === 1" @click="openCollectionWindow">
+                        <i class="icon-ion-ios-list-outline"/>
                     </li>
                 </ul>
                 <ul>
@@ -214,6 +217,8 @@ export default {
 
             isPttTalking: false,
             isRecording: false,
+
+            isCollectionEnable: !!Config.COLLECTION_SERVER
         }
     },
     methods: {
@@ -256,6 +261,11 @@ export default {
                     this.lastTypingMessageTimestamp = now;
                 }
             }
+        },
+        openCollectionWindow() {
+            ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
+                groupId: this.conversationInfo.conversation.target
+            });
         },
         async handlePaste(e, source) {
             let text;
@@ -1029,11 +1039,11 @@ export default {
             }
             this.pttTime = '00:00';
         },
-        
+
         onRecordingIndicatorEnter() {
             this.isRecordingCancelMode = true;
         },
-        
+
         onRecordingIndicatorLeave() {
             this.isRecordingCancelMode = false;
         },
@@ -1052,7 +1062,7 @@ export default {
             }
             window.removeEventListener('mouseup', this.handleMouseUp)
         },
-        
+
         cancelRecording() {
             this.isRecording = false;
             this.isRecordingCancelMode = false;

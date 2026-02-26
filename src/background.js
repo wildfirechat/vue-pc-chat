@@ -81,6 +81,7 @@ let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
+let collectionWindow;
 let conversationWindowMap = new Map();
 let screenshots;
 let tray;
@@ -845,6 +846,34 @@ const createMainWindow = async () => {
         } else {
             messageHistoryMessageWindow.show();
             messageHistoryMessageWindow.focus();
+        }
+    });
+
+    ipcMain.on(IPCEventType.SHOW_COLLECTION_WINDOW, async (event, args) => {
+        console.log(`on ${IPCEventType.SHOW_COLLECTION_WINDOW}`, collectionWindow, args)
+        let url;
+        if (process.env.WEBPACK_DEV_SERVER_URL) {
+            url = process.env.WEBPACK_DEV_SERVER_URL + '#/collection';
+        } else {
+            url = 'app://./index.html#/collection';
+        }
+
+        if (args.groupId) {
+            url += `?groupId=${args.groupId}`;
+        } else if (args.collectionId) {
+            url += `?collectionId=${args.collectionId}`;
+        }
+
+        if (!collectionWindow) {
+            collectionWindow = createWindow(url, 360, 640, 360, 640, false, false, true);
+            collectionWindow.on('close', () => {
+                collectionWindow = null;
+            });
+            collectionWindow.show();
+        } else {
+            collectionWindow.loadURL(url);
+            collectionWindow.show();
+            collectionWindow.focus();
         }
     });
 

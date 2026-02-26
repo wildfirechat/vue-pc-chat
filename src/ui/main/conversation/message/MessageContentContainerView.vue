@@ -41,6 +41,9 @@
                                              v-else-if="message.messageContent.type === MessageContentType.MESSAGE_CONTENT_TYPE_MIX_MULTI_MEDIA_TEXT"/>
         <MixFileTextMessageContentView :message="message"
                                        v-else-if="message.messageContent.type === MessageContentType.MESSAGE_CONTENT_TYPE_MIX_FILE_TEXT"/>
+        <CollectionMessageContentView :message="message"
+                                      v-else-if="message.messageContent.type === MessageContentType.Collection"
+                                      v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
         <UnsupportMessageContentView :message="message"
                                      v-else-if="[/* todo un support message types */].indexOf(message.messageContent.type) >= 0"/>
         <TestCustomMessageContentView :message="message"
@@ -80,6 +83,7 @@ import TestCustomMessageContentView from "./content/TestCustomMessageContentView
 import MixMultiMediaTextMessageContentView from "./content/MixMultiMediaTextMessageContentView.vue";
 import MessageContentType from "../../../../wfc/messages/messageContentType";
 import MixFileTextMessageContentView from "./content/MixFileTextMessageContentView.vue";
+import CollectionMessageContentView from "./content/CollectionMessageContentView";
 
 export default {
     name: "MessageContentContainerView",
@@ -98,6 +102,7 @@ export default {
         }
     },
     components: {
+        CollectionMessageContentView,
         MixFileTextMessageContentView,
         MixMultiMediaTextMessageContentView,
         TestCustomMessageContentView,
