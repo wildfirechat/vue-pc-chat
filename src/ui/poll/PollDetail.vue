@@ -388,6 +388,21 @@ export default {
     color: #ff3b30;
 }
 
+.detail-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 16px 0 16px;
+    background: #fff;
+    width: 100%;
+}
+
+.back-btn {
+    font-size: 15px;
+    color: #576b95;
+    cursor: pointer;
+}
+
 .detail-content {
     flex: 1;
     overflow-y: auto;
