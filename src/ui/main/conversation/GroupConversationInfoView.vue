@@ -157,6 +157,7 @@ export default {
                 initialCheckedUsers: groupMemberUserInfos,
                 uncheckableUsers: groupMemberUserInfos,
                 confirmTitle: this.$t('common.add'),
+                showOrganization: true
             });
         },
 
