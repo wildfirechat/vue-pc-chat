@@ -78,7 +78,10 @@
                            class="icon-ion-android-microphone record-icon"/>
                     </li>
                     <li v-if="isCollectionEnable && conversationInfo.conversation.type === 1" @click="openCollectionWindow">
-                        <i class="icon-ion-ios-list-outline" :title="$t('conversation.action_tip_collection')"/>
+                        <i class="icon-ion-android-list" :title="$t('conversation.action_tip_collection')"/>
+                    </li>
+                    <li v-if="isPollEnable && conversationInfo.conversation.type === 1" @click="openPollWindow">
+                        <i class="icon-ion-stats-bars" :title="$t('conversation.action_tip_poll')"/>
                     </li>
                 </ul>
                 <ul>
@@ -174,6 +177,7 @@ import {vOnClickOutside} from '@vueuse/components'
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import avenginekit from "../../../wfc/av/internal/engine.min";
+import { buildCollectionUrl, buildPollUrl } from '../../../platformHelper'
 
 export default {
     name: "MessageInputView",
@@ -222,7 +226,8 @@ export default {
             isPttTalking: false,
             isRecording: false,
 
-            isCollectionEnable: !!Config.COLLECTION_SERVER
+            isCollectionEnable: !!Config.COLLECTION_SERVER,
+            isPollEnable: !!Config.POLL_SERVER
         }
     },
     methods: {
@@ -267,7 +272,23 @@ export default {
             }
         },
         openCollectionWindow() {
+            const url = buildCollectionUrl({
+                mode: 'create',
+                groupId: this.conversationInfo.conversation.target
+            });
             ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
+                url: url,
+                groupId: this.conversationInfo.conversation.target
+            });
+        },
+        openPollWindow() {
+            // 进入投票主页（对应 PollHomeActivity）
+            const url = buildPollUrl({
+                mode: 'home',
+                groupId: this.conversationInfo.conversation.target
+            });
+            ipcRenderer.send(IpcEventType.SHOW_POLL_WINDOW, {
+                url: url,
                 groupId: this.conversationInfo.conversation.target
             });
         },

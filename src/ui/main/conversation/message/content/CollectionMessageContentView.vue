@@ -43,6 +43,7 @@ import Message from "../../../../../wfc/messages/message";
 import IpcEventType from "../../../../../ipcEventType";
 import {ipcRenderer} from 'electron';
 import Config from '../../../../../config'
+import { buildCollectionUrl } from '../../../../../platformHelper';
 
 export default {
     name: "CollectionMessageContentView",
@@ -89,7 +90,13 @@ export default {
                 })
                 return;
             }
+            const url = buildCollectionUrl({
+                mode: 'detail',
+                collectionId: this.message.messageContent.collectionId,
+                groupId: this.message.messageContent.groupId
+            });
             ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
+                url: url,
                 collectionId: this.message.messageContent.collectionId,
                 groupId: this.message.messageContent.groupId
             });

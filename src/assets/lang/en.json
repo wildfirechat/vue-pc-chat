@@ -181,7 +181,8 @@
         "wfc_id": "ID",
         "channel": "Channel",
         "speech2text": "Speech To Text",
-        "cancelSpeech2text": "Cancel Speech To Text"
+        "cancelSpeech2text": "Cancel Speech To Text",
+        "loading": "Loading"
     },
     "misc": {
         "beijing": "Beijing",
