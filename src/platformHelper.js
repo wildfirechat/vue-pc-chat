@@ -5,7 +5,6 @@ import IpcEventType from './ipcEventType';
 import store from './store';
 import ImageMessageContent from './wfc/messages/imageMessageContent';
 import { scaleDown } from './ui/util/imageUtil';
-import { toRaw } from 'vue';
 
 /**
  * 获取基础 URL（开发环境或生产环境）
@@ -152,7 +151,7 @@ export function previewMM(message, mixMultiMediaItemIndex = 0, continuous = true
         }
         ipcRenderer.send(IpcEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, {
             url: url,
-            messageUid: toRaw(message.messageUid),
+            messageUid: stringValue(message.messageUid),
             size,
         });
         console.log('show-multimedia-preview-window', url);
