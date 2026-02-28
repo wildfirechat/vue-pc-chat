@@ -272,25 +272,40 @@ export default {
             }
         },
         openCollectionWindow() {
-            const url = buildCollectionUrl({
-                mode: 'create',
-                groupId: this.conversationInfo.conversation.target
-            });
-            ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
-                url: url,
-                groupId: this.conversationInfo.conversation.target
-            });
+            if ((Config.APP_SERVER.indexOf('wildfirechat.net') >= 0 && Config.COLLECTION_SERVER.indexOf('wildfirechat.net') >= 0)
+                || (Config.APP_SERVER.indexOf('wildfirechat.net') === -1 && Config.COLLECTION_SERVER.indexOf('wildfirechat.net') === -1)) {
+                const url = buildCollectionUrl({
+                    mode: 'create',
+                    groupId: this.conversationInfo.conversation.target
+                });
+                ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
+                    url: url,
+                    groupId: this.conversationInfo.conversation.target
+                });
+            } else {
+                this.$notify({
+                    type: 'error',
+                    text: '未部署接龙服务'
+                })
+            }
         },
         openPollWindow() {
-            // 进入投票主页（对应 PollHomeActivity）
-            const url = buildPollUrl({
-                mode: 'home',
-                groupId: this.conversationInfo.conversation.target
-            });
-            ipcRenderer.send(IpcEventType.SHOW_POLL_WINDOW, {
-                url: url,
-                groupId: this.conversationInfo.conversation.target
-            });
+            if ((Config.APP_SERVER.indexOf('wildfirechat.net') >= 0 && Config.POLL_SERVER.indexOf('wildfirechat.net') >= 0)
+                || (Config.APP_SERVER.indexOf('wildfirechat.net') === -1 && Config.POLL_SERVER.indexOf('wildfirechat.net') === -1)) {
+                const url = buildPollUrl({
+                    mode: 'home',
+                    groupId: this.conversationInfo.conversation.target
+                });
+                ipcRenderer.send(IpcEventType.SHOW_POLL_WINDOW, {
+                    url: url,
+                    groupId: this.conversationInfo.conversation.target
+                });
+            } else {
+                this.$notify({
+                    type: 'error',
+                    text: '未部署投票服务'
+                })
+            }
         },
         async handlePaste(e, source) {
             let text;
