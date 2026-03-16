@@ -2695,6 +2695,13 @@ export class WfcManager {
     }
 
     /**
+     * 获取当前用户的自定义状态
+     */
+    getMyCustomState() {
+        return impl.getMyCustomState();
+    }
+
+    /**
      * 获取AuthCode。请参考 https://gitee.com/wfchat/open-platform
      * @param {String} appId 应用ID
      * @param {number} appType 应用类型
