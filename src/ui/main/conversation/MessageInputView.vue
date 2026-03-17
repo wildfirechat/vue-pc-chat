@@ -1,10 +1,10 @@
 <template>
-    <div ref="message-input-container" class="message-input-container">
+    <div ref="message-input-container" class="message-input-container" :class="{resized: resized}">
         <div v-if="convMuted"
              style="width: 100%; height: 50px; margin-top: -2px; background: lightgrey; display: flex; flex-direction: row; justify-content: center; align-items: center">
             <p style="color: white">群禁言或者群已被解散</p>
         </div>
-        <section v-else-if="!sharedConversationState.showChannelMenu" style="display: flex; flex-direction: column;">
+        <section v-else-if="!sharedConversationState.showChannelMenu" class="message-input-section">
             <section class="input-action-container">
                 <VEmojiPicker
                     id="emoji"
@@ -196,6 +196,11 @@ export default {
         muted: {
             type: Boolean,
             required: true,
+            default: false,
+        },
+        resized: {
+            type: Boolean,
+            required: false,
             default: false,
         }
     },
@@ -1339,6 +1344,17 @@ export default {
     position: relative;
 }
 
+.message-input-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-input-container.resized,
+.message-input-container.resized .message-input-section {
+    flex: 1 1 auto;
+    min-height: 150px;
+}
+
 #emoji {
     position: absolute;
     bottom: 55px;
@@ -1364,10 +1380,22 @@ export default {
     max-height: 260px;
     outline: none;
     padding: 0 20px;
-    overflow: auto;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
     user-select: text;
     -webkit-user-select: text;
     font-size: 13px;
+}
+
+.message-input-container.resized .input {
+    min-height: 0;
+    max-height: none;
+}
+
+.input p,
+.input div {
+    margin: 0;
 }
 
 .input:empty:before {
