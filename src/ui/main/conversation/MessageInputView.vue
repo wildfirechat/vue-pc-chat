@@ -443,16 +443,45 @@ export default {
             document.execCommand('insertText', false, text);
         },
 
+        getSelectedInputText() {
+            let input = this.$refs['input'];
+            let selection = window.getSelection();
+            if (!input || !selection || selection.rangeCount === 0 || selection.isCollapsed) {
+                return '';
+            }
+            let range = selection.getRangeAt(0);
+            if (!input.contains(range.commonAncestorContainer)) {
+                return '';
+            }
+            return selection.toString();
+        },
+
         copy() {
-            let text = this.$refs['input'].innerText;
+            let text = this.getSelectedInputText();
+            if (!text) {
+                text = this.$refs['input'].innerText;
+            }
             if (text) {
                 copyText(text)
             }
         },
 
         cut() {
+            let input = this.$refs['input'];
+            let selection = window.getSelection();
+            if (input && selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+                let range = selection.getRangeAt(0);
+                if (input.contains(range.commonAncestorContainer)) {
+                    let text = selection.toString();
+                    if (text) {
+                        copyText(text)
+                        range.deleteContents();
+                        return;
+                    }
+                }
+            }
             this.copy();
-            this.$refs['input'].innerHTML = '';
+            input.innerHTML = '';
         },
 
         async send(e) {
