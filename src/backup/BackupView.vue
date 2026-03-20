@@ -58,7 +58,6 @@ export default {
     },
     methods: {
         onReceiveMessage(msg) {
-            console.log("xxxd", msg);
             if (isElectron()) {
                 // 检查是否是备份请求消息
                 if (

@@ -43,6 +43,9 @@ export class OrganizationServerApi {
                             reject(new OrganizationServerError(response.data.code, response.data.message));
                         }
                     })
+                    .catch(error => {
+                        reject(error);
+                    })
 
             }, error => {
                 console.error('getAuthCode error', error);
