@@ -2385,15 +2385,7 @@ export class WfcManager {
      * @returns 返回此时间段内会话的每天消息数量。
      */
     getMessageCountByDay(conversation, contentTypes, startTime, endTime) {
-        let countStr = protoProxy.invoke('getMessageCountByDay', JSON.stringify(conversation));
-        let countArr = JSON.parse(countStr);
-        let result = new Map();
-        if (countArr) {
-            countArr.forEach(e => {
-                result.set(e.key, e.value)
-            })
-        }
-        return result;
+        return impl.getMessageCountByDay(conversation, contentTypes, startTime, endTime);
     }
 
     /**
