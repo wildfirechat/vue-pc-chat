@@ -586,6 +586,10 @@ const createMainWindow = async () => {
 
     mainWindow.webContents.session.on('will-download', downloadHandler);
 
+    ipcMain.handle('create-thumbnail', (event, filePath, size) => {
+        return NativeImage.createThumbnailFromPath(filePath, size);
+    });
+
     ipcMain.on(IPCEventType.START_SCREEN_SHOT, (event, args) => {
         // console.log('main voip-message event', args);
         screenShotWindowId = event.sender.id;
