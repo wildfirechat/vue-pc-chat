@@ -2271,6 +2271,28 @@ let store = {
         }
     },
 
+    clearConversationHistory(conversation) {
+        wfc.clearMessages(conversation);
+        if (conversationState.currentConversationInfo && conversation.equal(conversationState.currentConversationInfo.conversation)) {
+            conversationState.currentConversationMessageList = [];
+        }
+    },
+
+    clearRemoteConversationHistory(conversation) {
+        wfc.clearRemoteConversationMessages(conversation, () => {
+            if (
+                conversationState.currentConversationInfo &&
+                conversation.equal(
+                    conversationState.currentConversationInfo.conversation
+                )
+            ) {
+                conversationState.currentConversationMessageList = [];
+            }
+        }, err => {
+            console.log('clearRemoteConversationHistory', err);
+        });
+    },
+
     clearAllUnreadStatus() {
         wfc.clearAllUnreadStatus();
         conversationState.conversationInfoList.forEach(info => {
