@@ -174,7 +174,7 @@ export class WfcManager {
     }
 
     /**
-     * 设置包名。
+     * 设置包名，connect 之前调用
      * @param {String} packageName 包名
      *
      */
@@ -182,6 +182,13 @@ export class WfcManager {
         impl.setPackageName(packageName);
     }
 
+    /**
+     * 设置设备名称，connect 之前调用
+     * @param deviceName
+     */
+    setDeviceName(deviceName) {
+        impl.setPackageName(deviceName);
+    }
 
     /**
      * 获取当前用户的id
