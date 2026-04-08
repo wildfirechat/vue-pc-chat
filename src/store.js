@@ -737,8 +737,7 @@ let store = {
     },
 
     setCurrentConversationInfo(conversationInfo) {
-        if (!conversationInfo) {
-            if (conversationState.currentConversationInfo) {
+        if (conversationState.currentConversationInfo &&(!conversationInfo || !conversationState.currentConversationInfo.conversation.equal(conversationInfo.conversation))) {
                 let conversation = conversationState.currentConversationInfo.conversation;
 
                 if (wfc.isUserOnlineStateEnabled() && ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target))) {
@@ -748,7 +747,9 @@ let store = {
                     let content = new LeaveChannelChatMessageContent();
                     wfc.sendConversationMessage(conversation, content);
                 }
+            this.clearConversationUnreadStatus(conversationState.currentConversationInfo.conversation)
             }
+        if (!conversationInfo) {
             conversationState.currentConversationInfo = null;
             conversationState.shouldAutoScrollToBottom = false;
             conversationState.currentConversationMessageList.length = 0;
