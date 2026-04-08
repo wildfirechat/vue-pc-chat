@@ -444,13 +444,15 @@ export default {
                     this.refreshQrCode();
                 }
                 if (status !== ConnectionStatus.ConnectionStatusLogout) {
-                    console.error('连接失败', status, ConnectionStatus.desc(status));
+                    console.error('连接失败，请根据下面描述进行排查', status)
+                     console.error(ConnectionStatus.desc(status))
                     this.cancel();
                     this.diagnose();
                     this.$notify({
                         text: '连接失败，请打开控制台，查看具体日志',
                         type: 'error'
                     });
+                    ipcRenderer.send(IpcEventType.OPEN_MAIN_DEV_TOOLS)
                 }
 
             }

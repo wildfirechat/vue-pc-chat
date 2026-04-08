@@ -503,7 +503,7 @@ const createMainWindow = async () => {
         titleBarStyle: 'hidden',
         trafficLightPosition: {x: 4, y: 8},
         maximizable: false,
-        resizable: false,
+        resizable: isDevelopment,
         backgroundColor: 'none',
         // 以下两属性设置时会导致win不能正常unmaximize. electron bug
         // transparent: true,
@@ -924,6 +924,10 @@ const createMainWindow = async () => {
         }
     });
 
+    ipcMain.on(IPCEventType.OPEN_MAIN_DEV_TOOLS, async (event, args) => {
+            if (isDevelopment) mainWindow.webContents.openDevTools()
+    });
+
     // 直接在ui层处理了
     // ipcMain.on('open-file', async (event, filename) => {
     //     shell.openItem(filename);
@@ -959,7 +963,7 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.LOGOUT, (event, args) => {
         mainWindowState.unmanage();
-        mainWindow.resizable = false;
+        mainWindow.resizable = isDevelopment;
         mainWindow.maximizable = false;
         mainWindow.setMinimumSize(400, 500);
         mainWindow.setSize(400, 500);
@@ -977,7 +981,7 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.RESIZE_LOGIN_WINDOW, (event, args) => {
         mainWindowState.unmanage();
-        mainWindow.resizable = false;
+        mainWindow.resizable = isDevelopment;
         mainWindow.maximizable = false;
         mainWindow.setMinimumSize(400, 500);
         mainWindow.setSize(400, 500);

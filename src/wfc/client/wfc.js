@@ -174,7 +174,7 @@ export class WfcManager {
     }
 
     /**
-     * 设置包名，connect 之前调用
+     * 设置包名。
      * @param {String} packageName 包名
      *
      */
