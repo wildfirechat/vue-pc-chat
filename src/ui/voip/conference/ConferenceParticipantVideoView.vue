@@ -161,8 +161,9 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    border: 1px solid black;
-    background: #2d3033;
+    border: 1px solid var(--border-primary);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .participant-video-item.highlight {
@@ -185,7 +186,7 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #2d3033;
+    background: var(--bg-tertiary);
 }
 
 .avatar {
@@ -203,7 +204,7 @@ export default {
     left: 0;
     bottom: 0;
     display: flex;
-    background: gray;
+    background: var(--bg-secondary);
     border-radius: 1px;
     padding: 5px 10px;
     justify-content: center;

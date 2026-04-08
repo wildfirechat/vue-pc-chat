@@ -110,11 +110,11 @@ export default {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     height: 100vh;
     width: 100%;
-    background-color: #f5f6f7;
+    background-color: var(--bg-secondary);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    color: #333;
+    color: var(--text-primary);
     user-select: none;
 }
 
@@ -123,14 +123,14 @@ export default {
     align-items: center;
     justify-content: space-between;
     padding: 16px;
-    background: #fff;
-    border-bottom: 1px solid #e5e5e5;
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-primary);
     width: 100%;
 }
 
 .back-btn {
     font-size: 15px;
-    color: #576b95;
+    color: var(--text-accent);
     cursor: pointer;
 }
 
@@ -153,15 +153,15 @@ export default {
 .loading-state {
     padding: 60px;
     text-align: center;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .spinner {
-    border: 3px solid rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--border-secondary);
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    border-left-color: #1f64e4;
+    border-left-color: var(--text-accent);
     animation: spin 1s linear infinite;
     margin: 0 auto 10px;
 }
@@ -174,7 +174,7 @@ export default {
 .empty-state {
     padding: 60px;
     text-align: center;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .poll-list {
@@ -187,26 +187,26 @@ export default {
     display: flex;
     align-items: center;
     padding: 16px;
-    background: #fff;
+    background: var(--bg-primary);
     border-radius: 8px;
     cursor: pointer;
 }
 
 .poll-list-item:hover {
-    background: #f9f9f9;
+    background: var(--bg-secondary);
 }
 
 .poll-type-icon {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #f0f7ff;
+    background: var(--bg-item-hover);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-right: 12px;
     font-size: 18px;
-    color: #1f64e4;
+    color: var(--text-accent);
 }
 
 .poll-info {
@@ -216,7 +216,7 @@ export default {
 .poll-list-title {
     font-size: 15px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 4px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -231,24 +231,24 @@ export default {
 
 .poll-status {
     font-size: 12px;
-    color: #1f64e4;
-    background: #f0f7ff;
+    color: var(--text-accent);
+    background: var(--bg-item-hover);
     padding: 2px 8px;
     border-radius: 4px;
 }
 
 .poll-status.ended {
-    color: #999;
-    background: #f5f5f5;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
 }
 
 .poll-count {
     font-size: 12px;
-    color: #888;
+    color: var(--text-secondary);
 }
 
 .poll-arrow {
     font-size: 20px;
-    color: #999;
+    color: var(--text-secondary);
 }
 </style>

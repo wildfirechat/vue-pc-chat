@@ -259,6 +259,49 @@ export default {
     color: var(--text-primary);
 }
 
+/* tippy v6 dark mode */
+.dark .tippy-box {
+    background-color: var(--tippy-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--tippy-border) !important;
+}
+
+.dark .tippy-box[data-theme~='light'] {
+    background-color: var(--tippy-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--tippy-border) !important;
+}
+
+.dark .tippy-box[data-theme~='light'] .tippy-arrow {
+    color: var(--tippy-bg) !important;
+}
+
+.dark .tippy-box[data-theme~='light'] .tippy-content {
+    color: var(--text-primary) !important;
+}
+
+.dark .tippy-tooltip.light-theme {
+    border: 1px solid var(--tippy-border) !important;
+    background-color: var(--tippy-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark .tippy-tooltip.light-theme[x-placement^=top] .tippy-arrow {
+    border-top-color: var(--tippy-bg) !important;
+}
+
+.dark .tippy-tooltip.light-theme[x-placement^=bottom] .tippy-arrow {
+    border-bottom-color: var(--tippy-bg) !important;
+}
+
+.dark .tippy-tooltip.light-theme[x-placement^=left] .tippy-arrow {
+    border-left-color: var(--tippy-bg) !important;
+}
+
+.dark .tippy-tooltip.light-theme[x-placement^=right] .tippy-arrow {
+    border-right-color: var(--tippy-bg) !important;
+}
+
 #app {
     position: relative;
 }
@@ -344,6 +387,40 @@ export default {
 
 .dark .vm--modal .dialog-c-text {
     color: var(--text-secondary) !important;
+}
+
+/* v-emoji-picker dark mode */
+.dark .v-emoji-picker {
+    background-color: var(--bg-primary) !important;
+    border: 1px solid var(--border-primary) !important;
+}
+
+.dark .v-emoji-picker .v-category-button {
+    background-color: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border-primary) !important;
+}
+
+.dark .v-emoji-picker .v-emoji-category {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.dark .v-emoji-picker .v-emoji {
+    background-color: transparent !important;
+}
+
+.dark .v-emoji-picker .v-emoji:hover {
+    background-color: var(--bg-item-hover) !important;
+}
+
+.dark .v-emoji-picker .v-category-button img {
+    filter: invert(0.8);
+}
+
+.dark .v-emoji-picker input {
+    background-color: var(--bg-secondary) !important;
+    border: 1px solid var(--border-primary) !important;
+    color: var(--text-primary) !important;
 }
 
 </style>

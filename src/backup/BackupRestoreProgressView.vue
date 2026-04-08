@@ -454,12 +454,12 @@ export default {
     font-size: 20px;
     margin-bottom: 30px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .backup-info {
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 30px;
@@ -469,7 +469,7 @@ export default {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .info-row:last-child {
@@ -478,13 +478,13 @@ export default {
 
 .info-row .label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     font-weight: 500;
 }
 
 .info-row .value {
     font-size: 14px;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
@@ -496,13 +496,13 @@ export default {
 .status-text {
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .detail-text {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .restore-statistics {
@@ -510,7 +510,7 @@ export default {
     color: #2196F3;
     margin-top: 12px;
     font-weight: 500;
-    background: #f0f7ff;
+    background: var(--bg-tertiary);
     padding: 8px 12px;
     border-radius: 4px;
     display: inline-block;
@@ -523,7 +523,7 @@ export default {
 .progress-bar {
     width: 100%;
     height: 8px;
-    background: #e0e0e0;
+    background: var(--bg-tertiary);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 10px;
@@ -539,7 +539,7 @@ export default {
 .progress-text {
     text-align: center;
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .statistics {
@@ -548,7 +548,7 @@ export default {
     gap: 20px;
     margin-bottom: 30px;
     padding: 20px;
-    background: #f5f5f5;
+    background: var(--bg-tertiary);
     border-radius: 8px;
 }
 
@@ -558,7 +558,7 @@ export default {
 
 .stat-label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 8px;
 }
 
@@ -600,17 +600,17 @@ export default {
 }
 
 .cancel-btn {
-    background: #e0e0e0;
-    color: #666;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
 }
 
 .cancel-btn:hover {
-    background: #d0d0d0;
+    background: var(--bg-secondary);
 }
 
 .cancel-btn:disabled {
-    background: #e0e0e0;
-    color: #999;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
     cursor: not-allowed;
 }
 

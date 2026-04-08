@@ -208,8 +208,8 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: #292a2c;
-    background-color: #fcfcfc;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
 }
 
 .user-info-container .avatar {
@@ -225,7 +225,7 @@ export default {
     padding-bottom: 20px;
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid lightgray;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 
@@ -242,7 +242,7 @@ export default {
 }
 
 .content ul {
-    border: 1px solid white;
+    border: 1px solid var(--border-primary);
     list-style: none;
     margin: 10px 20px;
 }
@@ -252,10 +252,12 @@ export default {
     height: 40px;
     line-height: 40px;
     display: flex;
+    color: var(--text-primary);
 }
 
 .content ul li label {
     margin-right: 20px;
+    color: var(--text-secondary);
 }
 
 .content ul li .alias {
@@ -267,16 +269,17 @@ export default {
     width: 100%;
     outline: none;
     border: none;
-    background-color: #fcfcfc;
+    background-color: var(--bg-secondary);
     padding: 2px 5px;
+    color: var(--text-primary);
 }
 
 .content ul li .alias > input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .content ul li .alias > input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .content ul li > div {
@@ -296,6 +299,7 @@ export default {
 .action a {
     display: inline-block;
     text-decoration: none;
+    color: var(--icon-color);
 }
 
 .action a i {
@@ -308,7 +312,7 @@ export default {
 }
 
 i:hover {
-    color: #3f64e4;
+    color: var(--icon-active-color);
 }
 
 

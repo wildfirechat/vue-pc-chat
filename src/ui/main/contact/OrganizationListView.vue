@@ -63,14 +63,15 @@ export default {
     display: flex;
     font-size: 13px;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .organization-item:hover {
-    background-color: #EAEAEA;
+    background-color: var(--bg-item-hover);
 }
 
 .organization-item.active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-item-active);
 }
 
 .organization-item span {

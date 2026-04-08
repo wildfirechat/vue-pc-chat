@@ -96,14 +96,14 @@ export default {
     height: 40px;
     width: var(--voice-width);
     min-width: 55px;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 5px;
     padding: 5px 10px;
     align-items: center;
 }
 
 .volume-container i {
-    color: #888888;
+    color: var(--text-secondary);
 }
 
 .volume-container div {
@@ -111,16 +111,16 @@ export default {
 }
 
 .duration {
-    color: #b2b2b2;
+    color: var(--text-secondary);
     padding: 8px;
 }
 
 .speechText {
-    color: #888888;
+    color: var(--text-primary);
     margin: 8px 10px;
     padding: 8px 4px 8px 8px;
     font-size: 13px;
-    background-color: #e9e9e9;
+    background-color: var(--bg-tertiary);
     border-radius: 5px;
 }
 

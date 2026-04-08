@@ -139,7 +139,8 @@ export default {
 .sub-window-panel {
     width: min(480px, 100vw);
     height: 100%;
-    background: #f5f6f7;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
     position: relative;
     box-shadow: -2px 0 12px rgba(0, 0, 0, 0.18);
 }
@@ -159,7 +160,7 @@ export default {
 
 .sub-window-close i {
     font-size: 16px;
-    color: #888;
+    color: var(--text-secondary);
 }
 
 .sub-window-close i:hover {

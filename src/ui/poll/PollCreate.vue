@@ -294,11 +294,11 @@ export default {
 .poll-create {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     height: 100vh;
-    background-color: #f5f6f7;
+    background-color: var(--bg-secondary);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    color: #333;
+    color: var(--text-primary);
     user-select: none;
 }
 
@@ -334,7 +334,7 @@ export default {
 
 .form-wrapper {
     width: 100%;
-    background: #fff;
+    background: var(--bg-primary);
     padding: 20px 24px;
 }
 
@@ -345,18 +345,18 @@ export default {
 .form-label {
     display: block;
     margin-bottom: 8px;
-    color: #666;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
 .input-field {
     width: 100%;
     padding: 12px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
-    background: #fff;
+    background: var(--bg-primary);
     font-size: 15px;
-    color: #333;
+    color: var(--text-primary);
     box-sizing: border-box;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -393,7 +393,7 @@ export default {
     height: 36px;
     border: none;
     background: transparent;
-    color: #999;
+    color: var(--text-secondary);
     font-size: 18px;
     cursor: pointer;
     display: flex;
@@ -409,9 +409,9 @@ export default {
     width: 100%;
     padding: 12px;
     margin-top: 8px;
-    border: 1px dashed #ddd;
+    border: 1px dashed var(--border-primary);
     border-radius: 6px;
-    background: #fff;
+    background: var(--bg-primary);
     color: #1f64e4;
     font-size: 15px;
     cursor: pointer;
@@ -420,19 +420,19 @@ export default {
 
 .add-option-btn:hover {
     border-color: #1f64e4;
-    background: #f0f7ff;
+    background: var(--bg-item-hover);
 }
 
 .option-hint {
     font-size: 12px;
-    color: #999;
+    color: var(--text-secondary);
     margin-top: 8px;
 }
 
 .settings-list {
-    background: #fff;
+    background: var(--bg-primary);
     border-radius: 8px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
 }
 
 .setting-item {
@@ -440,7 +440,7 @@ export default {
     align-items: center;
     padding: 14px 16px;
     cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .setting-item:last-child {
@@ -450,17 +450,17 @@ export default {
 .setting-label {
     flex: 1;
     font-size: 15px;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .setting-value {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .setting-arrow {
     font-size: 18px;
-    color: #999;
+    color: var(--text-secondary);
     margin-left: 4px;
 }
 
@@ -561,7 +561,7 @@ input:checked + .slider:before {
 }
 
 .dialog-content {
-    background: #fff;
+    background: var(--bg-primary);
     border-radius: 12px;
     width: 80%;
     max-width: 300px;
@@ -573,8 +573,8 @@ input:checked + .slider:before {
     text-align: center;
     font-size: 16px;
     font-weight: 600;
-    color: #333;
-    border-bottom: 1px solid #f0f0f0;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .dialog-options {
@@ -586,9 +586,9 @@ input:checked + .slider:before {
     padding: 14px 16px;
     text-align: center;
     font-size: 15px;
-    color: #333;
+    color: var(--text-primary);
     cursor: pointer;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .dialog-option:last-child {
@@ -596,7 +596,7 @@ input:checked + .slider:before {
 }
 
 .dialog-option:hover, .dialog-option.active {
-    background: #f5f6f7;
+    background: var(--bg-secondary);
     color: #1f64e4;
 }
 
@@ -608,10 +608,11 @@ input:checked + .slider:before {
 .datetime-input {
     width: 100%;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
     font-size: 15px;
-    color: #333;
+    color: var(--text-primary);
+    background: var(--bg-primary);
     outline: none;
 }
 
@@ -622,21 +623,21 @@ input:checked + .slider:before {
 
 .dialog-actions {
     display: flex;
-    border-top: 1px solid #f0f0f0;
+    border-top: 1px solid var(--border-primary);
 }
 
 .dialog-btn {
     flex: 1;
     padding: 14px;
     border: none;
-    background: #fff;
+    background: var(--bg-primary);
     font-size: 15px;
     cursor: pointer;
 }
 
 .dialog-btn.cancel {
-    color: #666;
-    border-right: 1px solid #f0f0f0;
+    color: var(--text-secondary);
+    border-right: 1px solid var(--border-primary);
 }
 
 .dialog-btn.confirm {
@@ -645,6 +646,6 @@ input:checked + .slider:before {
 }
 
 .dialog-btn:hover {
-    background: #f5f6f7;
+    background: var(--bg-secondary);
 }
 </style>

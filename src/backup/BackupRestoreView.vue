@@ -178,7 +178,7 @@ export default {
     font-size: 20px;
     margin-bottom: 20px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .options {
@@ -191,15 +191,15 @@ export default {
     display: flex;
     align-items: center;
     padding: 15px 20px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
-    background: white;
+    background: var(--bg-primary);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .option-button:hover {
-    background: #f5f5f5;
+    background: var(--bg-secondary);
     border-color: #2196F3;
     box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
 }
@@ -211,7 +211,7 @@ export default {
 
 .option-button .text {
     font-size: 16px;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 500;
 }
 
@@ -230,7 +230,7 @@ export default {
 }
 
 .dialog-box {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 8px;
     padding: 30px;
     min-width: 400px;
@@ -242,14 +242,14 @@ export default {
     margin: 0 0 20px 0;
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .dialog-text {
     margin: 0 0 25px 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #666;
+    color: var(--text-secondary);
     white-space: pre-line;
 }
 

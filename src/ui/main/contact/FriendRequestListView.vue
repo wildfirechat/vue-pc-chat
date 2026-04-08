@@ -11,7 +11,7 @@
                             <div class="name-action">
                                 <div style="display: flex; align-items: center; ">
                                     <span class="name single-line">{{ friendRequest._target.displayName }}</span>
-                                    <p v-if="isExternalDomainUser(friendRequest._target)" class="single-line" style="color: #F0A040; border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName(friendRequest._target) }}</p>
+                                    <p v-if="isExternalDomainUser(friendRequest._target)" class="single-line" style="color: var(--text-accent); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName(friendRequest._target) }}</p>
                                 </div>
                                 <span v-if="friendRequest.status === 1" class="status">{{
                                         $t('friend_request.accepted')
@@ -125,16 +125,16 @@ export default {
     padding: 10px 15px 10px 0;
     align-items: center;
     font-size: 13px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 
 .new-friend-item-container.active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-tertiary);
 }
 
 .new-friend-item-container:hover {
-    background-color: #EAEAEA;
+    background-color: var(--bg-secondary);
 }
 
 .new-friend-item .info {
@@ -156,18 +156,18 @@ export default {
     padding: 0 10px;
     text-align: center;
     color: white;
-    background: #4168e0;
+    background: var(--text-accent);
     border-radius: 10px;
-    border: solid 1px #4168e0;
+    border: solid 1px var(--text-accent);
 }
 
 .new-friend-item .info .name-action .status {
-    color: #b2b2b2;
+    color: var(--text-secondary);
 }
 
 .new-friend-item .info .reason {
     font-size: 12px;
-    color: #b2b2b2;
+    color: var(--text-secondary);
 }
 
 

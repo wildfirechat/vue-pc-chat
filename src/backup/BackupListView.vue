@@ -287,14 +287,14 @@ export default {
     font-size: 20px;
     margin-bottom: 15px; /* 减小margin */
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
     flex-shrink: 0; /* 标题不缩小 */
 }
 
 .loading, .empty {
     text-align: center;
     padding: 50px 20px;
-    color: #999;
+    color: var(--text-secondary);
     flex: 1; /* 加载和空状态占据剩余空间 */
     overflow-y: auto;
 }
@@ -302,13 +302,13 @@ export default {
 .empty .hint {
     font-size: 14px;
     margin-top: 10px;
-    color: #bbb;
+    color: var(--text-secondary);
 }
 
 .backup-list {
     flex: 1; /* 占据剩余空间 */
     overflow-y: auto;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 10px;
     min-height: 0; /* 允许flex子元素缩小 */
@@ -320,7 +320,7 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 12px 15px; /* 减小padding */
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-primary);
     transition: background 0.2s;
     flex-shrink: 0; /* 防止item被压缩 */
 }
@@ -330,7 +330,7 @@ export default {
 }
 
 .backup-item:hover {
-    background: #f9f9f9;
+    background: var(--bg-secondary);
 }
 
 .backup-info {
@@ -341,7 +341,7 @@ export default {
 .backup-name {
     font-size: 16px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 5px; /* 减小margin */
     white-space: nowrap;
     overflow: hidden;
@@ -350,7 +350,7 @@ export default {
 
 .backup-detail {
     font-size: 13px;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 3px;
 }
 
@@ -360,7 +360,7 @@ export default {
 
 .backup-size {
     font-size: 14px;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .backup-actions {
@@ -404,7 +404,7 @@ export default {
     padding-top: 15px; /* 增加顶部padding */
     text-align: center;
     flex-shrink: 0; /* 确保footer不被压缩 */
-    border-top: 1px solid #e0e0e0; /* 添加分隔线 */
+    border-top: 1px solid var(--border-primary); /* 添加分隔线 */
 }
 
 .close-btn {
@@ -437,7 +437,7 @@ export default {
 }
 
 .dialog-box {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 8px;
     padding: 30px;
     min-width: 400px;
@@ -449,14 +449,14 @@ export default {
     margin: 0 0 20px 0;
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .dialog-text {
     margin: 0 0 25px 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #666;
+    color: var(--text-secondary);
     white-space: pre-line;
 }
 

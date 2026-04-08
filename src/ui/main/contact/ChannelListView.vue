@@ -46,14 +46,15 @@ export default {
     display: flex;
     font-size: 13px;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .channel-item:hover{
-    background-color: #EAEAEA;
+    background-color: var(--bg-secondary);
 }
 
 .channel-item.active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-tertiary);
 }
 
 .channel-item span {

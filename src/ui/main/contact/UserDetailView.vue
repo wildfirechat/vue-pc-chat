@@ -140,6 +140,8 @@ export default {
     border-bottom-right-radius: var(--main-border-radius);
     display: flex;
     justify-content: center;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .user-header-content-container {
@@ -152,7 +154,7 @@ export default {
     display: flex;
     align-items: center;
     padding-bottom: 15px;
-    border-bottom: 1px solid #e6e6e6;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .header .avatar {
@@ -174,17 +176,18 @@ export default {
     font-size: 15px;
     font-style: normal;
     font-weight: normal;
+    color: var(--text-primary);
 }
 
 .header .name p {
     font-size: 13px;
-    color: #7f7f7f;
+    color: var(--text-secondary);
 }
 
 .content {
     width: 100%;
     text-align: left;
-    border-bottom: 1px solid #e6e6e6;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .content ul {

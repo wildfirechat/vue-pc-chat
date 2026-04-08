@@ -46,14 +46,15 @@ export default {
     display: flex;
     font-size: 13px;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .group-item:hover{
-    background-color: #EAEAEA;
+    background-color: var(--bg-secondary);
 }
 
 .group-item.active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-tertiary);
 }
 
 .group-item span {

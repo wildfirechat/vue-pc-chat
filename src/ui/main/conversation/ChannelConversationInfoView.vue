@@ -98,12 +98,12 @@ header label {
     justify-content: center;
     align-items: flex-start;
     font-size: 14px;
-    color: #999999;
+    color: var(--text-secondary);
 }
 
 header label:last-of-type {
     padding-bottom: 15px;
-    border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 header label input {
@@ -127,11 +127,11 @@ header label input {
     justify-content: center;
     height: 54px;
     width: 100%;
-    border-top: 1px solid #ececec;
+    border-top: 1px solid var(--border-primary);
 }
 
 .unsubscribe-channel-item:active {
-    background: #d6d6d6;
+    background: var(--bg-item-active);
 }
 
 </style>

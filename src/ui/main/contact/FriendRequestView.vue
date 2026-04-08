@@ -63,7 +63,9 @@ export default {
 .friend-request-container {
     display: flex;
     flex-direction: row;
-    margin: 40px 30px 30px 30px
+    margin: 40px 30px 30px 30px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .avatar {
@@ -86,16 +88,18 @@ export default {
     width: 100%;
     padding: 0 5px;
     outline: none;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .info-action-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .info-action-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .info-container {
@@ -108,11 +112,13 @@ export default {
 .info-container .title {
     font-size: 20px;
     padding-top: 5px;
+    color: var(--text-primary);
 }
 
 .info-container .desc {
     font-size: 16px;
     padding-bottom: 5px;
+    color: var(--text-secondary);
 }
 
 .info-action-container .action-container {
@@ -128,21 +134,23 @@ export default {
 }
 
 .info-action-container .action-container .cancel {
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .info-action-container .action-container .cancel:active {
-    background: #cccccc;
+    background: var(--bg-tertiary);
 }
 
 .info-action-container .action-container .confirm {
-    background-color: #4168e0;
+    background-color: var(--text-accent);
     color: white;
-    border: 1px solid white;
+    border: 1px solid var(--text-accent);
 }
 
 .info-action-container .action-container .confirm:active {
-    background-color: #3168e0;
+    filter: brightness(90%);
 }
 
 </style>

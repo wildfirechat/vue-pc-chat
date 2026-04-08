@@ -247,12 +247,14 @@ export default {
     flex: 1;
     height: 100%;
     align-items: center;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .left-slider {
     height: 100%;
     width: 30%;
-    background: white;
+    background: var(--bg-primary);
     padding: 20px;
 }
 
@@ -285,7 +287,7 @@ export default {
 .action .icon {
     width: 40px;
     height: 40px;
-    background: white;
+    background: var(--bg-primary);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -302,7 +304,7 @@ export default {
 
 .right-slider {
     height: 100%;
-    background: #f8f9fb;
+    background: var(--bg-secondary);
     flex: 1 1 auto;
     overflow-y: auto;
     padding: 20px;
@@ -315,13 +317,13 @@ export default {
     display: flex;
     align-items: center;
     padding: 15px;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 10px;
     font-size: 12px;
 }
 
 .fav-container .fav-list {
-    background: white;
+    background: var(--bg-primary);
     border-radius: 10px;
 }
 
@@ -333,7 +335,7 @@ export default {
 }
 
 .fav-conference:active {
-    background: #f1f1f1;
+    background: var(--bg-secondary);
 }
 
 .fav-conference .icon {
@@ -348,7 +350,7 @@ export default {
 }
 
 .fav-conference:not(:last-of-type) {
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .fav-conference .title {
@@ -356,7 +358,7 @@ export default {
 }
 
 .fav-conference .desc {
-    color: gray;
+    color: var(--text-secondary);
     margin-top: 3px;
     font-size: 12px;
 }

@@ -449,7 +449,7 @@ export default {
 }
 .action-btn {
     pointer-events: auto;
-    background: #1f64e4;
+    background: var(--text-accent);
     color: white;
     border: none;
     padding: 12px 60px;
@@ -457,20 +457,22 @@ export default {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
 }
+
 .action-btn:hover {
-    background: #006ce6;
+    opacity: 0.9;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
 }
+
 .action-btn:active {
     transform: translateY(1px);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
 }
+
 .action-btn:disabled {
-    background: #b4d8ff;
+    background: var(--bg-item-active);
+    color: var(--text-secondary);
     box-shadow: none;
     cursor: default;
     transform: none;

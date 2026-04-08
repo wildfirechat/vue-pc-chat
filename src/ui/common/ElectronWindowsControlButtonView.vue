@@ -326,15 +326,15 @@ export default {
 }
 
 #min-button:hover {
-    background: #d6d6d6 !important;
+    background: var(--bg-item-active) !important;
 }
 
 #max-button:hover {
-    background: #d6d6d6 !important;
+    background: var(--bg-item-active) !important;
 }
 
 #restore-button:hover {
-    background: #d6d6d6 !important;
+    background: var(--bg-item-active) !important;
 }
 
 #close-button:hover {

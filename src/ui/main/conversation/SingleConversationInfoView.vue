@@ -94,7 +94,7 @@ export default {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-primary);
 }
 
 .action-item img {
@@ -108,7 +108,7 @@ export default {
 }
 
 .action-item:active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-item-active);
 }
 
 .conversation-action-item {
@@ -119,11 +119,11 @@ export default {
     justify-content: center;
     height: 42px;
     max-height: 42px;
-    border-top: 1px solid #ececec;
+    border-top: 1px solid var(--border-primary);
 }
 
 .conversation-action-item:active {
-    background: #d6d6d6;
+    background: var(--bg-item-active);
 }
 
 </style>

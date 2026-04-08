@@ -44,12 +44,14 @@ export default {
     align-items: center;
     border-top-right-radius: var(--main-border-radius);
     border-bottom-right-radius: var(--main-border-radius);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .channel-info-container a {
     color: white;
     padding: 10px 40px;
-    background-color: #3861e0;
+    background-color: var(--text-accent);
     border-radius: 5px;
     font-size: 14px;
     border: 1px solid transparent;
@@ -57,7 +59,7 @@ export default {
 }
 
 .channel-info-container a:active {
-    background-color: #4168e0;
+    opacity: 0.8;
 }
 
 .channel-info {

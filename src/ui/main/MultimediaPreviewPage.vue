@@ -289,7 +289,7 @@ export default {
 
 .left-arrow-container:hover .left-arrow {
     color: white;
-    background: #9a9a9a;
+    background: rgba(0, 0, 0, 0.5);
     width: 50px;
     height: 50px;
     border-radius: 30px;
@@ -319,7 +319,7 @@ export default {
 
 .right-arrow-container:hover .right-arrow {
     color: white;
-    background: #9a9a9a;
+    background: rgba(0, 0, 0, 0.5);
     width: 50px;
     height: 50px;
     border-radius: 30px;

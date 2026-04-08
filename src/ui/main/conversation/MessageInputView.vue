@@ -1,8 +1,8 @@
 <template>
     <div ref="message-input-container" class="message-input-container" :class="{resized: resized}">
         <div v-if="convMuted"
-             style="width: 100%; height: 50px; margin-top: -2px; background: lightgrey; display: flex; flex-direction: row; justify-content: center; align-items: center">
-            <p style="color: white">群禁言或者群已被解散</p>
+             style="width: 100%; height: 50px; margin-top: -2px; background: var(--bg-unconnected); display: flex; flex-direction: row; justify-content: center; align-items: center">
+            <p style="color: var(--text-danger)">群禁言或者群已被解散</p>
         </div>
         <section v-else-if="!sharedConversationState.showChannelMenu" class="message-input-section">
             <section class="input-action-container">

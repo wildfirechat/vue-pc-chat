@@ -642,7 +642,7 @@ export default {
     font-size: 20px;
     margin-bottom: 30px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
     flex-shrink: 0;
 }
 
@@ -654,13 +654,13 @@ export default {
 .status-text {
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .detail-text {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .progress-bar-container {
@@ -670,7 +670,7 @@ export default {
 .progress-bar {
     width: 100%;
     height: 8px;
-    background: #e0e0e0;
+    background: var(--bg-tertiary);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 10px;
@@ -686,7 +686,7 @@ export default {
 .progress-text {
     text-align: center;
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .statistics {
@@ -695,7 +695,7 @@ export default {
     gap: 20px;
     margin-bottom: 30px;
     padding: 20px;
-    background: #f5f5f5;
+    background: var(--bg-tertiary);
     border-radius: 8px;
 }
 
@@ -705,7 +705,7 @@ export default {
 
 .stat-label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     margin-bottom: 8px;
 }
 
@@ -720,7 +720,7 @@ export default {
     font-size: 20px;
     margin-bottom: 15px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
     flex-shrink: 0;
 }
 
@@ -730,7 +730,7 @@ export default {
     align-items: center;
     margin-bottom: 15px;
     padding: 10px;
-    background: #f5f5f5;
+    background: var(--bg-tertiary);
     border-radius: 6px;
     flex-shrink: 0; /* 确保不缩小 */
 }
@@ -752,7 +752,7 @@ export default {
 
 .selected-count {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
 }
 
 .empty {
@@ -760,13 +760,13 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .conversation-list {
     flex: 1;
     overflow-y: auto;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 10px;
     min-height: 0;
@@ -777,7 +777,7 @@ export default {
     display: flex;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-primary);
     cursor: pointer;
     border-radius: 6px;
     transition: background 0.2s;
@@ -788,11 +788,11 @@ export default {
 }
 
 .conversation-item:hover {
-    background: #f9f9f9;
+    background: var(--bg-secondary);
 }
 
 .conversation-item.selected {
-    background: #e3f2fd;
+    background: var(--bg-item-active);
 }
 
 .checkbox {
@@ -805,7 +805,7 @@ export default {
 .checkbox-unchecked {
     width: 20px;
     height: 20px;
-    border: 2px solid #999;
+    border: 2px solid var(--text-secondary);
     border-radius: 4px;
 }
 
@@ -828,7 +828,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f0f0f0;
+    background: var(--bg-tertiary);
     border-radius: 6px;
     margin-right: 12px;
     flex-shrink: 0;
@@ -859,7 +859,7 @@ export default {
 .name {
     font-size: 16px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -868,7 +868,7 @@ export default {
 
 .detail {
     font-size: 13px;
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .footer {
@@ -878,13 +878,13 @@ export default {
     justify-content: center;
     flex-shrink: 0; /* 确保footer不被压缩 */
     padding-top: 15px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--border-primary);
 }
 
 .cancel-btn {
     padding: 10px 30px;
-    background: #e0e0e0;
-    color: #666;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -893,7 +893,7 @@ export default {
 }
 
 .cancel-btn:hover {
-    background: #d0d0d0;
+    background: var(--bg-secondary);
 }
 
 .confirm-btn {

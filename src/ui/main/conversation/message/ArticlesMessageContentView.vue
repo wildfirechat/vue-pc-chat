@@ -53,19 +53,21 @@ export default {
 .top-article {
     position: relative;
     width: 400px;
-    background: white;
+    background: var(--bg-primary);
     padding: 10px;
     border-radius: 5px;
     margin: 5px 0;
+    color: var(--text-primary);
 }
 
 .top-article:hover {
-    background: #e0e0e0e5;
+    background: var(--bg-item-hover);
 }
 
 .top-article img {
     width: 100%;
     height: 150px;
+    object-fit: cover;
 }
 
 .top-article p {
@@ -89,6 +91,8 @@ export default {
     color: white;
     padding: 0 20px;
     transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    width: 100%;
 }
 
 .sub-article {
@@ -99,12 +103,14 @@ export default {
     position: relative;
     width: 400px;
     height: 80px;
-    background: white;
+    background: var(--bg-primary);
     padding: 0 10px;
+    color: var(--text-primary);
+    border-top: 1px solid var(--border-primary);
 }
 
 .sub-article:hover {
-    background: #e0e0e0e5;
+    background: var(--bg-item-hover);
 }
 
 .articles-container .sub-article:last-of-type {

@@ -618,15 +618,16 @@ export default {
     width: 380px;
     height: 500px;
     margin: auto;
-    background: white;
+    background: var(--bg-primary);
     border-radius: 5px;
+    color: var(--text-primary);
 }
 
 .qr-container {
     border-radius: 3px;
     width: 250px;
     height: 250px;
-    background-color: #e7e7e7;
+    background-color: var(--bg-tertiary);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -669,7 +670,7 @@ export default {
     margin-top: 5px;
     padding: 5px;
     font-size: 14px;
-    color: gray;
+    color: var(--text-secondary);
 }
 
 .qrcode-login-container button {
@@ -682,30 +683,31 @@ export default {
 .button-cancel {
     margin-top: 10px;
     background-color: transparent;
-    color: gray;
+    color: var(--text-secondary);
 }
 
 .button-cancel:active {
-    color: #4168e0;
+    color: var(--text-accent);
 }
 
 .button-cancel:hover {
-    color: #4168e0;
+    color: var(--text-accent);
 }
 
 .button-confirm {
     width: 200px;
     height: 40px;
     color: white;
-    background-color: #4168e0a0;
+    background-color: var(--text-accent);
+    opacity: 0.8;
 }
 
 .button-confirm:hover {
-    background-color: #4168e0;
+    opacity: 1;
 }
 
 .button-confirm:active {
-    background-color: #4168e0;
+    opacity: 1;
 }
 
 
@@ -722,7 +724,7 @@ export default {
 .switch-login-type-container {
     padding-top: 10px;
     font-size: 14px;
-    color: #4168e0;
+    color: var(--text-accent);
 }
 
 .login-form-container {
@@ -737,7 +739,7 @@ export default {
 .login-form-container .title {
     align-self: flex-start;
     font-size: 18px;
-    color: white;
+    color: var(--text-primary);
 }
 
 .login-form-container .item {
@@ -750,11 +752,13 @@ export default {
 .login-form-container .text-input {
     height: 40px;
     width: 100%;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
     padding: 0 5px;
     -moz-appearance: textfield;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 input::-webkit-outer-spin-button,
@@ -764,23 +768,25 @@ input::-webkit-inner-spin-button {
 }
 
 .login-form-container .text-input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .login-form-container .text-input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .login-form-container .login-button {
     height: 40px;
     width: 100%;
     margin-top: 20px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
+    background-color: var(--text-accent);
+    color: white;
 }
 
 .login-form-container .login-button:active {
-    border: 1px solid #4168e0;
+    opacity: 0.8;
 }
 
 .login-form-container .request-auth-code-button {
@@ -790,19 +796,23 @@ input::-webkit-inner-spin-button {
     right: 0;
     transform: translateY(-50%);
     margin: 0 5px;
+    border: none;
+    background: transparent;
+    color: var(--text-accent);
 }
 
 .login-form-container .syncing {
     position: absolute;
     bottom: 0;
-    color: #4168e0;
+    color: var(--text-accent);
 }
 
 .tip {
     align-self: flex-start;
     font-size: 12px;
-    color: #4168e0;
+    color: var(--text-accent);
     margin-top: 10px;
+    cursor: pointer;
 }
 
 .logo {
@@ -816,7 +826,8 @@ input::-webkit-inner-spin-button {
     bottom: 10px;
     align-self: flex-start;
     font-size: 12px;
-    color: lightcoral;
+    color: var(--text-danger);
+    cursor: pointer;
 }
 
 .diagnose-overlay {
@@ -833,7 +844,7 @@ input::-webkit-inner-spin-button {
 }
 
 .diagnose-content {
-    background: white;
+    background: var(--bg-primary);
     padding: 20px;
     border-radius: 5px;
     max-width: 100%;
@@ -842,6 +853,7 @@ input::-webkit-inner-spin-button {
     display: flex;
     flex-direction: column;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .diagnose-content pre {
@@ -851,5 +863,11 @@ input::-webkit-inner-spin-button {
 
 .diagnose-content button {
     margin-top: 20px;
+    padding: 5px 20px;
+    border: 1px solid var(--border-primary);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: 3px;
 }
+
 </style>
