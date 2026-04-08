@@ -136,8 +136,9 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    background-color: #f7f7f7;
+    background-color: var(--bg-secondary);
     overflow: hidden;
+    color: var(--text-primary);
 }
 
 .user-list-panel .input-container {
@@ -150,10 +151,11 @@ export default {
     margin: 15px 20px 0 15px;
     flex: 1;
     border-radius: 3px;
-    border: 1px solid #ededed;
-    background-color: white;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-primary);
     padding-left: 10px;
     text-align: left;
+    color: var(--text-primary);
 }
 
 .user-list-panel .user-list-container {
@@ -162,22 +164,25 @@ export default {
 }
 
 .user-list-container .back {
-    background-color: #f7f7f7;
+    background-color: var(--bg-secondary);
     height: 40px;
     font-size: 13px;
     padding-left: 15px;
     display: flex;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .user-list-container .back:active {
-    background-color: #e5e5e5;
+    background-color: var(--bg-item-active);
 }
 
 .checked-user-list-container {
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .checked-user-list-container header {
@@ -196,6 +201,7 @@ export default {
 .checked-user-list-container header span {
     font-size: 12px;
     margin-right: 20px;
+    color: var(--text-secondary);
 }
 
 
@@ -245,14 +251,16 @@ export default {
     position: absolute;
     width: 20px;
     height: 20px;
-    border: 1px solid white;
+    border: 1px solid var(--border-primary);
     border-radius: 10px;
     top: 0;
     right: 0;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .checked-user-list-container .content .unpick-button:active {
-    background-color: #e5e5e5;
+    background-color: var(--bg-item-active);
 }
 
 .checked-user-list-container footer {
@@ -266,11 +274,13 @@ export default {
 .checked-user-list-container footer button {
     padding: 5px 30px;
     border-radius: 4px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .checked-user-list-container footer button.confirm {
-    background-color: #4168e0;
+    background-color: var(--text-accent);
     color: white;
     margin-left: 20px;
     margin-right: 20px;

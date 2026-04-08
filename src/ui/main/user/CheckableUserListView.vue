@@ -215,12 +215,13 @@ ul {
 
 .contact-item .label {
     width: 100%;
-    background-color: #fafafa;
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
 }
 
 .contact-item .label p {
     padding: 5px 5px 5px 0;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .contact-item .label.sticky {
@@ -233,6 +234,7 @@ ul {
     display: flex;
     width: 100%;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .contact-item .content span {
@@ -240,11 +242,11 @@ ul {
 }
 
 .contact-item .content.active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-item-active);
 }
 
 .contact-item .content:active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-item-active);
 }
 
 .disabled {

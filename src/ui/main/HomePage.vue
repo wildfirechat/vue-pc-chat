@@ -352,7 +352,7 @@ export default {
     height: calc(100vh - var(--main-margin-top) - var(--main-margin-bottom));
     justify-content: center;
     align-items: center;
-    background-color: white;
+    background-color: var(--bg-primary);
     border-radius: var(--main-border-radius);
     overflow: hidden;
 }
@@ -365,7 +365,7 @@ export default {
     flex-direction: column;
     align-items: center;
     /*background: linear-gradient(180deg, #292a2c 0%, #483a3a 100%);*/
-    background: #EAEAEA;
+    background: var(--bg-sidebar);
     border-top-left-radius: var(--main-border-radius);
     border-bottom-left-radius: var(--main-border-radius);
     padding: var(--home-menu-padding-top) 0 20px 0;
@@ -373,7 +373,7 @@ export default {
 }
 
 .avatar {
-    background-color: gray;
+    background-color: var(--text-secondary);
     width: 35px;
     height: 35px;
     display: block;
@@ -411,7 +411,7 @@ export default {
     position: absolute;
     color: white;
     font-size: 10px;
-    background-color: red;
+    background-color: var(--text-danger);
     border-radius: 8px;
     min-width: 16px;
     height: 16px;
@@ -425,16 +425,16 @@ export default {
 
 i {
     font-size: 26px;
-    color: #868686;
+    color: var(--icon-color);
     cursor: pointer;
 }
 
 i:hover {
-    color: #1f64e4;
+    color: var(--icon-active-color);
 }
 
 i.active {
-    color: #3f64e4;
+    color: var(--icon-active-color);
 }
 
 .drag-area {
@@ -451,10 +451,10 @@ i.active {
     top: 0;
     left: 60px;
     right: 0;
-    color: red;
+    color: var(--text-danger);
     padding: 15px 0;
     text-align: center;
-    background: #f2f2f280;
+    background: var(--bg-unconnected);
     /*box-shadow: 0 0 1px #000;*/
 }
 
@@ -524,3 +524,4 @@ i.active {
 }
 
 </style>
+

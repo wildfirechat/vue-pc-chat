@@ -387,8 +387,9 @@ export default {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-primary);
     margin-right: 10px;
+    color: var(--text-secondary);
 }
 
 .participant-user {
@@ -396,10 +397,11 @@ export default {
     align-items: center;
     justify-content: center;
     padding: 5px 0 5px 10px;
+    color: var(--text-primary);
 }
 
 .participant-user.active {
-    background: #d6d6d6;
+    background: var(--bg-item-active);
 }
 
 .participant-user .name-desc {
@@ -408,10 +410,11 @@ export default {
 
 .participant-user .name-desc .desc {
     font-size: 13px;
+    color: var(--text-secondary);
 }
 
 .audio-video {
-    color: black;
+    color: var(--text-primary);
     padding: 0 10px;
 }
 
@@ -440,8 +443,9 @@ export default {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-primary);
     margin-right: 10px;
+    color: var(--text-secondary);
 }
 
 .avatar-container:hover .icon {
@@ -450,7 +454,7 @@ export default {
     left: 0;
     top: 0;
     color: white;
-    background: #e0d6d6d6;
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .action-container {

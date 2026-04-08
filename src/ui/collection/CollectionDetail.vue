@@ -241,23 +241,23 @@ export default {
 .collection-detail {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     height: 100vh;
-    background-color: #f5f6f7;
+    background-color: var(--bg-secondary);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    color: #333;
+    color: var(--text-primary);
     user-select: none;
 }
 
 /* Header */
 .page-header {
     height: 50px;
-    background: #fff;
+    background: var(--bg-primary);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    border-bottom: 1px solid #e6e6e6;
+    border-bottom: 1px solid var(--border-primary);
     -webkit-app-region: drag;
     flex-shrink: 0;
     z-index: 10;
@@ -272,25 +272,25 @@ export default {
 .header-title {
     font-weight: 600;
     font-size: 16px;
-    color: #333;
+    color: var(--text-primary);
 }
 .back-btn {
     cursor: pointer;
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     padding: 5px 0;
 }
 .back-btn:hover {
-    color: #333;
+    color: var(--text-primary);
 }
 
 .loading-state, .error-state {
     padding: 60px;
     text-align: center;
-    color: #999;
+    color: var(--text-secondary);
 }
 .spinner {
-    border: 3px solid rgba(0, 0, 0, 0.1);
+    border: 3px solid rgba(127, 127, 127, 0.1);
     width: 30px;
     height: 30px;
     border-radius: 50%;
@@ -303,7 +303,7 @@ export default {
     100% { transform: rotate(360deg); }
 }
 .error-state {
-    color: #ff3b30;
+    color: var(--text-danger);
 }
 
 /* Detail Mode */
@@ -313,11 +313,11 @@ export default {
     display: flex;
     flex-direction: column;
     padding-bottom: 80px;
-    background: #fff;
+    background: var(--bg-primary);
     width: 100%;
 }
 .detail-header {
-    background: #fff;
+    background: var(--bg-primary);
     padding: 24px 24px 16px 24px;
 }
 .creator-info {
@@ -338,44 +338,44 @@ export default {
 .creator-name {
     font-size: 14px;
     font-weight: 600;
-    color: #333;
+    color: var(--text-primary);
 }
 .meta-info {
     font-size: 12px;
-    color: #999;
+    color: var(--text-secondary);
     margin-top: 2px;
 }
 .collection-title {
     font-size: 24px;
     font-weight: bold;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 12px;
     line-height: 1.3;
 }
 .collection-desc {
     font-size: 15px;
-    color: #555;
+    color: var(--text-secondary);
     margin-bottom: 12px;
     white-space: pre-wrap;
     line-height: 1.6;
 }
 .collection-template {
     font-size: 13px;
-    color: #1f64e4;
-    background: #f0f7ff;
+    color: var(--text-accent);
+    background: rgba(31, 100, 228, 0.1);
     display: inline-block;
     padding: 4px 8px;
     border-radius: 4px;
 }
 .divider {
     height: 8px;
-    background: #f5f6f7;
+    background: var(--bg-secondary);
     flex-shrink: 0;
 }
 
 /* Entry List */
 .entry-list {
-    background: #fff;
+    background: var(--bg-primary);
     flex: 1;
     padding: 10px 0;
 }
@@ -383,17 +383,17 @@ export default {
     display: flex;
     align-items: flex-start;
     padding: 16px 24px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-primary);
     transition: background 0.2s;
 }
 .entry-item:hover {
-    background: #fafafa;
+    background: var(--bg-item-hover);
 }
 .index-badge {
     width: 24px;
     height: 24px;
-    background: #f0f2f5;
-    color: #576b95;
+    background: var(--bg-secondary);
+    color: var(--text-accent);
     border-radius: 12px;
     display: flex;
     align-items: center;
@@ -416,25 +416,25 @@ export default {
 .entry-text {
     flex: 1;
     font-size: 16px;
-    color: #333;
+    color: var(--text-primary);
     line-height: 1.6;
     word-break: break-word;
 }
 
 .edit-input {
     width: 100%;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
     padding: 10px 12px;
     font-size: 16px;
     line-height: 1.5;
     outline: none;
     resize: none;
-    background: #fff;
+    background: var(--bg-primary);
     font-family: inherit;
-    color: #333;
+    color: var(--text-primary);
     box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
-    border-color: #1f64e4;
+    border-color: var(--text-accent);
 }
 
 /* Floating Footer */

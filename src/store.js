@@ -2075,6 +2075,11 @@ let store = {
         ipcRenderer.send(IPCEventType.ENABLE_CLOSE_WINDOW_TO_EXIT, enable)
     },
 
+    setTheme(theme) {
+        miscState.theme = theme;
+        setItem('theme', theme);
+    },
+
     setEnableAutoLogin(enable) {
         miscState.enableAutoLogin = enable;
         setItem(contactState.selfUserInfo.uid + '-' + 'autoLogin', enable ? '1' : '0')

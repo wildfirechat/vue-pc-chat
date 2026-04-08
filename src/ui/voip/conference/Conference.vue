@@ -170,8 +170,8 @@
                                 </div>
                                 <div class="action" @click="chat">
                                     <i class="icon-ion-ios-chatboxes"
-                                       style="width: 40px; height: 40px; font-size: 40px; color: black"
-                                       v-bind:style="{color: showConversationView ? 'white' : 'black'}"/>
+                                       style="width: 40px; height: 40px; font-size: 40px; color: var(--text-primary)"
+                                       v-bind:style="{color: showConversationView ? 'white' : 'var(--text-primary)'}"/>
                                     <p>聊天</p>
                                 </div>
                                 <div v-if="conferenceManager.conferenceInfo && selfUserInfo.uid !== conferenceManager.conferenceInfo.owner" class="action">
@@ -1408,13 +1408,14 @@ i.active {
     width: var(--slider-width);
     height: 100%;
     overflow: auto;
-    background: white;
+    background: var(--bg-primary);
 }
 
 .conference-main-content-container {
     width: 100%;
     height: calc(100% - 20px);
     position: relative;
+    background-color: var(--bg-primary);
     /*flex: 1;*/
     /*flex-direction: column;*/
     /*justify-content: space-between;*/
@@ -1458,10 +1459,11 @@ i.active {
 }
 
 .content-container.audio {
-    background: white;
+    background: var(--bg-primary);
     height: calc(100% - 50px);
     overflow: auto;
     padding: 10px 0 50px 0;
+    color: var(--text-primary);
 }
 
 .participant-audio-item {

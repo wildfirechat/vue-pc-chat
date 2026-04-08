@@ -107,7 +107,7 @@ export default {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    background-color: white;
+    background-color: var(--bg-primary);
     padding: 5px 5px 0 5px;
     border-radius: 5px;
 }
@@ -159,7 +159,7 @@ export default {
 .file-item .size {
     font-size: 14px;
     padding-top: 5px;
-    color: rgb(112, 117, 121);
+    color: var(--text-secondary);
 }
 
 .footer {

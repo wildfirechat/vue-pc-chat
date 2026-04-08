@@ -251,6 +251,8 @@ export default {
     display: flex;
     height: 100%;
     width: 100%;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .contact-list-container {
@@ -258,7 +260,7 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    background-color: #f7f7f7;
+    background-color: var(--bg-secondary);
     overflow: hidden;
 }
 
@@ -273,25 +275,27 @@ export default {
     margin: 15px 20px 0 15px;
     flex: 1;
     border-radius: 3px;
-    border: 1px solid #ededed;
-    background-color: white;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-primary);
     padding-left: 20px;
     text-align: left;
     outline: none;
+    color: var(--text-primary);
 }
 
 .input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .input-container i {
     position: absolute;
     top: 20px;
     left: 20px;
+    color: var(--icon-color);
 }
 
 .pick-source-container {
@@ -321,16 +325,16 @@ export default {
 .pick-source-nav li:not(:last-child)::after {
     display: inline-block;
     margin: 0 10px;
-    color: #8f959f;
+    color: var(--text-secondary);
     content: ">";
 }
 
 .pick-source-nav li:not(:last-child) a {
-    color: #4168e0;
+    color: var(--text-accent);
 }
 
 .pick-source-nav li:last-child a {
-    color: #8f959f;
+    color: var(--text-secondary);
     pointer-events: none;
 }
 
@@ -347,7 +351,7 @@ export default {
 }
 
 .pick-source-list ul li:hover {
-    background: #d6d6d6;
+    background: var(--bg-item-hover);
     border-radius: 5px;
 }
 
@@ -357,13 +361,13 @@ export default {
 
 .pick-source-list ul li::after {
     display: inline-block;
-    color: #8f959f;
+    color: var(--text-secondary);
     content: ">";
 }
 
 .pick-source-list a {
     text-decoration: none;
-    color: black;
+    color: var(--text-primary);
     font-size: 14px;
 }
 
@@ -376,6 +380,7 @@ export default {
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: var(--bg-primary);
 }
 
 .checked-contact-list-container header {
@@ -383,6 +388,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .checked-contact-list-container header h2 {
@@ -394,6 +400,7 @@ export default {
 .checked-contact-list-container header span {
     font-size: 12px;
     margin-right: 20px;
+    color: var(--text-secondary);
 }
 
 
@@ -423,6 +430,7 @@ export default {
     text-align: center;
     max-width: 80px;
     font-size: 12px;
+    color: var(--text-primary);
 }
 
 .checked-contact-list-container .content .picked-user-container .picked-user {
@@ -442,15 +450,16 @@ export default {
     position: absolute;
     width: 20px;
     height: 20px;
-    border: 1px solid white;
+    border: 1px solid var(--bg-primary);
     border-radius: 10px;
-    background-color: #f2f2f2;
+    background-color: var(--bg-secondary);
     top: 0;
     right: 0;
+    color: var(--text-primary);
 }
 
 .checked-contact-list-container .content .unpick-button:active {
-    background-color: #e5e5e5;
+    background-color: var(--bg-item-active);
 }
 
 .checked-contact-list-container footer {
@@ -464,19 +473,22 @@ export default {
 footer button {
     padding: 5px 30px;
     border-radius: 4px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 footer button.confirm {
-    background-color: #4168e0;
+    background-color: var(--text-accent);
     margin-left: 20px;
     margin-right: 20px;
     color: white;
 }
 
 footer button.confirm.disable {
-    background-color: #f2f2f2;
-    color: #c2c2c2;
+    background-color: var(--bg-item-hover);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
 }
 
 </style>

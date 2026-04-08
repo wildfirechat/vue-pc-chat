@@ -63,7 +63,26 @@ export default {
             sharedConversationState: store.state.conversation,
         }
     },
+    watch: {
+        'sharedMiscState.theme': function (newVal, oldVal) {
+            this.applyTheme();
+        }
+    },
     methods: {
+        applyTheme() {
+            let theme = this.sharedMiscState.theme;
+            let isDark = false;
+            if (theme === 'dark') {
+                isDark = true;
+            } else if (theme === 'auto') {
+                isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            }
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        },
         visibilityChange(event, hidden) {
             store.setPageVisibility(!hidden);
             console.log('page visibilityChange', hidden);
@@ -91,6 +110,13 @@ export default {
     },
 
     created() {
+        this.applyTheme();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            if (this.sharedMiscState.theme === 'auto') {
+                this.applyTheme();
+            }
+        });
+
         let root = document.documentElement;
         if (isElectron() || window.location.href.indexOf('voip') >= 0) {
             root.style.setProperty('--main-margin-left', '0px');
@@ -177,13 +203,60 @@ export default {
     --home-menu-padding-top: 60px;
     --composite-message-page-width: 100%;
     --composite-message-page-height: 100%;
+
+    /* Light Theme Colors */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #f3f3f3;
+    --bg-sidebar: #EAEAEA;
+    --bg-sidebar-item-active: #d6d6d6;
+    --bg-item-hover: #eeeeee;
+    --bg-item-active: #d6d6d6;
+    --bg-unconnected: #f2f2f280;
+    --border-primary: #e6e6e6;
+    --border-secondary: #eeeeee;
+    --text-primary: #181818;
+    --text-secondary: gray;
+    --text-accent: #3f64e4;
+    --text-danger: red;
+    --icon-color: #868686;
+    --icon-active-color: #3f64e4;
+    --tippy-bg: #fcfcfc;
+    --tippy-border: #f5f5f5;
+    --bg-msg-in: #ffffff;
+    --bg-msg-out: #a8bdff;
+}
+
+.dark {
+    /* Dark Theme Colors */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #252525;
+    --bg-tertiary: #121212;
+    --bg-sidebar: #333333;
+    --bg-sidebar-item-active: #444444;
+    --bg-item-hover: #3a3a3a;
+    --bg-item-active: #444444;
+    --bg-unconnected: #2d2d2d80;
+    --border-primary: #333333;
+    --border-secondary: #2a2a2a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #888888;
+    --text-accent: #5c85ff;
+    --text-danger: #ff4d4d;
+    --icon-color: #888888;
+    --icon-active-color: #5c85ff;
+    --tippy-bg: #2d2d2d;
+    --tippy-border: #333333;
+    --bg-msg-in: #2d2d2d;
+    --bg-msg-out: #3f64e4;
 }
 
 .tippy-tooltip {
     right: var(--tippy-right) !important;
-    border: 1px solid #f5f5f5 !important;
-    background-color: #fcfcfc !important;
+    border: 1px solid var(--tippy-border) !important;
+    background-color: var(--tippy-bg) !important;
     box-shadow: 0 0 25px rgba(0, 0, 0, 0.125);
+    color: var(--text-primary);
 }
 
 #app {
@@ -238,5 +311,39 @@ export default {
     height: 300px;
 }
 
+/* vue-context dark mode */
+.dark .v-context {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.dark .v-context > li > a {
+    color: var(--text-primary);
+}
+
+.dark .v-context > li > a:hover {
+    background-color: var(--text-accent);
+    color: white;
+}
+
+/* vue-js-modal dark mode */
+.dark .vm--modal {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+}
+
+.dark .vm--modal .dialog-content {
+    background-color: var(--bg-primary) !important;
+}
+
+.dark .vm--modal .dialog-c-title {
+    color: var(--text-primary) !important;
+}
+
+.dark .vm--modal .dialog-c-text {
+    color: var(--text-secondary) !important;
+}
 
 </style>

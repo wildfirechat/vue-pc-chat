@@ -205,29 +205,31 @@ export default {
     width: 40px;
     text-align: justify;
     text-align-last: justify;
-    color: #7f7f7f;
+    color: var(--text-secondary);
 }
 
 .content ul li p {
     font-size: 12px;
+    color: var(--text-primary);
 }
 
 .content ul li .alias > input {
     width: 100%;
-    border: none;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-primary);
     border-radius: 3px;
     outline: none;
     padding: 5px;
-    color: #bfbfbf;
+    color: var(--text-primary);
     font-size: 13px;
 }
 
 .content ul li .alias > input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .content ul li .alias input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .content ul li > div {
@@ -247,7 +249,7 @@ export default {
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    color: #5d7ce8;
+    color: var(--text-accent);
 }
 
 .footer .action a {

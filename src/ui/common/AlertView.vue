@@ -117,26 +117,28 @@ export default {
     border-radius: 4px;
     padding: 5px 0;
     margin: 0 15px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .action-container .confirm {
-    background: #4168e0ef;
+    background: var(--text-accent);
     color: white;
 }
 
 .action-container .cancel {
-    color: black;
-    background: white;
+    color: var(--text-primary);
+    background: var(--bg-primary);
 }
 
 .action-container .cancel:active {
-    background: lightgrey;
-    color: black;
+    background: var(--bg-item-active);
+    color: var(--text-primary);
 }
 
 .action-container .confirm:active {
-    background: #4168e0;
+    background: var(--text-accent);
     color: white;
 }
 

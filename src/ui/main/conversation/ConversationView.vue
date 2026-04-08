@@ -1174,7 +1174,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: white;
+    background-color: var(--bg-primary);
     border-top-right-radius: var(--main-border-radius);
     border-bottom-right-radius: var(--main-border-radius);
     /*border-left: 1px solid #e6e6e6;*/
@@ -1183,6 +1183,7 @@ export default {
 .conversation-empty-container h1 {
     font-size: 17px;
     font-weight: normal;
+    color: var(--text-primary);
 }
 
 .title-container {
@@ -1192,10 +1193,11 @@ export default {
     padding: 0 0 0 20px;
     justify-content: space-between;
     align-items: center;
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #e6e6e6;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
     border-top-right-radius: var(--main-border-radius);
     position: relative;
+    color: var(--text-primary);
 }
 
 
@@ -1210,11 +1212,11 @@ export default {
 .title-container a {
     text-decoration: none;
     padding: 15px;
-    color: #181818;
+    color: var(--text-primary);
 }
 
 .title-container a:active {
-    color: #d6d6d6;
+    color: var(--bg-item-active);
 }
 
 .conversation-container {
@@ -1233,8 +1235,8 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #e6e6e6;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .conversation-content-container {
@@ -1244,13 +1246,13 @@ export default {
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    background-color: #f3f3f3;
+    background-color: var(--bg-tertiary);
     border-bottom-right-radius: var(--main-border-radius);
 }
 
 .conversation-content-container .drag-drop-container {
     position: absolute;
-    background-color: #f2f2f2a5;
+    background-color: var(--bg-unconnected);
     top: 0;
     left: 0;
     width: 100%;
@@ -1260,13 +1262,14 @@ export default {
 }
 
 .conversation-content-container .drag-drop {
-    border: 2px dashed #b2b2b2;
+    border: 2px dashed var(--text-secondary);
     height: 100%;
     width: 100%;
     border-radius: 5px;
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .conversation-content-container .drag-drop p {
@@ -1277,13 +1280,14 @@ export default {
     width: 100%;
     display: flex;
     flex-direction: column;
-    background: white;
+    background: var(--bg-primary);
 }
 
 .ongoing-call-item {
     padding: 10px 20px;
     display: flex;
-    border-bottom: 1px solid lightgrey;
+    border-bottom: 1px solid var(--border-primary);
+    color: var(--text-primary);
 }
 
 .ongoing-call-item p {
@@ -1292,12 +1296,14 @@ export default {
 
 .ongoing-call-item button {
     padding: 5px 10px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
 }
 
 .ongoing-call-item button:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .conversation-message-list {
@@ -1324,8 +1330,8 @@ export default {
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 2px solid #f3f3f3;
-    border-top: 2px solid #4168e0;
+    border: 2px solid var(--bg-tertiary);
+    border-top: 2px solid var(--text-accent);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -1336,16 +1342,16 @@ export default {
 }
 
 .finished {
-    color: #999;
+    color: var(--text-secondary);
     font-size: 14px;
 }
 
 .unread-count-tip-container {
     margin-left: auto;
     padding: 4px 8px;
-    background: white;
+    background: var(--bg-primary);
     width: auto;
-    color: #4168e0;
+    color: var(--text-accent);
     border-radius: 4px;
 }
 
@@ -1358,6 +1364,7 @@ export default {
     display: flex;
     padding: 10px 20px;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .inputting-container .avatar {
@@ -1373,12 +1380,12 @@ export default {
     display: block;
     width: 100%;
     height: 3px;
-    border-top: 1px solid #e2e2e2;
+    border-top: 1px solid var(--border-primary);
     margin: 0 auto;
 }
 
 .user-online-status {
-    color: gray;
+    color: var(--text-secondary);
     font-size: 10px;
 }
 
@@ -1394,9 +1401,10 @@ export default {
     top: 0;
     right: 0;
     position: absolute;
-    background-color: #ffffffe5;
+    background-color: var(--bg-unconnected);
     backdrop-filter: blur(6px);
-    border-left: 1px solid #e6e6e6;
+    border-left: 1px solid var(--border-primary);
+    color: var(--text-primary);
     /**
     否则会 clip 点击会话成员时，出现的 UserCardView
      */
@@ -1408,11 +1416,11 @@ export default {
 }
 
 i:hover {
-    color: #1f64e4;
+    color: var(--icon-active-color);
 }
 
 i.active {
-    color: #3f64e4;
+    color: var(--icon-active-color);
 }
 </style>
 

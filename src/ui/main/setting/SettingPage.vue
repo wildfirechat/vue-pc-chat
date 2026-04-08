@@ -46,6 +46,16 @@
                           :closeOnOutsideClick="true">
                 </dropdown>
             </div>
+            <div>
+                {{ $t('setting.theme') }}
+                <dropdown class="my-dropdown-toggle"
+                          :options="themes"
+                          :selected="currentTheme"
+                          v-on:updateOption="setTheme"
+                          :placeholder="'Select an Item'"
+                          :closeOnOutsideClick="true">
+                </dropdown>
+            </div>
         </div>
         <div class="ad-container">
             <p>
@@ -136,6 +146,11 @@ export default {
             sharedMiscState: store.state.misc,
             openPcChatTimeoutHandler: 0,
             langs: [{lang: 'zh-CN', name: '简体中文'}, {lang: 'zh-TW', name: '繁體中文'}, {lang: 'en', name: 'English'}],
+            themes: [
+                {theme: 'light', name: this.$t('setting.theme_light')},
+                {theme: 'dark', name: this.$t('setting.theme_dark')},
+                {theme: 'auto', name: this.$t('setting.theme_auto')}
+            ],
         }
     },
     methods: {
@@ -250,6 +265,10 @@ export default {
             // this.$router.go();
         },
 
+        setTheme(theme) {
+            store.setTheme(theme.theme)
+        },
+
         openPcChat() {
             // pc 端，deeplink 的 scheme 是 wfc://
             // 打开和 小火的会话
@@ -296,6 +315,12 @@ export default {
             let index = this.langs.findIndex(l => l.lang === lang);
             index = index >= 0 ? index : 0;
             return this.langs[index];
+        },
+        currentTheme() {
+            let theme = this.sharedMiscState.theme || 'auto';
+            let index = this.themes.findIndex(t => t.theme === theme);
+            index = index >= 0 ? index : 2; // Default to 'auto'
+            return this.themes[index];
         }
     },
     components: {
@@ -312,6 +337,8 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
 }
 
 .setting-container .content {
@@ -339,7 +366,7 @@ export default {
 .setting-container .ad-container {
     padding: 10px;
     font-size: 15px;
-    background: #f1f3f4;
+    background: var(--bg-secondary);
     margin: 10px;
     border-radius: 5px;
     /*box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
@@ -347,6 +374,7 @@ export default {
 
 .ad-container p {
     padding: 5px 0;
+    color: var(--text-primary);
 }
 
 .setting-container footer {
@@ -355,20 +383,20 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    border-top: 1px solid #d9d9d9;
+    border-top: 1px solid var(--border-primary);
 }
 
 .proto-version-info {
     justify-self: flex-start;
     margin-right: auto;
     padding-left: 10px;
-    color: lightgrey;
+    color: var(--text-secondary);
 }
 
 .setting-container .button {
     /* position: relative; */
     margin-right: 17px;
-    color: rgba(0, 0, 0, .8);
+    color: var(--text-primary);
     font-size: 14px;
     padding: 9px 8px;
     border: 0;
@@ -384,7 +412,7 @@ export default {
 }
 
 .setting-container .button:hover {
-    background: #e0e0e0e5;
+    background: var(--bg-item-hover);
 }
 
 </style>

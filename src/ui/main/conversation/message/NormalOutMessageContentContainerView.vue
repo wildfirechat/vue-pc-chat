@@ -250,22 +250,22 @@ export default {
 }
 
 .message-time-container.checked {
-    background-color: #e7e7e7;
+    background-color: var(--bg-item-active);
 }
 
 .message-time-container .time {
     width: 100%;
     margin-bottom: 20px;
     text-align: center;
-    color: #b4b4b4;
+    color: var(--text-secondary);
     font-size: 10px;
-    background-color: #f3f3f3;
+    background-color: var(--bg-tertiary);
 }
 
 .message-time-container .receipt {
     margin-right: 70px;
     font-size: 12px;
-    color: #b4b4b4;
+    color: var(--text-secondary);
 }
 
 .message-content-container {
@@ -296,9 +296,9 @@ export default {
 }
 
 .message-content-container-view.highlight {
-    background-color: #dadada;
+    background-color: var(--bg-item-active);
     opacity: 0.5;
-    --out-arrow-color: #dadada !important;
+    --out-arrow-color: var(--bg-item-active) !important;
 }
 
 </style>

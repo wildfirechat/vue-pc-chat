@@ -112,7 +112,7 @@ export default {
 <style scoped>
 .poll-message-container {
     margin: 0 10px;
-    background-color: white;
+    background-color: var(--bg-primary);
     border-radius: 5px;
     cursor: pointer;
     width: 280px;
@@ -131,7 +131,7 @@ export default {
     align-items: flex-start;
     font-size: 14px;
     font-weight: bold;
-    color: #000;
+    color: var(--text-primary);
     line-height: 1.4;
 }
 
@@ -149,12 +149,12 @@ export default {
 }
 
 .poll-message-container.out .poll-title {
-    color: #000;
+    color: var(--text-primary);
 }
 
 .poll-desc {
     font-size: 12px;
-    color: #888;
+    color: var(--text-secondary);
     margin-top: 8px;
     line-height: 1.4;
     overflow: hidden;
@@ -165,12 +165,12 @@ export default {
 }
 
 .poll-message-container.out .poll-desc {
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .poll-info {
     font-size: 11px;
-    color: #888;
+    color: var(--text-secondary);
     margin-top: 8px;
     white-space: nowrap;
     overflow: hidden;
@@ -178,7 +178,7 @@ export default {
 }
 
 .poll-message-container.out .poll-info {
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .poll-action {
@@ -188,14 +188,14 @@ export default {
 }
 
 .poll-message-container.out .poll-action {
-    color: #333;
+    color: var(--text-primary);
 }
 
 .poll-action.ended {
-    color: #999;
+    color: var(--text-secondary);
 }
 
 .poll-message-container.out .poll-action.ended {
-    color: #666;
+    color: var(--text-secondary);
 }
 </style>

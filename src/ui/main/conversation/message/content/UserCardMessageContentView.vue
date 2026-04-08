@@ -62,7 +62,7 @@ export default {
     height: 100px;
     margin: 0 10px;
     padding: 10px;
-    background-color: white;
+    background-color: var(--bg-primary);
     position: relative;
     border-radius: 5px;
 }
@@ -88,7 +88,7 @@ export default {
 .desc {
     padding-top: 8px;
     font-size: 13px;
-    color: #b8b8b8;
+    color: var(--text-secondary);
 }
 
 </style>

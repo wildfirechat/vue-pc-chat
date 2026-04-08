@@ -174,17 +174,17 @@ export default {
     padding: 10px 20px;
     align-items: flex-start;
 }
-
 .message-time-container .time {
-    align-self: center;
+    width: 100%;
+    text-align: center;
     margin-bottom: 20px;
-    color: #b4b4b4;
+    color: var(--text-secondary);
     height: 20px;
     font-size: 10px;
 }
 
 .message-time-container.checked {
-    background-color: #e7e7e7;
+    background-color: var(--bg-item-active);
 }
 
 .message-avatar-content-container {
@@ -222,15 +222,15 @@ export default {
 
 .message-name-content-container .name {
     margin-left: 10px;
-    color: #bdbdbd;
+    color: var(--text-secondary);
     font-size: 12px;
     margin-bottom: 2px;
 }
 
 .message-content-container.highlight {
-    background-color: #dadada;
+    background-color: var(--bg-item-active);
     opacity: 0.5;
-    --in-arrow-color: #dadada !important;
+    --in-arrow-color: var(--bg-item-active) !important;
 }
 
 </style>

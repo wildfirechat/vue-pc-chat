@@ -119,7 +119,7 @@ export default {
 .composite-message-container {
     margin: 0 10px;
     padding: 10px;
-    background-color: white;
+    background-color: var(--bg-primary);
     position: relative;
     border-radius: 5px;
     overflow: hidden;
@@ -131,14 +131,14 @@ export default {
 }
 
 .composite-message-container .title {
-    color: #050505;
+    color: var(--text-primary);
     font-size: 15px;
 }
 
 .composite-message-container .content, .desc {
     padding: 5px 0;
     font-size: 14px;
-    color: #b2b2b2;
+    color: var(--text-secondary);
 }
 
 .composite-message-container .desc {

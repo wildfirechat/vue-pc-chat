@@ -117,15 +117,15 @@ export default {
     height: 100%;
     justify-content: center;
     align-items: center;
-    color: black;
+    color: var(--text-primary);
 }
 
 .menu-item:not(:last-of-type) {
-    border-right: 1px solid #e5e5e5;
+    border-right: 1px solid var(--border-primary);
 }
 
 .menu-item:hover {
-    background: #e0e0e0e5;
+    background: var(--bg-item-hover);
 }
 
 .sub-menu-item {
@@ -135,31 +135,31 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: black;
+    color: var(--text-primary);
 }
 
 .sub-menu-item:not(:last-of-type) {
-    border-bottom: 1px solid #e0e0e0e5;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .sub-menu-item:hover {
-    background: #e0e0e0e5;
+    background: var(--bg-item-hover);
 }
 
 i {
     margin-left: 20px;
     font-size: 24px;
-    color: #000;
+    color: var(--icon-color);
     cursor: pointer;
 }
 
 >>> .tippy-arrow {
-    border-top: 8px solid red !important;
+    border-top: 8px solid var(--text-danger) !important;
     border-right: 8px solid transparent !important;
 }
 
 i:hover {
-    color: #3f64e4;
+    color: var(--icon-active-color);
 }
 
 </style>

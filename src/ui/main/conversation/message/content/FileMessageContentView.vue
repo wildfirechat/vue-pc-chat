@@ -100,7 +100,7 @@ export default {
 .file-message-container {
     margin: 0 10px;
     padding: 10px;
-    background-color: white;
+    background-color: var(--bg-primary);
     position: relative;
     border-radius: 5px;
     display: flex;
@@ -108,6 +108,7 @@ export default {
     justify-content: flex-start;
     max-width: 500px;
     min-width: 150px;
+    color: var(--text-primary);
 }
 
 .file-message-container img {
@@ -124,20 +125,21 @@ export default {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    color: var(--text-primary);
 }
 
 .file-message-container .file-size {
-    color: #888888;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
 .file-message-container .text {
-    color: #050505;
+    color: var(--text-primary);
     font-size: 16px;
 }
 
 .rightarrow:before {
-    border-left-color: white;
+    border-left-color: var(--bg-primary);
 }
 
 </style>

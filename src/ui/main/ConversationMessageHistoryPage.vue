@@ -292,10 +292,11 @@ export default {
 .conversation-message-history-page {
     width: 100vw;
     height: 100vh;
-    background: #f3f3f3;
+    background: var(--bg-tertiary);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    color: var(--text-primary);
 }
 
 .title-container {
@@ -321,7 +322,7 @@ export default {
     height: 60px;
     margin-right: 20px;
     border-radius: 3px;
-    background: #e0e0e0;
+    background: var(--bg-item-active);
 }
 
 .search-input-container {
@@ -338,29 +339,31 @@ export default {
     padding: 0 10px 0 20px;
     text-align: left;
     flex: 1;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
-    background-color: #eeeeee;
+    background-color: var(--bg-item-hover);
+    color: var(--text-primary);
 }
 
 .search-input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container i {
     position: absolute;
     left: 5px;
+    color: var(--text-secondary);
 }
 
 .category-container {
     display: flex;
     padding: 15px 0;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--border-primary);
     flex-direction: row;
     justify-content: space-around;
 }
@@ -370,7 +373,7 @@ export default {
 }
 
 .category-item.active {
-    color: #4168e0;
+    color: var(--text-accent);
 }
 
 .message-list-container {
@@ -398,6 +401,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .message-list-container ul li:not(:last-child)::after {
@@ -406,7 +410,7 @@ export default {
     position: absolute;
     margin-left: 55px;
     padding: 5px 0;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .message-container {
@@ -427,7 +431,7 @@ export default {
 
 .name-time-container p {
     font-size: 12px;
-    color: #c2c2c2;
+    color: var(--text-secondary);
 }
 
 .name-time-content-container .content {
@@ -442,7 +446,7 @@ export default {
     right: 0;
     top: 40px;
     font-size: 14px;
-    color: #637599;
+    color: var(--text-accent);
 }
 
 .message-container:hover .action {
@@ -464,12 +468,12 @@ export default {
 }
 
 >>> .text-message-container.out {
-    background-color: #f3f3f3;
+    background-color: var(--bg-tertiary);
     padding-top: 0 !important;
 }
 
 >>> .text-message-container {
-    background-color: #f3f3f3;
+    background-color: var(--bg-tertiary);
     padding-top: 0 !important;
 }
 

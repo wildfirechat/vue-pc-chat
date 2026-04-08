@@ -151,7 +151,7 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: white;
+    background-color: var(--bg-primary);
     padding: 5px 5px 0 5px;
     border-radius: 5px;
 }
@@ -198,7 +198,7 @@ video {
 
 i {
     font-size: 24px;
-    color: #000b;
+    color: var(--text-primary);
     cursor: pointer;
 }
 

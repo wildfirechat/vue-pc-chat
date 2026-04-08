@@ -367,7 +367,7 @@ export default {
 .file-item .size {
     font-size: 14px;
     padding-top: 5px;
-    color: rgb(112, 117, 121);
+    color: var(--text-secondary);
 }
 
 .footer {
@@ -385,10 +385,11 @@ export default {
     flex: 1;
     height: 30px;
     padding-left: 10px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
-    background-color: #eeeeee;
+    background-color: var(--bg-item-hover);
+    color: var(--text-primary);
 }
 
 img {
@@ -407,12 +408,12 @@ video {
 
 i {
     font-size: 24px;
-    color: #000b;
+    color: var(--icon-color);
     cursor: pointer;
 }
 
 i:hover {
-    color: #3f64e4;
+    color: var(--icon-active-color);
 }
 
 </style>

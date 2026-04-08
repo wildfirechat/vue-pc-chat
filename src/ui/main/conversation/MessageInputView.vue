@@ -1342,6 +1342,8 @@ export default {
     display: flex;
     flex-direction: column;
     position: relative;
+    border-top: 1px solid var(--border-primary);
+    background-color: var(--bg-tertiary);
 }
 
 .message-input-section {
@@ -1386,6 +1388,7 @@ export default {
     user-select: text;
     -webkit-user-select: text;
     font-size: 13px;
+    color: var(--text-primary);
 }
 
 .message-input-container.resized .input {
@@ -1400,7 +1403,7 @@ export default {
 
 .input:empty:before {
     content: attr(title);
-    color: rgb(128, 128, 128);
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
@@ -1416,12 +1419,12 @@ export default {
 
 i {
     font-size: 24px;
-    color: #000b;
+    color: var(--icon-color);
     cursor: pointer;
 }
 
 i:hover {
-    color: #3f64e4;
+    color: var(--icon-active-color);
 }
 
 .input-action-container ul li .screen-shot-button {
@@ -1431,7 +1434,7 @@ i:hover {
     display: none;
     padding: 5px 10px;
     font-size: 12px;
-    background-color: #b8b8b8;
+    background-color: var(--bg-sidebar-item-active);
     border-radius: 5px;
     color: #fff;
 }
@@ -1460,21 +1463,21 @@ i:hover {
 }
 
 .ptt-icon {
-    color: #000b;
+    color: var(--icon-color);
 }
 
 .ptt-icon.active {
-    color: red;
+    color: var(--text-danger);
     animation: glow 2s infinite;
 }
 
 
 .record-icon {
-    color: #000b;
+    color: var(--icon-color);
 }
 
 .record-icon.active {
-    color: red;
+    color: var(--text-danger);
     animation: glow 2s infinite;
 }
 
@@ -1598,6 +1601,6 @@ i:hover {
 <style scoped>
 .emoji-picker {
     box-shadow: 5px 5px 20px 0 #C0C0C0;
-    --ep-color-active: #3f64e4 !important;
+    --ep-color-active: var(--text-accent) !important;
 }
 </style>

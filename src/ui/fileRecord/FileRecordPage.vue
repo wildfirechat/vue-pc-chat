@@ -354,7 +354,7 @@ export default {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #f7f7f7;
+    background-color: var(--bg-primary);
 }
 
 .file-record-page .title {
@@ -376,6 +376,7 @@ export default {
 .file-record-container .category-container {
     width: 120px;
     height: 100%;
+    background-color: var(--bg-secondary);
 }
 
 .search-input-container {
@@ -383,7 +384,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #fafafa;
+    background-color: var(--bg-secondary);
     position: relative;
 }
 
@@ -394,23 +395,25 @@ export default {
     padding: 0 10px 0 20px;
     text-align: left;
     flex: 1;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
-    background-color: #eeeeee;
+    background-color: var(--bg-item-hover);
+    color: var(--text-primary);
 }
 
 .search-input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container i {
     position: absolute;
     left: 10px;
+    color: var(--icon-color);
 }
 
 .category-item {
@@ -419,14 +422,15 @@ export default {
     padding: 5px 0 5px 20px;
     height: 50px;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .category-item:active {
-    background-color: #dedede;
+    background-color: var(--bg-item-active);
 }
 
 .category-item.active {
-    background-color: #dedede;
+    background-color: var(--bg-item-active);
 }
 
 .category-item p {
@@ -436,11 +440,12 @@ export default {
 }
 
 .conversation-list-container {
-    border-left: 1px solid #e4e4e4;
-    border-right: 1px solid #e4e4e4;
+    border-left: 1px solid var(--border-primary);
+    border-right: 1px solid var(--border-primary);
     width: 185px;
     height: 100%;
     overflow: auto;
+    background-color: var(--bg-secondary);
 }
 
 .conversation-item {
@@ -465,18 +470,19 @@ export default {
 }
 
 .conversation-item:active {
-    background-color: #dedede;
+    background-color: var(--bg-item-active);
 }
 
 .conversation-item.active {
-    background-color: #dedede;
+    background-color: var(--bg-item-active);
 }
 
 .file-record-container .file-record-list-container {
     flex: 1;
     height: 100%;
-    background-color: white;
+    background-color: var(--bg-primary);
     overflow: auto;
+    color: var(--text-primary);
 }
 
 .file-record-empty-container {
@@ -485,7 +491,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #b6b6b6;
+    color: var(--text-secondary);
 }
 
 
@@ -507,11 +513,11 @@ export default {
     top: 70px;
     left: 40px;
     right: 35px;
-    border-bottom: 1px solid #f2f2f2;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .file-record-item:active {
-    background-color: #dedede;
+    background-color: var(--bg-item-active);
 }
 
 .file-record-item img {
@@ -530,14 +536,14 @@ export default {
 
 .file-name-sender-container .name {
     font-size: 13px;
-    color: #252525;
+    color: var(--text-primary);
     padding-bottom: 3px;
 }
 
 .file-name-sender-container .sender {
     padding-top: 3px;
     font-size: 12px;
-    color: #b6b6b6;
+    color: var(--text-secondary);
 }
 
 .file-date-size-container {
@@ -551,13 +557,13 @@ export default {
 .file-date-size-container .date {
     font-size: 12px;
     padding-left: 15px;
-    color: #b6b6b6;
+    color: var(--text-secondary);
     padding-bottom: 3px;
 }
 
 .file-date-size-container .size {
     font-size: 12px;
-    color: #b2b2b2;
+    color: var(--text-secondary);
     padding-top: 3px;
 }
 

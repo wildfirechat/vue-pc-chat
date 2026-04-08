@@ -75,14 +75,14 @@ export default {
 .label {
     width: 100%;
     padding-left: 30px;
-    background-color: #fafafa;
+    background-color: var(--bg-secondary);
 }
 
 .label p {
     padding: 5px 5px 5px 0;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--border-primary);
     font-size: 10px;
-    color: #7F7F7F;
+    color: var(--text-secondary);
 }
 
 .contact-item {
@@ -91,10 +91,11 @@ export default {
     width: 100%;
     font-size: 13px;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .contact-item:hover{
-    background-color: #EAEAEA
+    background-color: var(--bg-item-hover)
 }
 
 .contact-item span {
@@ -102,20 +103,20 @@ export default {
 }
 
 .contact-item.active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-item-active);
 }
 
 .contact-item:active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-item-active);
 }
 
 .contact-item.highlight {
-    box-shadow: 0 0 0 1px #4168e0 inset;
+    box-shadow: 0 0 0 1px var(--text-accent) inset;
     z-index: 100;
 }
 
 .user-online-status {
-    color: gray;
+    color: var(--text-secondary);
     font-size: 10px;
 }
 

@@ -85,7 +85,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #fafafa;
+    background-color: var(--bg-secondary);
     -webkit-app-region: drag;
     position: relative;
 }
@@ -99,18 +99,19 @@ export default {
     /* flex: 1; */
     /* 兼容Firefox 52 */
     width: 209px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
-    background-color: #eeeeee;
+    background-color: var(--bg-item-hover);
+    color: var(--text-primary);
 }
 
 .search-input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container i {
@@ -119,19 +120,21 @@ export default {
     /* 兼容Firefox 52 */
     top: 50%;
     transform: translate(0, -50%);
+    color: var(--icon-color);
 }
 
 .search-input-container button {
     width: 30px;
     height: 25px;
     margin-right: 10px;
-    background-color: #fafafa;
+    background-color: var(--bg-secondary);
     border-radius: 3px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
 }
 
 .search-input-container button:active {
-    background-color: #e5e5e5;
+    background-color: var(--bg-item-active);
 }
 
 </style>

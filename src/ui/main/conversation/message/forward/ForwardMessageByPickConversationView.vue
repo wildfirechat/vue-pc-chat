@@ -154,7 +154,7 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    background-color: #f7f7f7;
+    background-color: var(--bg-secondary);
     overflow: hidden;
 }
 
@@ -168,23 +168,25 @@ export default {
     margin: 15px 20px 0 15px;
     flex: 1;
     border-radius: 3px;
-    border: 1px solid #ededed;
-    background-color: white;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-primary);
     padding-left: 10px;
     text-align: left;
+    color: var(--text-primary);
 }
 
 .conversation-list-panel .create-group {
-    background-color: #f7f7f7;
+    background-color: var(--bg-secondary);
     height: 40px;
     font-size: 13px;
     padding-left: 15px;
     display: flex;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .conversation-list-panel .create-group:active {
-    background-color: #e5e5e5;
+    background-color: var(--bg-item-active);
 }
 
 .conversation-list-container {
@@ -195,9 +197,9 @@ export default {
 }
 
 .conversation-list-container > p {
-    background-color: #f7f7f7;
+    background-color: var(--bg-secondary);
     font-size: 12px;
-    color: #888888;
+    color: var(--text-secondary);
     padding-left: 15px;
     padding-top: 8px;
     padding-bottom: 8px;
@@ -208,6 +210,7 @@ export default {
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: var(--bg-primary);
 }
 
 .checked-conversation-list-container header {
@@ -215,6 +218,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .checked-conversation-list-container header h2 {
@@ -226,6 +230,7 @@ export default {
 .checked-conversation-list-container header span {
     font-size: 12px;
     margin-right: 20px;
+    color: var(--text-secondary);
 }
 
 
@@ -256,6 +261,7 @@ export default {
     text-align: center;
     max-width: 80px;
     font-size: 12px;
+    color: var(--text-primary);
 }
 
 .checked-conversation-list-container .content .picked-user-container .picked-user {
@@ -269,7 +275,7 @@ export default {
     height: 45px;
     margin: 10px 10px;
     display: inline-block;
-    background: #d6d6d6;
+    background: var(--bg-item-hover);
     border-radius: 3px;
 }
 
@@ -277,14 +283,16 @@ export default {
     position: absolute;
     width: 20px;
     height: 20px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 10px;
     top: 0;
     right: 0;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .checked-conversation-list-container .content .unpick-button:active {
-    background-color: #e5e5e5;
+    background-color: var(--bg-item-active);
 }
 
 .checked-conversation-list-container footer {
@@ -298,11 +306,13 @@ export default {
 .checked-conversation-list-container footer button {
     padding: 5px 30px;
     border-radius: 4px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
 }
 
 .checked-conversation-list-container footer button.confirm {
-    background-color: #4168e0;
+    background-color: var(--text-accent);
     margin-left: 20px;
     color: white;
     margin-right: 20px;
@@ -312,6 +322,7 @@ export default {
     width: 100%;
     padding: 5px 10px;
     height: 30px;
+    color: var(--text-primary);
 }
 
 

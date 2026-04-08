@@ -27,7 +27,7 @@ export default {
 .text-message-container {
     margin: 0 10px;
     padding: 10px;
-    background-color: white;
+    background-color: var(--bg-primary);
     position: relative;
     border-radius: 5px;
 }
@@ -38,7 +38,7 @@ export default {
 
 
 .text-message-container .text {
-    color: #050505;
+    color: var(--text-primary);
     font-size: 16px;
 }
 

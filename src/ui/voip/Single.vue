@@ -829,15 +829,15 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: black;
+    color: var(--text-primary);
 }
 
 .audio-input-device-item:not(:last-of-type) {
-    border-bottom: 1px solid #e0e0e0e5;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .audio-input-device-item:hover {
-    background: #e0e0e0e5;
+    background: var(--bg-item-hover);
 }
 
 .webrtc-tip {

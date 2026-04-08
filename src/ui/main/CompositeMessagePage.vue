@@ -190,8 +190,9 @@ export default {
 .composite-page {
     width: var(--composite-message-page-width);
     height: var(--composite-message-page-height);
-    background: #f7f7f7;
+    background: var(--bg-primary);
     overflow: scroll;
+    color: var(--text-primary);
 }
 
 .close-button-container {
@@ -202,7 +203,7 @@ export default {
 }
 
 .close-button-container:active {
-    background: lightgrey;
+    background: var(--bg-item-active);
 }
 
 .composite-page ul {
@@ -223,7 +224,7 @@ export default {
     position: absolute;
     margin-left: 55px;
     padding: 5px 0;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .message-container {
@@ -244,7 +245,7 @@ export default {
 
 .name-time-container p {
     font-size: 12px;
-    color: #c2c2c2;
+    color: var(--text-secondary);
 }
 
 .name-time-content-container .content {
@@ -266,11 +267,11 @@ export default {
 }
 
 >>> .text-message-container.out {
-    background-color: #f7f7f7;
+    background-color: var(--bg-primary);
 }
 
 >>> .text-message-container {
-    background-color: #f7f7f7;
+    background-color: var(--bg-primary);
     padding-left: 0;
 }
 

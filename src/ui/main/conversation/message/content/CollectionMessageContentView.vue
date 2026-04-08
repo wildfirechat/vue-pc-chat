@@ -116,7 +116,7 @@ export default {
 <style scoped>
 .collection-message-container {
     margin: 0 10px;
-    background-color: white;
+    background-color: var(--bg-primary);
     border-radius: 5px;
     cursor: pointer;
     width: 280px; /* Slightly wider for list content */
@@ -142,7 +142,7 @@ export default {
     margin-top: 2px;
 }
 .collection-icon.out {
-    color: #333; /* Darker on blue bg */
+    color: var(--text-primary); /* Darker on blue bg */
 }
 .title-container {
     flex: 1;
@@ -152,22 +152,22 @@ export default {
     font-weight: bold;
     font-size: 15px;
     line-height: 1.4;
-    color: #333;
+    color: var(--text-primary);
 }
 .count {
     font-size: 11px;
-    color: #888;
+    color: var(--text-secondary);
     white-space: nowrap;
     margin-top: 4px;
 }
 .collection-message-container.out .count {
-    color: #555;
+    color: var(--text-secondary);
 }
 
 /* Description */
 .desc {
     font-size: 13px;
-    color: #666;
+    color: var(--text-secondary);
     padding: 0 12px 8px 12px; /* Indent to align with title */
     line-height: 1.4;
     overflow: hidden;
@@ -177,7 +177,7 @@ export default {
     -webkit-box-orient: vertical;
 }
 .collection-message-container.out .desc {
-    color: #444;
+    color: var(--text-secondary);
 }
 
 .divider {
@@ -193,12 +193,12 @@ export default {
 }
 .empty-hint {
     font-size: 13px;
-    color: #999;
+    color: var(--text-secondary);
     text-align: center;
     padding: 10px 0;
 }
 .collection-message-container.out .empty-hint {
-    color: #666;
+    color: var(--text-secondary);
 }
 .entry-list {
     display: flex;
@@ -206,7 +206,7 @@ export default {
 }
 .entry-item {
     font-size: 13px;
-    color: #333;
+    color: var(--text-primary);
     padding: 2px 0;
     white-space: nowrap;
     overflow: hidden;
@@ -214,11 +214,11 @@ export default {
 }
 .more-hint {
     font-size: 12px;
-    color: #888;
+    color: var(--text-secondary);
     margin-top: 4px;
 }
 .collection-message-container.out .more-hint {
-    color: #555;
+    color: var(--text-secondary);
 }
 
 /* Footer */
@@ -231,10 +231,10 @@ export default {
     justify-content: flex-start;
 }
 .collection-message-container.out .footer {
-    color: #333;
+    color: var(--text-primary);
     border-top-color: rgba(0,0,0,0.1);
 }
 .action-text.ended {
-    color: #999;
+    color: var(--text-secondary);
 }
 </style>

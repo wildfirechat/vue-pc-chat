@@ -127,13 +127,13 @@ export default {
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #e5e5e5;
+    border-right: 1px solid var(--border-primary);
 }
 
 .panel {
     height: calc(100% - 60px);
     position: relative;
-    background-color: #fafafa;
+    background-color: var(--bg-tertiary);
     flex: 1;
     overflow-y: auto;
 }
@@ -157,14 +157,15 @@ export default {
     padding: 5px 0 5px 20px;
     height: 50px;
     align-items: center;
+    color: var(--text-primary);
 }
 
 .category-item:active {
-    background-color: #dedede;
+    background-color: var(--bg-item-active);
 }
 
 .category-item.active {
-    background-color: #dedede;
+    background-color: var(--bg-item-active);
 }
 
 .category-item p {

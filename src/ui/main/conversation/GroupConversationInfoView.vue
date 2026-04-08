@@ -430,6 +430,7 @@ export default {
     justify-content: flex-start;
     height: 100%;
     overflow: hidden;
+    background-color: var(--bg-primary);
 }
 
 header {
@@ -439,6 +440,7 @@ header {
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background-color: var(--bg-primary);
 }
 
 header .group-portrait-container {
@@ -450,7 +452,7 @@ header .group-portrait-container {
 }
 
 header .group-portrait-container p {
-    color: #191919;
+    color: var(--text-primary);
     font-size: 13px;
 }
 
@@ -468,7 +470,7 @@ header label {
     justify-content: center;
     align-items: flex-start;
     font-size: 13px;
-    color: #191919;
+    color: var(--text-primary);
 }
 
 header label:not(:first-of-type) {
@@ -477,7 +479,7 @@ header label:not(:first-of-type) {
 
 header label:last-of-type {
     padding-bottom: 15px;
-    border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 header label input {
@@ -488,10 +490,11 @@ header label input {
     width: 100%;
     font-size: 13px;
     background-color: transparent;
+    color: var(--text-primary);
 }
 
 header label input::-webkit-input-placeholder {
-    color: #7F7F7F;
+    color: var(--text-secondary);
 }
 
 .member-container {
@@ -509,24 +512,26 @@ header label input::-webkit-input-placeholder {
     padding: 0 10px 0 20px;
     height: 25px;
     border-radius: 3px;
-    border: 1px solid #ededed;
-    background-color: white;
+    border: 1px solid var(--border-primary);
+    background-color: var(--bg-primary);
     text-align: left;
     outline: none;
+    color: var(--text-primary);
 }
 
 .search-item input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-item input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-item i {
     position: absolute;
     left: 25px;
     top: 15px;
+    color: var(--icon-color);
 }
 
 .action-item {
@@ -543,7 +548,8 @@ header label input::-webkit-input-placeholder {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-primary);
+    color: var(--text-secondary);
 }
 
 .action-item img {
@@ -554,25 +560,26 @@ header label input::-webkit-input-placeholder {
 .action-item p {
     margin-left: 10px;
     font-size: 13px;
+    color: var(--text-primary);
 }
 
 .action-item:active {
-    background-color: #d6d6d6;
+    background-color: var(--bg-item-active);
 }
 
 .conversation-action-item {
     display: flex;
-    color: red;
+    color: var(--text-danger);
     align-items: center;
     justify-content: center;
     font-size: 12px;
     height: 42px;
     max-height: 42px;
-    border-top: 1px solid #ececec;
+    border-top: 1px solid var(--border-primary);
 }
 
 .conversation-action-item:active {
-    background: #d6d6d6;
+    background: var(--bg-item-active);
 }
 
 .switch {

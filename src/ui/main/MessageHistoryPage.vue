@@ -209,10 +209,11 @@ export default {
 .message-history-page {
     width: 100vw;
     height: 100vh;
-    background: #f3f3f3;
+    background: var(--bg-tertiary);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    color: var(--text-primary);
 }
 
 .search-input-container {
@@ -222,7 +223,7 @@ export default {
     justify-content: center;
     align-items: center;
     position: relative;
-    border-bottom: 1px solid #e4e4e4;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .search-input-container input {
@@ -230,23 +231,25 @@ export default {
     padding: 0 10px 0 20px;
     text-align: left;
     flex: 1;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
-    background-color: #eeeeee;
+    background-color: var(--bg-item-hover);
+    color: var(--text-primary);
 }
 
 .search-input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--text-accent);
 }
 
 .search-input-container i {
     position: absolute;
     left: 65px;
+    color: var(--text-secondary);
 }
 
 .portal {
@@ -254,6 +257,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--text-secondary);
 }
 
 .empty {
@@ -261,6 +265,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
+    color: var(--text-secondary);
 }
 
 .search-result-container {
@@ -273,7 +278,7 @@ export default {
     width: 240px;
     height: 100%;
     overflow: scroll;
-    border-right: 1px solid #e4e4e4;
+    border-right: 1px solid var(--border-primary);
 }
 
 .conversation-item {
@@ -283,10 +288,11 @@ export default {
     /*border-bottom: 1px solid #eeeeee;*/
     align-items: center;
     justify-content: center;
+    color: var(--text-primary);
 }
 
 .conversation-item.active {
-    background: #dedede;
+    background: var(--bg-item-active);
 }
 
 .header {
@@ -301,7 +307,7 @@ export default {
     height: 45px;
     min-width: 45px;
     min-height: 45px;
-    background: #d6d6d6;
+    background: var(--bg-item-active);
     top: 50%;
     transform: translateY(-50%);
     border-radius: 3px;
@@ -320,7 +326,7 @@ export default {
 .content-container .title {
     display: inline-block;
     font-size: 14px;
-    color: #262626;
+    color: var(--text-primary);
     font-style: normal;
     font-weight: normal;
     padding-right: 10px;
@@ -328,7 +334,7 @@ export default {
 }
 
 .content-container .desc {
-    color: #b8b8b8;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
@@ -349,14 +355,14 @@ export default {
 }
 
 .desc-action-container .desc {
-    color: #b8b8b8;
+    color: var(--text-secondary);
     font-size: 13px;
 }
 
 .desc-action-container .action {
     display: flex;
     align-items: center;
-    color: #262626;
+    color: var(--text-primary);
     margin-left: auto;
     font-size: 14px;
 }
@@ -391,7 +397,7 @@ export default {
     position: absolute;
     margin-left: 55px;
     padding: 5px 0;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .message-container {
@@ -412,7 +418,7 @@ export default {
 
 .name-time-container p {
     font-size: 12px;
-    color: #c2c2c2;
+    color: var(--text-secondary);
 }
 
 .name-time-content-container .content {
@@ -427,7 +433,7 @@ export default {
     right: 0;
     top: 40px;
     font-size: 14px;
-    color: #637599;
+    color: var(--text-accent);
 }
 
 .message-container:hover .action {
@@ -451,13 +457,13 @@ export default {
 }
 
 >>> .text-message-container.out {
-    background-color: #f3f3f3;
+    background-color: var(--bg-tertiary);
     padding-top: 0 !important;
     padding-left: 0 !important;
 }
 
 >>> .text-message-container {
-    background-color: #f3f3f3;
+    background-color: var(--bg-tertiary);
     padding-top: 0 !important;
     padding-left: 0 !important;
 }
