@@ -1,6 +1,6 @@
 <template>
     <div ref="userCardTippy"
-         :id="'#userCardInfoTrigger' + message.messageId"
+         :id="'userCardInfoTrigger' + message.messageId"
          class="user-card-content-container">
         <div class="portrait-name-container">
             <img :src="message.messageContent.portrait">
