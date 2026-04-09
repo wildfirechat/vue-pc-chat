@@ -296,9 +296,8 @@ export default {
 }
 
 .message-content-container-view.highlight {
-    background-color: #dadada;
-    opacity: 0.5;
-    --out-arrow-color: #dadada !important;
+    filter: brightness(0.9);
+    z-index: 100;
 }
 
 </style>

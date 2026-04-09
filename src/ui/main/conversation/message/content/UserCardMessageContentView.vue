@@ -91,4 +91,8 @@ export default {
     color: #b8b8b8;
 }
 
+.rightarrow:before {
+    border-left-color: white;
+}
+
 </style>
