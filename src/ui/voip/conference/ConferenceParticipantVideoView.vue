@@ -17,7 +17,7 @@
                :srcObject.prop="participant._stream"
                :muted="participant.uid === selfUserId"
                autoPlay/>
-        <div v-if="!participant._isVideoMuted" class="video-stream-tip-container">
+        <div v-if="!participant._isVideoMuted && showFocusTip" class="video-stream-tip-container">
             <p>{{ '双击视频，将其设置为焦点' }}</p>
         </div>
         <div class="info-container">
@@ -45,6 +45,10 @@ export default {
         session: {
             type: Object,
             required: true,
+        },
+        showFocusTip: {
+            type: Boolean,
+            default: true
         }
     },
     data() {

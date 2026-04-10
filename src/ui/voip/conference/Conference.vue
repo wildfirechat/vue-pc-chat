@@ -75,6 +75,7 @@
                             <ConferenceParticipantVideoView v-for="(participant) in currentPageParticipants"
                                                             :key="participant.uid + '-' + participant._isScreenSharing"
                                                             :participant="participant"
+                                                            :show-focus-tip="false"
                                                             :session="session">
                             </ConferenceParticipantVideoView>
                         </section>
@@ -98,6 +99,7 @@
                                 <ConferenceParticipantVideoView v-for="(participant) in participantUserInfos"
                                                                 :key="participant.uid + '-' + participant._isScreenSharing"
                                                                 :participant="participant"
+                                                                :show-focus-tip="true"
                                                                 :session="session">
                                 </ConferenceParticipantVideoView>
                             </div>

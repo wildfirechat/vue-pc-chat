@@ -1,3 +1,4 @@
+import {reactive} from "vue";
 import conferenceApi from "../../../api/conferenceApi";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import MessageContentType from "../../../wfc/messages/messageContentType";
@@ -551,5 +552,5 @@ class ConferenceManager {
     }
 }
 
-let self = new ConferenceManager();
+let self = reactive(new ConferenceManager());
 export default self;
