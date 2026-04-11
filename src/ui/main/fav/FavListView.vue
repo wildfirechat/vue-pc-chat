@@ -452,7 +452,7 @@ export default {
 }
 
 .fav-item-container:active {
-    background-color: #dedede;
+    background-color: var(--background-item-placeholder);
 }
 
 .fav-item-content {
@@ -470,7 +470,7 @@ export default {
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 12px;
-    color: #252525;
+    color: var(--text-primary);
 }
 
 .fav-item-image {
@@ -510,7 +510,7 @@ export default {
 }
 
 .fav-item-file .name {
-    color: #252525;
+    color: var(--text-primary);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;

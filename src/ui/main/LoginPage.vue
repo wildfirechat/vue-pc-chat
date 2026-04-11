@@ -618,7 +618,7 @@ export default {
     width: 380px;
     height: 500px;
     margin: auto;
-    background: white;
+    background: var(--background-primary);
     border-radius: 5px;
 }
 
@@ -626,7 +626,7 @@ export default {
     border-radius: 3px;
     width: 250px;
     height: 250px;
-    background-color: #e7e7e7;
+    background-color: var(--background-tertiary);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -669,7 +669,7 @@ export default {
     margin-top: 5px;
     padding: 5px;
     font-size: 14px;
-    color: gray;
+    color: var(--text-secondary);
 }
 
 .qrcode-login-container button {
@@ -682,30 +682,30 @@ export default {
 .button-cancel {
     margin-top: 10px;
     background-color: transparent;
-    color: gray;
+    color: var(--text-secondary);
 }
 
 .button-cancel:active {
-    color: #4168e0;
+    color: var(--border-active);
 }
 
 .button-cancel:hover {
-    color: #4168e0;
+    color: var(--border-active);
 }
 
 .button-confirm {
     width: 200px;
     height: 40px;
-    color: white;
-    background-color: #4168e0a0;
+    color: var(--text-on-accent);
+    background-color: var(--border-active);
 }
 
 .button-confirm:hover {
-    background-color: #4168e0;
+    background-color: var(--border-active);
 }
 
 .button-confirm:active {
-    background-color: #4168e0;
+    background-color: var(--border-active);
 }
 
 
@@ -722,7 +722,7 @@ export default {
 .switch-login-type-container {
     padding-top: 10px;
     font-size: 14px;
-    color: #4168e0;
+    color: var(--border-active);
 }
 
 .login-form-container {
@@ -737,7 +737,7 @@ export default {
 .login-form-container .title {
     align-self: flex-start;
     font-size: 18px;
-    color: white;
+    color: var(--text-on-accent);
 }
 
 .login-form-container .item {
@@ -750,7 +750,7 @@ export default {
 .login-form-container .text-input {
     height: 40px;
     width: 100%;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
     padding: 0 5px;
@@ -764,23 +764,23 @@ input::-webkit-inner-spin-button {
 }
 
 .login-form-container .text-input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .login-form-container .text-input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .login-form-container .login-button {
     height: 40px;
     width: 100%;
     margin-top: 20px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
 }
 
 .login-form-container .login-button:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .login-form-container .request-auth-code-button {
@@ -795,13 +795,13 @@ input::-webkit-inner-spin-button {
 .login-form-container .syncing {
     position: absolute;
     bottom: 0;
-    color: #4168e0;
+    color: var(--border-active);
 }
 
 .tip {
     align-self: flex-start;
     font-size: 12px;
-    color: #4168e0;
+    color: var(--border-active);
     margin-top: 10px;
 }
 
@@ -825,7 +825,7 @@ input::-webkit-inner-spin-button {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--background-overlay);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -833,7 +833,7 @@ input::-webkit-inner-spin-button {
 }
 
 .diagnose-content {
-    background: white;
+    background: var(--background-primary);
     padding: 20px;
     border-radius: 5px;
     max-width: 100%;

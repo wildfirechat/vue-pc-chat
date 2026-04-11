@@ -63,7 +63,7 @@ export default {
 
 <style lang="css" scoped>
 .notification-container {
-    background-color: white;
+    background-color: var(--background-primary);
     width: 400px;
     padding: 5px 10px;
     border-radius: 5px;

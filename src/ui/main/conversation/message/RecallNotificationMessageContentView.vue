@@ -69,7 +69,7 @@ export default {
 }
 
 .notification-container .notification {
-    color: #b8b8b8;
+    color: var(--text-placeholder);
     margin: 20px 0;
     font-size: 12px;
 }

@@ -370,7 +370,7 @@ export default {
     overflow: auto;
     background-color: #ffffffe5;
     backdrop-filter: blur(6px);
-    border-left: 1px solid #e6e6e6;
+    border-left: 1px solid var(--border-primary);
 }
 
 .participant-list-container .action-item {
@@ -399,7 +399,7 @@ export default {
 }
 
 .participant-user.active {
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
 }
 
 .participant-user .name-desc {
@@ -411,7 +411,7 @@ export default {
 }
 
 .audio-video {
-    color: black;
+    color: var(--text-primary);
     padding: 0 10px;
 }
 
@@ -449,7 +449,7 @@ export default {
     position: absolute;
     left: 0;
     top: 0;
-    color: white;
+    color: var(--text-on-accent);
     background: #e0d6d6d6;
 }
 

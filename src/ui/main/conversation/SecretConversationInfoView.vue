@@ -106,12 +106,12 @@ export default {
     display: flex;
     padding-left: 20px;
     align-items: center;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-tertiary);
 }
 
 .action-item-padding {
     flex: 1;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-tertiary);
 }
 
 .action-item .icon {
@@ -135,7 +135,7 @@ export default {
 }
 
 .action-item:active {
-    background-color: #d6d6d6;
+    background-color: var(--background-item-placeholder);
 }
 
 </style>

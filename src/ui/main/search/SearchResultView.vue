@@ -274,13 +274,13 @@ export default {
     display: block;
     z-index: 100;
     overflow: auto;
-    /*background-color: red;*/
+    /*background-color: var(--text-danger);*/
     background-color: #f3f3f3e5;
 }
 
 .search-result-container ul {
     list-style: none;
-    background-color: white;
+    background-color: var(--background-primary);
 }
 
 
@@ -291,11 +291,11 @@ export default {
     padding-bottom: 2px;
     margin-left: 12px;
     font-size: 13px;
-    border-bottom: 1px solid #eeeeee;
+    border-bottom: 1px solid var(--border-secondary);
 }
 
 .search-result-item {
-    background-color: white;
+    background-color: var(--background-primary);
     padding: 10px 12px;
 }
 
@@ -329,7 +329,7 @@ export default {
 }
 
 .search-result-item.contact button:active {
-    background: #cccccc;
+    background: var(--background-item-placeholder)ccc;
 }
 
 .search-result-item.group {

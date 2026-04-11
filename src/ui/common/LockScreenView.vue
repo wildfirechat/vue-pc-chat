@@ -42,7 +42,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #ffffff;
+    color: var(--text-on-accent);
     animation: fadeIn 0.3s ease-in-out;
 }
 

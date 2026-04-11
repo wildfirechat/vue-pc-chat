@@ -20,7 +20,7 @@
         <div v-if="session" class="main-slider-container"
              v-bind:style="{display: session.screenSharing && sharedMiscState.isElectron ? 'none' : 'flex'}">
             <div class="main">
-                <header style="background: white; height: 20px; display: flex; justify-content: space-between">
+                <header style="background: var(--background-primary); height: 20px; display: flex; justify-content: space-between">
                     <a href="#" @click.prevent>
                         <i class="icon-ion-information" style="padding: 0 10px"
                            id="info-icon"
@@ -108,7 +108,7 @@
                     <!--audio-->
                     <div v-else style="width: 100%; height: 100%">
                         <div
-                            style="background: white; height: 50px; display: flex; justify-content: center; align-items: center">
+                            style="background: var(--background-primary); height: 50px; display: flex; justify-content: center; align-items: center">
                             <div
                                 style="background: #daeafe; width: 300px; height: 40px; padding: 0 5px; border-radius: 3px; display: flex; flex-direction: column; justify-content: center">
                                 <p class="single-line"> {{ '正在讲话: ' + speakingUserName }}</p>
@@ -172,7 +172,7 @@
                                 </div>
                                 <div class="action" @click="chat">
                                     <i class="icon-ion-ios-chatboxes"
-                                       style="width: 40px; height: 40px; font-size: 40px; color: black"
+                                       style="width: 40px; height: 40px; font-size: 40px; color: var(--text-primary)"
                                        v-bind:style="{color: showConversationView ? 'white' : 'black'}"/>
                                     <p>聊天</p>
                                 </div>
@@ -1382,15 +1382,15 @@ export default {
 }
 
 a {
-    color: gray;
+    color: var(--text-secondary);
 }
 
 i:hover {
-    color: #1f64e4;
+    color: var(--accent-color);
 }
 
 i.active {
-    color: #3f64e4;
+    color: var(--accent-color);
 }
 
 .main-slider-container {
@@ -1410,7 +1410,7 @@ i.active {
     width: var(--slider-width);
     height: 100%;
     overflow: auto;
-    background: white;
+    background: var(--background-primary);
 }
 
 .conference-main-content-container {
@@ -1460,7 +1460,7 @@ i.active {
 }
 
 .content-container.audio {
-    background: white;
+    background: var(--background-primary);
     height: calc(100% - 50px);
     overflow: auto;
     padding: 10px 0 50px 0;
@@ -1483,12 +1483,12 @@ i.active {
     height: 18px;
     position: absolute;
     left: 50%;
-    color: white;
+    color: var(--text-on-accent);
     text-align: center;
     vertical-align: center;
     border-radius: 9px;
     bottom: 0;
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
     transform: translateX(-50%) translateY(25%);
 }
 
@@ -1518,7 +1518,7 @@ footer {
 }
 
 .duration-action-container p {
-    color: white;
+    color: var(--text-on-accent);
     padding: 0 5px 0 0;
 }
 
@@ -1534,7 +1534,7 @@ footer {
     flex-direction: column;
     align-items: center;
     font-size: 12px;
-    color: white;
+    color: var(--text-on-accent);
     padding: 0 25px 0 25px;
 }
 
@@ -1564,10 +1564,10 @@ footer {
     top: 0;
     width: 100%;
     height: 100%;
-    background: #e0e0e0e0;
+    background: var(--border-primary)e0;
     text-align: center;
     justify-content: center;
-    color: red;
+    color: var(--text-danger);
 }
 
 .icon-ion-grid:after {

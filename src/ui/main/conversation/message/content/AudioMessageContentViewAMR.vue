@@ -96,14 +96,14 @@ export default {
     height: 40px;
     width: var(--voice-width);
     min-width: 55px;
-    background: white;
+    background: var(--background-primary);
     border-radius: 5px;
     padding: 5px 10px;
     align-items: center;
 }
 
 .volume-container i {
-    color: #888888;
+    color: var(--text-hint);
 }
 
 .volume-container div {
@@ -116,7 +116,7 @@ export default {
 }
 
 .speechText {
-    color: #888888;
+    color: var(--text-hint);
     margin: 8px 10px;
     padding: 8px 4px 8px 8px;
     font-size: 13px;

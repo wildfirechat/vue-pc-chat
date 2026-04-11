@@ -85,7 +85,7 @@ export default {
     justify-content: center;
     align-items: center;
     color: #292a2c;
-    background-color: #fcfcfc;
+    background-color: var(--background-tooltip);
 }
 
 .user-info-container .avatar {
@@ -171,7 +171,7 @@ export default {
 }
 
 i:hover {
-    color: #3f64e4;
+    color: var(--accent-color);
 }
 
 

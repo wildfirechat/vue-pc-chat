@@ -103,7 +103,7 @@ export default {
     color: #aaaaaa;
     font-size: 13px;
     overflow: hidden;
-    background-color: #e7e7e7;
+    background-color: var(--background-item-placeholder);
     text-overflow: ellipsis;
 }
 
@@ -120,7 +120,7 @@ export default {
     border-top: 0;
     border-right: 0;
     border-left: 0;
-    border-bottom: 1px solid #e6e6e6;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 </style>

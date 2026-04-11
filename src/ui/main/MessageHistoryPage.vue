@@ -209,7 +209,7 @@ export default {
 .message-history-page {
     width: 100vw;
     height: 100vh;
-    background: #f3f3f3;
+    background: var(--background-tertiary);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -230,18 +230,18 @@ export default {
     padding: 0 10px 0 20px;
     text-align: left;
     flex: 1;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
-    background-color: #eeeeee;
+    background-color: var(--background-input);
 }
 
 .search-input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .search-input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .search-input-container i {
@@ -280,13 +280,13 @@ export default {
     width: 100%;
     height: 70px;
     display: flex;
-    /*border-bottom: 1px solid #eeeeee;*/
+    /*border-bottom: 1px solid var(--border-secondary);*/
     align-items: center;
     justify-content: center;
 }
 
 .conversation-item.active {
-    background: #dedede;
+    background: var(--background-item-placeholder);
 }
 
 .header {
@@ -301,7 +301,7 @@ export default {
     height: 45px;
     min-width: 45px;
     min-height: 45px;
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
     top: 50%;
     transform: translateY(-50%);
     border-radius: 3px;
@@ -320,7 +320,7 @@ export default {
 .content-container .title {
     display: inline-block;
     font-size: 14px;
-    color: #262626;
+    color: var(--text-primary);
     font-style: normal;
     font-weight: normal;
     padding-right: 10px;
@@ -328,7 +328,7 @@ export default {
 }
 
 .content-container .desc {
-    color: #b8b8b8;
+    color: var(--text-placeholder);
     font-size: 13px;
 }
 
@@ -349,14 +349,14 @@ export default {
 }
 
 .desc-action-container .desc {
-    color: #b8b8b8;
+    color: var(--text-placeholder);
     font-size: 13px;
 }
 
 .desc-action-container .action {
     display: flex;
     align-items: center;
-    color: #262626;
+    color: var(--text-primary);
     margin-left: auto;
     font-size: 14px;
 }
@@ -391,7 +391,7 @@ export default {
     position: absolute;
     margin-left: 55px;
     padding: 5px 0;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-tertiary);
 }
 
 .message-container {
@@ -451,13 +451,13 @@ export default {
 }
 
 >>> .text-message-container.out {
-    background-color: #f3f3f3;
+    background-color: var(--background-tertiary);
     padding-top: 0 !important;
     padding-left: 0 !important;
 }
 
 >>> .text-message-container {
-    background-color: #f3f3f3;
+    background-color: var(--background-tertiary);
     padding-top: 0 !important;
     padding-left: 0 !important;
 }

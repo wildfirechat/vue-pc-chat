@@ -52,7 +52,7 @@ export default {
 <style scoped>
 
 .conference-simple-info-container {
-    background: white;
+    background: var(--background-primary);
     padding: 5px 10px;
     width: 300px;
     border-radius: 2px;
@@ -78,7 +78,7 @@ export default {
 
 .info-item .value {
     flex: 1 1 auto;
-    color: gray;
+    color: var(--text-secondary);
     text-overflow: ellipsis;
     overflow: hidden;
 }

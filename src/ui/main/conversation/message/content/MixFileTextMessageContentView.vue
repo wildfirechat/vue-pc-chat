@@ -107,7 +107,7 @@ export default {
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    background-color: white;
+    background-color: var(--background-primary);
     padding: 5px 5px 0 5px;
     border-radius: 5px;
 }
@@ -181,12 +181,12 @@ img {
 
 i {
     font-size: 24px;
-    color: #000b;
+    color: var(--text-primary)b;
     cursor: pointer;
 }
 
 i:hover {
-    color: #3f64e4;
+    color: var(--accent-color);
 }
 
 </style>

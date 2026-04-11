@@ -34,7 +34,7 @@
                 </div>
             </li>
             <li>
-                <div class="action" style="color: black; pointer-events: auto">
+                <div class="action" style="color: var(--text-primary); pointer-events: auto">
                     <i @click="hideMultiSelectionActionView" class="icon-ion-close"></i>
                 </div>
             </li>
@@ -155,14 +155,14 @@ ul li {
 }
 
 .action.enable {
-    color: black;
+    color: var(--text-primary);
     pointer-events: auto;
 }
 
 .action .icon {
     width: 60px;
     height: 60px;
-    background-color: white;
+    background-color: var(--background-primary);
     border-radius: 30px;
     display: flex;
     justify-content: center;

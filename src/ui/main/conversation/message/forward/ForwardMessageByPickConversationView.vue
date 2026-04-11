@@ -154,7 +154,7 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    background-color: #f7f7f7;
+    background-color: var(--background-item-normal);
     overflow: hidden;
 }
 
@@ -168,14 +168,14 @@ export default {
     margin: 15px 20px 0 15px;
     flex: 1;
     border-radius: 3px;
-    border: 1px solid #ededed;
-    background-color: white;
+    border: 1px solid var(--border-tertiary);
+    background-color: var(--background-primary);
     padding-left: 10px;
     text-align: left;
 }
 
 .conversation-list-panel .create-group {
-    background-color: #f7f7f7;
+    background-color: var(--background-item-normal);
     height: 40px;
     font-size: 13px;
     padding-left: 15px;
@@ -195,9 +195,9 @@ export default {
 }
 
 .conversation-list-container > p {
-    background-color: #f7f7f7;
+    background-color: var(--background-item-normal);
     font-size: 12px;
-    color: #888888;
+    color: var(--text-hint);
     padding-left: 15px;
     padding-top: 8px;
     padding-bottom: 8px;
@@ -269,7 +269,7 @@ export default {
     height: 45px;
     margin: 10px 10px;
     display: inline-block;
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
     border-radius: 3px;
 }
 
@@ -277,7 +277,7 @@ export default {
     position: absolute;
     width: 20px;
     height: 20px;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 10px;
     top: 0;
     right: 0;
@@ -302,9 +302,9 @@ export default {
 }
 
 .checked-conversation-list-container footer button.confirm {
-    background-color: #4168e0;
+    background-color: var(--accent-color);
     margin-left: 20px;
-    color: white;
+    color: var(--text-on-accent);
     margin-right: 20px;
 }
 

@@ -178,13 +178,13 @@ export default {
 .message-time-container .time {
     align-self: center;
     margin-bottom: 20px;
-    color: #b4b4b4;
+    color: var(--text-time);
     height: 20px;
     font-size: 10px;
 }
 
 .message-time-container.checked {
-    background-color: #e7e7e7;
+    background-color: var(--background-item-placeholder);
 }
 
 .message-avatar-content-container {

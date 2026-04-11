@@ -249,10 +249,10 @@ export default {
     display: flex;
     align-items: center;
     padding-left: 15px;
-    color: #262626;
+    color: var(--text-primary);
     font-size: 14px;
     position: sticky;
-    background-color: #fafafa;
+    background-color: var(--background-secondary);
     top: 0;
 }
 
@@ -269,7 +269,7 @@ export default {
 .category-item .tip {
     font-size: 10px;
     padding-left: 5px;
-    color: #7f7f7f;
+    color: var(--text-secondary-strong);
 }
 
 .arrow {

@@ -152,16 +152,16 @@ export default {
 .breadcrumb li:not(:last-child)::after {
     display: inline-block;
     margin: 0 10px;
-    color: #8f959f;
+    color: var(--text-secondary-strong);
     content: ">";
 }
 
 .breadcrumb li:not(:last-child) a {
-    color: #4168e0;
+    color: var(--accent-color);
 }
 
 .breadcrumb li:last-child a {
-    color: #8f959f;
+    color: var(--text-secondary-strong);
     pointer-events: none;
 }
 
@@ -182,7 +182,7 @@ export default {
 }
 
 .organization-item:hover {
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
 }
 
 .organization-item img {
@@ -197,7 +197,7 @@ export default {
     margin-left: auto;
     padding: 5px;
     font-size: 14px;
-    color: #4168e0;
+    color: var(--accent-color);
 }
 
 .organization-item .button:hover {

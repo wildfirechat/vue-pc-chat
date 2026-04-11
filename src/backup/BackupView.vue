@@ -360,18 +360,18 @@ export default {
 
 <style scoped lang="css">
 .backup-progress-content {
-    background: white;
+    background: var(--background-primary);
     border-radius: 8px;
     padding: 30px;
     min-width: 400px;
     max-width: 500px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-main);
 }
 
 .backup-progress-content h3 {
     margin: 0 0 20px 0;
     font-size: 20px;
-    color: #333;
+    color: var(--text-primary);
     text-align: center;
 }
 
@@ -388,12 +388,12 @@ export default {
 }
 
 .backup-progress-item .label {
-    color: #666;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
 .backup-progress-item .value {
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
     text-align: right;
     max-width: 60%;
@@ -401,7 +401,7 @@ export default {
 }
 
 .backup-progress-item .value.file-name {
-    color: #1f64e4;
+    color: var(--accent-color);
 }
 
 .backup-progress-spinner {
@@ -413,8 +413,8 @@ export default {
 .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #1f64e4;
+    border: 4px solid var(--background-tertiary);
+    border-top: 4px solid var(--accent-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -430,7 +430,7 @@ export default {
 
 .backup-progress-hint {
     text-align: center;
-    color: #666;
+    color: var(--text-muted);
     font-size: 13px;
     margin: 0;
 }

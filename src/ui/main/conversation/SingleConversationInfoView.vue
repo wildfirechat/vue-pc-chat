@@ -108,22 +108,22 @@ export default {
 }
 
 .action-item:active {
-    background-color: #d6d6d6;
+    background-color: var(--background-item-placeholder);
 }
 
 .conversation-action-item {
     display: flex;
-    color: red;
+    color: var(--text-danger);
     align-items: center;
     font-size: 12px;
     justify-content: center;
     height: 42px;
     max-height: 42px;
-    border-top: 1px solid #ececec;
+    border-top: 1px solid var(--border-tertiary);
 }
 
 .conversation-action-item:active {
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
 }
 
 </style>

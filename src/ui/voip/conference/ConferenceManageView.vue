@@ -148,7 +148,7 @@ export default {
     overflow: auto;
     background-color: #ffffffe5;
     backdrop-filter: blur(6px);
-    border-left: 1px solid #e6e6e6;
+    border-left: 1px solid var(--border-primary);
 }
 
 .conference-manage-view-container.active {
@@ -163,7 +163,7 @@ export default {
 }
 
 .conference-manage-view-container .action-tip:active {
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
 }
 
 .title-container {
@@ -179,7 +179,7 @@ export default {
 }
 
 .title-container i:active {
-    /*background: #d6d6d6;*/
+    /*background: var(--background-item-placeholder);*/
 }
 
 </style>

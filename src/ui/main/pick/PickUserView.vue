@@ -67,7 +67,7 @@
                     </div>
                     <div style="display: flex; align-items: center; ">
                         <p class="name single-line">{{ user._displayName }}</p>
-                        <p v-if="isExternalDomainUser(user)" class="single-line" style="color: #F0A040; border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName(user) }}</p>
+                        <p v-if="isExternalDomainUser(user)" class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName(user) }}</p>
                     </div>
                 </div>
                 <div class="picked-user-container" v-for="(org, index) in sharedPickState.organizations" :key="org.id">
@@ -258,7 +258,7 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    background-color: #f7f7f7;
+    background-color: var(--background-item-normal);
     overflow: hidden;
 }
 
@@ -273,19 +273,19 @@ export default {
     margin: 15px 20px 0 15px;
     flex: 1;
     border-radius: 3px;
-    border: 1px solid #ededed;
-    background-color: white;
+    border: 1px solid var(--border-tertiary);
+    background-color: var(--background-primary);
     padding-left: 20px;
     text-align: left;
     outline: none;
 }
 
 .input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .input-container i {
@@ -321,16 +321,16 @@ export default {
 .pick-source-nav li:not(:last-child)::after {
     display: inline-block;
     margin: 0 10px;
-    color: #8f959f;
+    color: var(--text-secondary-strong);
     content: ">";
 }
 
 .pick-source-nav li:not(:last-child) a {
-    color: #4168e0;
+    color: var(--accent-color);
 }
 
 .pick-source-nav li:last-child a {
-    color: #8f959f;
+    color: var(--text-secondary-strong);
     pointer-events: none;
 }
 
@@ -347,7 +347,7 @@ export default {
 }
 
 .pick-source-list ul li:hover {
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
     border-radius: 5px;
 }
 
@@ -357,13 +357,13 @@ export default {
 
 .pick-source-list ul li::after {
     display: inline-block;
-    color: #8f959f;
+    color: var(--text-secondary-strong);
     content: ">";
 }
 
 .pick-source-list a {
     text-decoration: none;
-    color: black;
+    color: var(--text-primary);
     font-size: 14px;
 }
 
@@ -444,7 +444,7 @@ export default {
     height: 20px;
     border: 1px solid white;
     border-radius: 10px;
-    background-color: #f2f2f2;
+    background-color: var(--background-tertiary);
     top: 0;
     right: 0;
 }
@@ -468,14 +468,14 @@ footer button {
 }
 
 footer button.confirm {
-    background-color: #4168e0;
+    background-color: var(--accent-color);
     margin-left: 20px;
     margin-right: 20px;
-    color: white;
+    color: var(--text-on-accent);
 }
 
 footer button.confirm.disable {
-    background-color: #f2f2f2;
+    background-color: var(--background-tertiary);
     color: #c2c2c2;
 }
 

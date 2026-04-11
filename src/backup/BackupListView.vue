@@ -287,14 +287,14 @@ export default {
     font-size: 20px;
     margin-bottom: 15px; /* 减小margin */
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
     flex-shrink: 0; /* 标题不缩小 */
 }
 
 .loading, .empty {
     text-align: center;
     padding: 50px 20px;
-    color: #999;
+    color: var(--text-hint);
     flex: 1; /* 加载和空状态占据剩余空间 */
     overflow-y: auto;
 }
@@ -302,13 +302,13 @@ export default {
 .empty .hint {
     font-size: 14px;
     margin-top: 10px;
-    color: #bbb;
+    color: var(--text-tertiary);
 }
 
 .backup-list {
     flex: 1; /* 占据剩余空间 */
     overflow-y: auto;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 10px;
     min-height: 0; /* 允许flex子元素缩小 */
@@ -320,7 +320,7 @@ export default {
     justify-content: space-between;
     align-items: center;
     padding: 12px 15px; /* 减小padding */
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-tertiary);
     transition: background 0.2s;
     flex-shrink: 0; /* 防止item被压缩 */
 }
@@ -330,7 +330,7 @@ export default {
 }
 
 .backup-item:hover {
-    background: #f9f9f9;
+    background: var(--background-tertiary);
 }
 
 .backup-info {
@@ -341,7 +341,7 @@ export default {
 .backup-name {
     font-size: 16px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 5px; /* 减小margin */
     white-space: nowrap;
     overflow: hidden;
@@ -350,7 +350,7 @@ export default {
 
 .backup-detail {
     font-size: 13px;
-    color: #666;
+    color: var(--text-muted);
     margin-bottom: 3px;
 }
 
@@ -360,7 +360,7 @@ export default {
 
 .backup-size {
     font-size: 14px;
-    color: #999;
+    color: var(--text-hint);
 }
 
 .backup-actions {
@@ -371,8 +371,8 @@ export default {
 
 .restore-btn {
     padding: 6px 16px;
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -381,13 +381,13 @@ export default {
 }
 
 .restore-btn:hover {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 
 .delete-btn {
     padding: 6px 16px;
-    background: #ff4d4f;
-    color: white;
+    background: var(--text-danger);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -404,13 +404,13 @@ export default {
     padding-top: 15px; /* 增加顶部padding */
     text-align: center;
     flex-shrink: 0; /* 确保footer不被压缩 */
-    border-top: 1px solid #e0e0e0; /* 添加分隔线 */
+    border-top: 1px solid var(--border-primary); /* 添加分隔线 */
 }
 
 .close-btn {
     padding: 10px 40px;
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -419,7 +419,7 @@ export default {
 }
 
 .close-btn:hover {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 
 /* 对话框样式 */
@@ -429,7 +429,7 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--background-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -437,26 +437,26 @@ export default {
 }
 
 .dialog-box {
-    background: white;
+    background: var(--background-primary);
     border-radius: 8px;
     padding: 30px;
     min-width: 400px;
     max-width: 500px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-main);
 }
 
 .dialog-box h3 {
     margin: 0 0 20px 0;
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .dialog-text {
     margin: 0 0 25px 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #666;
+    color: var(--text-muted);
     white-space: pre-line;
 }
 
@@ -476,17 +476,17 @@ export default {
 }
 
 .cancel-button {
-    background: #e0e0e0;
-    color: #666;
+    background: var(--border-primary);
+    color: var(--text-muted);
 }
 
 .cancel-button:hover {
-    background: #d0d0d0;
+    background: var(--border-secondary);
 }
 
 .confirm-button {
-    background: #ff4d4f;
-    color: white;
+    background: var(--text-danger);
+    color: var(--text-on-accent);
 }
 
 .confirm-button:hover {
@@ -496,8 +496,8 @@ export default {
 .dialog-button {
     width: 100%;
     padding: 10px;
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -506,6 +506,6 @@ export default {
 }
 
 .dialog-button:hover {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 </style>

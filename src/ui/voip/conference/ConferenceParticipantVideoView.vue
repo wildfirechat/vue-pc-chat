@@ -235,7 +235,7 @@ export default {
 
 .participant-video-item p {
     max-height: 20px;
-    color: white;
+    color: var(--text-on-accent);
 }
 
 </style>

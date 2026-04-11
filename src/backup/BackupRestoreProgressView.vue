@@ -454,12 +454,12 @@ export default {
     font-size: 20px;
     margin-bottom: 30px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .backup-info {
-    background: #f9f9f9;
-    border: 1px solid #e0e0e0;
+    background: var(--background-item-hover);
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 20px;
     margin-bottom: 30px;
@@ -469,7 +469,7 @@ export default {
     display: flex;
     justify-content: space-between;
     padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-secondary);
 }
 
 .info-row:last-child {
@@ -478,13 +478,13 @@ export default {
 
 .info-row .label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
 .info-row .value {
     font-size: 14px;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 600;
 }
 
@@ -496,21 +496,21 @@ export default {
 .status-text {
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .detail-text {
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .restore-statistics {
     font-size: 13px;
-    color: #2196F3;
+    color: var(--accent-color);
     margin-top: 12px;
     font-weight: 500;
-    background: #f0f7ff;
+    background: var(--background-item-selected);
     padding: 8px 12px;
     border-radius: 4px;
     display: inline-block;
@@ -523,7 +523,7 @@ export default {
 .progress-bar {
     width: 100%;
     height: 8px;
-    background: #e0e0e0;
+    background: var(--border-primary);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 10px;
@@ -531,7 +531,7 @@ export default {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2196F3, #1976D2);
+    background: var(--accent-color);
     transition: width 0.3s ease;
     border-radius: 4px;
 }
@@ -539,7 +539,7 @@ export default {
 .progress-text {
     text-align: center;
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .statistics {
@@ -548,7 +548,7 @@ export default {
     gap: 20px;
     margin-bottom: 30px;
     padding: 20px;
-    background: #f5f5f5;
+    background: var(--background-tertiary);
     border-radius: 8px;
 }
 
@@ -558,14 +558,14 @@ export default {
 
 .stat-label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
     margin-bottom: 8px;
 }
 
 .stat-value {
     font-size: 24px;
     font-weight: bold;
-    color: #2196F3;
+    color: var(--accent-color);
 }
 
 .footer {
@@ -582,39 +582,39 @@ export default {
 }
 
 .close-btn {
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
 }
 
 .close-btn:hover {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 
 .confirm-btn {
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
 }
 
 .confirm-btn:hover {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 
 .cancel-btn {
-    background: #e0e0e0;
-    color: #666;
+    background: var(--border-primary);
+    color: var(--text-muted);
 }
 
 .cancel-btn:hover {
-    background: #d0d0d0;
+    background: var(--background-item-placeholder);
 }
 
 .cancel-btn:disabled {
-    background: #e0e0e0;
-    color: #999;
+    background: var(--border-primary);
+    color: var(--text-hint);
     cursor: not-allowed;
 }
 
 .cancel-btn:disabled:hover {
-    background: #e0e0e0;
+    background: var(--border-primary);
 }
 </style>

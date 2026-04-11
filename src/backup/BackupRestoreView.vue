@@ -178,7 +178,7 @@ export default {
     font-size: 20px;
     margin-bottom: 20px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .options {
@@ -191,17 +191,17 @@ export default {
     display: flex;
     align-items: center;
     padding: 15px 20px;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
-    background: white;
+    background: var(--background-primary);
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .option-button:hover {
-    background: #f5f5f5;
-    border-color: #2196F3;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    background: var(--background-tertiary);
+    border-color: var(--accent-color);
+    box-shadow: var(--shadow-main);
 }
 
 .option-button .icon {
@@ -211,7 +211,7 @@ export default {
 
 .option-button .text {
     font-size: 16px;
-    color: #333;
+    color: var(--text-primary);
     font-weight: 500;
 }
 
@@ -222,7 +222,7 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: var(--background-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -230,34 +230,34 @@ export default {
 }
 
 .dialog-box {
-    background: white;
+    background: var(--background-primary);
     border-radius: 8px;
     padding: 30px;
     min-width: 400px;
     max-width: 500px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-main);
 }
 
 .dialog-box h3 {
     margin: 0 0 20px 0;
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .dialog-text {
     margin: 0 0 25px 0;
     font-size: 14px;
     line-height: 1.6;
-    color: #666;
+    color: var(--text-muted);
     white-space: pre-line;
 }
 
 .dialog-button {
     width: 100%;
     padding: 10px;
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -266,6 +266,6 @@ export default {
 }
 
 .dialog-button:hover {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 </style>

@@ -59,7 +59,7 @@ export default {
 .video-content-container {
     margin: 0 10px;
     position: relative;
-    border: 1px solid #efefef;
+    border: 1px solid var(--border-tertiary);
     border-radius: 5px;
 }
 
@@ -72,11 +72,11 @@ export default {
 }
 
 .right-arrow:before {
-    border-left-color: white;
+    border-left-color: var(--text-on-accent);
 }
 
 .left-arrow:before {
-    border-left-color: white;
+    border-left-color: var(--text-on-accent);
 }
 
 </style>

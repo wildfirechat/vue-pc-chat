@@ -78,7 +78,7 @@ export default {
     transform: translateX(-50%) translateY(-50%);
     width: 15px;
     height: 15px;
-    background: #f3f3f3;
+    background: var(--background-tertiary);
     border-radius: 15px;
 }
 

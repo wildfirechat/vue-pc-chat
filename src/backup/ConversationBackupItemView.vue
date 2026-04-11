@@ -99,7 +99,7 @@ export default {
     display: flex;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-tertiary);
     cursor: pointer;
     border-radius: 6px;
     transition: background 0.2s;
@@ -110,11 +110,11 @@ export default {
 }
 
 .conversation-item:hover {
-    background: #f9f9f9;
+    background: var(--background-tertiary);
 }
 
 .conversation-item.selected {
-    background: #e3f2fd;
+    background: var(--background-item-selected);
 }
 
 .checkbox {
@@ -127,19 +127,19 @@ export default {
 .checkbox-unchecked {
     width: 20px;
     height: 20px;
-    border: 2px solid #999;
+    border: 2px solid var(--text-hint);
     border-radius: 4px;
 }
 
 .checkbox-checked {
     width: 20px;
     height: 20px;
-    background: #2196F3;
+    background: var(--accent-color);
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-accent);
     font-size: 14px;
     font-weight: bold;
 }
@@ -150,7 +150,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f0f0f0;
+    background: var(--background-tertiary);
     border-radius: 6px;
     margin-right: 12px;
     flex-shrink: 0;
@@ -181,7 +181,7 @@ export default {
 .name {
     font-size: 16px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -190,6 +190,6 @@ export default {
 
 .detail {
     font-size: 13px;
-    color: #999;
+    color: var(--text-hint);
 }
 </style>

@@ -59,7 +59,7 @@ export default {
 }
 
 .group-info-container a {
-    color: white;
+    color: var(--text-on-accent);
     padding: 10px 40px;
     background-color: #3861e0;
     border-radius: 5px;
@@ -69,7 +69,7 @@ export default {
 }
 
 .group-info-container a:active {
-    background-color: #4168e0;
+    background-color: var(--accent-color);
 }
 
 .group-info {
@@ -99,7 +99,7 @@ export default {
     margin-bottom: 20px;
     display: flex;
     justify-content: center;
-    color: #3f64e4;
+    color: var(--accent-color);
     font-size: 13px;
 }
 

@@ -70,7 +70,7 @@ export default {
 .streaming-text-message-container {
     margin: 0 10px;
     padding: 10px;
-    background-color: white;
+    background-color: var(--background-primary);
     position: relative;
     border-radius: 5px;
     display: flex;
@@ -97,11 +97,11 @@ export default {
 }
 
 .streaming-text-message-container.out {
-    background-color: #a8bdff;
+    background-color: var(--background-message-out);
 }
 
 .streaming-text-message-container .text {
-    color: #050505;
+    color: var(--text-primary);
     font-size: 13px;
     line-height: 20px;
     /*max-height: 1000px;*/
@@ -131,7 +131,7 @@ export default {
 .ai-content-tip{
     margin: 5px 10px 0;
     font-size: 12px;
-    color: #999;
+    color: var(--text-hint);
 }
 
 </style>

@@ -450,7 +450,7 @@ header .group-portrait-container {
 }
 
 header .group-portrait-container p {
-    color: #191919;
+    color: var(--text-primary);
     font-size: 13px;
 }
 
@@ -468,7 +468,7 @@ header label {
     justify-content: center;
     align-items: flex-start;
     font-size: 13px;
-    color: #191919;
+    color: var(--text-primary);
 }
 
 header label:not(:first-of-type) {
@@ -477,7 +477,7 @@ header label:not(:first-of-type) {
 
 header label:last-of-type {
     padding-bottom: 15px;
-    border-bottom: 1px solid #ececec;
+    border-bottom: 1px solid var(--border-tertiary);
 }
 
 header label input {
@@ -509,18 +509,18 @@ header label input::-webkit-input-placeholder {
     padding: 0 10px 0 20px;
     height: 25px;
     border-radius: 3px;
-    border: 1px solid #ededed;
-    background-color: white;
+    border: 1px solid var(--border-tertiary);
+    background-color: var(--background-primary);
     text-align: left;
     outline: none;
 }
 
 .search-item input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .search-item input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .search-item i {
@@ -557,22 +557,22 @@ header label input::-webkit-input-placeholder {
 }
 
 .action-item:active {
-    background-color: #d6d6d6;
+    background-color: var(--background-item-placeholder);
 }
 
 .conversation-action-item {
     display: flex;
-    color: red;
+    color: var(--text-danger);
     align-items: center;
     justify-content: center;
     font-size: 12px;
     height: 42px;
     max-height: 42px;
-    border-top: 1px solid #ececec;
+    border-top: 1px solid var(--border-tertiary);
 }
 
 .conversation-action-item:active {
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
 }
 
 .switch {

@@ -339,7 +339,7 @@ export default {
 .setting-container .ad-container {
     padding: 10px;
     font-size: 15px;
-    background: #f1f3f4;
+    background: var(--background-secondary);
     margin: 10px;
     border-radius: 5px;
     /*box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);*/
@@ -355,20 +355,20 @@ export default {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    border-top: 1px solid #d9d9d9;
+    border-top: 1px solid var(--border-primary);
 }
 
 .proto-version-info {
     justify-self: flex-start;
     margin-right: auto;
     padding-left: 10px;
-    color: lightgrey;
+    color: var(--text-hint);
 }
 
 .setting-container .button {
     /* position: relative; */
     margin-right: 17px;
-    color: rgba(0, 0, 0, .8);
+    color: var(--text-primary);
     font-size: 14px;
     padding: 9px 8px;
     border: 0;
@@ -384,7 +384,7 @@ export default {
 }
 
 .setting-container .button:hover {
-    background: #e0e0e0e5;
+    background: var(--background-item-hover);
 }
 
 </style>

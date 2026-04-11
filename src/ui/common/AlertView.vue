@@ -122,22 +122,22 @@ export default {
 
 .action-container .confirm {
     background: #4168e0ef;
-    color: white;
+    color: var(--text-on-accent);
 }
 
 .action-container .cancel {
-    color: black;
-    background: white;
+    color: var(--text-primary);
+    background: var(--background-primary);
 }
 
 .action-container .cancel:active {
     background: lightgrey;
-    color: black;
+    color: var(--text-primary);
 }
 
 .action-container .confirm:active {
-    background: #4168e0;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
 }
 
 </style>

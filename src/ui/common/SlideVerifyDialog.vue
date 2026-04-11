@@ -322,7 +322,7 @@ export default {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--background-overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -330,7 +330,7 @@ export default {
 }
 
 .slide-verify-container {
-    background: white;
+    background: var(--background-primary);
     border-radius: 12px;
     padding: 20px;
     width: 360px;
@@ -345,7 +345,7 @@ export default {
 .slide-verify-header .title {
     font-size: 18px;
     font-weight: bold;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .slide-verify-content {
@@ -385,7 +385,7 @@ export default {
     position: relative;
     width: 100%;
     height: 40px;
-    background-color: #f0f0f0;
+    background-color: var(--border-secondary);
     border-radius: 20px;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -400,7 +400,7 @@ export default {
     align-items: center;
     justify-content: center;
     font-size: 14px;
-    color: #999;
+    color: var(--text-hint);
     pointer-events: none;
 }
 
@@ -410,7 +410,7 @@ export default {
     left: 0;
     width: 40px;
     height: 40px;
-    background: white;
+    background: var(--background-primary);
     border-radius: 50%;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     display: flex;

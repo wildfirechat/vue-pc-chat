@@ -223,7 +223,7 @@ export default {
     position: absolute;
     margin-left: 55px;
     padding: 5px 0;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid var(--border-tertiary);
 }
 
 .message-container {
@@ -266,11 +266,11 @@ export default {
 }
 
 >>> .text-message-container.out {
-    background-color: #f7f7f7;
+    background-color: var(--background-item-normal);
 }
 
 >>> .text-message-container {
-    background-color: #f7f7f7;
+    background-color: var(--background-item-normal);
     padding-left: 0;
 }
 

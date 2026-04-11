@@ -1416,12 +1416,12 @@ export default {
 
 i {
     font-size: 24px;
-    color: #000b;
+    color: var(--text-primary);
     cursor: pointer;
 }
 
 i:hover {
-    color: #3f64e4;
+    color: var(--accent-color);
 }
 
 .input-action-container ul li .screen-shot-button {
@@ -1431,9 +1431,9 @@ i:hover {
     display: none;
     padding: 5px 10px;
     font-size: 12px;
-    background-color: #b8b8b8;
+    background-color: var(--text-placeholder);
     border-radius: 5px;
-    color: #fff;
+    color: var(--text-on-accent);
 }
 
 .input-action-container ul li .screen-shot-more:hover .screen-shot-button {
@@ -1460,21 +1460,21 @@ i:hover {
 }
 
 .ptt-icon {
-    color: #000b;
+    color: var(--text-primary);
 }
 
 .ptt-icon.active {
-    color: red;
+    color: var(--text-danger);
     animation: glow 2s infinite;
 }
 
 
 .record-icon {
-    color: #000b;
+    color: var(--text-primary);
 }
 
 .record-icon.active {
-    color: red;
+    color: var(--text-danger);
     animation: glow 2s infinite;
 }
 
@@ -1520,7 +1520,7 @@ i:hover {
 .wave-bar {
     width: 3px;
     height: 100%;
-    background: white;
+    background: var(--background-primary);
     border-radius: 2px;
     animation: wave 1s ease-in-out infinite;
 }
@@ -1535,7 +1535,7 @@ i:hover {
 }
 
 .recording-text {
-    color: white;
+    color: var(--text-on-accent);
     font-size: 14px;
     font-weight: 500;
     letter-spacing: 0.5px;
@@ -1597,7 +1597,6 @@ i:hover {
 
 <style scoped>
 .emoji-picker {
-    box-shadow: 5px 5px 20px 0 #C0C0C0;
-    --ep-color-active: #3f64e4 !important;
+    box-shadow: var(--shadow-tooltip);
 }
 </style>

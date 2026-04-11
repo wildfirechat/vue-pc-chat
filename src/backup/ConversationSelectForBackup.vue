@@ -642,7 +642,7 @@ export default {
     font-size: 20px;
     margin-bottom: 30px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
     flex-shrink: 0;
 }
 
@@ -654,13 +654,13 @@ export default {
 .status-text {
     font-size: 18px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 10px;
 }
 
 .detail-text {
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .progress-bar-container {
@@ -670,7 +670,7 @@ export default {
 .progress-bar {
     width: 100%;
     height: 8px;
-    background: #e0e0e0;
+    background: var(--border-primary);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 10px;
@@ -678,7 +678,7 @@ export default {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2196F3, #1976D2);
+    background: var(--accent-color);
     transition: width 0.3s ease;
     border-radius: 4px;
 }
@@ -686,7 +686,7 @@ export default {
 .progress-text {
     text-align: center;
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .statistics {
@@ -695,7 +695,7 @@ export default {
     gap: 20px;
     margin-bottom: 30px;
     padding: 20px;
-    background: #f5f5f5;
+    background: var(--background-tertiary);
     border-radius: 8px;
 }
 
@@ -705,14 +705,14 @@ export default {
 
 .stat-label {
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
     margin-bottom: 8px;
 }
 
 .stat-value {
     font-size: 24px;
     font-weight: bold;
-    color: #2196F3;
+    color: var(--accent-color);
 }
 
 .conversation-select-container h2 {
@@ -720,7 +720,7 @@ export default {
     font-size: 20px;
     margin-bottom: 15px;
     text-align: center;
-    color: #333;
+    color: var(--text-primary);
     flex-shrink: 0;
 }
 
@@ -730,15 +730,15 @@ export default {
     align-items: center;
     margin-bottom: 15px;
     padding: 10px;
-    background: #f5f5f5;
+    background: var(--background-tertiary);
     border-radius: 6px;
     flex-shrink: 0; /* 确保不缩小 */
 }
 
 .action-btn {
     padding: 6px 16px;
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -747,12 +747,12 @@ export default {
 }
 
 .action-btn:hover {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 
 .selected-count {
     font-size: 14px;
-    color: #666;
+    color: var(--text-muted);
 }
 
 .empty {
@@ -760,13 +760,13 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #999;
+    color: var(--text-hint);
 }
 
 .conversation-list {
     flex: 1;
     overflow-y: auto;
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-primary);
     border-radius: 8px;
     padding: 10px;
     min-height: 0;
@@ -777,7 +777,7 @@ export default {
     display: flex;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--border-secondary);
     cursor: pointer;
     border-radius: 6px;
     transition: background 0.2s;
@@ -788,11 +788,11 @@ export default {
 }
 
 .conversation-item:hover {
-    background: #f9f9f9;
+    background: var(--background-item-hover);
 }
 
 .conversation-item.selected {
-    background: #e3f2fd;
+    background: var(--background-item-selected);
 }
 
 .checkbox {
@@ -805,19 +805,19 @@ export default {
 .checkbox-unchecked {
     width: 20px;
     height: 20px;
-    border: 2px solid #999;
+    border: 2px solid var(--text-hint);
     border-radius: 4px;
 }
 
 .checkbox-checked {
     width: 20px;
     height: 20px;
-    background: #2196F3;
+    background: var(--accent-color);
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--text-on-accent);
     font-size: 14px;
     font-weight: bold;
 }
@@ -828,7 +828,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f0f0f0;
+    background: var(--border-secondary);
     border-radius: 6px;
     margin-right: 12px;
     flex-shrink: 0;
@@ -859,7 +859,7 @@ export default {
 .name {
     font-size: 16px;
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
     margin-bottom: 4px;
     white-space: nowrap;
     overflow: hidden;
@@ -868,7 +868,7 @@ export default {
 
 .detail {
     font-size: 13px;
-    color: #999;
+    color: var(--text-hint);
 }
 
 .footer {
@@ -878,13 +878,13 @@ export default {
     justify-content: center;
     flex-shrink: 0; /* 确保footer不被压缩 */
     padding-top: 15px;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1px solid var(--border-primary);
 }
 
 .cancel-btn {
     padding: 10px 30px;
-    background: #e0e0e0;
-    color: #666;
+    background: var(--border-primary);
+    color: var(--text-muted);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -893,13 +893,13 @@ export default {
 }
 
 .cancel-btn:hover {
-    background: #d0d0d0;
+    background: var(--background-item-placeholder);
 }
 
 .confirm-btn {
     padding: 10px 30px;
-    background: #2196F3;
-    color: white;
+    background: var(--accent-color);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -908,11 +908,11 @@ export default {
 }
 
 .confirm-btn:hover:not(:disabled) {
-    background: #1976D2;
+    background: var(--accent-color-active);
 }
 
 .confirm-btn:disabled {
-    background: #ccc;
+    background: var(--background-item-placeholder);
     cursor: not-allowed;
     opacity: 0.6;
 }

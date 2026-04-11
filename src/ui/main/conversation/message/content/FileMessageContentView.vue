@@ -100,7 +100,7 @@ export default {
 .file-message-container {
     margin: 0 10px;
     padding: 10px;
-    background-color: white;
+    background-color: var(--background-primary);
     position: relative;
     border-radius: 5px;
     display: flex;
@@ -127,17 +127,17 @@ export default {
 }
 
 .file-message-container .file-size {
-    color: #888888;
+    color: var(--text-hint);
     font-size: 13px;
 }
 
 .file-message-container .text {
-    color: #050505;
+    color: var(--text-primary);
     font-size: 16px;
 }
 
 .rightarrow:before {
-    border-left-color: white;
+    border-left-color: var(--text-on-accent);
 }
 
 </style>

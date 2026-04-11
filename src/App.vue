@@ -181,9 +181,9 @@ export default {
 
 .tippy-tooltip {
     right: var(--tippy-right) !important;
-    border: 1px solid #f5f5f5 !important;
-    background-color: #fcfcfc !important;
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.125);
+    border: 1px solid var(--border-subtle) !important;
+    background-color: var(--background-tooltip) !important;
+    box-shadow: var(--shadow-tooltip);
 }
 
 #app {
@@ -205,7 +205,7 @@ export default {
     top: 0;
     height: 100vh;
     width: 100vw;
-    background: rgba(0, 0, 0, .2);
+    background: var(--background-mask);
     overflow: hidden;
 }
 

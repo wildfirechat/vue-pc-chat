@@ -132,7 +132,7 @@ export default {
 }
 
 .organization-item:hover {
-    background: #d6d6d6;
+    background: var(--background-item-placeholder);
 }
 
 .organization-item img {
@@ -147,7 +147,7 @@ export default {
     margin-left: auto;
     padding: 5px;
     font-size: 14px;
-    color: #4168e0;
+    color: var(--accent-color);
 }
 
 .organization-item .button:not(.disabled):hover {
@@ -156,7 +156,7 @@ export default {
 }
 
 .organization-item .button.disabled {
-    color: gray;
+    color: var(--text-secondary);
 }
 
 </style>

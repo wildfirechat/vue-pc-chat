@@ -354,7 +354,7 @@ export default {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #f7f7f7;
+    background-color: var(--background-item-normal);
 }
 
 .file-record-page .title {
@@ -383,7 +383,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #fafafa;
+    background-color: var(--background-secondary);
     position: relative;
 }
 
@@ -394,18 +394,18 @@ export default {
     padding: 0 10px 0 20px;
     text-align: left;
     flex: 1;
-    border: 1px solid #e5e5e5;
+    border: 1px solid var(--border-primary);
     border-radius: 3px;
     outline: none;
-    background-color: #eeeeee;
+    background-color: var(--background-input);
 }
 
 .search-input-container input:active {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .search-input-container input:focus {
-    border: 1px solid #4168e0;
+    border: 1px solid var(--border-active);
 }
 
 .search-input-container i {
@@ -422,11 +422,11 @@ export default {
 }
 
 .category-item:active {
-    background-color: #dedede;
+    background-color: var(--background-item-placeholder);
 }
 
 .category-item.active {
-    background-color: #dedede;
+    background-color: var(--background-item-placeholder);
 }
 
 .category-item p {
@@ -465,17 +465,17 @@ export default {
 }
 
 .conversation-item:active {
-    background-color: #dedede;
+    background-color: var(--background-item-placeholder);
 }
 
 .conversation-item.active {
-    background-color: #dedede;
+    background-color: var(--background-item-placeholder);
 }
 
 .file-record-container .file-record-list-container {
     flex: 1;
     height: 100%;
-    background-color: white;
+    background-color: var(--background-primary);
     overflow: auto;
 }
 
@@ -511,7 +511,7 @@ export default {
 }
 
 .file-record-item:active {
-    background-color: #dedede;
+    background-color: var(--background-item-placeholder);
 }
 
 .file-record-item img {
@@ -530,7 +530,7 @@ export default {
 
 .file-name-sender-container .name {
     font-size: 13px;
-    color: #252525;
+    color: var(--text-primary);
     padding-bottom: 3px;
 }
 

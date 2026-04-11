@@ -116,7 +116,7 @@ export default {
 <style scoped>
 .collection-message-container {
     margin: 0 10px;
-    background-color: white;
+    background-color: var(--background-primary);
     border-radius: 5px;
     cursor: pointer;
     width: 280px; /* Slightly wider for list content */
@@ -126,7 +126,7 @@ export default {
 }
 
 .collection-message-container.out {
-    background-color: #a8bdff; /* Match bubble color */
+    background-color: var(--background-message-out); /* Match bubble color */
 }
 
 /* Header */
@@ -138,11 +138,11 @@ export default {
 .collection-icon {
     font-size: 20px;
     margin-right: 8px;
-    color: #576b95;
+    color: var(--text-link);
     margin-top: 2px;
 }
 .collection-icon.out {
-    color: #333; /* Darker on blue bg */
+    color: var(--text-primary); /* Darker on blue bg */
 }
 .title-container {
     flex: 1;
@@ -152,11 +152,11 @@ export default {
     font-weight: bold;
     font-size: 15px;
     line-height: 1.4;
-    color: #333;
+    color: var(--text-primary);
 }
 .count {
     font-size: 11px;
-    color: #888;
+    color: var(--text-hint);
     white-space: nowrap;
     margin-top: 4px;
 }
@@ -167,7 +167,7 @@ export default {
 /* Description */
 .desc {
     font-size: 13px;
-    color: #666;
+    color: var(--text-muted);
     padding: 0 12px 8px 12px; /* Indent to align with title */
     line-height: 1.4;
     overflow: hidden;
@@ -193,12 +193,12 @@ export default {
 }
 .empty-hint {
     font-size: 13px;
-    color: #999;
+    color: var(--text-hint);
     text-align: center;
     padding: 10px 0;
 }
 .collection-message-container.out .empty-hint {
-    color: #666;
+    color: var(--text-muted);
 }
 .entry-list {
     display: flex;
@@ -206,7 +206,7 @@ export default {
 }
 .entry-item {
     font-size: 13px;
-    color: #333;
+    color: var(--text-primary);
     padding: 2px 0;
     white-space: nowrap;
     overflow: hidden;
@@ -214,7 +214,7 @@ export default {
 }
 .more-hint {
     font-size: 12px;
-    color: #888;
+    color: var(--text-hint);
     margin-top: 4px;
 }
 .collection-message-container.out .more-hint {
@@ -225,16 +225,16 @@ export default {
 .footer {
     padding: 8px 12px;
     font-size: 13px;
-    color: #576b95;
+    color: var(--text-link);
     border-top: 1px solid rgba(0,0,0,0.05);
     display: flex;
     justify-content: flex-start;
 }
 .collection-message-container.out .footer {
-    color: #333;
+    color: var(--text-primary);
     border-top-color: rgba(0,0,0,0.1);
 }
 .action-text.ended {
-    color: #999;
+    color: var(--text-hint);
 }
 </style>

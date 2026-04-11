@@ -288,7 +288,7 @@ export default {
 }
 
 .left-arrow-container:hover .left-arrow {
-    color: white;
+    color: var(--text-on-accent);
     background: #9a9a9a;
     width: 50px;
     height: 50px;
@@ -318,7 +318,7 @@ export default {
 }
 
 .right-arrow-container:hover .right-arrow {
-    color: white;
+    color: var(--text-on-accent);
     background: #9a9a9a;
     width: 50px;
     height: 50px;

@@ -499,7 +499,7 @@ export default {
     flex-direction: column;
     align-items: center;
     font-size: 12px;
-    color: white;
+    color: var(--text-on-accent);
 }
 
 .floating-action-container {
@@ -514,7 +514,7 @@ export default {
     justify-content: center;
     align-items: center;
     position: absolute;
-    background: #cccccc;
+    background: var(--background-item-placeholder)ccc;
     cursor: move;
 }
 
@@ -551,7 +551,7 @@ export default {
     flex-direction: column;
     align-items: center;
     font-size: 12px;
-    color: white;
+    color: var(--text-on-accent);
     cursor: auto;
 }
 
@@ -573,7 +573,7 @@ export default {
     align-items: center;
     width: 100%;
     height: 100%;
-    color: white;
+    color: var(--text-on-accent);
     /*background-color: rebeccapurple;*/
 }
 
@@ -594,7 +594,7 @@ export default {
     height: auto;
     position: absolute;
     top: 0;
-    background-color: #cccccc;
+    background-color: var(--background-item-placeholder)ccc;
     left: 0;
 }
 
@@ -610,7 +610,7 @@ export default {
 
 .webrtc-tip {
     position: absolute;
-    color: red;
+    color: var(--text-danger);
     left: 0;
     top: 0;
     z-index: 999;

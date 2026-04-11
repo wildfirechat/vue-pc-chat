@@ -145,7 +145,7 @@ export default {
 }
 
 .category.active {
-    color: #4168e0;
+    color: var(--accent-color);
     border-bottom: 2px solid #4168e0;
 }
 
@@ -206,8 +206,8 @@ export default {
 }
 
 .action-container button:active {
-    color: #4168e0;
-    border-color: #4168e0;
+    color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .action-container button.disabled {
