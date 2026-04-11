@@ -125,7 +125,7 @@ export default {
 }
 
 .message .sender {
-    color: #f66868;
+    color: var(--status-error);
     padding-right: 5px;
 }
 

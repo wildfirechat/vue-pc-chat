@@ -146,7 +146,7 @@ export default {
     display: none;
     height: 100%;
     overflow: auto;
-    background-color: #ffffffe5;
+    background-color: var(--background-info-panel);
     backdrop-filter: blur(6px);
     border-left: 1px solid var(--border-primary);
 }
@@ -158,8 +158,8 @@ export default {
 
 .conference-manage-view-container .action-tip {
     padding: 10px;
-    background: #f1f1f1;
-    border-bottom: 1px solid #dadada;
+    background: var(--background-tertiary);
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .conference-manage-view-container .action-tip:active {
@@ -170,7 +170,7 @@ export default {
     display: flex;
     padding: 10px;
     align-items: center;
-    background: #f1f1f1;
+    background: var(--background-tertiary);
 }
 
 .title-container i {

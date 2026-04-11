@@ -151,7 +151,7 @@ export default {
 }
 
 .organization-item .button:not(.disabled):hover {
-    background: #dbe1f0;
+    background: var(--background-selected-dim);
     border-radius: 5px;
 }
 

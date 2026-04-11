@@ -22,7 +22,7 @@
                             <!--message content-->
                             <TextMessageContentView :message="message"
                                                     v-if="message.messageContent.type === 1"
-                                                    :style="{'--out-arrow-color':'#a8bdff', '--in-arrow-color':'white'}"
+                                                    :style="{'--out-arrow-color':'var(--message-out-arrow)', '--in-arrow-color':'var(--message-in-arrow)'}"
                                                     v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
                             <!--                            <AudioMessageContentView :message="message"-->
                             <!--                                                     v-else-if="message.messageContent.type === 2"/>-->
@@ -140,7 +140,7 @@ export default {
 .message-page {
     width: var(--composite-message-page-width);
     height: var(--composite-message-page-height);
-    background: #f7f7f7;
+    background: var(--background-primary);
     overflow: scroll;
 }
 
@@ -194,7 +194,7 @@ export default {
 
 .name-time-container p {
     font-size: 12px;
-    color: #c2c2c2;
+    color: var(--text-tertiary);
 }
 
 .name-time-content-container .content {

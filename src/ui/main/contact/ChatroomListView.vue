@@ -71,7 +71,7 @@ export default {
 }
 
 .chatroom-item:hover{
-    background-color: var(--background-sidebar);
+    background-color: var(--background-item-hover);
 }
 
 .chatroom-item.active {

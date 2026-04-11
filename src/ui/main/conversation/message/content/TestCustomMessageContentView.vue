@@ -87,7 +87,7 @@ export default {
 }
 
 .text-message-container >>> code {
-    background: #f5f5f5;
+    background: var(--background-tertiary);
     display: inline-block;
     border-radius: 3px;
     padding: 0 5px;

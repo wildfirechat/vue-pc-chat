@@ -396,7 +396,7 @@ export default {
 }
 
 .delete-btn:hover {
-    background: #ff7875;
+    background: var(--status-error-hover);
 }
 
 .footer {
@@ -490,7 +490,7 @@ export default {
 }
 
 .confirm-button:hover {
-    background: #ff7875;
+    background: var(--status-error-hover);
 }
 
 .dialog-button {

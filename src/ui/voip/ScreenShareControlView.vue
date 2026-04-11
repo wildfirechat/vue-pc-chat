@@ -128,7 +128,7 @@ export default {
     justify-content: space-around;
     z-index: 100;
     padding: 10px 0;
-    background: #2d3033;
+    background: var(--background-voip-sidebar);
 }
 
 .screen-share-action-container .action {

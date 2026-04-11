@@ -61,7 +61,7 @@ export default {
 }
 
 .external-domain-item:hover {
-    background-color: var(--background-sidebar);
+    background-color: var(--background-item-hover);
 }
 
 .external-domain-item.active {

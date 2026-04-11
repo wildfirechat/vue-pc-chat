@@ -378,7 +378,7 @@ export default {
 }
 
 .spinner {
-    border: 3px solid rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--background-trans-muted);
     width: 30px;
     height: 30px;
     border-radius: 50%;
@@ -449,8 +449,8 @@ export default {
 
 .status-tag {
     font-size: 13px;
-    color: #ff9500;
-    background: #fff7e6;
+    color: var(--status-warning);
+    background: var(--background-warning-subtle);
     padding: 4px 8px;
     border-radius: 4px;
 }
@@ -531,7 +531,7 @@ export default {
 .check-circle {
     width: 22px;
     height: 22px;
-    border: 2px solid #ccc;
+    border: 2px solid var(--border-primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -600,17 +600,17 @@ export default {
 .action-btn {
     background: var(--accent-color);
     color: var(--text-on-accent);
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    box-shadow: var(--shadow-accent);
 }
 
 .action-btn:hover {
-    background: #006ce6;
+    background: var(--status-info);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+    box-shadow: var(--shadow-accent-strong);
 }
 
 .action-btn:disabled {
-    background: #b4d8ff;
+    background: var(--accent-color-subtle);
     box-shadow: none;
     cursor: default;
     transform: none;
@@ -622,7 +622,7 @@ export default {
 }
 
 .danger-btn {
-    background: #ff3b30;
+    background: var(--status-error);
     color: var(--text-on-accent);
 }
 </style>

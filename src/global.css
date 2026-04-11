@@ -1,3 +1,5 @@
+@import './theme/index.css';
+
 :root {
     /* Layout Variables (Theme Independent) */
     --main-border-radius: 10px;
@@ -11,144 +13,33 @@
     --composite-message-page-height: 100%;
 }
 
-/* Light Theme (Default) */
-[data-theme='light'], :root:not([data-theme]) {
-    --background-primary: #ffffff;
-    --background-secondary: #fafafa;
-    --background-tertiary: #f3f3f3;
-    --background-sidebar: #EAEAEA;
-    --background-input: #eeeeee;
-    --background-item-normal: #f8f8f8;
-    --background-item-hover: #f3f3f3;
-    --background-item-active: #dedede;
-    --background-item-selected: #e3f2fd;
-    --background-item-top: #ebebeb;
-    --background-item-placeholder: #d6d6d6;
-    --background-tooltip: #fcfcfc;
-    --background-overlay: rgba(0, 0, 0, 0.5);
-    --background-mask: rgba(0, 0, 0, 0.2);
-    --background-modal: #ffffff;
-    --background-badge: #ff0000;
-    --background-message-in: #ffffff;
-    --background-message-out: #a8bdff;
-    --background-message-selected: #e7e7e7;
-    --background-selected-alt: #dbe1f0;
+/* Global Styles */
+@import '~@madogai/vue-context/dist/css/vue-context.css';
 
-    --message-in-arrow: #ffffff;
-    --message-out-arrow: #a8bdff;
-
-    --text-primary: #262626;
-    --text-secondary: #868686;
-    --text-secondary-strong: #7f7f7f;
-    --text-tertiary: #ACACAC;
-    --text-placeholder: #b8b8b8;
-    --text-hint: #999999;
-    --text-time: #b4b4b4;
-    --text-link: #1f64e4;
-    --text-link-hover: #3f64e4;
-    --text-danger: #ff0000;
-    --text-on-accent: #ffffff;
-    --text-warning: #F0A040;
-    --text-muted: #666666;
-
-    --border-primary: #e5e5e5;
-    --border-secondary: #eeeeee;
-    --border-tertiary: #ececec;
-    --border-active: #4168e0;
-    --border-subtle: #f5f5f5;
-    --border-strong: #d9d9d9;
-
-    --accent-color: #1f64e4;
-    --accent-color-active: #3f64e4;
-
-    --shadow-main: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-    --shadow-tooltip: 0 0 25px rgba(0, 0, 0, 0.125);
-
-    --scrollbar-thumb: #c1c1c1;
-    --scrollbar-track: transparent;
-
-    /* Emoji Picker Variables (Third-party) */
-    --ep-color-bg: #ffffff;
-    --ep-color-sbg: #f3f3f3;
-    --ep-color-border: #eeeeee;
-    --ep-color-text: #262626;
-    --ep-color-active: #1f64e4;
-
-    /* Scrollbar Styling，浅色时，不设置宽高效果更好 */
-    ::-webkit-scrollbar {
-    }
+.v-context {
+    font-size: 14px;
+    background-color: var(--background-tooltip) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-tooltip) !important;
+    padding: 5px 0 !important;
 }
 
-/* Dark Theme (macOS Mail Style) */
-[data-theme='dark'] {
-    --background-primary: #1e1e1e;      /* 主内容区: 纯深灰 */
-    --background-secondary: #2d2d2d;    /* 头部/搜索栏 */
-    --background-tertiary: #252525;     /* 列表背景 */
-    --background-sidebar: #262626;      /* 侧边栏: 稍亮一点的深灰 */
-    --background-input: #3c3c3c;        /* 输入框 */
-    --background-item-normal: #1e1e1e;
-    --background-item-hover: #323232;   /* 条目悬停 */
-    --background-item-active: #2d2d2d;
-    --background-item-selected: #0058d2;/* 条目选中: macOS 经典蓝 */
-    --background-item-top: #252525;
-    --background-item-placeholder: #444444;
-    --background-tooltip: #2d2d2d;
-    --background-overlay: rgba(0, 0, 0, 0.7);
-    --background-mask: rgba(0, 0, 0, 0.4);
-    --background-modal: #2d2d2d;
-    --background-badge: #ff3b30;        /* 苹果标准的红色 */
-    --background-message-in: #2d2d2d;
-    --background-message-out: #0058d2;  /* 发送的消息气泡: 蓝色 */
-    --background-message-selected: #3d3d3d;
-    --background-selected-alt: #2d3d5d;
-
-    --message-in-arrow: #2d2d2d;
-    --message-out-arrow: #0058d2;
-
-    --text-primary: #ffffff;            /* 主文字: 纯白 */
-    --text-secondary: #9a9a9e;          /* 次要文字: 浅灰 */
-    --text-secondary-strong: #b0b0b5;
-    --text-tertiary: #75757a;
-    --text-placeholder: #636366;
-    --text-hint: #8e8e93;
-    --text-time: #75757a;
-    --text-link: #0a84ff;               /* 链接: 亮蓝 */
-    --text-link-hover: #409cff;
-    --text-danger: #ff453a;
-    --text-on-accent: #ffffff;
-    --text-warning: #ffd60a;
-    --text-muted: #8e8e93;
-
-    --border-primary: #333333;          /* 主边框: 深灰 */
-    --border-secondary: #3a3a3a;
-    --border-tertiary: #2a2a2a;
-    --border-active: #0a84ff;
-    --border-subtle: #252525;
-    --border-strong: #444444;
-
-    --accent-color: #0a84ff;
-    --accent-color-active: #409cff;
-
-    --shadow-main: 0 4px 12px 0 rgba(0, 0, 0, 0.5);
-    --shadow-tooltip: 0 8px 30px rgba(0, 0, 0, 0.5);
-
-    --scrollbar-thumb: #454545;
-    --scrollbar-track: transparent;
-
-    /* Emoji Picker Variables (Third-party) */
-    --ep-color-bg: #2d2d2d;
-    --ep-color-sbg: #3c3c3c;
-    --ep-color-border: #444444;
-    --ep-color-text: #ffffff;
-    --ep-color-active: #0a84ff;
-
-    /* Scrollbar Styling */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
+.v-context > li > a {
+    padding: .4rem 1rem;
+    color: var(--text-primary) !important;
 }
 
+.v-context > li > a:hover {
+    background-color: var(--accent-color) !important;
+    color: var(--text-on-accent) !important;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-app-region: no-drag;
+}
 
 ::-webkit-scrollbar-thumb {
     background-color: var(--scrollbar-thumb);
@@ -159,55 +50,181 @@
     background: var(--scrollbar-track);
 }
 
-body {
+/* --- Global Input/Textarea Styling --- */
+input, textarea {
+    background-color: var(--background-input);
     color: var(--text-primary);
-    background-color: var(--background-primary);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    outline: none;
+    padding: 4px 8px;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    color: var(--text-primary);
-    margin: 0;
+input:focus, textarea:focus {
+    border-color: var(--accent-color);
 }
 
-@import '~@madogai/vue-context/dist/css/vue-context.css';
+input::placeholder, textarea::placeholder {
+    color: var(--text-placeholder);
+}
 
-.v-context {
+/* --- Global Button Styling --- */
+button {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 16px;
     font-size: 14px;
+    font-weight: 500;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+    user-select: none;
+    border: 1px solid transparent;
+    background-color: var(--button-default-bg);
+    color: var(--button-default-text);
+    border-color: var(--button-default-border);
 }
 
-.v-context > li > a {
-    padding: .4rem 1rem;
+button:hover {
+    background-color: var(--button-default-hover);
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    -webkit-app-region: no-drag;
+button:active {
+    opacity: 0.8;
 }
 
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    filter: grayscale(1);
+}
+
+button.primary {
+    background-color: var(--button-primary-bg) !important;
+    color: var(--button-primary-text) !important;
+    border-color: var(--button-primary-bg) !important;
+}
+
+button.primary:hover {
+    background-color: var(--button-primary-hover) !important;
+    border-color: var(--button-primary-hover) !important;
+}
+
+button.danger {
+    background-color: var(--button-danger-bg) !important;
+    color: var(--button-danger-text) !important;
+    border-color: var(--button-danger-bg) !important;
+}
+
+button.danger:hover {
+    background-color: var(--button-danger-hover) !important;
+    border-color: var(--button-danger-hover) !important;
+}
+
+/* --- Tippy.js Theme Adaptation --- */
+.tippy-box {
+    background-color: var(--background-tooltip) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-tooltip) !important;
+}
+
+.tippy-box[data-theme~='light'],
 .tippy-tooltip.light-theme {
-    /* todo */
-    background-color: var(--background-primary);
-    border: 2px solid var(--background-primary);
-    /*width: 350px;*/
-    /*height: 350px;*/
+    background-color: var(--background-tooltip) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-subtle) !important;
 }
 
-.tippy-arrow {
-    border-right: 8px solid var(--background-primary) !important;
+.tippy-content {
+    color: var(--text-primary) !important;
 }
 
+/* Tippy Arrow Adaptation */
+.tippy-box[data-placement^='top'] > .tippy-arrow::before,
 .tippy-popper[x-placement^=top] .tippy-arrow {
-    border-top: 8px solid var(--background-primary) !important;
-    border-right: 8px solid transparent !important;
+    border-top-color: var(--background-tooltip) !important;
+}
+.tippy-box[data-placement^='bottom'] > .tippy-arrow::before {
+    border-bottom-color: var(--background-tooltip) !important;
+}
+.tippy-box[data-placement^='left'] > .tippy-arrow::before {
+    border-left-color: var(--background-tooltip) !important;
+}
+.tippy-box[data-placement^='right'] > .tippy-arrow::before,
+.tippy-arrow {
+    border-right-color: var(--background-tooltip) !important;
+}
+
+/* --- vue-js-modal Adaptation --- */
+.vm--modal {
+    background-color: var(--background-modal) !important;
+    color: var(--text-primary) !important;
+    box-shadow: var(--shadow-main) !important;
+}
+
+.vue-dialog {
+    background-color: var(--background-modal) !important;
+}
+
+.vue-dialog-button {
+    background-color: var(--background-modal) !important;
+    color: var(--text-primary) !important;
+    border-top: 1px solid var(--border-primary) !important;
+}
+
+.vue-dialog-button:hover {
+    background-color: var(--background-item-hover) !important;
+}
+
+.vue-dialog div[style*="color: rgb(187, 187, 187)"] {
+    color: var(--text-hint) !important;
+}
+
+/* --- v-emoji-picker Adaptation --- */
+#emojiPicker, .v-emoji-picker, .vemoji-picker, .emoji-picker {
+    --ep-color-bg: var(--background-tooltip) !important;
+    --ep-color-sbg: var(--background-input) !important;
+    --ep-color-border: var(--border-subtle) !important;
+    --ep-color-text: var(--text-primary) !important;
+    --ep-color-active: var(--accent-color) !important;
+    background-color: var(--background-tooltip) !important;
+}
+
+.v-emoji-picker *, .vemoji-picker *, .emoji-picker * {
+    /*border-color: var(--border-subtle) !important;*/
+}
+
+.v-emoji-picker .category, .vemoji-picker .category {
+    background-color: var(--background-input) !important;
+}
+
+/* --- vue-dropdowns Adaptation --- */
+.dropdown-toggle {
+    /*background-color: var(--background-input) !important;*/
+    color: var(--text-primary) !important;
+    /*border: 1px solid var(--border-primary) !important;*/
+}
+
+.dropdown-menu {
+    background-color: var(--background-tooltip) !important;
+    border: 1px solid var(--border-subtle) !important;
+    box-shadow: var(--shadow-tooltip) !important;
+}
+
+.dropdown-menu li a {
+    color: var(--text-primary) !important;
+}
+
+.dropdown-menu li a:hover {
+    background-color: var(--background-item-hover) !important;
 }
 
 .vue-notification-group {
     margin: var(--main-margin-top) var(--main-margin-right) 0 0;
 }
-
 
 img.emoji {
     height: 1em !important;
@@ -224,22 +241,36 @@ img.emoji {
     white-space: nowrap;
 }
 
-ul,
-ol {
+ul, ol {
     list-style: none;
 }
 
-div,
-button,
-img,
-video {
+div, button, img, video {
     outline: none;
 }
 
-p,
-div {
+p, div {
     word-break: break-all;
     user-select: none;
     color: var(--text-primary);
 }
 
+body {
+    color: var(--text-primary);
+    background-color: var(--background-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+a {
+    color: var(--text-link);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--text-link-hover);
+}

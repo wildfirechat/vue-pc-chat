@@ -459,11 +459,11 @@ i.active {
 }
 
 .voip-div-container {
-    background: #292929;
+    background: var(--background-voip);
     position: fixed;
     margin: auto;
     border-radius: 5px;
-    box-shadow: var(--shadow-main), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    box-shadow: var(--shadow-main), 0 6px 20px 0 var(--background-mask);
     display: flex;
     flex-direction: column;
 }
@@ -486,7 +486,7 @@ i.active {
 .voip-div-container .title {
     text-align: center;
     padding: 5px 0;
-    background: #b6b6b6;
+    background: var(--background-item-placeholder);
     display: flex;
     justify-content: center;
     align-content: center;

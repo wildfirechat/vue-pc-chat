@@ -141,7 +141,7 @@ export default {
 }
 
 .poll-result-message-container.out .poll-result-stats {
-    color: #555;
+    color: var(--text-muted);
 }
 
 .poll-result-status {

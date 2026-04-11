@@ -157,7 +157,7 @@ export default {
 }
 
 .spinner {
-    border: 3px solid rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--background-trans-muted);
     width: 30px;
     height: 30px;
     border-radius: 50%;

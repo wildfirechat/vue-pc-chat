@@ -368,7 +368,7 @@ export default {
     flex-direction: column;
     height: 100%;
     overflow: auto;
-    background-color: #ffffffe5;
+    background-color: var(--background-info-panel);
     backdrop-filter: blur(6px);
     border-left: 1px solid var(--border-primary);
 }
@@ -387,7 +387,7 @@ export default {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-dashed);
     margin-right: 10px;
 }
 
@@ -440,7 +440,7 @@ export default {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-dashed);
     margin-right: 10px;
 }
 
@@ -450,7 +450,7 @@ export default {
     left: 0;
     top: 0;
     color: var(--text-on-accent);
-    background: #e0d6d6d6;
+    background: var(--background-item-placeholder);
 }
 
 .action-container {

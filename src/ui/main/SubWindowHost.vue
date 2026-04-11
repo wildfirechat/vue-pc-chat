@@ -130,7 +130,7 @@ export default {
     top: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--background-overlay);
     z-index: 9998;
     display: flex;
     justify-content: flex-end;
@@ -141,7 +141,7 @@ export default {
     height: 100%;
     background: var(--background-tertiary);
     position: relative;
-    box-shadow: -2px 0 12px rgba(0, 0, 0, 0.18);
+    box-shadow: -2px 0 12px var(--background-mask);
 }
 
 .sub-window-close {

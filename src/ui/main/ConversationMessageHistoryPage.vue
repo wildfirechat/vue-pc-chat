@@ -427,7 +427,7 @@ export default {
 
 .name-time-container p {
     font-size: 12px;
-    color: #c2c2c2;
+    color: var(--text-tertiary);
 }
 
 .name-time-content-container .content {
@@ -442,7 +442,7 @@ export default {
     right: 0;
     top: 40px;
     font-size: 14px;
-    color: #637599;
+    color: var(--text-link);
 }
 
 .message-container:hover .action {

@@ -3,7 +3,7 @@
         <div class="streaming-text-message-container"
             v-bind:class="{out:message.direction === 0}">
             <p class="text" v-html="this.$xss(this.textContent)" @mouseup="mouseUp" @contextmenu="preventContextMenuTextSelection"></p>
-            <FadeLoader :loading="message.messageContent.type === 14" color="#848484" style="margin:10px" width="3px" height="8px" margin="2px" radius="8px"></FadeLoader>
+            <FadeLoader :loading="message.messageContent.type === 14" color="var(--text-hint)" style="margin:10px" width="3px" height="8px" margin="2px" radius="8px"></FadeLoader>
         </div>
         <p class="ai-content-tip">本内容由 AI 生成</p>
     </div>
@@ -89,7 +89,7 @@ export default {
 }
 
 .streaming-text-message-container >>> code {
-    background: #f5f5f5;
+    background: var(--background-tertiary);
     display: inline-block;
     border-radius: 3px;
     padding: 0 5px;

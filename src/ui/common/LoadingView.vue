@@ -47,7 +47,7 @@ export default {
     content: '';
     display: block;
     height: 50%;
-    background: #848484; /*jow loading的颜色*/
+    background: var(--text-hint); /*jow loading的颜色*/
     border-radius: 5px;
 }
 

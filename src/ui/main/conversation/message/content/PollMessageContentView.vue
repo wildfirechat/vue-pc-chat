@@ -165,7 +165,7 @@ export default {
 }
 
 .poll-message-container.out .poll-desc {
-    color: #555;
+    color: var(--text-muted);
 }
 
 .poll-info {
@@ -178,7 +178,7 @@ export default {
 }
 
 .poll-message-container.out .poll-info {
-    color: #555;
+    color: var(--text-muted);
 }
 
 .poll-action {

@@ -17,6 +17,7 @@ import {ipcRenderer, remote} from "../../platform";
 import IpcEventType from "../../ipcEventType";
 import { ipcMain } from "electron";
 import IPCEventType from "../../ipcEventType";
+import { getItem } from '../util/storageHelper';
 
 let tabGroup = null;
 
@@ -154,7 +155,12 @@ export default {
             }
         })
 
-        this.addTab(this.url, false);
+        const theme = getItem('theme');
+        let query = ''
+        if (theme) {
+            query = "?theme=" + theme
+        }
+        this.addTab(this.url + query, false);
         this.tabGroup = tabGroup;
         init(wfc, this, Config.OPEN_PLATFORM_SERVE_PORT);
 

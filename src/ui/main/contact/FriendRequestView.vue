@@ -128,7 +128,7 @@ export default {
 }
 
 .info-action-container .action-container .cancel {
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
 }
 
 .info-action-container .action-container .cancel:active {
@@ -142,7 +142,7 @@ export default {
 }
 
 .info-action-container .action-container .confirm:active {
-    background-color: #3168e0;
+    background-color: var(--status-info);
 }
 
 </style>

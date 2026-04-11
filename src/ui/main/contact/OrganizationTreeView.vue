@@ -130,7 +130,7 @@ export default {
 .title {
     padding: 20px;
     font-size: 20px;
-    border-bottom: 1px solid lightgray;
+    border-bottom: 1px solid var(--border-tertiary);
 }
 
 .breadcrumb {
@@ -201,7 +201,7 @@ export default {
 }
 
 .organization-item .button:hover {
-    background: #dbe1f0;
+    background: var(--background-selected-dim);
     border-radius: 5px;
 }
 

@@ -421,7 +421,7 @@ export default {
     display: flex;
     align-items: center;
     padding-left: 20px;
-    border-bottom: 1px solid #ebebeb;
+    border-bottom: 1px solid var(--border-light-strong);
 }
 
 .fav-list-container div {
@@ -448,7 +448,7 @@ export default {
     left: 80px;
     right: 80px;
     bottom: 0;
-    border-bottom: 1px solid #e4e4e4;
+    border-bottom: 1px solid var(--border-muted);
 }
 
 .fav-item-container:active {
@@ -519,7 +519,7 @@ export default {
 }
 
 .fav-item-file .size {
-    color: #b2b2b2;
+    color: var(--text-hint);
 }
 
 .fav-item-video {
@@ -561,12 +561,12 @@ export default {
 
 .fav-item-sender-time .time {
     font-size: 12px;
-    color: #b6b6b6;
+    color: var(--text-hint);
 }
 
 .fav-item-sender-time .sender {
     font-size: 12px;
-    color: #b2b2b2;
+    color: var(--text-hint);
     padding-top: 3px;
 }
 

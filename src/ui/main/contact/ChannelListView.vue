@@ -50,7 +50,7 @@ export default {
 }
 
 .channel-item:hover{
-    background-color: var(--background-sidebar);
+    background-color: var(--background-item-hover);
 }
 
 .channel-item.active {

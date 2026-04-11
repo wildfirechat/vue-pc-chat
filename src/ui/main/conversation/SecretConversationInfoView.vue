@@ -121,7 +121,7 @@ export default {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-dashed);
 }
 
 .action-item img {

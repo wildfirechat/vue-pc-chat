@@ -76,7 +76,7 @@ export default {
     height: 100%;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    box-shadow: 0 4px 8px 0 var(--background-mask), 0 6px 20px 0 var(--background-mask);
 }
 
 .portrait-container {
@@ -117,11 +117,11 @@ export default {
     border-radius: 4px;
     padding: 5px 0;
     margin: 0 15px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
 }
 
 .action-container .confirm {
-    background: #4168e0ef;
+    background: var(--accent-color);
     color: var(--text-on-accent);
 }
 

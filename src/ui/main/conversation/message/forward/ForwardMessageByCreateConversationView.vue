@@ -171,7 +171,7 @@ export default {
 }
 
 .user-list-container .back:active {
-    background-color: #e5e5e5;
+    background-color: var(--border-primary);
 }
 
 .checked-user-list-container {
@@ -252,7 +252,7 @@ export default {
 }
 
 .checked-user-list-container .content .unpick-button:active {
-    background-color: #e5e5e5;
+    background-color: var(--border-primary);
 }
 
 .checked-user-list-container footer {
@@ -266,7 +266,7 @@ export default {
 .checked-user-list-container footer button {
     padding: 5px 30px;
     border-radius: 4px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
 }
 
 .checked-user-list-container footer button.confirm {

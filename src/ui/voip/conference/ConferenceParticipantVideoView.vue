@@ -166,11 +166,11 @@ export default {
     justify-content: center;
     align-items: center;
     border: 1px solid black;
-    background: #2d3033;
+    background: var(--background-voip-sidebar);
 }
 
 .participant-video-item.highlight {
-    border: 2px solid #1FCA6A;
+    border: 2px solid var(--status-success);
 }
 
 .participant-video-item .video-stream-tip-container {
@@ -189,7 +189,7 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #2d3033;
+    background: var(--background-voip-sidebar);
 }
 
 .avatar {

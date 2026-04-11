@@ -82,7 +82,7 @@ export default {
     padding: 5px 5px 5px 0;
     border-bottom: 1px solid var(--border-primary);
     font-size: 10px;
-    color: #7F7F7F;
+    color: var(--text-secondary-strong);
 }
 
 .contact-item {
@@ -94,7 +94,7 @@ export default {
 }
 
 .contact-item:hover{
-    background-color: var(--background-sidebar)
+    background-color: var(--background-item-hover)
 }
 
 .contact-item span {
@@ -110,7 +110,7 @@ export default {
 }
 
 .contact-item.highlight {
-    box-shadow: 0 0 0 1px #4168e0 inset;
+    box-shadow: 0 0 0 1px var(--accent-color) inset;
     z-index: 100;
 }
 

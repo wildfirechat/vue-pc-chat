@@ -161,7 +161,7 @@ export default {
     margin-top: 4px;
 }
 .collection-message-container.out .count {
-    color: #555;
+    color: var(--text-muted);
 }
 
 /* Description */
@@ -177,12 +177,12 @@ export default {
     -webkit-box-orient: vertical;
 }
 .collection-message-container.out .desc {
-    color: #444;
+    color: var(--text-muted);
 }
 
 .divider {
     height: 1px;
-    background-color: rgba(0,0,0,0.05);
+    background-color: var(--background-trans-subtle);
     margin: 0 12px;
 }
 
@@ -218,7 +218,7 @@ export default {
     margin-top: 4px;
 }
 .collection-message-container.out .more-hint {
-    color: #555;
+    color: var(--text-muted);
 }
 
 /* Footer */
@@ -226,13 +226,13 @@ export default {
     padding: 8px 12px;
     font-size: 13px;
     color: var(--text-link);
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid var(--background-trans-subtle);
     display: flex;
     justify-content: flex-start;
 }
 .collection-message-container.out .footer {
     color: var(--text-primary);
-    border-top-color: rgba(0,0,0,0.1);
+    border-top-color: var(--background-trans-muted);
 }
 .action-text.ended {
     color: var(--text-hint);

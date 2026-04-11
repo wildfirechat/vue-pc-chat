@@ -71,7 +71,7 @@
                 </div>
                 <div v-if="sharedConversationState.inputtingUser" class="inputting-container">
                     <img class="avatar" :src="sharedConversationState.inputtingUser.portrait"/>
-                    <ScaleLoader :color="'#d2d2d2'" :height="'15px'" :width="'3px'"/>
+                    <ScaleLoader :color="'var(--text-tertiary)'" :height="'15px'" :width="'3px'"/>
                 </div>
                 <div v-if="unreadMessageCount > 0" class="unread-count-tip-container" @click="showUnreadMessage">
                     {{ '' + this.unreadMessageCount + '条新消息' }}
@@ -1260,7 +1260,7 @@ export default {
 }
 
 .conversation-content-container .drag-drop {
-    border: 2px dashed #b2b2b2;
+    border: 2px dashed var(--border-dashed-active);
     height: 100%;
     width: 100%;
     border-radius: 5px;

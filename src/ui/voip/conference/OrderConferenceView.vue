@@ -198,7 +198,7 @@ export default {
 
 .advance_desc {
     font-size: 12px;
-    color: #F95569;
+    color: var(--status-error);
 }
 
 .create-conference-container > * {

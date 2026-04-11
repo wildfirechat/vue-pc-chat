@@ -367,7 +367,7 @@ export default {
 .file-item .size {
     font-size: 14px;
     padding-top: 5px;
-    color: rgb(112, 117, 121);
+    color: var(--text-secondary);
 }
 
 .footer {

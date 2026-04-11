@@ -376,6 +376,7 @@ export default {
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: var(--background-primary);
 }
 
 .checked-contact-list-container header {
@@ -450,7 +451,7 @@ export default {
 }
 
 .checked-contact-list-container .content .unpick-button:active {
-    background-color: #e5e5e5;
+    background-color: var(--border-primary);
 }
 
 .checked-contact-list-container footer {
@@ -464,7 +465,7 @@ export default {
 footer button {
     padding: 5px 30px;
     border-radius: 4px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
 }
 
 footer button.confirm {
@@ -476,7 +477,7 @@ footer button.confirm {
 
 footer button.confirm.disable {
     background-color: var(--background-tertiary);
-    color: #c2c2c2;
+    color: var(--text-tertiary);
 }
 
 </style>

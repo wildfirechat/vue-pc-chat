@@ -436,8 +436,8 @@ export default {
 }
 
 .conversation-list-container {
-    border-left: 1px solid #e4e4e4;
-    border-right: 1px solid #e4e4e4;
+    border-left: 1px solid var(--border-muted);
+    border-right: 1px solid var(--border-muted);
     width: 185px;
     height: 100%;
     overflow: auto;
@@ -485,7 +485,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #b6b6b6;
+    color: var(--text-hint);
 }
 
 
@@ -507,7 +507,7 @@ export default {
     top: 70px;
     left: 40px;
     right: 35px;
-    border-bottom: 1px solid #f2f2f2;
+    border-bottom: 1px solid var(--border-separator);
 }
 
 .file-record-item:active {
@@ -537,7 +537,7 @@ export default {
 .file-name-sender-container .sender {
     padding-top: 3px;
     font-size: 12px;
-    color: #b6b6b6;
+    color: var(--text-hint);
 }
 
 .file-date-size-container {
@@ -551,13 +551,13 @@ export default {
 .file-date-size-container .date {
     font-size: 12px;
     padding-left: 15px;
-    color: #b6b6b6;
+    color: var(--text-hint);
     padding-bottom: 3px;
 }
 
 .file-date-size-container .size {
     font-size: 12px;
-    color: #b2b2b2;
+    color: var(--text-hint);
     padding-top: 3px;
 }
 

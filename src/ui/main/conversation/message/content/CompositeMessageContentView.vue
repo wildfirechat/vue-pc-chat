@@ -138,11 +138,11 @@ export default {
 .composite-message-container .content, .desc {
     padding: 5px 0;
     font-size: 14px;
-    color: #b2b2b2;
+    color: var(--text-hint);
 }
 
 .composite-message-container .desc {
-    border-top: 1px solid #f2f2f2;
+    border-top: 1px solid var(--border-separator);
     padding: 5px 0 0 0;
 }
 

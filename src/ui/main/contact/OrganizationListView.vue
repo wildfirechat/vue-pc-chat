@@ -67,7 +67,7 @@ export default {
 }
 
 .organization-item:hover {
-    background-color: var(--background-sidebar);
+    background-color: var(--background-item-hover);
 }
 
 .organization-item.active {

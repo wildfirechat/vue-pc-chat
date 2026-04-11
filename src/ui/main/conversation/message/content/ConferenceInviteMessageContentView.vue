@@ -139,7 +139,7 @@ export default {
 .type {
     padding-top: 5px;
     margin: 5px 10px 0 10px;
-    border-top: 1px solid rgba(211, 211, 211, 0.4);
+    border-top: 1px solid var(--border-tertiary);
     font-size: 14px;
     color: var(--text-secondary);
 }

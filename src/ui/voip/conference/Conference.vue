@@ -65,9 +65,9 @@
                     <!--main-->
                     <!--video-->
                     <div v-if="!audioOnly" style="width: 100%; height: 100%">
-                        <i v-if="computedCurrentLayout=== 0 && currentGridPageIndex > 0" style="position: absolute; top: 50%; left: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
+                        <i v-if="computedCurrentLayout=== 0 && currentGridPageIndex > 0" style="position: absolute; top: 50%; left: 0; color: var(--text-tertiary); z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-left-c"
                            @click="prePage"></i>
-                        <i v-if="computedCurrentLayout=== 0 && currentGridPageIndex < gridPageCount - 1" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
+                        <i v-if="computedCurrentLayout=== 0 && currentGridPageIndex < gridPageCount - 1" style="position: absolute; top: 50%; right: 0; color: var(--text-tertiary); z-index: 1000; font-size: 40px; padding: 0 10px" class="icon-ion-arrow-right-c"
                            @click="nextPage"></i>
                         <!--                    宫格布局-->
                         <section v-if="computedCurrentLayout=== 0" class="content-container grid video">
@@ -90,7 +90,7 @@
                                        :muted="computedFocusVideoParticipant.uid === selfUserInfo.uid"
                                        playsInline
                                        autoPlay/>
-                                <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: #c8cacc; z-index: 1000; font-size: 40px">
+                                <div @click="toggleParticipantListVideoView" style="position: absolute; top: 50%; right: 0; color: var(--text-tertiary); z-index: 1000; font-size: 40px">
                                     <i :class="hideFocusLayoutParticipantListVideoView ? 'icon-ion-arrow-left-b' : 'icon-ion-arrow-right-b'"></i>
                                 </div>
                             </div>
@@ -110,7 +110,7 @@
                         <div
                             style="background: var(--background-primary); height: 50px; display: flex; justify-content: center; align-items: center">
                             <div
-                                style="background: #daeafe; width: 300px; height: 40px; padding: 0 5px; border-radius: 3px; display: flex; flex-direction: column; justify-content: center">
+                                style="background: var(--accent-color-subtle); width: 300px; height: 40px; padding: 0 5px; border-radius: 3px; display: flex; flex-direction: column; justify-content: center">
                                 <p class="single-line"> {{ '正在讲话: ' + speakingUserName }}</p>
                             </div>
                         </div>
@@ -135,7 +135,7 @@
                                     <img class="avatar"
                                          v-bind:class="{highlight:participant._volume > 0}"
                                          :src="participant.portrait" :alt="participant">
-                                    <i v-if="participant._isHost" class="indicator icon-ion-person" style="background: #FD802E"></i>
+                                    <i v-if="participant._isHost" class="indicator icon-ion-person" style="background: var(--status-warning)"></i>
                                     <i v-if="participant._isAudience" class="indicator icon-ion-ios-mic-off" style="color: red"></i>
                                 </div>
                                 <p class="single-line">{{ userName(participant) }}</p>
@@ -1374,7 +1374,7 @@ export default {
 <style lang="css" scoped>
 
 .voip-container {
-    background: #00000000 !important;
+    background: var(--background-voip) !important;
     position: relative;
     --conference-container-margin-top: 30px;
     --slider-width: 0px;
@@ -1545,7 +1545,7 @@ footer {
 }
 
 .avatar.highlight {
-    border: 2px solid #1FCA6A;
+    border: 2px solid var(--status-success);
 }
 
 .action-img {

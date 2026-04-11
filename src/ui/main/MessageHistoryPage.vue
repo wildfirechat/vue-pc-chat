@@ -222,7 +222,7 @@ export default {
     justify-content: center;
     align-items: center;
     position: relative;
-    border-bottom: 1px solid #e4e4e4;
+    border-bottom: 1px solid var(--border-muted);
 }
 
 .search-input-container input {
@@ -273,7 +273,7 @@ export default {
     width: 240px;
     height: 100%;
     overflow: scroll;
-    border-right: 1px solid #e4e4e4;
+    border-right: 1px solid var(--border-muted);
 }
 
 .conversation-item {
@@ -412,7 +412,7 @@ export default {
 
 .name-time-container p {
     font-size: 12px;
-    color: #c2c2c2;
+    color: var(--text-tertiary);
 }
 
 .name-time-content-container .content {
@@ -427,7 +427,7 @@ export default {
     right: 0;
     top: 40px;
     font-size: 14px;
-    color: #637599;
+    color: var(--text-link);
 }
 
 .message-container:hover .action {

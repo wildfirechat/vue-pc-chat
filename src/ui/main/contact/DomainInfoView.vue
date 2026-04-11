@@ -155,7 +155,7 @@ export default {
     border-radius: 3px;
     outline: none;
     padding: 5px;
-    color: #bfbfbf;
+    color: var(--text-hint);
     font-size: 13px;
 }
 
@@ -184,7 +184,7 @@ export default {
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
-    color: #5d7ce8;
+    color: var(--accent-color);
 }
 
 .footer .action a {

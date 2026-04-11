@@ -128,7 +128,7 @@ export default {
 }
 
 .new-friend-item:hover {
-    background-color: var(--background-sidebar);
+    background-color: var(--background-item-hover);
 }
 
 .new-friend-item .info {
@@ -153,16 +153,16 @@ export default {
     color: var(--text-on-accent);
     background: var(--accent-color);
     border-radius: 10px;
-    border: solid 1px #4168e0;
+    border: solid 1px var(--accent-color);
 }
 
 .new-friend-item .info .name-action .status {
-    color: #b2b2b2;
+    color: var(--text-hint);
 }
 
 .new-friend-item .info .reason {
     font-size: 12px;
-    color: #b2b2b2;
+    color: var(--text-hint);
 }
 
 

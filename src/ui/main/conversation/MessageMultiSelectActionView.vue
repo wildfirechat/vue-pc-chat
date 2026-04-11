@@ -132,7 +132,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-top: 1px solid #e2e2e2;
+    border-top: 1px solid var(--border-separator);
 }
 
 ul {

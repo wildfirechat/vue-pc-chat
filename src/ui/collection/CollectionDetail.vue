@@ -290,7 +290,7 @@ export default {
     color: var(--text-hint);
 }
 .spinner {
-    border: 3px solid rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--background-trans-muted);
     width: 30px;
     height: 30px;
     border-radius: 50%;
@@ -354,7 +354,7 @@ export default {
 }
 .collection-desc {
     font-size: 15px;
-    color: #555;
+    color: var(--text-muted);
     margin-bottom: 12px;
     white-space: pre-wrap;
     line-height: 1.6;
@@ -392,7 +392,7 @@ export default {
 .index-badge {
     width: 24px;
     height: 24px;
-    background: #f0f2f5;
+    background: var(--background-secondary);
     color: var(--text-link);
     border-radius: 12px;
     display: flex;
@@ -423,7 +423,7 @@ export default {
 
 .edit-input {
     width: 100%;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
     padding: 10px 12px;
     font-size: 16px;
@@ -433,7 +433,7 @@ export default {
     background: var(--background-primary);
     font-family: inherit;
     color: var(--text-primary);
-    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+    box-shadow: var(--shadow-accent-focus);
     border-color: var(--accent-color);
 }
 
@@ -457,20 +457,20 @@ export default {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    box-shadow: var(--shadow-accent);
     transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
 }
 .action-btn:hover {
-    background: #006ce6;
+    background: var(--status-info);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+    box-shadow: var(--shadow-accent-strong);
 }
 .action-btn:active {
     transform: translateY(1px);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+    box-shadow: var(--shadow-accent);
 }
 .action-btn:disabled {
-    background: #b4d8ff;
+    background: var(--accent-color-subtle);
     box-shadow: none;
     cursor: default;
     transform: none;

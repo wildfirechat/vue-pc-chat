@@ -21,7 +21,7 @@
             <ScreenShareControlView v-if="session && session.screenSharing && session.rcStatus === 5" type="conference"/>
             <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
         </div>
-        <div v-if="session && !(session.screenSharing && session.rcStatus === 5)" class="container" style="background: #292929">
+        <div v-if="session && !(session.screenSharing && session.rcStatus === 5)" class="container" style="background: var(--background-voip)">
             <section class="full-height full-width">
                 <!--audio-->
                 <div class="content-container" v-if="audioOnly">
@@ -833,7 +833,7 @@ export default {
 }
 
 .audio-input-device-item:not(:last-of-type) {
-    border-bottom: 1px solid #e0e0e0e5;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .audio-input-device-item:hover {

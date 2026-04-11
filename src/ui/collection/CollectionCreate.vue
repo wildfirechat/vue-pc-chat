@@ -213,7 +213,7 @@ export default {
 .input-field {
     width: 100%;
     padding: 12px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
     background: var(--background-primary);
     font-size: 15px;
@@ -227,7 +227,7 @@ export default {
 }
 .input-field:focus {
     border-color: var(--accent-color);
-    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    box-shadow: var(--shadow-accent-focus);
 }
 .textarea-field {
     resize: none;
@@ -245,7 +245,7 @@ export default {
     align-items: center;
     justify-content: center;
     padding: 12px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
@@ -287,20 +287,20 @@ export default {
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    box-shadow: var(--shadow-accent);
     transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
 }
 .action-btn:hover {
-    background: #006ce6;
+    background: var(--status-info);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.4);
+    box-shadow: var(--shadow-accent-strong);
 }
 .action-btn:active {
     transform: translateY(1px);
-    box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+    box-shadow: var(--shadow-accent);
 }
 .action-btn:disabled {
-    background: #b4d8ff;
+    background: var(--accent-color-subtle);
     box-shadow: none;
     cursor: default;
     transform: none;

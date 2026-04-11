@@ -92,6 +92,14 @@ export default {
 
     created() {
         let root = document.documentElement;
+        // Apply theme
+        store.applyTheme();
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (this.sharedMiscState.theme === 'system') {
+                store.applyTheme();
+            }
+        });
+
         if (isElectron() || window.location.href.indexOf('voip') >= 0) {
             root.style.setProperty('--main-margin-left', '0px');
             root.style.setProperty('--main-margin-right', '0px');

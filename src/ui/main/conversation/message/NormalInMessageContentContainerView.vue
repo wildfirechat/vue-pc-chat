@@ -184,7 +184,7 @@ export default {
 }
 
 .message-time-container.checked {
-    background-color: var(--background-item-placeholder);
+    background-color: var(--background-message-selected);
 }
 
 .message-avatar-content-container {
@@ -222,7 +222,7 @@ export default {
 
 .message-name-content-container .name {
     margin-left: 10px;
-    color: #bdbdbd;
+    color: var(--text-hint);
     font-size: 12px;
     margin-bottom: 2px;
 }

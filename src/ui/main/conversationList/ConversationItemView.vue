@@ -405,7 +405,7 @@ export default {
 }
 
 .conversation-item-container.top .content .last-message-desc {
-    color: #949494;
+    color: var(--text-secondary);
 }
 
 .content .last-message-desc {

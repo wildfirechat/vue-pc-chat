@@ -30,7 +30,7 @@
                         <div style="display: inline-block; text-align: center" class="screen-shot-wrapper">
                             <i id="screenShot" @click="screenShot(false)" class="icon-ion-scissors" :title="$t('conversation.action_tip_screenshot')"/>
                             <span class="screen-shot-more">
-                                <i class="icon-ion-chevron-down" style="font-size: 10px; color: #494849; padding-left: 5px;"/>
+                                <i class="icon-ion-chevron-down" style="font-size: 10px; color: var(--text-primary); padding-left: 5px;"/>
                                 <span @click="screenShot(true)" class="screen-shot-button">{{ $t('conversation.action_tip_screenshot_hide') }}</span>
                             </span>
                         </div>
@@ -1400,7 +1400,7 @@ export default {
 
 .input:empty:before {
     content: attr(title);
-    color: rgb(128, 128, 128);
+    color: var(--text-hint);
     font-size: 13px;
 }
 
@@ -1485,10 +1485,10 @@ i:hover {
     left: 50%;
     transform: translateX(-50%);
     margin-bottom: 10px;
-    background: linear-gradient(135deg, #3F64E4 0%, #764ba2 100%);
+    background: var(--gradient-recording);
     border-radius: 12px;
     padding: 12px 20px;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    box-shadow: var(--shadow-accent-recording);
     min-width: 180px;
     z-index: 1000;
 }
@@ -1500,7 +1500,7 @@ i:hover {
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: #764ba2;
+    border-top-color: var(--accent-color-active);
 }
 
 .recording-content {
@@ -1542,7 +1542,7 @@ i:hover {
 }
 
 .recording-time {
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--background-trans-light);
     font-size: 13px;
     font-weight: 600;
     font-family: 'Monaco', 'Courier New', monospace;
@@ -1550,7 +1550,7 @@ i:hover {
 }
 
 .recording-tip {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--background-trans-light);
     font-size: 11px;
     text-align: center;
     margin-top: 2px;
@@ -1558,7 +1558,7 @@ i:hover {
 }
 
 .recording-tip.cancel {
-    color: #ff6b6b;
+    color: var(--status-error);
     font-weight: 600;
     transform: scale(1.05);
 }

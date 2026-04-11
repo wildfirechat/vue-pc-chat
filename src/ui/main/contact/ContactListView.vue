@@ -273,7 +273,7 @@ export default {
 }
 
 .arrow {
-    border: solid #b9b9b9;
+    border: solid var(--contact-arrow-border);
     border-width: 0 1px 1px 0;
     display: inline-block;
     padding: 3px;

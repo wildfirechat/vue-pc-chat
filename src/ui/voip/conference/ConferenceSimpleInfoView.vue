@@ -56,7 +56,7 @@ export default {
     padding: 5px 10px;
     width: 300px;
     border-radius: 2px;
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    box-shadow: 0 4px 8px 0 var(--background-mask), 0 6px 20px 0 var(--background-mask);
 }
 
 .title {
@@ -73,7 +73,7 @@ export default {
     width: 60px;
     min-width: 60px;
     font-size: 13px;
-    color: #2d3033;
+    color: var(--text-primary);
 }
 
 .info-item .value {

@@ -84,7 +84,7 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    color: #292a2c;
+    color: var(--text-primary);
     background-color: var(--background-tooltip);
 }
 
@@ -100,7 +100,7 @@ export default {
     padding-bottom: 20px;
     display: flex;
     justify-content: space-between;
-    border-bottom: 1px solid lightgray;
+    border-bottom: 1px solid var(--border-tertiary);
 }
 
 

@@ -491,7 +491,7 @@ header label input {
 }
 
 header label input::-webkit-input-placeholder {
-    color: #7F7F7F;
+    color: var(--text-secondary-strong);
 }
 
 .member-container {
@@ -543,7 +543,7 @@ header label input::-webkit-input-placeholder {
     justify-content: center;
     align-items: center;
     border-radius: 3px;
-    border: 1px dashed #d6d6d6;
+    border: 1px dashed var(--border-dashed);
 }
 
 .action-item img {

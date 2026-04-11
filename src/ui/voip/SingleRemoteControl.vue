@@ -6,7 +6,7 @@
 <!--static STATUS_CONNECTED = 4;-->
 <!--}-->
 <template>
-    <div class="flex-column flex-align-center flex-justify-center" style="background: #2d3033">
+    <div class="flex-column flex-align-center flex-justify-center" style="background: var(--background-voip-sidebar)">
         <h1 style="display: none">Voip-single，运行在新的window，和主窗口数据是隔离的！！</h1>
 
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
@@ -18,7 +18,7 @@
                                     stop-screen-share-title="结束远程控制"
                                     :stop-screen-share-func="hangup"/>
         </div>
-        <div v-if="session && !(session.screenSharing && session.rcStatus === 5)" class="container" style="background: #292929">
+        <div v-if="session && !(session.screenSharing && session.rcStatus === 5)" class="container" style="background: var(--background-voip)">
             <section class="full-height full-width">
                 <!--video-->
                 <div class="content-container">

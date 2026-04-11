@@ -275,7 +275,7 @@ export default {
     z-index: 100;
     overflow: auto;
     /*background-color: var(--text-danger);*/
-    background-color: #f3f3f3e5;
+    background-color: var(--background-info-panel);
 }
 
 .search-result-container ul {
@@ -285,7 +285,7 @@ export default {
 
 
 .category-item label {
-    color: #b2b2b2;
+    color: var(--text-hint);
     display: block;
     padding-top: 10px;
     padding-bottom: 2px;
@@ -300,7 +300,7 @@ export default {
 }
 
 .search-result-item:active {
-    background-color: #d9d9d9;
+    background-color: var(--border-strong);
 }
 
 .search-result-item.contact {
@@ -324,12 +324,12 @@ export default {
     margin-left: auto;
     padding: 3px 10px;
     border-radius: 3px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
     outline: none;
 }
 
 .search-result-item.contact button:active {
-    background: var(--background-item-placeholder)ccc;
+    background: var(--background-item-placeholder);
 }
 
 .search-result-item.group {
@@ -358,7 +358,7 @@ export default {
 
 .show-all {
     padding-left: 12px;
-    color: #66789d;
+    color: var(--text-link);
     font-size: 12px;
 }
 

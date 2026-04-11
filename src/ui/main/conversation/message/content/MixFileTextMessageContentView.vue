@@ -137,7 +137,7 @@ export default {
     min-width: 80px;
     min-height: 80px;
     border-radius: 8px;
-    background-color: #DEDEDE;
+    background-color: var(--background-item-placeholder);
 }
 
 .file-item .name-size {
@@ -159,7 +159,7 @@ export default {
 .file-item .size {
     font-size: 14px;
     padding-top: 5px;
-    color: rgb(112, 117, 121);
+    color: var(--text-secondary);
 }
 
 .footer {

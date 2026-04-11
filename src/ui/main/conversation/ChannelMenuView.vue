@@ -139,7 +139,7 @@ export default {
 }
 
 .sub-menu-item:not(:last-of-type) {
-    border-bottom: 1px solid #e0e0e0e5;
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .sub-menu-item:hover {

@@ -100,7 +100,7 @@ export default {
     border-radius: 5px;
     word-wrap: break-word;
     word-break: break-all;
-    color: #aaaaaa;
+    color: var(--text-tertiary);
     font-size: 13px;
     overflow: hidden;
     background-color: var(--background-item-placeholder);

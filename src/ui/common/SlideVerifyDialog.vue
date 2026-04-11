@@ -5,7 +5,7 @@
                 <span class="title">安全验证</span>
             </div>
 
-            <div class="slide-verify-content" v-loading="loading" element-loading-text="加载中..." element-loading-background="rgba(255, 255, 255, 0.9)">
+            <div class="slide-verify-content" v-loading="loading" element-loading-text="加载中..." element-loading-background="var(--background-trans-light)">
                 <!-- 背景图 -->
                 <div class="image-container">
                     <img ref="backgroundImage" class="background-image" :src="backgroundImage" alt="">
@@ -23,11 +23,11 @@
                             :class="{'verified': isVerified}"
                         >
                             <svg v-if="!isVerified" t="1704654172740" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                                <path d="M512 192C335.36 192 192 335.36 192 512s143.36 320 320 320 320-143.36 320-320S688.64 192 512 192z m0 704C299.84 896 128 724.16 128 512S299.84 128 512 128s384 171.84 384 384-171.84 384-384 384z" fill="#999999" p-id="2082"></path>
-                                <path d="M665.6 456.96l-134.4-134.4-19.2 19.2 115.2 115.2-115.2 115.2 19.2 19.2 134.4-134.4z" fill="#999999" p-id="2083"></path>
+                                <path d="M512 192C335.36 192 192 335.36 192 512s143.36 320 320 320 320-143.36 320-320S688.64 192 512 192z m0 704C299.84 896 128 724.16 128 512S299.84 128 512 128s384 171.84 384 384-171.84 384-384 384z" fill="var(--text-hint)" p-id="2082"></path>
+                                <path d="M665.6 456.96l-134.4-134.4-19.2 19.2 115.2 115.2-115.2 115.2 19.2 19.2 134.4-134.4z" fill="var(--text-hint)" p-id="2083"></path>
                             </svg>
                             <svg v-else t="1704654243869" class="icon success" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                                <path d="M384 690.752L192 499.712l-45.248 45.248L384 781.248l512-512-45.248-45.248z" fill="#4CAF50"></path>
+                                <path d="M384 690.752L192 499.712l-45.248 45.248L384 781.248l512-512-45.248-45.248z" fill="var(--status-success)"></path>
                             </svg>
                         </div>
                     </div>
@@ -36,8 +36,8 @@
                 <!-- 刷新按钮 -->
                 <div class="refresh-button" @click="refreshVerify" title="刷新验证码">
                     <svg t="1704654321234" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="20" height="20">
-                        <path d="M960 448H512v-128l-192 192 192 192v-128h352v-128z" fill="#666666" p-id="2590"></path>
-                        <path d="M512 192c-212.064 0-384 171.936-384 384s171.936 384 384 384 384-171.936 384-384-171.936-384-384-384z m0 640c-141.376 0-256-114.624-256-256s114.624-256 256-256 256 114.624 256 256-114.624 256-256 256z" fill="#666666" p-id="2591"></path>
+                        <path d="M960 448H512v-128l-192 192 192 192v-128h352v-128z" fill="var(--text-muted)" p-id="2590"></path>
+                        <path d="M512 192c-212.064 0-384 171.936-384 384s171.936 384 384 384 384-171.936 384-384-171.936-384-384-384z m0 640c-141.376 0-256-114.624-256-256s114.624-256 256-256 256 114.624 256 256-114.624 256-256 256z" fill="var(--text-muted)" p-id="2591"></path>
                     </svg>
                 </div>
             </div>
@@ -334,7 +334,7 @@ export default {
     border-radius: 12px;
     padding: 20px;
     width: 360px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-main);
 }
 
 .slide-verify-header {
@@ -357,7 +357,7 @@ export default {
     width: 100%;
     height: 180px;
     margin-bottom: 15px;
-    background-color: #f5f5f5;
+    background-color: var(--background-tertiary);
     border-radius: 4px;
     overflow: hidden;
 }
@@ -387,7 +387,7 @@ export default {
     height: 40px;
     background-color: var(--border-secondary);
     border-radius: 20px;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 1px 3px var(--background-trans-muted);
 }
 
 .slider-hint {
@@ -412,7 +412,7 @@ export default {
     height: 40px;
     background: var(--background-primary);
     border-radius: 50%;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-main);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -422,11 +422,11 @@ export default {
 }
 
 .slider-button:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-main);
 }
 
 .slider-button.verified {
-    background: #4CAF50;
+    background: var(--status-success);
 }
 
 .slider-button .icon {
@@ -456,15 +456,15 @@ export default {
     justify-content: center;
     cursor: pointer;
     border-radius: 4px;
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    background-color: var(--background-trans-light);
+    box-shadow: var(--shadow-main);
     transition: all 0.3s;
     z-index: 10;
 }
 
 .refresh-button:hover {
-    background-color: rgba(240, 240, 240, 0.95);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    background-color: var(--background-trans-light);
+    box-shadow: var(--shadow-main);
 }
 
 .refresh-button .icon {
@@ -473,7 +473,7 @@ export default {
 
 /* Loading 样式 */
 :deep(.el-loading-mask) {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: var(--background-trans-light);
     border-radius: 4px;
 }
 </style>

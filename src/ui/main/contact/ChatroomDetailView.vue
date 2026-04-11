@@ -86,7 +86,7 @@ export default {
 .chatroom-info-container a {
     color: var(--text-on-accent);
     padding: 10px 40px;
-    background-color: #3861e0;
+    background-color: var(--status-info);
     border-radius: 5px;
     font-size: 14px;
     border: 1px solid transparent;

@@ -100,7 +100,7 @@ export default {
 }
 
 .ex-info-container {
-    border-top: 1px solid lightgrey;
+    border-top: 1px solid var(--border-tertiary);
     padding-top: 5px;
     margin: 5px 0;
     font-size: 14px;

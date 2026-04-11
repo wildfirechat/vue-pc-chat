@@ -54,7 +54,7 @@ export default {
 }
 
 .group-item:hover{
-    background-color: var(--background-sidebar);
+    background-color: var(--background-item-hover);
 }
 
 .group-item.active {

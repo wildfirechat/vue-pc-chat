@@ -11,7 +11,7 @@
 
                 <div class="message-avatar-content-container">
                     <!-- 文件的进度条有点特殊，有进度的消息的进度条有点特殊 -->
-                    <FadeLoader :loading="message.status === 0 && message.messageContent.type !== 5" color="#848484" style="margin:10px" width="3px" height="8px" margin="2px" radius="8px"> </FadeLoader>
+                    <FadeLoader :loading="message.status === 0 && message.messageContent.type !== 5" color="var(--text-hint)" style="margin:10px" width="3px" height="8px" margin="2px" radius="8px"> </FadeLoader>
                     <i v-if="message.status === 2" class="icon-ion-close-circled" style="color: red" @click="resend"/>
                     <div class="flex-column flex-align-end">
                         <MessageContentContainerView :message="message"

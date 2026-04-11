@@ -184,7 +184,7 @@ export default {
 }
 
 .conversation-list-panel .create-group:active {
-    background-color: #e5e5e5;
+    background-color: var(--border-primary);
 }
 
 .conversation-list-container {
@@ -208,6 +208,7 @@ export default {
     flex: 1;
     display: flex;
     flex-direction: column;
+    background-color: var(--background-primary);
 }
 
 .checked-conversation-list-container header {
@@ -284,7 +285,7 @@ export default {
 }
 
 .checked-conversation-list-container .content .unpick-button:active {
-    background-color: #e5e5e5;
+    background-color: var(--border-primary);
 }
 
 .checked-conversation-list-container footer {
@@ -298,7 +299,7 @@ export default {
 .checked-conversation-list-container footer button {
     padding: 5px 30px;
     border-radius: 4px;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--border-primary);
 }
 
 .checked-conversation-list-container footer button.confirm {

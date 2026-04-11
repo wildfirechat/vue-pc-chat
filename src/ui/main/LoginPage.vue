@@ -15,10 +15,10 @@
                 </div>
                 <!--    等待扫码-->
                 <div v-if="loginStatus === 0" class="pending-scan">
-                    <p style="font-size: 20px; color: #353535; padding-bottom: 10px">{{ $t('login.desc') }}</p>
-                    <p style="font-size: 15px; color: #a3a3a3">{{ $t('login.tip_web') }}</p>
-                    <p style="font-size: 15px; color: #a3a3a3; padding-bottom: 5px">{{ $t('login.warning') }}</p>
-                    <a style="font-size: 15px; color: #4168e0" target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
+                    <p style="font-size: 20px; color: var(--text-primary); padding-bottom: 10px">{{ $t('login.desc') }}</p>
+                    <p style="font-size: 15px; color: var(--text-secondary)">{{ $t('login.tip_web') }}</p>
+                    <p style="font-size: 15px; color: var(--text-secondary); padding-bottom: 5px">{{ $t('login.warning') }}</p>
+                    <a style="font-size: 15px; color: var(--accent-color)" target="_blank" href="https://static.wildfirechat.net/download_qrcode.png">点击下载野火IM移动端</a>
                 </div>
                 <!--    已经扫码-->
                 <div v-else-if="loginStatus === 1" class="scanned">
@@ -63,7 +63,7 @@
                     <p class="tip" @click="register">注册</p>
                 </div>
                 <button class="login-button" :disabled="mobile === '' || !password || password === ''" ref="loginWithPasswordButton" @click="loginWithPassword">{{ loginStatus === 3 ? '数据同步中，可能需要数分钟...' : '登录' }}</button>
-                <ClipLoader v-if="loginStatus === 3" class="syncing" :color="'#4168e0'" :height="'80px'" :width="'80px'"/>
+                <ClipLoader v-if="loginStatus === 3" class="syncing" :color="'var(--accent-color)'" :height="'80px'" :width="'80px'"/>
             </div>
             <div v-else class="login-form-container">
                 <!--            验证码登录-->
