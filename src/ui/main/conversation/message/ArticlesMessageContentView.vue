@@ -60,7 +60,7 @@ export default {
 }
 
 .top-article:hover {
-    background: var(--border-primary)e5;
+    background: var(--border-primary);
 }
 
 .top-article img {
@@ -104,7 +104,7 @@ export default {
 }
 
 .sub-article:hover {
-    background: var(--border-primary)e5;
+    background: var(--border-primary);
 }
 
 .articles-container .sub-article:last-of-type {

@@ -7,10 +7,10 @@
             <p class="file-name">{{ this.message.messageContent.name }}</p>
             <p class="file-size single-line">{{ size }}</p>
         </div>
-        <div v-if="downloadStats" style="height:5px; background: var(--accent-color)a0; position: absolute; left: 0; bottom: 0"
+        <div v-if="downloadStats" style="height:5px; background: var(--accent-color); position: absolute; left: 0; bottom: 0"
              v-bind:style="{width: downloadStats.progress / downloadStats.total * 100 + '%'}">
         </div>
-        <div v-if="sendStats" style="height:5px; background: var(--accent-color)a0; position: absolute; left: 0; bottom: 0"
+        <div v-if="sendStats" style="height:5px; background: var(--accent-color); position: absolute; left: 0; bottom: 0"
              v-bind:style="{width: sendStats.progress / sendStats.total * 100 + '%'}">
         </div>
     </div>

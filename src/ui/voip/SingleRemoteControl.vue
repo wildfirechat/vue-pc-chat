@@ -514,7 +514,7 @@ export default {
     justify-content: center;
     align-items: center;
     position: absolute;
-    background: var(--background-item-placeholder)ccc;
+    background: var(--background-item-placeholder);
     cursor: move;
 }
 
@@ -594,7 +594,7 @@ export default {
     height: auto;
     position: absolute;
     top: 0;
-    background-color: var(--background-item-placeholder)ccc;
+    background-color: var(--background-item-placeholder);
     left: 0;
 }
 

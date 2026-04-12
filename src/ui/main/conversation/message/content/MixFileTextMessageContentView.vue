@@ -181,7 +181,7 @@ img {
 
 i {
     font-size: 24px;
-    color: var(--text-primary)b;
+    color: var(--text-primary);
     cursor: pointer;
 }
 

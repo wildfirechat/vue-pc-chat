@@ -124,6 +124,14 @@
     --button-danger-text: var(--text-on-accent);
     --button-danger-hover: #ff4d4f;
 
+    --hero-bg-gradient: linear-gradient(180deg, #e8efff 0%, #f5f8ff 40%, #ffffff 70%, #f0f4ff 100%);
+    --hero-bg-pattern: radial-gradient(circle at 1px 1px, rgba(65, 104, 224, 0.08) 1px, transparent 0);
+    --hero-bg-blob-opacity: 0.35;
+    --hero-bg-blob-opacity-dim: 0.2;
+    --hero-bg-blob-1: linear-gradient(135deg, #3f64e4 0%, #764ba2 100%);
+    --hero-bg-blob-2: linear-gradient(135deg, #00c6ff 0%, #3f64e4 100%);
+    --hero-bg-blob-3: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
     ::-webkit-scrollbar {
     }
 }

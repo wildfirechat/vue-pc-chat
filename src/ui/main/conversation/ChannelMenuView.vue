@@ -125,7 +125,7 @@ export default {
 }
 
 .menu-item:hover {
-    background: var(--border-primary)e5;
+    background: var(--border-primary);
 }
 
 .sub-menu-item {
@@ -143,7 +143,7 @@ export default {
 }
 
 .sub-menu-item:hover {
-    background: var(--border-primary)e5;
+    background: var(--border-primary);
 }
 
 i {

@@ -129,6 +129,14 @@
     --button-danger-text: #ffffff;
     --button-danger-hover: #d93b30;
 
+    --hero-bg-gradient: linear-gradient(180deg, #121214 0%, #1a1a1c 40%, #121214 70%, #1a1a1c 100%);
+    --hero-bg-pattern: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
+    --hero-bg-blob-opacity: 0.15;
+    --hero-bg-blob-opacity-dim: 0.1;
+    --hero-bg-blob-1: linear-gradient(135deg, #0a84ff 0%, #5856d6 100%);
+    --hero-bg-blob-2: linear-gradient(135deg, #64d2ff 0%, #0a84ff 100%);
+    --hero-bg-blob-3: linear-gradient(135deg, #5e5ce6 0%, #bf5af2 100%);
+
     .message-input-container i {
         color: var(--text-secondary);
     }

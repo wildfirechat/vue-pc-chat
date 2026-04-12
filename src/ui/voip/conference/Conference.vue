@@ -6,9 +6,9 @@
 <!--static STATUS_CONNECTED = 4;-->
 <!--}-->
 <template>
-    <div class="flex-column flex-align-center flex-justify-center voip-container" style="width: 100%; height: 100%" ref="rootContainer">
+    <div class="flex-column voip-container" style="width: 100%; height: 100%" ref="rootContainer">
         <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
-            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"
+            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px;"
                                               :title="'野火会议'"
                                               :macos="!sharedMiscState.isElectronWindowsOrLinux"/>
             <ScreenShareControlView v-if="session && session.screenSharing" type="conference"/>
@@ -1379,6 +1379,7 @@ export default {
     --conference-container-margin-top: 30px;
     --slider-width: 0px;
     --main-width: 100%;
+    overflow: hidden;
 }
 
 a {
@@ -1564,7 +1565,7 @@ footer {
     top: 0;
     width: 100%;
     height: 100%;
-    background: var(--border-primary)e0;
+    background: var(--border-primary);
     text-align: center;
     justify-content: center;
     color: var(--text-danger);

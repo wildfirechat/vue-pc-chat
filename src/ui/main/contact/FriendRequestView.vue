@@ -132,7 +132,7 @@ export default {
 }
 
 .info-action-container .action-container .cancel:active {
-    background: var(--background-item-placeholder)ccc;
+    background: var(--background-item-placeholder);
 }
 
 .info-action-container .action-container .confirm {

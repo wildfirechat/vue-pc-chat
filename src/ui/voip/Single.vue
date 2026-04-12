@@ -728,7 +728,7 @@ export default {
     justify-content: center;
     align-items: center;
     position: absolute;
-    background: var(--background-item-placeholder)ccc;
+    background: var(--background-item-placeholder);
     cursor: move;
 }
 
@@ -808,7 +808,7 @@ export default {
     height: auto;
     position: absolute;
     top: 0;
-    background-color: var(--background-item-placeholder)ccc;
+    background-color: var(--background-item-placeholder);
     left: 0;
 }
 
@@ -837,15 +837,22 @@ export default {
 }
 
 .audio-input-device-item:hover {
-    background: var(--border-primary)e5;
+    background: var(--border-primary);
 }
 
 .webrtc-tip {
     position: absolute;
-    color: var(--text-danger);
     left: 0;
     top: 0;
     z-index: 999;
+}
+
+p {
+    color: var(--text-on-accent);
+}
+
+.webrtc-tip p {
+    color: var(--text-danger);
 }
 
 </style>

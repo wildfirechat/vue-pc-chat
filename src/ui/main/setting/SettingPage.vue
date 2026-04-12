@@ -46,7 +46,7 @@
                           :closeOnOutsideClick="true">
                 </dropdown>
             </div>
-            <div style="margin-top: 20px">
+            <div>
                 {{ $t('setting.theme') || '外观' }}
                 <dropdown class="my-dropdown-toggle"
                           :options="themes"

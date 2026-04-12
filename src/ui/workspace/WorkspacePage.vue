@@ -15,9 +15,7 @@ import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
 import {ipcRenderer, remote} from "../../platform";
 import IpcEventType from "../../ipcEventType";
-import { ipcMain } from "electron";
-import IPCEventType from "../../ipcEventType";
-import { getItem } from '../util/storageHelper';
+import store from '../../store';
 
 let tabGroup = null;
 
@@ -28,6 +26,7 @@ export default {
         return {
             shouldShowWorkspacePortal: true,
             url: Config.OPEN_PLATFORM_WORK_SPACE_URL,
+            sharedMiscState: store.state.misc,
         }
     },
 
@@ -155,10 +154,9 @@ export default {
             }
         })
 
-        const theme = getItem('theme');
         let query = ''
-        if (theme) {
-            query = "?theme=" + theme
+        if (['dark', 'light'].includes(this.sharedMiscState.theme)) {
+            query = "?theme=" + this.sharedMiscState.theme
         }
         this.addTab(this.url + query, false);
         this.tabGroup = tabGroup;
