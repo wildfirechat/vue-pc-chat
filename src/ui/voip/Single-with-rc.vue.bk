@@ -6,7 +6,7 @@
 <!--static STATUS_CONNECTED = 4;-->
 <!--}-->
 <template>
-    <div class="flex-column flex-align-center flex-justify-center" style="width: 100%; height: 100%">
+    <div class="flex-column flex-align-center flex-justify-center">
         <h1 style="display: none">Voip-single，运行在新的window，和主窗口数据是隔离的！！</h1>
 
         <div class="webrtc-tip" v-if="showVoipTip">
@@ -14,7 +14,14 @@
             <p>多人版音视频 和 高级版音视频不互通，切换方法请参考: wfc/av/internal/README.MD</p>
             <p>{{ voipTip }}</p>
         </div>
-        <div v-if="session" class="container">
+        <div v-if="sharedMiscState.isElectron" ref="notClickThroughArea">
+            <!--            <ElectronWindowsControlButtonView style="position: absolute; top: 0; left: 0; width: 100%; height: 30px; background: white"-->
+            <!--                                              :title="'野火会议'"-->
+            <!--                                              :macos="!sharedMiscState.isElectronWindowsOrLinux"/>-->
+            <ScreenShareControlView v-if="session && session.screenSharing && session.rcStatus === 5" type="conference"/>
+            <h1 style="display: none">Voip-Conference 运行在新的window，和主窗口数据是隔离的！！</h1>
+        </div>
+        <div v-if="session && !(session.screenSharing && session.rcStatus === 5)" class="container" style="background: var(--background-voip)">
             <section class="full-height full-width">
                 <!--audio-->
                 <div class="content-container" v-if="audioOnly">
@@ -48,7 +55,7 @@
 
                 <!--video-->
                 <div v-else class="content-container">
-                    <div class="local-media-container">
+                    <div class="local-media-container" v-if="session.rcStatus !== 5">
                         <video v-if="status === 4 || localStream"
                                ref="localVideo"
                                class="localVideo me"
@@ -100,7 +107,21 @@
                 </div>
 
                 <!--connected-->
-                <div v-if="status === 4" class="action-container">
+                <UseDraggable v-if="status === 4 && session.rcStatus === 5" class="floating-action-container">
+                    <p class="desc">控制</p>
+                    <div class="floating-actions">
+                        <div class="action">
+                            <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
+                            <p>结束远程控制</p>
+                        </div>
+                        <div class="action">
+                            <img v-if="!session.audioMuted" @click="mute" class="action-img" src='@/assets/images/av_mute.png'/>
+                            <img v-else @click="mute" class="action-img" src='@/assets/images/av_mute_hover.png'/>
+                            <p>静音</p>
+                        </div>
+                    </div>
+                </UseDraggable>
+                <div v-if="status === 4 && session.rcStatus === 0" class="action-container">
                     <div class="action">
                         <img @click="hangup" class="action-img" src='@/assets/images/av_hang_up.png'/>
                     </div>
@@ -128,10 +149,11 @@
                             <p>静音</p>
                         </div>
                     </div>
-                    <div v-if="!audioOnly && false" class="action">
-                        <img @click="screenShare" class="action-img" src='@/assets/images/av_share.png'/>
+                    <div v-if="!audioOnly && session.rcStatus === 0" class="action">
+                        <img @click="inviteRemoteControl" class="action-img" src='@/assets/images/av_share.png'/>
+                        <p>远程协助</p>
                     </div>
-                    <div v-if="!audioOnly" class="action">
+                    <div v-if="!audioOnly && session.rcStatus === 0" class="action">
                         <img @click="down2voice" class="action-img" src='@/assets/images/av_float_audio.png'/>
                         <p>切换到语音聊天</p>
                     </div>
@@ -146,15 +168,26 @@
 import avenginekit from "../../wfc/av/internal/engine.min";
 import CallSessionCallback from "../../wfc/av/engine/callSessionCallback";
 import CallState from "../../wfc/av/engine/callState";
-import {isElectron} from "../../platform";
+import {ipcRenderer, isElectron} from "../../platform";
 import ScreenOrWindowPicker from "./ScreenOrWindowPicker";
 import VideoType from "../../wfc/av/engine/videoType";
 import Config from "../../config";
+import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
+import ScreenShareControlView from "./ScreenShareControlView.vue";
+import store from "../../store";
+import avenginekitproxy from "../../wfc/av/engine/avenginekitproxy";
+import IpcEventType from "../../ipcEventType";
+import wfrc from "../../wfc/rc/wfrc";
+import RcEndReason from "../../wfc/av/engine/rcEndReason";
+import RCState from "../../wfc/av/engine/rcState";
+import registerRemoteControlEventListener, {startMonitorUACStatus, stopMonitorUACStatus, unregisterRemoteControlEventListener} from "./rcEventHelper";
+import {UseDraggable} from "@vueuse/components";
 import wfc from "../../wfc/client/wfc";
 import EventType from "../../wfc/client/wfcEvent";
 
 export default {
     name: 'Single',
+    components: {UseDraggable, ScreenShareControlView, ElectronWindowsControlButtonView},
     data() {
         return {
             session: null,
@@ -175,6 +208,10 @@ export default {
             showVoipTip: Config.SHOW_VOIP_TIP,
             voipTip: '',
             supportConference: avenginekit.startConference !== undefined,
+            sharedMiscState: store.state.misc,
+
+            deltaXSum: 0,
+            deltaYSum: 0,
         }
     },
     methods: {
@@ -279,6 +316,7 @@ export default {
 
             sessionCallback.onInitial = (session, selfUserInfo, initiatorUserInfo, participantUserInfos) => {
                 console.log('onInitial')
+                window.__callSession = session;
                 this.session = session;
                 this.audioOnly = session.audioOnly;
                 this.participantUserInfos = [...participantUserInfos];
@@ -353,6 +391,68 @@ export default {
                 // console.log('didReportAudioVolume', userId, volume)
             }
 
+            sessionCallback.onReceiveRemoteControlInvite = () => {
+                console.log('onReceiveRemoteControlInvite')
+                if (isElectron()) {
+                    this.$alert({
+                        content: '对方邀请你进行远程协助',
+                        confirmText: '接受',
+                        cancelText: '拒绝',
+                        cancelCallback: () => {
+                            this.session.rejectRemoteControlInvite();
+                            this.$notify({
+                                text: '你拒绝了对方的远程协助邀请',
+                                type: 'info'
+                            })
+                        },
+                        confirmCallback: () => {
+                            this.session.muteVideo(true);
+                            this.session.acceptRemoteControlInvite();
+                            registerRemoteControlEventListener(this.session, this.$refs.remoteVideo);
+                        }
+                    })
+                }
+            }
+
+            sessionCallback.didAcceptRemoteControlInvite = () => {
+                avenginekitproxy.emitToMain(IpcEventType.START_SCREEN_SHARE, {rc: true})
+                wfrc.start()
+                if (process && process.platform === 'win32'){
+                    startMonitorUACStatus(this.session)
+                }
+            }
+            sessionCallback.didGetStats = (userId, reports) => {
+            }
+
+            sessionCallback.didRemoteControlEnd = (reason) => {
+                console.log('didRemoteControlEnd', reason)
+                let reasonTip = '远程协助结束了';
+                if (reason === RcEndReason.REASON_REJECT) {
+                    reasonTip = '对方拒绝了你的远程协助邀请'
+                } else if (reason === RcEndReason.REASON_HANGUP) {
+                    reasonTip = '对方结束了远程协助'
+                }
+                this.$notify({
+                    text: reasonTip,
+                    type: 'info'
+                })
+                this.session.stopScreenShare()
+                // 其实，只有reason 为 hangup 时，才真正开始过远程协助/控制
+                wfrc.stop()
+                if (process && process.platform === 'win32'){
+                    stopMonitorUACStatus()
+                }
+                unregisterRemoteControlEventListener()
+            }
+
+            sessionCallback.didRemoteUACStatusChange = (isUac) => {
+                if (isUac) {
+                    this.$notify({
+                        text: '请通知对方点击确认，完成提权操作，否则将不能进一步操作',
+                        type: 'info'
+                    })
+                }
+            }
 
             avenginekit.sessionCallback = sessionCallback;
         },
@@ -362,6 +462,11 @@ export default {
         },
 
         hangup() {
+            if (this.session.rcStatus === RCState.STATUS_CONNECTED) {
+                this.session.muteVideo(false)
+                this.session.endRemoteControl(RcEndReason.REASON_HANGUP)
+                return
+            }
             this.session.hangup();
         },
 
@@ -401,6 +506,63 @@ export default {
 
         down2voice() {
             this.session.downgrade2Voice();
+        },
+        async inviteRemoteControl() {
+            if (isElectron()) {
+                let screens = await ipcRenderer.invoke(IpcEventType.GET_SOURCE, {types: ['screen'], fetchWindowIcons: false})
+                let inviteRemoteControl = (sourceId) => {
+                    let desktopShareOptions = {
+                        sourceId: sourceId,
+                        // minWidth: 1280,
+                        // maxWidth: 1280,
+                        // minHeight: 720,
+                        // maxHeight: 720
+                    }
+                    this.session.startScreenShare(desktopShareOptions);
+                    this.session.inviteRemoteControl(window.screen.width, window.screen.height);
+                    // TODO
+                    // FIXME
+                    //  没有提示，奇怪
+                    this.$notify({
+                        text: '等待对方接受远程协助邀请',
+                        type: 'info'
+                    });
+                }
+                console.log('screens', screens)
+                if (screens.length === 1) {
+                    inviteRemoteControl(screens[0].id);
+                } else {
+                    let beforeClose = (event) => {
+                        // What a gamble... 50% chance to cancel closing
+                        if (!event.params) {
+                            return;
+                        }
+                        if (event.params.source) {
+                            let source = event.params.source;
+                            inviteRemoteControl(source.id)
+                        }
+                    };
+                    this.$modal.show(
+                        ScreenOrWindowPicker,
+                        {
+                            title: '请选择需要远程协助的桌面',
+                            desc: '将允许对方远程操作你选择的桌面',
+                            types: ['screen']
+                        }, null, {
+                            width: 360,
+                            height: 620,
+                            name: 'screen-window-picker-modal',
+                            clickToClose: false,
+                        }, {
+                            // 'before-open': beforeOpen,
+                            'before-close': beforeClose,
+                            // 'closed': closed,
+                        })
+                }
+            } else {
+                // this.session.startScreenShare();
+                // not support
+            }
         },
         screenShare() {
             if (this.session.isScreenSharing()) {
@@ -451,6 +613,11 @@ export default {
             let sec = ~~((timestamp % 60));
             str += (sec < 10 ? "0" : "") + sec
             return str;
+        },
+
+        isCallConnected() {
+            //Todo
+            return true;
         },
         onUserInfosUpdate(userInfos = []) {
             for (let i = 0; i < this.participantUserInfos.length; i++) {
@@ -519,7 +686,6 @@ export default {
 <style lang="css" scoped>
 
 .container {
-    background: var(--background-voip);
     width: 100%;
     height: 100%;
     position: relative;
@@ -548,6 +714,59 @@ export default {
     align-items: center;
     font-size: 12px;
     color: var(--text-on-accent);
+}
+
+.floating-action-container {
+    height: 100px;
+    min-width: 100px;
+    border-radius: 50px;
+    top: 10%;
+    left: 10%;
+    padding: 20px 0;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    background: var(--background-item-placeholder);
+    cursor: move;
+}
+
+.floating-actions {
+    width: 300px;
+    justify-content: space-around;
+}
+
+.floating-action-container:not(:hover) .floating-actions {
+    display: none;
+}
+
+.floating-action-container:hover .floating-actions {
+    display: flex;
+    flex-direction: row;
+}
+
+.floating-action-container:not(:hover) .desc {
+    display: flex;
+    height: 100%;
+    padding: 20px;
+    justify-items: center;
+    align-items: center;
+}
+
+.floating-action-container:hover .desc {
+    cursor: move;
+    padding: 20px;
+}
+
+.floating-actions .action {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 12px;
+    color: var(--text-on-accent);
+    cursor: auto;
 }
 
 .avatar {

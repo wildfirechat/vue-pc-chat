@@ -355,7 +355,7 @@ export default {
     background-color: var(--background-primary);
     border-radius: var(--main-border-radius);
     overflow: hidden;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), 
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08),
                 0 10px 20px rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(0, 0, 0, 0.02);
 }

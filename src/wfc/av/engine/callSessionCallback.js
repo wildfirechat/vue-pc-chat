@@ -5,7 +5,6 @@
 // TODO 后续移除所有userInfo相关参数，采用ipc调用获取
 import wfrc from "../../rc/wfrc";
 import {simulateRemoteControlInputEvent} from "../../../ui/voip/rcEventHelper";
-import avenginekitproxy from "./avenginekitproxy";
 import RCEvent from "../../rc/RCEvent";
 
 export default class CallSessionCallback {
