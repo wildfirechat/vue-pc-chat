@@ -138,6 +138,6 @@
     --hero-bg-blob-3: linear-gradient(135deg, #5e5ce6 0%, #bf5af2 100%);
 
     .message-input-container i {
-        color: var(--text-secondary);
+        color: var(--text-secondary) !important;
     }
 }
