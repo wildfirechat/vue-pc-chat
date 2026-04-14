@@ -22,6 +22,7 @@
     --background-message-in: #2c2c2e;   /* 接收气泡：系统次级灰 */
     --background-message-out: #409cff;  /* 发送气泡：系统蓝 */
     --background-message-selected: #121212;
+    --background-message-quoted: #3A3A3C;
     --background-selected-alt: #2d3d5d;
 
     --message-in-arrow: #2c2c2e;
@@ -76,7 +77,8 @@
     --background-error-subtle: rgba(255, 69, 58, 0.1);
     --background-accent-light: #1a2a4a;
     --background-selected-dim: #262c3d;
-    --background-voip: #000000;
+    --background-voip: #2E2E2E;
+    --background-action: #202020;
     --background-voip-sidebar: #1c1c1e;
     --background-active-subtle: #262c3d;
     --background-info-panel: rgba(28, 28, 30, 0.9);
