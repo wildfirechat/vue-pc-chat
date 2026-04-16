@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="login-container">
+        <div class="login-container" :class="{'web-login-container': !sharedMiscState.isElectron}">
             <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
                                               :maximizable="false"
                                               v-if="sharedMiscState.isElectronWindowsOrLinux"/>
@@ -637,6 +637,9 @@ export default {
     margin: auto;
     background: var(--background-primary);
     border-radius: 12px;
+}
+
+.web-login-container {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08),
                 0 10px 20px rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(0, 0, 0, 0.02);
