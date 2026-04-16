@@ -223,7 +223,9 @@ npm run cross-package-linux-arm64
 
 24. arm64 版 UOS 上启动失败，通过终端启动时，提示：` error while loading shared libraries: libz.so: cannot open shared object file: No such file or directory`
 
-    `sudo apt install zlib1g zlib1g-dev`
+    一般是依赖缺失导致的，安装依赖：`sudo apt install zlib1g zlib1g-dev`
+     
+    如果还有问题，可参考：https://github.com/AppImage/AppImageKit/issues/1092
 
 ## 截图
 
