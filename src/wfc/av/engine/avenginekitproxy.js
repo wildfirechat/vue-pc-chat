@@ -733,15 +733,17 @@ export class AvEngineKitProxy {
                     this.callWin.closable = true;
                     this.callWin.maximizable = !!args.rc;
                     this.callWin.transparent = true;
-                    let mw = args.rc ? 800 : 800
-                    let mh = args.rc ? 200 : 800
+                    // Conference screen-share should collapse to control-bar size.
+                    let isConference = this.type === 'conference';
+                    let mw = args.rc ? 800 : (isConference ? 420 : 800)
+                    let mh = args.rc ? 200 : (isConference ? 130 : 800)
                     this.callWin.setMinimumSize(mw, mh);
                     this.callWin.setSize(mw, mh);
                     // console.log('screen width', screen, screen.width);
                     if (args.rc) {
                         this.callWin.minimize()
                     } else {
-                        this.callWin.setPosition((screenWidth - 800) / 2, 0, true);
+                        this.callWin.setPosition((screenWidth - mw) / 2, 0, true);
                     }
                 }
             });
