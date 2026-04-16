@@ -146,6 +146,24 @@ export default {
 
     mounted() {
         tabGroup = document.querySelector("tab-group");
+
+        // Inject CSS for tab title truncation (>>> cannot pierce native Shadow DOM)
+        const shadowFixStyle = document.createElement('style');
+        shadowFixStyle.textContent = `
+            .tabs { flex: 1; min-width: 0; display: flex; overflow: hidden; }
+            .tab { flex: 1 1 0%; min-width: 60px; max-width: 200px; }
+            .tab-title {
+                flex: 1 1 0%;
+                min-width: 0;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                display: block;
+            }
+            .tab-close { flex-shrink: 0; }
+        `;
+        tabGroup.shadowRoot.appendChild(shadowFixStyle);
+
         tabGroup.on('tab-active', this.onTabActive)
         tabGroup.on('tab-removed', () => {
             let tabs = tabGroup.getTabs();

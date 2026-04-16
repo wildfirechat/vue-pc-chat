@@ -92,7 +92,7 @@
                 <AI v-show="route.path === '/home/ai'"/>
             </router-view>
             <div v-if="sharedMiscState.connectionStatus === -1" class="unconnected">网络连接断开</div>
-            <div class="drag-area" :style="dragAreaLeft"></div>
+            <div v-show="this.$router.currentRoute.value.path !== '/home/h-wp'" class="drag-area" :style="dragAreaLeft"></div>
 
             <!-- 备份进度窗口 -->
             <BackupView v-if="sharedMiscState.isElectron" class="backup-progress-modal"  />
