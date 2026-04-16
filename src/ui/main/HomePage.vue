@@ -97,15 +97,41 @@
             <!-- 备份进度窗口 -->
             <BackupView v-if="sharedMiscState.isElectron" class="backup-progress-modal"  />
             <UseDraggable v-if="!sharedMiscState.isElectron && sharedMiscState.isVoipOngoing"
+                          v-show="!conferenceMinimized"
                           class="voip-div-container"
+                          :class="{ 'voip-minimizing': conferenceMinimizing }"
+                          :style="{
+                              ...(conferenceSliderOpen ? { width: '1310px' } : {}),
+                              transformOrigin: voipTransformOrigin
+                          }"
                           :initial-value="{x:'50%', y:'50%'}"
                           :prevent-default="true"
+                          :on-start="onConferenceStart"
                           v-bind:class="{single:voipProxy.type === 'single', multi:voipProxy.type === 'multi', conference: voipProxy.type === 'conference'}"
             >
+                <div class="voip-titlebar">
+                    <!-- just to make title center -->
+                    <span></span>
+                    <span class="voip-titlebar-title">{{ voipProxy.type === 'conference' ? '会议' : '通话' }}</span>
+                    <button class="voip-minimize-btn" @click.stop="minimizeVoip" title="最小化">
+                        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><rect x="3" y="11" width="18" height="2" rx="1"/></svg>
+                    </button>
+                </div>
+                <div class="voip-content-wrap">
                 <Single v-if="voipProxy.type === 'single'" ref="handle-id"/>
                 <Multi v-if="voipProxy.type === 'multi'" ref="handle-id"/>
                 <Conference v-if="voipProxy.type === 'conference'" ref="handle-id"/>
+                </div>
             </UseDraggable>
+            <!-- Minimized pip: shown above settings button when conference/call is minimized -->
+            <div v-if="!sharedMiscState.isElectron && sharedMiscState.isVoipOngoing && conferenceMinimized"
+                 class="voip-minimized-pip"
+                 @click="restoreVoip"
+                 :title="voipProxy.type === 'conference' ? '点击恢复会议' : '点击恢复通话'"
+            >
+                <i class="icon-ion-ios-telephone"/>
+                <span class="voip-pip-label">{{ voipProxy.type === 'conference' ? '会议中' : '通话中' }}</span>
+            </div>
             <SubWindowHost v-if="!sharedMiscState.isElectron"/>
         </div>
     </div>
@@ -145,10 +171,69 @@ export default {
             isSetting: false,
             fileWindow: null,
             voipProxy: avenginekitproxy,
+            conferenceSliderOpen: false,
+            conferenceMinimized: false,
+            conferenceMinimizing: false,
+            voipTransformOrigin: '5% 95%',
         };
     },
 
     methods: {
+        onConferenceStart(pos, event) {
+            // Cancel drag (and prevent e.preventDefault()) when clicking inside
+            // the conversation slider or on any interactive element inside the
+            // conference overlay, so inputs and buttons still receive focus.
+            const target = event.target;
+            if (
+                target.isContentEditable ||
+                ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'A'].includes(target.tagName) ||
+                target.closest('.conference-slider') ||
+                target.closest('.conference-footer-layout')
+            ) {
+                return false;
+            }
+        },
+
+        minimizeVoip() {
+            // Calculate transform-origin in viewport coordinates
+            // so animation scales toward the pip's position
+            const voipEl = document.querySelector('.voip-div-container');
+            if (voipEl) {
+                const voipRect = voipEl.getBoundingClientRect();
+
+                // Pip position: left: calc(var(--main-margin-left) + 9px); bottom: calc(var(--main-margin-bottom) + 78px);
+                // Pip size: 42px, so center is at left+21, bottom-21
+                const mainMarginLeft = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--main-margin-left')) || 80;
+                const mainMarginBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--main-margin-bottom')) || 50;
+                const pipX = mainMarginLeft + 9 + 21; // pip center X
+                const pipY = window.innerHeight - mainMarginBottom - 78 - 21; // pip center Y
+
+                // Calculate origin as percentage relative to voip container
+                const originX = ((pipX - voipRect.left) / voipRect.width) * 100;
+                const originY = ((pipY - voipRect.top) / voipRect.height) * 100;
+
+                this.voipTransformOrigin = `${originX}% ${originY}%`;
+            }
+
+            this.conferenceMinimizing = true;
+            setTimeout(() => {
+                this.conferenceMinimized = true;
+                this.conferenceMinimizing = false;
+            }, 450);
+        },
+
+        restoreVoip() {
+            // 恢复前，先恢复为缩小状态，然后显示 DOM
+            this.conferenceMinimizing = true;
+            this.conferenceMinimized = false;
+            // 等待浏览器完成渲染，确保元素已以缩小状态显示
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // 移除缩小类，触发 CSS 过渡回到正常大小
+                    this.conferenceMinimizing = false;
+                });
+            });
+        },
         onClickPortrait(event) {
             wfc.getUserInfo(this.sharedContactState.selfUserInfo.uid, true);
         },
@@ -248,7 +333,16 @@ export default {
                 }
             }
         },
+    },
 
+    watch: {
+        'sharedMiscState.isVoipOngoing'(newVal) {
+            if (!newVal) {
+                this.conferenceMinimized = false;
+                this.conferenceMinimizing = false;
+                this.voipTransformOrigin = '5% 95%';
+            }
+        },
     },
 
     computed: {
@@ -291,6 +385,8 @@ export default {
     },
 
     mounted() {
+        this.$eventBus.$on('conference-slider-opened', () => { this.conferenceSliderOpen = true; });
+        this.$eventBus.$on('conference-slider-closed', () => { this.conferenceSliderOpen = false; });
         avenginekitproxy.onVoipCallErrorCallback = (errorCode) => {
             if (errorCode === -1) {
                 this.$notify({
@@ -324,6 +420,8 @@ export default {
         }
     },
     unmounted() {
+        this.$eventBus.$off('conference-slider-opened');
+        this.$eventBus.$off('conference-slider-closed');
         wfc.eventEmitter.removeListener(EventType.ConnectionStatusChanged, this.onConnectionStatusChange);
         console.log('home destroy')
     },
@@ -469,6 +567,15 @@ i.active {
     box-shadow: var(--shadow-main), 0 6px 20px 0 var(--background-mask);
     display: flex;
     flex-direction: column;
+    width: 360px;
+    height: 640px;
+    overflow: hidden;
+    scale: 1;
+    opacity: 1;
+    filter: brightness(1);
+    transition: scale 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                filter 0.45s ease-out;
 }
 
 .voip-div-container.single {
@@ -478,7 +585,7 @@ i.active {
 
 .voip-div-container.multi {
     width: 960px;
-    height: 600px;
+    height: 640px;
 }
 
 .voip-div-container.conference {
@@ -512,7 +619,109 @@ i.active {
     border: none;
 }
 
+.voip-div-container.voip-minimizing {
+    scale: 0.065;
+    opacity: 0;
+    filter: brightness(0.7);
+    pointer-events: none;
+}
 /* 备份进度窗口样式 */
+.voip-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 28px;
+    padding: 0 8px 0 12px;
+    background: rgba(0, 0, 0, 0.28);
+    flex-shrink: 0;
+    /* must be above Single.vue's .webrtc-tip (z-index: 999) */
+    position: relative;
+    z-index: 1000;
+}
+
+.voip-titlebar-title {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.65);
+    user-select: none;
+    pointer-events: none;
+}
+
+.voip-minimize-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.voip-minimize-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+/* Content wrapper so Single/Multi/Conference fill remaining flex height */
+.voip-content-wrap {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* Minimized pip — floats above the settings button in the left sidebar */
+.voip-minimized-pip {
+    position: fixed;
+    left: calc(var(--main-margin-left) + 9px);
+    bottom: calc(var(--main-margin-bottom) + 78px);
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #4a7cf7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1002;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.4);
+    /* entrance spring + pulse pulse pulse */
+    animation: voip-pip-appear 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+               voip-pip-pulse 2.6s ease-in-out 0.32s infinite;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.voip-minimized-pip:hover {
+    transform: scale(1.12);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+    animation: none;
+}
+
+.voip-minimized-pip .icon-ion-ios-telephone {
+    font-size: 20px;
+    color: #fff;
+}
+
+.voip-pip-label {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1;
+    margin-top: 1px;
+}
+
+@keyframes voip-pip-appear {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+@keyframes voip-pip-pulse {
+    0%, 100% { box-shadow: 0 2px 14px rgba(0, 0, 0, 0.4); }
+    50% { box-shadow: 0 2px 14px rgba(0, 0, 0, 0.4), 0 0 0 7px rgba(74, 124, 247, 0.3); }
+}
 .backup-progress-modal {
     position: fixed;
     top: 0;
