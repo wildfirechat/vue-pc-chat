@@ -100,10 +100,7 @@
                           v-show="!conferenceMinimized"
                           class="voip-div-container"
                           :class="{ 'voip-minimizing': conferenceMinimizing }"
-                          :style="{
-                              ...(conferenceSliderOpen ? { width: '1310px' } : {}),
-                              transformOrigin: voipTransformOrigin
-                          }"
+                          :style="voipContainerStyle"
                           :initial-value="{x:'50%', y:'50%'}"
                           :prevent-default="true"
                           :on-start="onConferenceStart"
@@ -172,6 +169,7 @@ export default {
             fileWindow: null,
             voipProxy: avenginekitproxy,
             conferenceSliderOpen: false,
+            conferenceScreenSharing: false,
             conferenceMinimized: false,
             conferenceMinimizing: false,
             voipTransformOrigin: '5% 95%',
@@ -338,6 +336,7 @@ export default {
     watch: {
         'sharedMiscState.isVoipOngoing'(newVal) {
             if (!newVal) {
+                this.conferenceScreenSharing = false;
                 this.conferenceMinimized = false;
                 this.conferenceMinimizing = false;
                 this.voipTransformOrigin = '5% 95%';
@@ -371,6 +370,22 @@ export default {
                     left: 'calc(60px + 261px)'
                 }
             }
+        },
+        voipContainerStyle() {
+            const style = {
+                transformOrigin: this.voipTransformOrigin
+            };
+
+            if (this.voipProxy.type === 'conference') {
+                if (this.conferenceScreenSharing) {
+                    style.width = '620px';
+                    style.height = '150px';
+                } else if (this.conferenceSliderOpen) {
+                    style.width = '1310px';
+                }
+            }
+
+            return style;
         }
     },
 
@@ -385,8 +400,13 @@ export default {
     },
 
     mounted() {
-        this.$eventBus.$on('conference-slider-opened', () => { this.conferenceSliderOpen = true; });
-        this.$eventBus.$on('conference-slider-closed', () => { this.conferenceSliderOpen = false; });
+        if (!isElectron()) {
+            this.$eventBus.$on('conference-slider-opened', () => { this.conferenceSliderOpen = true; });
+            this.$eventBus.$on('conference-slider-closed', () => { this.conferenceSliderOpen = false; });
+            this.$eventBus.$on('conference-screen-share-changed', (screenSharing) => {
+                this.conferenceScreenSharing = !!screenSharing;
+            });
+        }
         avenginekitproxy.onVoipCallErrorCallback = (errorCode) => {
             if (errorCode === -1) {
                 this.$notify({
@@ -420,12 +440,15 @@ export default {
         }
     },
     unmounted() {
-        this.$eventBus.$off('conference-slider-opened');
-        this.$eventBus.$off('conference-slider-closed');
+        if (!isElectron()) {
+            this.$eventBus.$off('conference-slider-opened');
+            this.$eventBus.$off('conference-slider-closed');
+            this.$eventBus.$off('conference-screen-share-changed');
+        }
         wfc.eventEmitter.removeListener(EventType.ConnectionStatusChanged, this.onConnectionStatusChange);
         console.log('home destroy')
     },
-
+    
     components: {
         BackupView,
         SubWindowHost,

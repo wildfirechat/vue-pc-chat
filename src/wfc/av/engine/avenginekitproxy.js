@@ -736,7 +736,7 @@ export class AvEngineKitProxy {
                     // Conference screen-share should collapse to control-bar size.
                     let isConference = this.type === 'conference';
                     let mw = args.rc ? 800 : (isConference ? 420 : 800)
-                    let mh = args.rc ? 200 : (isConference ? 130 : 800)
+                    let mh = args.rc ? 200 : (isConference ? 140 : 800)
                     this.callWin.setMinimumSize(mw, mh);
                     this.callWin.setSize(mw, mh);
                     // console.log('screen width', screen, screen.width);
