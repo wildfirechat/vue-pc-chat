@@ -339,6 +339,7 @@ let store = {
             })
             // 更新在线状态
             this.state.contact.friendList = this._patchAndSortUserInfos(this.state.contact.friendList, '');
+            this._patchCurrentConversationOnlineStatus();
         })
         // 服务端删除
         this._addWfcListener(EventType.MessageDeleted, (messageUid) => {
