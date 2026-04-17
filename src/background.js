@@ -1361,7 +1361,7 @@ function startOpenPlatformServer(port) {
         return
     }
     const WebSocket = require('ws');
-    const wss = new WebSocket.Server({port: port ? port : 7983});
+    const wss = new WebSocket.Server({host: '127.0.0.1', port: port ? port : 7983});
 
     console.log('starting websocket server...');
     wss.on('connection', (ws) => {
