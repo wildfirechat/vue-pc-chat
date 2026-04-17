@@ -109,7 +109,7 @@
                             <img @click="screenShare" class="action-img" src='@/assets/images/av_share.png'/>
                         </div>
                         <div v-if="participantUserInfos.length < 8" class="action">
-                            <img @click="invite" class="action-img" src="@/assets/images/add.png">
+                            <img @click="invite" class="action-img circle" src="@/assets/images/add.png">
                         </div>
                     </div>
                 </div>
@@ -645,11 +645,9 @@ export default {
 }
 
 .action-container {
-    width: 100%;
-    bottom: 0;
-    left: 0;
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
+    column-gap: 80px;
     padding-bottom: 20px;
 }
 
@@ -683,5 +681,10 @@ export default {
     left: 0;
     top: 0;
     z-index: 999;
+}
+
+.circle {
+    border-radius: 50%;
+    background: var(--background-action);
 }
 </style>

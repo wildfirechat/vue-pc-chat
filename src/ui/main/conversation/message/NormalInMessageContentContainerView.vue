@@ -6,14 +6,17 @@
             <div class="message-avatar-content-container">
                 <tippy
                     v-if="enableClickMessageSenderPortrait"
-                    :to="'#infoTrigger' + this.message.messageId"
+                    :to="'#' + userCardTriggerId"
                     interactive
                     :animate-fill="false"
-                    placement="left"
+                    placement="right"
                     distant="7"
                     theme="light"
                     animation="fade"
                     trigger="click"
+                    :append-to="tippyAppendTo"
+                    strategy="fixed"
+                    :popper-options="{ modifiers: [{ name: 'eventListeners', options: { scroll: false } }] }"
                 >
                     <template #content>
                         <ChannelCardView v-if="message.conversation.type === 3" v-on:close="closeUserCard" :channel-id="message.conversation.target"/>
@@ -25,7 +28,7 @@
                            :value="message"
                            v-model="sharedPickState.messages"/>
                     <img ref="userCardTippy"
-                         :id="'infoTrigger' + this.message.messageId"
+                        :id="userCardTriggerId"
                          @click="onClickUserPortrait(message.from)"
                          @contextmenu.prevent="openMessageSenderContextMenu($event, message)"
                          class="avatar"
@@ -72,15 +75,31 @@ export default {
     props: {
         message: null,
     },
+    inject: {
+        conversationEventBus: {
+            default: null,
+        },
+        conversationActiveStore: {
+            default: null,
+        },
+    },
     data() {
+        const activeStore = this.conversationActiveStore || store;
         return {
-            sharedConversationState: store.state.conversation,
-            sharedPickState: store.state.pick,
+            activeStore: activeStore,
+            sharedConversationState: activeStore.state.conversation,
+            sharedPickState: activeStore.state.pick,
             highLight: false,
             quotedMessage: null,
         }
     },
     methods: {
+        tippyAppendTo(ref) {
+            return ref.closest('.voip-div-container') || document.body;
+        },
+        getConversationEventBus() {
+            return this.conversationEventBus || this.$eventBus;
+        },
         onClickUserPortrait(userId) {
             if (this.message.conversation.type === ConversationType.Channel) {
                 wfc.getChannelInfo(this.message.conversation.target, true);
@@ -105,14 +124,14 @@ export default {
         }
     },
     mounted() {
-        this.$eventBus.$on('contextMenuClosed', this.onContextMenuClosed);
+        this.getConversationEventBus().$on('contextMenuClosed', this.onContextMenuClosed);
 
         if (this.message.messageContent.quoteInfo) {
             let messageUid = this.message.messageContent.quoteInfo.messageUid;
-            let msg = store.getMessageByUid(messageUid);
+            let msg = this.activeStore.getMessageByUid(messageUid);
             if (!msg) {
                 wfc.loadRemoteMessage(messageUid, (ms) => {
-                    msg = store._patchMessage(ms);
+                    msg = this.activeStore._patchMessage(ms);
                     this.quotedMessage = msg;
                 }, err => {
                     console.log('load remote message error', messageUid, err)
@@ -124,12 +143,15 @@ export default {
     },
 
     beforeUnmount() {
-        this.$eventBus.$off('contextMenuClosed', this.onContextMenuClosed);
+        this.getConversationEventBus().$off('contextMenuClosed', this.onContextMenuClosed);
     },
 
     computed: {
+        userCardTriggerId() {
+            return 'infoTrigger-' +  (this.message.messageId ? this.message.messageId : (this.message.messageUid ? stringValue(this.message.messageUid) : new Date().getTime()));
+        },
         isDownloading() {
-            return store.isDownloadingMessage(this.message.messageId);
+            return this.activeStore.isDownloadingMessage(this.message.messageId);
         },
 
         messageSenderPortrait() {

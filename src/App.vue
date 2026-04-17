@@ -47,6 +47,7 @@ import wfc from "./wfc/client/wfc";
 import waterMark from "./ui/util/waterMark";
 import Config from "./config";
 import LockScreenView from "./ui/common/LockScreenView";
+import ForwardType from "./ui/main/conversation/message/forward/ForwardType";
 
 export default {
     name: 'App',
@@ -141,6 +142,18 @@ export default {
                 });
             }
         })
+        this.$eventBus.$on('forward-fav', args => {
+            if (!args || !args.favItem) {
+                return;
+            }
+            let message = args.favItem.toMessage();
+            this.$forwardMessage({
+                forwardType: ForwardType.NORMAL,
+                messages: [message],
+            }).catch(reason => {
+                console.log('forward fav error', reason)
+            });
+        })
 
         if(Config.ENABLE_WATER_MARK){
             waterMark.init()
@@ -148,6 +161,7 @@ export default {
     },
     beforeUnmount() {
         this.$eventBus.$off('uploadFile');
+        this.$eventBus.$off('forward-fav');
         window.removeEventListener('blur', this.onblur)
         window.removeEventListener('focus', this.onfocus)
         window.removeEventListener('beforeunload', this.onBeforeUnload)
