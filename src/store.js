@@ -20,7 +20,7 @@ import MessageConfig from "./wfc/client/messageConfig";
 import PersistFlag from "./wfc/messages/persistFlag";
 import ForwardType from "./ui/main/conversation/message/forward/ForwardType";
 import TextMessageContent from "./wfc/messages/textMessageContent";
-import {currentWindow, ipcRenderer, isElectron, remote} from "./platform";
+import {currentWindow, ipcRenderer, isElectron} from "./platform";
 import SearchType from "./wfc/model/searchType";
 import Config from "./config";
 import {getItem, setItem} from "./ui/util/storageHelper";
