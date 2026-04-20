@@ -145,6 +145,76 @@ const router = createRouter({
 app.use(router)
 app.config.globalProperties.$router = router
 
+const AUTO_RECOVER_STORAGE_KEY = 'wf-renderer-auto-recover-state'
+const AUTO_RECOVER_WINDOW_MS = 30 * 1000
+const AUTO_RECOVER_MAX_TIMES = 3
+const AUTO_RECOVER_RELOAD_DELAY_MS = 300
+let autoRecoverScheduled = false
+
+function getCurrentHashPath() {
+    const hash = window.location.hash || ''
+    if (!hash) {
+        return '/'
+    }
+    return hash.startsWith('#') ? hash.substring(1) : hash
+}
+
+function isMainHomeRoute() {
+    const path = getCurrentHashPath()
+    return path === '/' || path.startsWith('/home')
+}
+
+function canAutoRecoverNow() {
+    const now = Date.now()
+    try {
+        const raw = sessionStorage.getItem(AUTO_RECOVER_STORAGE_KEY)
+        let state = raw ? JSON.parse(raw) : null
+        if (!state || typeof state !== 'object' || typeof state.startAt !== 'number' || typeof state.count !== 'number') {
+            state = {startAt: now, count: 0}
+        }
+        if (now - state.startAt > AUTO_RECOVER_WINDOW_MS) {
+            state = {startAt: now, count: 0}
+        }
+        state.count += 1
+        sessionStorage.setItem(AUTO_RECOVER_STORAGE_KEY, JSON.stringify(state))
+        return state.count <= AUTO_RECOVER_MAX_TIMES
+    } catch (e) {
+        // If sessionStorage is unavailable, still try a single recovery.
+        return true
+    }
+}
+
+function scheduleAutoRecover(source, errorLike) {
+    if (autoRecoverScheduled) {
+        return
+    }
+    if (!isMainHomeRoute()) {
+        return
+    }
+    if (!canAutoRecoverNow()) {
+        console.error('[auto-recover] skipped, too many reloads in short time', source, errorLike)
+        return
+    }
+    autoRecoverScheduled = true
+    console.error('[auto-recover] scheduling renderer reload', source, errorLike)
+    window.setTimeout(() => {
+        window.location.reload()
+    }, AUTO_RECOVER_RELOAD_DELAY_MS)
+}
+
+app.config.errorHandler = (err, instance, info) => {
+    console.error('[vue errorHandler]', info, err)
+    scheduleAutoRecover(`vue:${info || 'unknown'}`, err)
+}
+
+window.addEventListener('error', (event) => {
+    scheduleAutoRecover('window.error', event?.error || event?.message)
+}, true)
+
+window.addEventListener('unhandledrejection', (event) => {
+    scheduleAutoRecover('window.unhandledrejection', event?.reason)
+}, true)
+
 const eventBus = mitt()
 eventBus.$on = eventBus.on
 eventBus.$off = eventBus.off

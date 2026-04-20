@@ -101,6 +101,12 @@ let closeWindowToExit = true;
 let userData = app.getPath('userData');
 let imagesCacheDir = `${userData}/images`;
 let voicesCacheDir = `${userData}/voices`;
+const MAIN_WINDOW_RECOVER_WINDOW_MS = 30 * 1000;
+const MAIN_WINDOW_RECOVER_MAX_TIMES = 3;
+let mainWindowRecoverState = {
+    startAt: 0,
+    count: 0,
+};
 let mainMenu = [
     {
         label: pkg.name,
@@ -567,6 +573,45 @@ const createMainWindow = async () => {
         console.log('main windowOpenHandler', details)
         shell.openExternal(details.url);
         return {action: 'deny'}
+    });
+
+    const tryRecoverMainWindow = (reason, details) => {
+        if (!mainWindow || mainWindow.isDestroyed()) {
+            return;
+        }
+        const now = Date.now();
+        if (!mainWindowRecoverState.startAt || now - mainWindowRecoverState.startAt > MAIN_WINDOW_RECOVER_WINDOW_MS) {
+            mainWindowRecoverState = {
+                startAt: now,
+                count: 0,
+            };
+        }
+        mainWindowRecoverState.count += 1;
+        if (mainWindowRecoverState.count > MAIN_WINDOW_RECOVER_MAX_TIMES) {
+            console.error('[main-window-auto-recover] skipped, too many reloads', reason, details);
+            return;
+        }
+
+        console.error('[main-window-auto-recover] reload main window', reason, details);
+        try {
+            mainWindow.webContents.reloadIgnoringCache();
+        } catch (e) {
+            console.error('[main-window-auto-recover] reload failed', e);
+        }
+    };
+
+    mainWindow.webContents.on('render-process-gone', (event, details) => {
+        if (details && details.reason === 'clean-exit') {
+            return;
+        }
+        tryRecoverMainWindow('render-process-gone', details);
+    });
+
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+        if (!isMainFrame || errorCode === 0) {
+            return;
+        }
+        tryRecoverMainWindow('did-fail-load', {errorCode, errorDescription, validatedURL});
     });
 
     mainWindow.on('close', e => {
