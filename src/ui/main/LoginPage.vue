@@ -96,6 +96,7 @@
 
         <!-- 滑动验证对话框 -->
         <SlideVerifyDialog
+            v-if="enableLoginSlideVerify"
             ref="slideVerifyDialog"
             @verify-success="onSlideVerifySuccess"
             @verify-failed="onSlideVerifyFailed"
@@ -149,6 +150,8 @@ export default {
 
             diagnoseResult: '',
             showDiagnoseOverlay: false,
+
+            enableLoginSlideVerify: Config.ENABLE_LOGIN_SLIDE_VERIFY,
 
             // 滑动验证相关
             hasSlideVerifiedForCode: false, // 是否已通过滑动验证（用于验证码登录）
@@ -224,8 +227,6 @@ export default {
         },
 
         async requestAuthCode() {
-            // 显示滑动验证
-            this.$refs.slideVerifyDialog.show();
             this.pendingLoginAction = () => {
                 appServerApi.requestAuthCode(this.mobile, this.cachedSlideVerifyToken)
                     .then(response => {
@@ -248,6 +249,12 @@ export default {
                         });
                     })
             };
+            if (this.enableLoginSlideVerify) {
+                this.$refs.slideVerifyDialog.show();
+            } else {
+                this.pendingLoginAction();
+                this.pendingLoginAction = null;
+            }
         },
 
         async loginWithPassword() {
@@ -259,8 +266,6 @@ export default {
             // 必须在 getClientId 之前调用，createPCLoginSession 会触发调用 getClientId，打开时，需重新设计起逻辑
             // wfc.setAppName('wfc-' + this.mobile);
 
-            // 显示滑动验证
-            this.$refs.slideVerifyDialog.show();
             this.pendingLoginAction = () => {
                 this.$refs.loginWithPasswordButton.disabled = true;
                 this.loginStatus = 3;
@@ -287,10 +292,22 @@ export default {
                         });
                     })
             };
+            if (this.enableLoginSlideVerify) {
+                this.$refs.slideVerifyDialog.show();
+            } else {
+                this.pendingLoginAction();
+                this.pendingLoginAction = null;
+            }
         },
 
         async loginWithAuthCode() {
             if (!this.mobile || !this.authCode) {
+                return;
+            }
+
+            if (!this.enableLoginSlideVerify) {
+                this.cachedSlideVerifyToken = null;
+                this.performAuthCodeLogin();
                 return;
             }
 
