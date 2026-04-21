@@ -1,10 +1,8 @@
 <template>
-    <section class="search-result-container"
-             v-if="sharedSearchState.query.length"
-             v-bind:class="{active:sharedSearchState.query}"
-             v-v-on-click-outside="hideSearchView"
-             @click="hideSearchView"
-    >
+    <section v-if="sharedSearchState.query.length"
+             ref="floatingPanel"
+             class="search-result-floating"
+             :style="floatingStyle">
         <div class="search-result">
             <ul>
                 <li class="category-item" v-if="sharedSearchState.userSearchResult.length > 0">
@@ -78,7 +76,7 @@
                         <li v-for="(conv, index) in toShowConversationList" :key="index">
                             <div class="search-result-item group" @click="chatToConversation(conv.conversation)">
                                 <img :src="conv.conversation._target.portrait">
-                                <span>{{ conv.conversation._target._displayName }}</span>
+                                <span class="single-line">{{ conv.conversation._target._displayName }}</span>
                             </div>
                         </li>
                     </ul>
@@ -100,19 +98,18 @@
 </template>
 
 <script>
-import store from "../../../store";
-import Conversation from "../../../wfc/model/conversation";
-import ConversationType from "../../../wfc/model/conversationType";
-import FriendRequestView from "../contact/FriendRequestView.vue";
-import IpcEventType from "../../../ipcEventType";
-import {ipcRenderer} from "../../../platform";
-import wfc from "../../../wfc/client/wfc";
-import {vOnClickOutside} from '@vueuse/components'
+import store from '../../../store';
+import Conversation from '../../../wfc/model/conversation';
+import ConversationType from '../../../wfc/model/conversationType';
+import FriendRequestView from '../contact/FriendRequestView.vue';
+import IpcEventType from '../../../ipcEventType';
+import { ipcRenderer } from '../../../platform';
+import wfc from '../../../wfc/client/wfc';
 
 export default {
-    name: "SearchResultView",
+    name: 'SearchResultView',
     props: [
-        "query"
+        'query'
     ],
     data() {
         return {
@@ -123,15 +120,26 @@ export default {
             shouldShowAllContact: false,
             shouldShowAllGroup: false,
             shouldShowAllConversation: false,
+            floatingStyle: {
+                left: '0px',
+                top: '0px',
+                width: '320px',
+                maxHeight: '320px',
+                visibility: 'visible',
+            },
         }
     },
 
     mounted() {
-        // do nothing
         store.setSearchQuery(this.query)
+        this.bindFloatingEvents()
+        this.$nextTick(() => {
+            this.updateFloatingPosition()
+        })
     },
 
     beforeUnmount() {
+        this.unbindFloatingEvents()
         store.setSearchQuery('')
     },
 
@@ -143,10 +151,95 @@ export default {
         query() {
             console.log('searchView query changed:', this.query)
             store.setSearchQuery(this.query)
+            this.$nextTick(() => {
+                this.updateFloatingPosition()
+            })
+        },
+        'sharedSearchState.query'() {
+            this.$nextTick(() => {
+                this.updateFloatingPosition()
+            })
         }
     },
 
     methods: {
+        bindFloatingEvents() {
+            document.addEventListener('pointerdown', this.onGlobalPointerDown, true)
+            window.addEventListener('resize', this.updateFloatingPosition)
+            window.addEventListener('scroll', this.updateFloatingPosition, true)
+        },
+        unbindFloatingEvents() {
+            document.removeEventListener('pointerdown', this.onGlobalPointerDown, true)
+            window.removeEventListener('resize', this.updateFloatingPosition)
+            window.removeEventListener('scroll', this.updateFloatingPosition, true)
+        },
+        onGlobalPointerDown(e) {
+            const panel = this.$refs.floatingPanel
+            if (panel && panel.contains(e.target)) {
+                return
+            }
+            const anchorEl = this.getAnchorElement()
+            if (anchorEl && anchorEl.contains(e.target)) {
+                return
+            }
+            store.hideSearchView()
+        },
+        getAnchorElement() {
+            if (document.activeElement && document.activeElement.id === 'searchInput') {
+                return document.activeElement
+            }
+            const inputs = Array.from(document.querySelectorAll('#searchInput'))
+            if (inputs.length === 0) {
+                return null
+            }
+            const visibleInput = inputs.find((input) => {
+                const rect = input.getBoundingClientRect()
+                return rect.width > 0 && rect.height > 0
+            })
+            return visibleInput || inputs[0]
+        },
+        updateFloatingPosition() {
+            if (!this.sharedSearchState.query || !this.sharedSearchState.query.length) {
+                return
+            }
+            const anchorEl = this.getAnchorElement()
+            if (!anchorEl) {
+                this.floatingStyle = {
+                    left: '12px',
+                    top: '66px',
+                    width: '320px',
+                    maxHeight: `${Math.max(180, window.innerHeight - 74)}px`,
+                    visibility: 'visible',
+                }
+                return
+            }
+
+            const anchorRect = anchorEl.getBoundingClientRect()
+
+            const viewportPadding = 8
+            const top = anchorRect.bottom + 6
+            let left = anchorRect.left
+            let width = Math.max(320, anchorRect.width + 40)
+
+            if (left < viewportPadding) {
+                left = viewportPadding
+            }
+            const maxWidth = window.innerWidth - viewportPadding * 2
+            width = Math.max(320, Math.min(width, maxWidth))
+            if (left + width > window.innerWidth - viewportPadding) {
+                left = window.innerWidth - viewportPadding - width
+            }
+
+            const maxHeight = Math.max(180, window.innerHeight - top - viewportPadding)
+
+            this.floatingStyle = {
+                left: `${Math.round(left)}px`,
+                top: `${Math.round(top)}px`,
+                width: `${Math.round(width)}px`,
+                maxHeight: `${Math.round(maxHeight)}px`,
+                visibility: 'visible',
+            }
+        },
         isFriend(userId) {
             return wfc.isMyFriend(userId);
         },
@@ -180,12 +273,6 @@ export default {
 
         showAllConversation() {
             this.shouldShowAllConversation = true;
-        },
-        hideSearchView(e) {
-            console.log('hideSearchView', e);
-            if (e.target.id !== 'searchInput' && e.target.classList[0] !== 'show-all') {
-                store.hideSearchView()
-            }
         },
 
         chatToContact(contact) {
@@ -257,28 +344,22 @@ export default {
         }
     },
 
-    directives: {
-        vOnClickOutside
-    },
-
 }
 </script>
 
 <style lang="css" scoped>
 
-.search-result-container {
-    display: none;
-}
-
-.search-result-container.active {
-    display: block;
-    z-index: 100;
+.search-result-floating {
+    position: fixed;
+    z-index: 9999;
     overflow: auto;
-    /*background-color: var(--text-danger);*/
-    background-color: var(--background-info-panel);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18), 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-primary);
+    background-color: var(--background-primary);
 }
 
-.search-result-container ul {
+.search-result-floating ul {
     list-style: none;
     background-color: var(--background-primary);
 }
@@ -361,9 +442,12 @@ export default {
 }
 
 .show-all {
-    padding-left: 12px;
+    padding: 10px 12px;
     color: var(--text-link);
     font-size: 12px;
+}
+.show-all:hover {
+    background-color: var(--background-item-hover);
 }
 
 </style>
