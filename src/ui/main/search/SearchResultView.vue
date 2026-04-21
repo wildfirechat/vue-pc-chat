@@ -299,6 +299,10 @@ export default {
     padding: 10px 12px;
 }
 
+.search-result-item:hover {
+    background-color: var(--background-item-hover);
+}
+
 .search-result-item:active {
     background-color: var(--border-strong);
 }
