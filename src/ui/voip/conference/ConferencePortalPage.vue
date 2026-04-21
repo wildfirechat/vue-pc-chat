@@ -88,10 +88,18 @@ export default {
         }
     },
     mounted() {
-        this.loadFavConferences();
-        this.historyConferenceInfos = conferenceManager.getHistoryConference();
+        this.$eventBus.on('conferenceListUpdated', () => {
+            this.reload();
+        });
+    },
+    activated() {
+        this.reload();
     },
     methods: {
+        reload() {
+        	this.loadFavConferences();
+        	this.historyConferenceInfos = conferenceManager.getHistoryConference();
+    	},
         loadFavConferences() {
             conferenceApi.getFavConferences()
                 .then(favConferenceInfos => {
@@ -133,7 +141,7 @@ export default {
             };
             let closed = (event) => {
                 console.log('Close...', event)
-                this.loadFavConferences();
+                this.reload();
             };
             this.$modal.show(
                 CreateConferenceView,
@@ -157,7 +165,7 @@ export default {
             };
             let closed = (event) => {
                 console.log('Close...', event)
-                this.loadFavConferences();
+                this.reload();
             };
             this.$modal.show(
                 OrderConferenceView,
@@ -184,7 +192,7 @@ export default {
                 if (ev.params && ev.params.destroy) {
                     if (ev.params && ev.params.destroy) {
                         console.log("destroy, reload");
-                        this.loadFavConferences();
+                        this.reload();
                     }
                 }
                 console.log("Close...", event);

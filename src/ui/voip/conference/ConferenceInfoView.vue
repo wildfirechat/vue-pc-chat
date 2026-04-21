@@ -118,6 +118,7 @@ export default {
         async destroyConference(){
             await conferenceApi.destroyConference(this.conferenceInfo.conferenceId)
             conferenceManager.removeHistory(this.conferenceInfo)
+            this.$eventBus.$emit('conferenceListUpdated');
             this.$modal.hide('conference-info-modal', {destroy: true});
         }
     },
@@ -136,8 +137,6 @@ export default {
         },
         audience() {
             return !(this.conferenceInfo.owner === this.selfUserId || !this.conferenceInfo.audience || this.conferenceInfo.allowSwitchMode)
-                // Safari 浏览器，不支持直接静音自动播放音视频
-                || navigator.vendor.indexOf('Apple') >= 0
         },
         enableDestroy() {
             console.log('conferenceInfo', this.conferenceInfo, this.selfUserId);

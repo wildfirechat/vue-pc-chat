@@ -106,6 +106,12 @@ import IpcEventType from '../../../ipcEventType';
 import { ipcRenderer } from '../../../platform';
 import wfc from '../../../wfc/client/wfc';
 
+const FLOATING_PANEL_MIN_WIDTH = 320;
+const FLOATING_PANEL_MIN_HEIGHT = 180;
+const FLOATING_PANEL_VIEWPORT_PADDING = 8;
+const FLOATING_PANEL_OFFSET_Y = 6;
+const FLOATING_PANEL_FALLBACK_TOP = 66;
+
 export default {
     name: 'SearchResultView',
     props: [
@@ -198,47 +204,63 @@ export default {
             })
             return visibleInput || inputs[0]
         },
-        updateFloatingPosition() {
-            if (!this.sharedSearchState.query || !this.sharedSearchState.query.length) {
-                return
-            }
-            const anchorEl = this.getAnchorElement()
-            if (!anchorEl) {
-                this.floatingStyle = {
-                    left: '12px',
-                    top: '66px',
-                    width: '320px',
-                    maxHeight: `${Math.max(180, window.innerHeight - 74)}px`,
-                    visibility: 'visible',
-                }
-                return
-            }
-
-            const anchorRect = anchorEl.getBoundingClientRect()
-
-            const viewportPadding = 8
-            const top = anchorRect.bottom + 6
-            let left = anchorRect.left
-            let width = Math.max(320, anchorRect.width + 40)
-
-            if (left < viewportPadding) {
-                left = viewportPadding
-            }
-            const maxWidth = window.innerWidth - viewportPadding * 2
-            width = Math.max(320, Math.min(width, maxWidth))
-            if (left + width > window.innerWidth - viewportPadding) {
-                left = window.innerWidth - viewportPadding - width
-            }
-
-            const maxHeight = Math.max(180, window.innerHeight - top - viewportPadding)
-
-            this.floatingStyle = {
+        getMainContentContainerRect() {
+            return document.getElementById('main-content-container').getBoundingClientRect()
+        },
+        buildFloatingStyle({ left, top, width, maxHeight }) {
+            return {
                 left: `${Math.round(left)}px`,
                 top: `${Math.round(top)}px`,
                 width: `${Math.round(width)}px`,
                 maxHeight: `${Math.round(maxHeight)}px`,
                 visibility: 'visible',
             }
+        },
+        clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max)
+        },
+        getFloatingBounds(anchorRect, contentRect) {
+            const top = anchorRect.bottom + FLOATING_PANEL_OFFSET_Y
+            const viewportBottom = window.innerHeight - FLOATING_PANEL_VIEWPORT_PADDING
+            const containerBottom = contentRect.bottom - FLOATING_PANEL_VIEWPORT_PADDING
+            const maxBottom = Math.min(viewportBottom, containerBottom)
+
+            let left = Math.max(anchorRect.left, FLOATING_PANEL_VIEWPORT_PADDING)
+            let width = Math.max(FLOATING_PANEL_MIN_WIDTH, anchorRect.width + 40)
+            const maxWidth = window.innerWidth - FLOATING_PANEL_VIEWPORT_PADDING * 2
+
+            width = this.clamp(width, FLOATING_PANEL_MIN_WIDTH, maxWidth)
+            if (left + width > window.innerWidth - FLOATING_PANEL_VIEWPORT_PADDING) {
+                left = window.innerWidth - FLOATING_PANEL_VIEWPORT_PADDING - width
+            }
+
+            return {
+                left,
+                top,
+                width,
+                maxHeight: Math.max(FLOATING_PANEL_MIN_HEIGHT, maxBottom - top),
+            }
+        },
+        updateFloatingPosition() {
+            if (!this.sharedSearchState.query || !this.sharedSearchState.query.length) {
+                return
+            }
+            const anchorEl = this.getAnchorElement()
+            const contentRect = this.getMainContentContainerRect()
+
+            if (!anchorEl) {
+                const top = Math.max(contentRect.top + FLOATING_PANEL_FALLBACK_TOP, FLOATING_PANEL_FALLBACK_TOP)
+                const maxHeight = Math.max(FLOATING_PANEL_MIN_HEIGHT, contentRect.bottom - FLOATING_PANEL_VIEWPORT_PADDING - top)
+                this.floatingStyle = this.buildFloatingStyle({
+                    left: 12,
+                    top,
+                    width: FLOATING_PANEL_MIN_WIDTH,
+                    maxHeight,
+                })
+                return
+            }
+
+            this.floatingStyle = this.buildFloatingStyle(this.getFloatingBounds(anchorEl.getBoundingClientRect(), contentRect))
         },
         isFriend(userId) {
             return wfc.isMyFriend(userId);
