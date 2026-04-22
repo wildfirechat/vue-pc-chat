@@ -756,7 +756,7 @@ const createMainWindow = async () => {
         let remotePath = args.remotePath;
         let messageUid = args.messageUid;
         let windowId = args.windowId;
-        remotePath = remotePath.replace(':80', '');
+        remotePath = remotePath.replace(':80/', '/');
         downloadFileMap.set(encodeURI(remotePath), {messageUid: messageUid, fileName: args.fileName, windowId: windowId});
 
         let windows = BrowserWindow.getAllWindows();
