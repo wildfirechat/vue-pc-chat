@@ -17,9 +17,6 @@ module.exports = {
     chainWebpack: config => {
         config.module.rules.delete('eslint');
     },
-    devServer: {
-        open: false,
-    },
     configureWebpack: {
         // Webpack configuration applied to web builds and the electron renderer process
         target: "electron-renderer",

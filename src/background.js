@@ -556,20 +556,12 @@ const createMainWindow = async () => {
     mainWindow.webContents.on('new-window', (event, url) => {
         event.preventDefault();
         console.log('new-windows', url)
-        if (url.startsWith('http') && !url.startsWith(process.env.WEBPACK_DEV_SERVER_URL)) {
-            shell.openExternal(url);
-        }
+        shell.openExternal(url);
     });
 
     // open url in default browser, electron 22-
     mainWindow.webContents.on('will-navigate', (event, url) => {
         console.log('will-navigate', url)
-        if (process.env.WEBPACK_DEV_SERVER_URL && url.startsWith(process.env.WEBPACK_DEV_SERVER_URL)) {
-            return;
-        }
-        if (url === 'about:blank') {
-            return;
-        }
         // do default action
         event.preventDefault();
         // console.log('navigate', url)
