@@ -82,10 +82,11 @@ const asyncProtoMethods = {
                     done: true,
                     cbArgs: cbArgs
                 }
-                let messageId = args.methodArgs[0];
-                let msg = proto.getMessage(messageId);
-                _genProtoEventListener('onSendMessage')(msg);
-                _notifyMessageStatusUpdate(messageId);
+                // proto.min.js 里面处理
+                // let messageUid = args.methodArgs[0];
+                // let msg = proto.getMessageByUid(messageUid);
+                // _genProtoEventListener('onSendMessage')(msg);
+                // _notifyMessageStatusUpdate(msg.messageId);
                 event.sender.send(ASYNC_CALLBACK, obj);
             },
             (...cbArgs) => {
@@ -96,8 +97,47 @@ const asyncProtoMethods = {
                     done: true,
                     cbArgs: cbArgs
                 }
-                let messageId = args.methodArgs[0];
-                _notifyMessageStatusUpdate(messageId);
+                // proto.min.js 里面处理
+                // let messageId = args.methodArgs[0];
+                // _notifyMessageStatusUpdate(messageId);
+                event.sender.send(ASYNC_CALLBACK, obj);
+            },
+        )
+    },
+    sendSavedMessageEx: (event, args) => {
+        proto.sendSavedMessageEx(...args.methodArgs,
+            (...cbArgs) => {
+                // prepared
+                // never called
+            },
+            (...cbArgs) => {
+                // progress
+                // never called
+            },
+            (...cbArgs) => {
+                let obj = {
+                    code: 0,
+                    reqId: args.reqId,
+                    cbIndex: 2,
+                    done: true,
+                    cbArgs: cbArgs
+                }
+                // let messageId = args.methodArgs[0];
+                // let msg = proto.getMessage(messageId);
+                // _genProtoEventListener('onSendMessage')(msg);
+                // _notifyMessageStatusUpdate(messageId);
+                event.sender.send(ASYNC_CALLBACK, obj);
+            },
+            (...cbArgs) => {
+                let obj = {
+                    code: 0,
+                    reqId: args.reqId,
+                    cbIndex: 3,
+                    done: true,
+                    cbArgs: cbArgs
+                }
+                // let messageId = args.methodArgs[0];
+                // _notifyMessageStatusUpdate(messageId);
                 event.sender.send(ASYNC_CALLBACK, obj);
             },
         )
