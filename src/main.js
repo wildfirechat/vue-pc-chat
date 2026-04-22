@@ -5,6 +5,7 @@ import {createPinia} from 'pinia'
 import routers from './routers'
 
 import wfc from './wfc/client/wfc'
+import ConnectionStatus from './wfc/client/connectionStatus'
 import VueTippy from 'vue-tippy'
 import 'tippy.js/dist/tippy.css'
 import 'tippy.js/themes/light.css'
@@ -142,6 +143,19 @@ const router = createRouter({
     history: createWebHashHistory(),
     routes: routers,
 })
+
+router.beforeEach((to, from, next) => {
+    if (to.path.startsWith('/home')) {
+        const status = wfc.getConnectionStatus();
+        if (status !== ConnectionStatus.ConnectionStatusConnected
+            && status !== ConnectionStatus.ConnectionStatusReceiveing) {
+            next('/');
+            return;
+        }
+    }
+    next();
+})
+
 app.use(router)
 app.config.globalProperties.$router = router
 
