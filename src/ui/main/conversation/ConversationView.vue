@@ -936,7 +936,9 @@ export default {
             }
             amr = new BenzAMRRecorder();
             let voice = message.messageContent;
-            amr.initWithUrl(voice.remotePath).then(() => {
+            let url = voice.remotePath;
+            url = !isElectron() && Config.USE_WSS ? url.replace('http://', 'https://') : url;
+            amr.initWithUrl(url).then(() => {
                 message._isPlaying = true;
                 amr.play();
             });

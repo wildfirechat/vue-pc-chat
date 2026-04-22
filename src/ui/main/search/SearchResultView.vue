@@ -11,7 +11,7 @@
                         <li v-for="(user, index) in toShowUserList" :key="index">
                             <div class="search-result-item contact" @click.stop="chatToContact(user)">
                                 <img :src="user.portrait">
-                                <span>{{ user.displayName }}</span>
+                                <span class="single-line">{{ user.displayName }}</span>
                                 <button @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
                             </div>
                         </li>
@@ -28,7 +28,7 @@
                         <li v-for="(channel, index) in toShowChannelList" :key="index">
                             <div class="search-result-item contact" @click.stop="chatToChannel(channel)">
                                 <img :src="channel.portrait">
-                                <span>{{ channel.name }}</span>
+                                <span class="single-line">{{ channel.name }}</span>
                             </div>
                         </li>
                     </ul>
@@ -44,7 +44,7 @@
                         <li v-for="(contact, index) in toShowContactList" :key="index">
                             <div class="search-result-item contact" @click.stop="chatToContact(contact)">
                                 <img :src="contact.portrait">
-                                <span>{{ contact._displayName }}</span>
+                                <span class="single-line">{{ contact._displayName }}</span>
                             </div>
                         </li>
                     </ul>
@@ -60,7 +60,7 @@
                         <li v-for="(group, index) in toShowGroupList" :key="index">
                             <div class="search-result-item group" @click="chatToGroup(group)">
                                 <img :src="group.portrait">
-                                <span>{{ group.remark ? group.remark : group.name }}</span>
+                                <span class="single-line">{{ group.remark ? group.remark : group.name }}</span>
                             </div>
                         </li>
                     </ul>
@@ -91,6 +91,9 @@
                     <div class="search-result-item message" @click="showMessageHistoryPage">
                         <p>{{ $t('search.search_message_history') }} </p>
                     </div>
+                </li>
+                <li class="category-item" v-else-if="isSearchResultEmpty">
+                    <label style="padding-bottom: 8px">{{ $t('search.result_empty') }}</label>
                 </li>
             </ul>
         </div>
@@ -349,20 +352,27 @@ export default {
     },
 
     computed: {
-        toShowUserList: function () {
+        toShowUserList() {
             return !this.shouldShowAllUser && this.sharedSearchState.userSearchResult.length > 5 ? this.sharedSearchState.userSearchResult.slice(0, 4) : this.sharedSearchState.userSearchResult;
         },
-        toShowChannelList: function () {
+        toShowChannelList() {
             return !this.shouldShowAllChannel&& this.sharedSearchState.channelSearchResult.length > 5 ? this.sharedSearchState.channelSearchResult.slice(0, 4) : this.sharedSearchState.channelSearchResult;
         },
-        toShowContactList: function () {
+        toShowContactList() {
             return !this.shouldShowAllContact && this.sharedSearchState.contactSearchResult.length > 5 ? this.sharedSearchState.contactSearchResult.slice(0, 4) : this.sharedSearchState.contactSearchResult;
         },
-        toShowGroupList: function () {
+        toShowGroupList() {
             return !this.shouldShowAllGroup && this.sharedSearchState.groupSearchResult.length > 5 ? this.sharedSearchState.groupSearchResult.slice(0, 4) : this.sharedSearchState.groupSearchResult;
         },
-        toShowConversationList: function () {
+        toShowConversationList() {
             return !this.shouldShowAllConversation && this.sharedSearchState.conversationSearchResult.length > 5 ? this.sharedSearchState.conversationSearchResult.slice(0, 4) : this.sharedSearchState.conversationSearchResult;
+        },
+        isSearchResultEmpty() {
+            return this.sharedSearchState.userSearchResult.length ===0
+                && this.sharedSearchState.channelSearchResult.length === 0
+                && this.sharedSearchState.contactSearchResult.length === 0
+                && this.sharedSearchState.groupSearchResult.length === 0
+                && this.sharedSearchState.conversationSearchResult.length === 0;
         }
     },
 
