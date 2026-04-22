@@ -553,26 +553,43 @@ const createMainWindow = async () => {
         }
     });
 
+    const isInternalUrl = (url) => {
+        if (!url || url === 'about:blank') {
+            return true;
+        }
+        if (process.env.WEBPACK_DEV_SERVER_URL && url.startsWith(process.env.WEBPACK_DEV_SERVER_URL)) {
+            return true;
+        }
+        if (url.startsWith('app://')) {
+            return true;
+        }
+        return false;
+    }
+
     mainWindow.webContents.on('new-window', (event, url) => {
         event.preventDefault();
-        console.log('new-windows', url)
-        shell.openExternal(url);
+        if (!isInternalUrl(url)) {
+            console.log('opening external url', url)
+            shell.openExternal(url);
+        }
     });
 
     // open url in default browser, electron 22-
     mainWindow.webContents.on('will-navigate', (event, url) => {
-        console.log('will-navigate', url)
-        // do default action
-        event.preventDefault();
-        // console.log('navigate', url)
-        shell.openExternal(url);
+        event.preventDefault(); // 必须拦截，防止应用刷新/跳转
+        if (!isInternalUrl(url)) {
+            console.log('will-navigate to external', url)
+            shell.openExternal(url);
+        }
     });
 
     // open url in default browser, electron 22+
     mainWindow.webContents.setWindowOpenHandler(details => {
-        console.log('main windowOpenHandler', details)
-        shell.openExternal(details.url);
-        return {action: 'deny'}
+        if (!isInternalUrl(details.url)) {
+            console.log('main windowOpenHandler external', details.url)
+            shell.openExternal(details.url);
+        }
+        return {action: 'deny'} // 必须返回 deny，防止 Electron 自动打开新窗口
     });
 
     const tryRecoverMainWindow = (reason, details) => {
