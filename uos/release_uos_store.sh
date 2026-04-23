@@ -1,21 +1,8 @@
 #!/bin/bash
 set -e
 
-if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
-echo "Usage: sh release_uos_store.sh version."
-exit 0
-fi
-
-if [ $# -ne 1 ]; then
-echo "Invalid parameter count!"
-exit 1
-fi
-
-
-VERSION=$1
+VERSION=1.0.0
 ARCH=mips64el
-
-BINPATH=cn.wildfirechat.pcclient-linux-mips64el
 
 sudo rm -rf release
 
@@ -28,7 +15,7 @@ cd cn.wildfirechat.pcclient
 mkdir entries files
 cp ../../../info ./
 
-sed -i 's/arm64/mips64el/' info
+sed -i 's/arm64/'"$ARCH"'/' info
 sed -i "s/\"version\": \"0.0.1\"/\"version\": \"${VERSION}\"/" info
 
 cd entries
@@ -59,16 +46,20 @@ mkdir applications
 cd applications
 cp ../../../../../../entries/applications/cn.wildfirechat.pcclient.desktop ./
 cd ../../files
-cp -af ../../../../../dist/${BINPATH}/* ./
+cp -af ../../../../../electron_v10.1.0_kylin_v10/* ./
+mv electron cn.wildfirechat.pcclient
 mkdir -p resources/extraResources/icons
 cp -af ../../../../../build/icons/* ./resources/extraResources/icons/
 cd ../../
+
 dh_make --createorig -s -y
 cd debian
 
 echo "override_dh_auto_build:" >> rules
 echo "override_dh_shlibdeps:" >> rules
 echo "override_dh_strip:" >> rules
+echo "override_dh_installdocs:" >> rules
+echo "override_dh_installchangelogs:" >> rules
 
 sed -i 's/^Maintainer.*$/Maintainer: imndx <imndxx@wildirechat.cn>/' control
 sed -i 's/^Architecture.*$/Architecture: '"$ARCH"'/' control
@@ -78,16 +69,12 @@ sed -i 's/<insert up to 60 chars description>/WF IM PC Client/' control
 sed -i 's/<insert long description, indented with spaces>/WF IM PC Client/' control
 sed -i 's/<insert the upstream URL, if relevant>/https:\/\/wildfirechat.cn/' control
 
+sed -i "1s/.*/cn.wildfirechat.pcclient (${VERSION}) unstable; urgency=medium/" changelog
+
 echo "cn.wildfirechat.pcclient/ /opt/apps" > install
 rm *.EX *.ex
 cd ..
 sudo dpkg-buildpackage -rfakeroot -tc -uc -us -b
 cd ..
-dpkg-deb -R cn.wildfirechat.pcclient_${VERSION}-1_${ARCH}.deb wfcdeb
-rm -rf *.deb
-cd wfcdeb
-rm -rf usr
-sed -i 's/^Version.*$/Version: '"$VERSION"'/' DEBIAN/control
-cd ..
-dpkg-deb -b wfcdeb cn.wildfirechat.pcclient_${VERSION}_${ARCH}.deb
-rm -rf wfcdeb
+mv cn.wildfirechat.pcclient_${VERSION}_${ARCH}.deb ./
+sudo rm -rf release

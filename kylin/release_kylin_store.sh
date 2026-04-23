@@ -1,21 +1,9 @@
 #!/bin/bash
 set -e
 
-if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
-echo "Usage: sh release_uos_store.sh version."
-exit 0
-fi
 
-if [ $# -ne 1 ]; then
-echo "Invalid parameter count!"
-exit 1
-fi
-
-
-VERSION=$1
+VERSION=1.0.0
 ARCH=mips64el
-
-BINPATH=cn.wildfirechat.pcclient-linux-mips64el
 
 sudo rm -rf release
 
@@ -53,7 +41,8 @@ cd ../applications
 cp ../../../../../../entries/applications/cn.wildfirechat.pcclient.desktop ./
 sed -i 's/files\///g' cn.wildfirechat.pcclient.desktop
 cd ../../../opt/apps/cn.wildfirechat.pcclient
-cp -af ../../../../../../dist/${BINPATH}/* ./
+cp -af ../../../../../../electron_v10.1.0_kylin_v10/* ./
+mv electron cn.wildfirechat.pcclient
 mkdir -p resources/extraResources/icons
 cp -af ../../../../../../build/icons/* ./resources/extraResources/icons/
 cd ../../../
@@ -73,6 +62,8 @@ sed -i 's/<insert up to 60 chars description>/WF IM PC Client/' control
 sed -i 's/<insert long description, indented with spaces>/WF IM PC Client/' control
 sed -i 's/<insert the upstream URL, if relevant>/https:\/\/wildfirechat.cn/' control
 
+sed -i "1s/.*/cn.wildfirechat.pcclient (${VERSION}) unstable; urgency=medium/" changelog
+
 echo "opt/apps/cn.wildfirechat.pcclient/ /opt/apps" > install
 echo "usr/share/ /usr" >> install
 
@@ -81,10 +72,6 @@ rm *.EX *.ex
 cd ..
 sudo dpkg-buildpackage -rfakeroot -tc -uc -us -b
 cd ..
-dpkg-deb -R cn.wildfirechat.pcclient_${VERSION}-1_${ARCH}.deb wfcdeb
-rm -rf *.deb
-cd wfcdeb
-sed -i 's/^Version.*$/Version: '"$VERSION"'/' DEBIAN/control
+mv cn.wildfirechat.pcclient_${VERSION}_${ARCH}.deb ../
 cd ..
-dpkg-deb -b wfcdeb cn.wildfirechat.pcclient_${VERSION}_${ARCH}.deb
-rm -rf wfcdeb
+sudo rm -rf release
