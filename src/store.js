@@ -542,6 +542,7 @@ let store = {
         (isMainWindow || loadOptions.loadChannelList) && this._loadChannelList();
         (isMainWindow || loadOptions.loadFriendList) && this._loadFriendList();
         (isMainWindow || loadOptions.loadFavContactList) && this._loadFavContactList();
+        isMainWindow && this._loadAiRobotList();
         (isMainWindow || loadOptions.loadFriendRequestList) && this._loadFriendRequest();
         (isMainWindow || loadOptions.loadDefaultConversationList) && this._loadDefaultConversationList();
         this._loadSelfUserInfo();
@@ -1728,6 +1729,18 @@ let store = {
             })
         } else {
             this.state.contact.favContactList = [];
+        }
+    },
+
+    _loadAiRobotList() {
+        if (Config.AI_ROBOT) {
+            let aiUserInfos = this.getUserInfos([Config.AI_ROBOT], '');
+            aiUserInfos.forEach(u => {
+                u._category = 'AI 助手';
+            });
+            this.state.contact.aiRobotList = aiUserInfos;
+        } else {
+            this.state.contact.aiRobotList = [];
         }
     },
 
