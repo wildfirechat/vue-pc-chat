@@ -566,14 +566,6 @@ const createMainWindow = async () => {
         return false;
     }
 
-    mainWindow.webContents.on('new-window', (event, url) => {
-        event.preventDefault();
-        if (!isInternalUrl(url)) {
-            console.log('opening external url', url)
-            shell.openExternal(url);
-        }
-    });
-
     // open url in default browser, electron 22-
     mainWindow.webContents.on('will-navigate', (event, url) => {
         event.preventDefault(); // 必须拦截，防止应用刷新/跳转
@@ -583,14 +575,24 @@ const createMainWindow = async () => {
         }
     });
 
-    // open url in default browser, electron 22+
-    mainWindow.webContents.setWindowOpenHandler(details => {
-        if (!isInternalUrl(details.url)) {
-            console.log('main windowOpenHandler external', details.url)
-            shell.openExternal(details.url);
-        }
-        return {action: 'deny'} // 必须返回 deny，防止 Electron 自动打开新窗口
-    });
+    if(mainWindow.webContents.setWindowOpenHandler) {
+        // open url in default browser, electron 22+
+        mainWindow.webContents.setWindowOpenHandler(details => {
+            if (!isInternalUrl(details.url)) {
+                console.log('main windowOpenHandler external', details.url)
+                shell.openExternal(details.url);
+            }
+            return {action: 'deny'} // 必须返回 deny，防止 Electron 自动打开新窗口
+        });
+    } else {
+        mainWindow.webContents.on('new-window', (event, url) => {
+            event.preventDefault();
+            if (!isInternalUrl(url)) {
+                console.log('opening external url', url)
+                shell.openExternal(url);
+            }
+        });
+    }
 
     const tryRecoverMainWindow = (reason, details) => {
         if (!mainWindow || mainWindow.isDestroyed()) {
@@ -873,11 +875,18 @@ const createMainWindow = async () => {
         console.log('on workspace-new-tab-web-content', args)
         let id = args.id;
         let _webContents = webContents.fromId(id)
-        _webContents.setWindowOpenHandler(details => {
-            console.log('workspace windowOpenHandler', details)
-            mainWindow.webContents.send(IPCEventType.WORKSPACE_ADD_NEW_TAB, {url: encodeURI(details.url), frameName: details.frameName})
-            return {action: 'deny'}
-        });
+        if(_webContents.setWindowOpenHandler){
+            _webContents.setWindowOpenHandler(details => {
+                console.log('workspace windowOpenHandler', details)
+                mainWindow.webContents.send(IPCEventType.WORKSPACE_ADD_NEW_TAB, {url: encodeURI(details.url), frameName: details.frameName})
+                return {action: 'deny'}
+            });
+        } else {
+            _webContents.on('new-window', (event, url, frameName, disposition, options, additionalFeatures) => {
+                console.log('workspace new-window', event, url)
+                mainWindow.webContents.send(IPCEventType.WORKSPACE_ADD_NEW_TAB, {url: encodeURI(url), frameName: frameName})
+            })
+        }
     });
 
     ipcMain.on(IPCEventType.showConversationMessageHistoryPage, async (event, args) => {
@@ -920,7 +929,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCEventType.SHOW_COLLECTION_WINDOW}`, collectionWindow, args)
         // URL 由渲染进程拼接好传入，便于 web 端复用
         let url = args.url;
-        
+
         if (!url) {
             console.error('SHOW_COLLECTION_WINDOW: url is required');
             return;
@@ -943,7 +952,7 @@ const createMainWindow = async () => {
         console.log(`on ${IPCEventType.SHOW_POLL_WINDOW}`, pollWindow, args)
         // URL 由渲染进程拼接好传入，便于 web 端复用
         let url = args.url;
-        
+
         if (!url) {
             console.error('SHOW_POLL_WINDOW: url is required');
             return;
@@ -1062,7 +1071,11 @@ const createMainWindow = async () => {
     })
 
     ipcMain.handle('getMediaSourceId', (event, args) => {
-        const senderWindow = BrowserWindow.fromWebContents(event.sender); // BrowserWindow or null
+        let senderWindow = BrowserWindow.fromWebContents(event.sender); // BrowserWindow or null
+        if(!senderWindow){
+            senderWindow = BrowserWindow.fromBrowserView(event.sender.hostWebContents)
+        }
+        senderWindow = senderWindow ? senderWindow : mainWindow;
         return senderWindow.getMediaSourceId();
     });
 
@@ -1136,11 +1149,21 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
 
     win.loadURL(url);
     console.log('create windows url', url)
-    win.webContents.on('new-window', (event, url) => {
-        event.preventDefault();
-        console.log('new-windows', url)
-        shell.openExternal(url);
-    });
+    if(win.webContents.setWindowOpenHandler){
+        win.webContents.setWindowOpenHandler(details => {
+            if (!isInternalUrl(details.url)) {
+                console.log('main windowOpenHandler external', details.url)
+                shell.openExternal(details.url);
+            }
+            return {action: 'deny'} // 必须返回 deny，防止 Electron 自动打开新窗口
+        });
+    }else {
+        win.webContents.on('new-window', (event, url) => {
+            event.preventDefault();
+            console.log('new-windows', url)
+            shell.openExternal(url);
+        });
+    }
     return win;
 }
 
@@ -1427,6 +1450,7 @@ function startOpenPlatformServer(port) {
 
     console.log('starting websocket server...');
     wss.on('connection', (ws) => {
+        console.log('op server, connection')
         ws.on('message', (data) => {
             wss.clients.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
