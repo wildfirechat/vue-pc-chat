@@ -98,6 +98,7 @@ export default {
                     return;
                 }
             }
+            let devPreloadFilePath = process.platform === 'darwin' ? `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js` :`file://${__dirname}/../../../../../../src/ui/workspace/bridgeClientImpl.js` ;
             let tab = tabGroup.addTab({
                 title: name,
                 //src: args.url ? args.url : args,
@@ -111,7 +112,7 @@ export default {
                     contextIsolation: false,
                     webpreferences: 'nodeIntegration=true, contextIsolation=false',
                     url: url,
-                    preload: process.env.NODE_ENV === 'development' ?  `file://${__dirname}/../../../../../../../../src/ui/workspace/bridgeClientImpl.js` : `file://${__dirname}/preload.js`
+                    preload: process.env.NODE_ENV === 'development' ?  devPreloadFilePath : `file://${__dirname}/preload.js`
                 },
             });
             // tab.webview.addEventListener('new-window', (e) => {
