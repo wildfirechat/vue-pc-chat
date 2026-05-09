@@ -19,16 +19,19 @@ fi
 
 VERSION=$1
 ARCH=$2
+DEB_ARCH=$2
 
 if [ "$2" = "loongarch64" ]
 then
   BINPATH=linux-loong64-unpacked
+  DEB_ARCH=loong64
 elif [ "$2" == "amd64" ]
 then
   BINPATH=linux-unpacked
 elif [ "$2" == "sw64" ]
 then
   BINPATH=linux-sw64-unpacked
+  DEB_ARCH=sw_64
 else
   BINPATH=linux-${ARCH}-unpacked
 fi
@@ -36,6 +39,11 @@ fi
 if [ "$2" == "sw64" ]
 then
   ARCH="sw_64"
+fi
+
+if [ "$2" == "loongarch64" ]
+then
+  ARCH="loong64"
 fi
 
 sudo rm -rf release
@@ -82,20 +90,25 @@ dh_make --createorig -s -y
 cd debian
 
 sed -i 's/^Maintainer.*$/Maintainer: imndx <imndxx@wildirechat.cn>/' control
-sed -i 's/^Architecture.*$/Architecture: '"$ARCH"'/' control
+sed -i 's/^Architecture.*$/Architecture: '"$DEB_ARCH"'/' control
 sed -i 's/^Version.*$/Version: '"$VERSION"'/' control
+sed -i 's/^Depends:.*$/Depends: ${misc:Depends}/' control
 
 sed -i 's/<insert up to 60 chars description>/WF IM PC Client/' control
 sed -i 's/<insert long description, indented with spaces>/WF IM PC Client/' control
 sed -i 's/<insert the upstream URL, if relevant>/https:\/\/wildfirechat.cn/' control
 
-echo "opt/apps/cn.wildfirechat.pcclient/ /opt/apps" > install
-echo "usr/share/ /usr" >> install
+if ! grep -q '^override_dh_shlibdeps:' rules; then
+printf '\noverride_dh_shlibdeps:\n\tdh_shlibdeps -Xopt/apps/cn.wildfirechat.pcclient/\n' >> rules
+fi
+
+echo "opt/apps/cn.wildfirechat.pcclient/ /opt/apps" > cn.wildfirechat.pcclient.install
+echo "usr/share/ /usr" >> cn.wildfirechat.pcclient.install
 
 rm *.EX *.ex
 
 cd ..
-sudo dpkg-buildpackage -rfakeroot -tc -uc -us -b
+sudo dpkg-buildpackage -rfakeroot -tc -uc -us -b -a"${DEB_ARCH}"
 cd ..
 dpkg-deb -R cn.wildfirechat.pcclient_${VERSION}-1_${ARCH}.deb wfcdeb
 rm -rf *.deb
