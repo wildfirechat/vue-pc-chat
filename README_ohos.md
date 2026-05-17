@@ -43,8 +43,9 @@ sed -i.bak 's/app\.asar/app/g' js/* && rm -f js/*.bak
 
 ### DevEco Studio 完成最终的打包操作
 1. 用`DevEco Studio` 打开`libelectron_v34/ohos_hap` 项目
-2. 根据实际情况，修改`AppScope/app.json5`里面的`bundleName`等信息
-3. 配置签名，然后直接运行或打包
+2. 修改`AppScope/app.json5`里面的`bundleName`、`vendor`等信息
+3. 修改`AppScope/resources/base/element/string.json`里面的`value`，别修改`name`，修改的是`value`
+4. 配置签名，然后直接运行或打包
 
 ### 参考
 [ohos_electron](https://gitcode.com/openharmony-sig/electron#hap%E5%8C%85%E6%9E%84%E5%BB%BA%E4%B8%8E%E4%BD%BF%E7%94%A8)
