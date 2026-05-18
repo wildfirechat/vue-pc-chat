@@ -93,7 +93,6 @@ let isFullScreen = false;
 let isMainWindowFocusedWhenStartScreenshot = false;
 let screenShotWindowId = 0;
 let isOsx = process.platform === 'darwin';
-let isWin = !isOsx;
 let userId = ''
 
 let isSuspend = false;
@@ -526,10 +525,9 @@ const createMainWindow = async () => {
             // 如果想打包之后的版本，不能打开调试控制台，请取消下面的注释
             // devTools: !app.isPackaged,
         },
-        frame: !isWin,
+        frame: isOsx,
     });
     mainWindow.center();
-    const badgeOptions = {}
 
     if (process.env.WEBPACK_DEV_SERVER_URL) {
         // Load the url of the dev server if in development mode
@@ -540,6 +538,7 @@ const createMainWindow = async () => {
         // Load the index.html when not in development
         mainWindow.loadURL('app://./index.html')
     }
+    // mainWindow.webContents.openDevTools()
     mainWindow.webContents.on('did-finish-load', (e) => {
         try {
             mainWindow.show();
@@ -1181,7 +1180,7 @@ function onDeepLink(url) {
 
 app.setAsDefaultProtocolClient(DEEP_LINK_PROTOCOL);
 // pls refer to: https://blog.csdn.net/youyudexiaowangzi/article/details/118676790
-// windows 7 下面，如果启动黑屏，请将下面注释打开
+// windows 7、openharmony 模拟器，如果启动黑屏，请将下面注释打开
 //app.disableHardwareAcceleration();
 app.on('open-url', (event, url) => {
     onDeepLink(url);
