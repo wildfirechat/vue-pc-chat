@@ -122,6 +122,10 @@ module.exports = {
                 appId: pkg.appId,
                 compression: 'normal',
                 artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
+                files: [
+                    "**/*",
+                    "!**/*.js.map"
+                ],
                 protocols: {
                     name: "wf-deep-linking",
                     schemes: ["wfc"]
