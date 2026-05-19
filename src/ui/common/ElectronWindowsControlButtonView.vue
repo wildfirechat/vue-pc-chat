@@ -28,6 +28,11 @@
             </div>
         </div>
     </div>
+    <div v-else-if="ohos" class="titlebar webkit-draggable">
+        <div class="title">
+            <p class="single-line">{{ title }}</p>
+        </div>
+    </div>
     <div v-else class="titlebar webkit-draggable">
         <div class="title">
             <p class="single-line">{{ title }}</p>
@@ -77,6 +82,11 @@ export default {
             default: true,
         },
         macos: {
+            type: Boolean,
+            required: false,
+            default: false,
+        },
+        ohos: {
             type: Boolean,
             required: false,
             default: false,

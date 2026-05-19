@@ -1,7 +1,8 @@
 <template>
     <div class="home-container" ref="home-container">
         <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
-                                          v-if="sharedMiscState.isElectronWindowsOrLinux"/>
+                                          :ohos="sharedMiscState.isOhos"
+                                          v-if="sharedMiscState.isElectronWindowsOrLinux || sharedMiscState.isOhos || true"/>
         <div class="home">
             <section class="menu-container">
                 <div>
@@ -448,7 +449,7 @@ export default {
         wfc.eventEmitter.removeListener(EventType.ConnectionStatusChanged, this.onConnectionStatusChange);
         console.log('home destroy')
     },
-    
+
     components: {
         BackupView,
         SubWindowHost,
