@@ -504,7 +504,7 @@ const createMainWindow = async () => {
         height: 600,
         minWidth: 960,
         minHeight: 600,
-        opacity: 0,
+        opacity: process.platform === 'win32' ? 0 : 1,
         titleBarStyle: 'hidden',
         trafficLightPosition: {x: 4, y: 8},
         maximizable: false,
@@ -546,7 +546,9 @@ const createMainWindow = async () => {
             if (deepLinkUrl) {
                 onDeepLink(deepLinkUrl)
             }
+            if (process.platform === 'win32') {
             setTimeout(() => mainWindow.setOpacity(1), 1000 / 60);
+            }
         } catch (ex) {
             // do nothing
         }
@@ -1495,6 +1497,7 @@ ipcMain.handle('create-voip-window', async (event, windowOptions) => {
             event.sender.send(`voip-window-webContents-did-finish-load`);
         });
         win.loadURL(windowOptions.url)
+        win.removeMenu();
 
         return win.id;
     } catch (error) {

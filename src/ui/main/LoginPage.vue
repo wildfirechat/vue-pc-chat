@@ -501,9 +501,6 @@ export default {
             }
 
             if (status === ConnectionStatus.ConnectionStatusConnected) {
-                if (isElectron()) {
-                    ipcRenderer.send(IpcEventType.LOGIN, {closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
-                }
                 this.$router.replace({path: "/home"});
                 if (isElectron() || (Config.CLIENT_ID_STRATEGY === 1 || Config.CLIENT_ID_STRATEGY === 2)) {
                     isElectron() && ipcRenderer.send(IpcEventType.LOGIN, {userId: wfc.getUserId(), closeWindowToExit: getItem(wfc.getUserId() + '-' + 'closeWindowToExit') === '1'})
