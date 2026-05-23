@@ -117,6 +117,34 @@ export class WfcManager {
         return impl.isTcpShortLink();
     }
 
+        /**
+     * 设置使用KCP，需要专业版IM服务，且开启KCP端口。
+     *
+     * @param {string} kcpPort kcp端口
+     * @param {boolean} useKcp 是否使用kcp，要为true。
+     */
+    setUseKcp(kcpPort, useKcp) {
+        impl.setUseKcp(kcpPort, useKcp);
+    }
+
+    /**
+     * 是否使用KCP
+     * @returns {boolean} 是否使用KCP
+     */
+    isUseKcp() {
+        return impl.isUseKcp();
+    }
+
+    /**
+     * 设置使用TLS，需要专业版IM服务，且开启TLS功能
+     *
+     * @param {boolean} skipVerifyCert 是否跳过本地验证，一般自签名要跳过。
+     * @param {string[]} selfSignedCerts 自签名证书，如果是公签，传空。
+     */
+    UseTls(skipVerifyCert, selfSignedCerts) {
+        impl.useTls(skipVerifyCert, selfSignedCerts);
+    }
+
     /**
      * 连接服务器
      * @param {string} userId 用户id
