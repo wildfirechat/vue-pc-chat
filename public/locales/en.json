@@ -2,7 +2,25 @@
 	"Main": {
 		"Title": "Preferences...",
 		"Check": "Check for updates",
+		"ToggleMainWindow": "Toggle Main Window",
 		"Quit": "Quit wildfireChat"
+	},
+	"Update": {
+		"Available": "Update available",
+		"AvailableDetail": "A new version is available. It will be downloaded in the background.",
+		"NotAvailable": "No updates available",
+		"NotAvailableDetail": "You are running the latest version.",
+		"Downloading": "Downloading update",
+		"DownloadingDetail": "Please leave the app open, the new version is downloading. You'll receive a notification when it's finished.",
+		"Downloaded": "Update ready",
+		"DownloadedDetail": "Update downloaded. The application will restart to apply the update.",
+		"Error": "Update error",
+		"Unsupported": "Auto update not supported",
+		"UnsupportedDetail": "Auto update is not supported for this installation type. Please download the latest version manually.",
+		"NotConfigured": "Update server not configured",
+		"NotConfiguredDetail": "The update server URL is not configured. Please contact the administrator or check the documentation.",
+		"Restart": "Restart now",
+		"Later": "Later"
 	},
 	"File": {
 		"Title": "File",

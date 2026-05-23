@@ -30,6 +30,7 @@ import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
 import createProtocol from "./createProtocol";
+import { autoUpdater } from 'electron-updater';
 
 console.log('start crash report', app.getPath('crashDumps'))
 // crashReporter.start({uploadToServer: false});
@@ -74,6 +75,34 @@ process.on('uncaughtException', (error) => {
 
 let forceQuit = false;
 let downloading = false;
+let manualUpdateCheck = false;
+
+function isAutoUpdaterSupported() {
+    if (isDevelopment) return false;
+    // Linux 仅 AppImage 支持自动更新，deb/rpm 等不支持
+    if (process.platform === 'linux' && !process.env.APPIMAGE) return false;
+    return true;
+}
+
+function shouldShowUpdateMenu() {
+    return isAutoUpdaterSupported() && !!autoUpdater.feedUrl;
+}
+
+function filterMenuTemplate(template) {
+    return template.map(item => {
+        if (item.submenu) {
+            return {
+                ...item,
+                submenu: item.submenu.filter(sub => {
+                    return !(sub.id === 'menu-check-update' && !shouldShowUpdateMenu());
+                })
+            };
+        }
+        return item;
+    }).filter(item => {
+        return !(item.id === 'menu-check-update' && !shouldShowUpdateMenu());
+    });
+}
 let mainWindow;
 let fileWindow;
 let multimediaPreviewWindow;
@@ -135,10 +164,11 @@ let mainMenu = [
                 role: 'unhide'
             },
             {
+                id: 'menu-check-update',
                 label: Locales.__('Main').Check,
                 accelerator: 'Cmd+U',
                 click() {
-                    checkForUpdates();
+                    checkForUpdates(true);
                 }
             },
             {
@@ -279,10 +309,20 @@ let mainMenu = [
 ];
 let trayMenu = [
     {
-        label: '切换主窗口',
+        label: Locales.__('Main').ToggleMainWindow,
         click() {
             let isVisible = mainWindow.isVisible();
             isVisible ? mainWindow.hide() : mainWindow.show();
+        }
+    },
+    {
+        type: 'separator'
+    },
+    {
+        id: 'menu-check-update',
+        label: Locales.__('Main').Check,
+        click() {
+            checkForUpdates(true);
         }
     },
     {
@@ -322,20 +362,128 @@ let trayMenu = [
 ];
 let blink = null
 
-function checkForUpdates() {
+function checkForUpdates(manual = false) {
+    manualUpdateCheck = manual;
+    if (!isAutoUpdaterSupported()) {
+        if (manual) {
+            dialog.showMessageBox({
+                type: 'info',
+                buttons: ['OK'],
+                title: pkg.name,
+                message: Locales.__('Update').Unsupported,
+                detail: Locales.__('Update').UnsupportedDetail
+            });
+        }
+        return;
+    }
+
     if (downloading) {
         dialog.showMessageBox({
             type: 'info',
             buttons: ['OK'],
             title: pkg.name,
-            message: `Downloading...`,
-            detail: `Please leave the app open, the new version is downloading. You'll receive a new dialog when downloading is finished.`
+            message: Locales.__('Update').Downloading,
+            detail: Locales.__('Update').DownloadingDetail
         });
-
         return;
     }
 
+    // 如需自定义更新服务器，请取消下面注释并配置 URL
+    // autoUpdater.setFeedURL({
+    //     provider: 'generic',
+    //     url: 'https://your-update-server.com/releases'
+    // });
+
+    if (!autoUpdater.feedUrl) {
+        if (manual) {
+            dialog.showMessageBox({
+                type: 'info',
+                buttons: ['OK'],
+                title: pkg.name,
+                message: Locales.__('Update').NotConfigured,
+                detail: Locales.__('Update').NotConfiguredDetail
+            });
+        }
+        return;
+    }
+
+    autoUpdater.checkForUpdates().catch(err => {
+        console.error('checkForUpdates error', err);
+        downloading = false;
+        if (manualUpdateCheck) {
+            dialog.showMessageBox({
+                type: 'error',
+                buttons: ['OK'],
+                title: pkg.name,
+                message: Locales.__('Update').Error,
+                detail: err.message
+            });
+        }
+        manualUpdateCheck = false;
+    });
 }
+
+autoUpdater.on('checking-for-update', () => {
+    console.log('Checking for update...');
+});
+
+autoUpdater.on('update-available', (info) => {
+    console.log('Update available.', info);
+    downloading = true;
+});
+
+autoUpdater.on('update-not-available', (info) => {
+    console.log('Update not available.', info);
+    if (manualUpdateCheck) {
+        dialog.showMessageBox({
+            type: 'info',
+            buttons: ['OK'],
+            title: pkg.name,
+            message: Locales.__('Update').NotAvailable,
+            detail: Locales.__('Update').NotAvailableDetail
+        });
+    }
+    manualUpdateCheck = false;
+});
+
+autoUpdater.on('download-progress', (progressObj) => {
+    let logMessage = `Download speed: ${progressObj.bytesPerSecond}`;
+    logMessage += ` - Downloaded ${progressObj.percent}%`;
+    logMessage += ` (${progressObj.transferred}/${progressObj.total})`;
+    console.log(logMessage);
+});
+
+autoUpdater.on('update-downloaded', (info) => {
+    console.log('Update downloaded.', info);
+    downloading = false;
+    dialog.showMessageBox({
+        type: 'info',
+        buttons: [Locales.__('Update').Restart, Locales.__('Update').Later],
+        title: pkg.name,
+        message: Locales.__('Update').Downloaded,
+        detail: Locales.__('Update').DownloadedDetail
+    }).then(({ response }) => {
+        if (response === 0) {
+            autoUpdater.quitAndInstall();
+        }
+    });
+    manualUpdateCheck = false;
+});
+
+autoUpdater.on('error', (err) => {
+    console.error('Auto updater error', err);
+    downloading = false;
+    if (manualUpdateCheck) {
+        dialog.showMessageBox({
+            type: 'error',
+            buttons: ['OK'],
+            title: pkg.name,
+            message: Locales.__('Update').Error,
+            detail: err.message
+        });
+    }
+    manualUpdateCheck = false;
+});
 
 function updateTray(unread = 0) {
     settings.showOnTray = true;
@@ -346,7 +494,7 @@ function updateTray(unread = 0) {
             return;
         }
 
-        let contextmenu = Menu.buildFromTemplate(trayMenu);
+        let contextmenu = Menu.buildFromTemplate(filterMenuTemplate(trayMenu));
         if (!trayIcon) {
             let iconPath;
             if (!isOsx) {
@@ -398,7 +546,8 @@ function updateTray(unread = 0) {
 }
 
 function createMenu() {
-    var menu = Menu.buildFromTemplate(mainMenu);
+    var template = filterMenuTemplate(mainMenu);
+    var menu = Menu.buildFromTemplate(template);
 
     if (isOsx) {
         Menu.setApplicationMenu(menu);
@@ -1310,6 +1459,21 @@ app.on('ready', () => {
         } catch (e) {
             // do nothing
         }
+
+        // 如需启动后自动检查更新，请取消下面注释
+        // if (isAutoUpdaterSupported()) {
+        //     setTimeout(() => {
+        //         checkForUpdates(false);
+        //     }, 60 * 1000); // 启动1分钟后检查
+        // }
+
+        ipcMain.on(IPCEventType.CHECK_FOR_UPDATES, () => {
+            checkForUpdates(true);
+        });
+
+        ipcMain.handle('is-updater-configured', () => {
+            return shouldShowUpdateMenu();
+        });
 
     }
 );

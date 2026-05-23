@@ -132,6 +132,12 @@ npm run cross-package-linux-arm64
 
 ```
 
+## 自动升级
+
+本项目已集成基于 `electron-updater` 的自动升级功能，支持 Windows、macOS 和 Linux AppImage 平台。默认配置下自动升级处于关闭状态，如需启用，请参考详细文档进行配置：
+
+📄 **[Electron 应用自动升级实现指南](https://docs.wildfirechat.cn/blogs/electron-auto-updater-guide.html)**
+
 ## Electron版本
 
 1. 目前`master`分支默认使用的 Electron 版本是`22.3.27`，`22.3.27`是最后一个支持`Windows 7`的版本，如果不需要支持`Windows 7`，可自行升级到更新的 Electron 版本

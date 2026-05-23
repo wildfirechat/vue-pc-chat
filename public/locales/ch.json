@@ -2,7 +2,25 @@
 	"Main": {
 		"Title": "偏好...",
 		"Check": "检查更新",
+		"ToggleMainWindow": "切换主窗口",
 		"Quit": "退出 wildfireChat"
+	},
+	"Update": {
+		"Available": "发现新版本",
+		"AvailableDetail": "发现新版本，将在后台自动下载。",
+		"NotAvailable": "当前已是最新版本",
+		"NotAvailableDetail": "当前已经是最新版本。",
+		"Downloading": "正在下载更新",
+		"DownloadingDetail": "请保持应用打开，新版本正在下载。下载完成后会通知您。",
+		"Downloaded": "更新已就绪",
+		"DownloadedDetail": "更新已下载完成，应用将重启以安装更新。",
+		"Error": "检查更新失败",
+		"Unsupported": "不支持自动更新",
+		"UnsupportedDetail": "当前安装方式不支持自动更新，请手动下载最新版本。",
+		"NotConfigured": "未配置更新服务器",
+		"NotConfiguredDetail": "更新服务器地址未配置，请联系管理员或参考文档进行配置。",
+		"Restart": "立即重启",
+		"Later": "稍后"
 	},
 	"File": {
 		"Title": "文件",

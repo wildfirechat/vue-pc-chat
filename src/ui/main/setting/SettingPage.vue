@@ -76,6 +76,9 @@
                 打开日志目录
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
             </a>
+            <a v-if="sharedMiscState.isElectron && updaterConfigured" class="button" target="_blank" @click.prevent.stop="checkForUpdates">
+                检查更新
+            </a>
             <a class="button" target="_blank" @click.prevent.stop="showChangePasswordContextMenu">
                 修改密码
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
@@ -145,6 +148,7 @@ export default {
         return {
             sharedMiscState: store.state.misc,
             openPcChatTimeoutHandler: 0,
+            updaterConfigured: false,
             langs: [{lang: 'zh-CN', name: '简体中文'}, {lang: 'zh-TW', name: '繁體中文'}, {lang: 'en', name: 'English'}],
             themes: [{id: 'system', name: '跟随系统'}, {id: 'light', name: '浅色'}, {id: 'dark', name: '暗黑'}],
         }
@@ -157,6 +161,11 @@ export default {
         openLogDir() {
             let appPath = wfc.getAppPath();
             shell.openPath(appPath);
+        },
+        checkForUpdates() {
+            if (isElectron()) {
+                ipcRenderer.send(IpcEventType.CHECK_FOR_UPDATES);
+            }
         },
         showChangePasswordContextMenu(event) {
             this.$refs.changePasswordContextMenu.open(event);
@@ -301,8 +310,11 @@ export default {
 
     },
 
-    mounted() {
+    async mounted() {
         window.addEventListener('blur', this.blurListener)
+        if (isElectron()) {
+            this.updaterConfigured = await ipcRenderer.invoke('is-updater-configured');
+        }
     },
     beforeUnmount() {
         window.removeEventListener('blur', this.blurListener)

@@ -184,7 +184,12 @@ module.exports = {
                     perMachine: false,
                     createDesktopShortcut: true,
                     shortcutName: '${productName}',
-                }
+                },
+                // 如需启用自动更新，请取消下面注释并配置实际的服务器地址
+                // publish: {
+                //     provider: 'generic',
+                //     url: 'https://your-update-server.com/releases'
+                // }
             }
         }
     },

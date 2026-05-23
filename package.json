@@ -50,6 +50,7 @@
     "detectrtc": "^1.4.1",
     "electron-screenshots": "0.5.11",
     "electron-tabs": "^1.0.4",
+    "electron-updater": "^6.3.0",
     "electron-window-state": "^5.0.3",
     "electron-windows-badge": "^1.1.0",
     "events": "^3.2.0",
