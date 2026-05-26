@@ -17,7 +17,8 @@ import {
     shell,
     Tray,
     desktopCapturer,
-    webContents
+    webContents,
+    systemPreferences
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -806,8 +807,22 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.START_SCREEN_SHOT, (event, args) => {
         // console.log('main voip-message event', args);
+        // 申请截图权限，由截图插件申请的权限好像是屏幕录制权限，导致无法截图
+        if(process.platform === 'openharmony') {
+            console.log('Start request screen capture permission');
+            systemPreferences.callArkTSFunction('PermissionManagerAdapter.RequestPermissionCode','void', ['screen_capture'])
+                .then(r => {
+                    // 由于 callArkTSFunction 暂不支持调用的函数callback 返回或异步返回，导致现在无法实现申请结果查询，或检测是否已授权
+                    // 故这儿直接尝试进行截图
+                    // 截图插件里面，可能会触发屏幕录制权限申请弹框，目前无法去除
+                    console.log('request screen capture permission end', r)
         screenShotWindowId = event.sender.id;
         screenshots.startCapture();
+                })
+        }else {
+            screenShotWindowId = event.sender.id;
+            screenshots.startCapture();
+        }
     });
 
     ipcMain.on('voip-message', (event, args) => {
