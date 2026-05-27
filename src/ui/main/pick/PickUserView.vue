@@ -2,7 +2,7 @@
     <div class="pick-contact-container">
         <section class="contact-list-container">
             <div class="input-container">
-                <input type="text" :placeholder="$t('common.search')" v-model="filterQuery" :disabled="!showOrganization">
+                <input type="text" :placeholder="$t('common.search')" v-model="filterQuery" :disabled="showOrganization && !pickSource">
                 <i class="icon-ion-ios-search"></i>
             </div>
             <div v-if="showOrganization && orgServiceAvailable" class="pick-source-container">
@@ -48,6 +48,7 @@
             <CheckableOrganizationTreeView
                 ref="checkableOrganizationTreeView"
                 v-if="pickSource === 'organization'"
+                :search-query="filterQuery"
                 @organization-path-update="onOrganizationPathUpdate"/>
         </section>
         <section class="checked-contact-list-container">
@@ -145,6 +146,11 @@ export default {
             organizationPathList: [],
             defaultOrganizationPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
             orgServiceAvailable: organizationServerApi.isServiceAvailable,
+        }
+    },
+    watch: {
+        pickSource() {
+            this.filterQuery = '';
         }
     },
     methods: {
