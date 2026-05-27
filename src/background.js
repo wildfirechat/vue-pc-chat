@@ -66,7 +66,7 @@ i18n.configure({
 });
 Locales.setLocale('ch');
 
-app.commandLine.appendSwitch('js-flags', '--expose-gc')
+// app.commandLine.appendSwitch('js-flags', '--expose-gc')
 // 忽略证书错误
 //app.commandLine.appendSwitch('ignore-certificate-errors')
 
