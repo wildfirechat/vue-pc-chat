@@ -2,7 +2,7 @@
     <div class="home-container" ref="home-container">
         <ElectronWindowsControlButtonView style="position: absolute; top: 0; right: 0"
                                           :ohos="sharedMiscState.isOhos"
-                                          v-if="sharedMiscState.isElectronWindowsOrLinux || sharedMiscState.isOhos || true"/>
+                                          v-if="sharedMiscState.isElectronWindowsOrLinux || sharedMiscState.isOhos"/>
         <div class="home">
             <section class="menu-container">
                 <div>
