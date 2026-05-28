@@ -85,7 +85,7 @@
                 <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
             </div>
 
-            <p class="diagnose" @click="diagnose">诊断</p>
+            <p v-if="isElectronDev" class="diagnose" @click="diagnose">诊断</p>
         </div>
 
         <div v-if="showDiagnoseOverlay" class="diagnose-overlay">
@@ -160,6 +160,8 @@ export default {
             pendingLoginAction: null,      // 待执行的登录操作
             authCodeCountdown: 0,          // 获取验证码倒计时
             authCodeTimer: null,           // 倒计时定时器
+
+            isElectronDev: process && process.env.NODE_ENV === 'development'
         }
     },
     created() {
@@ -528,6 +530,9 @@ export default {
         },
 
         async diagnose() {
+            if(!this.isElectronDev){
+                return
+            }
             let configInfo = '';
             configInfo += `APP-Server: ${Config.APP_SERVER}\n`
             configInfo += `Route-Host: ${this.routeHost}\n`
