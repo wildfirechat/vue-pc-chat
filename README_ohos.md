@@ -40,6 +40,17 @@ sed -i.bak 's/app\.asar/app/g' js/* && rm -f js/*.bak
 
 ```
 
+### 截图
+`hm-pc-chat`里面包含的是特殊编译的版本，更新资源后，一定要通过 git 工具，将`screenshots`相关改动，全部丢弃，可能被改动的目录有：
+```angular2html
+web_engine/src/main/resources/resfile/resources/app/node_modules/electron-screenshots
+web_engine/src/main/resources/resfile/resources/app/node_modules/fs-extra
+web_engine/src/main/resources/resfile/resources/app/node_modules/node-screenshots
+web_engine/src/main/resources/resfile/resources/app/node_modules/node-screenshots-darwin-arm64
+web_engine/src/main/resources/resfile/resources/app/node_modules/node-screenshots-openharmony-arm64
+web_engine/src/main/resources/resfile/resources/app/node_modules/react-screenshots
+```
+
 ### DevEco Studio 完成最终的打包操作
 1. 用`DevEco Studio` 打开`hm-pc-chat` 项目
 2. 修改`AppScope/app.json5`里面的`bundleName`、`vendor`等信息
