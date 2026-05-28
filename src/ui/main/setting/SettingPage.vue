@@ -72,11 +72,11 @@
                 target="_blank">
                 问题反馈
             </a>
-            <a v-if="sharedMiscState.isElectron" class="button" target="_blank" @click.prevent.stop="openLogDir">
+            <a v-if="sharedMiscState.isElectron && !sharedMiscState.isOhos" class="button" target="_blank" @click.prevent.stop="openLogDir">
                 打开日志目录
                 <!--        <i class="icon-ion-ios-email-outline"/>-->
             </a>
-            <a v-if="sharedMiscState.isElectron && updaterConfigured" class="button" target="_blank" @click.prevent.stop="checkForUpdates">
+            <a v-if="sharedMiscState.isElectron && updaterConfigured && !sharedMiscState.isOhos" class="button" target="_blank" @click.prevent.stop="checkForUpdates">
                 检查更新
             </a>
             <a class="button" target="_blank" @click.prevent.stop="showChangePasswordContextMenu">
