@@ -2,6 +2,13 @@
     <section class="organization-tree-container">
         <div class="title-bar">
             <h2 class="title">组织结构</h2>
+        </div>
+        <nav class="breadcrumb">
+            <ul>
+                <li v-for="org in currentOrganizationPathList" :key="org.id">
+                    <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
+                </li>
+            </ul>
             <div class="search-action" :class="{ active: searchActive }">
                 <input
                     ref="searchInput"
@@ -15,13 +22,6 @@
                     <i :class="searchActive ? 'icon-ion-ios-close' : 'icon-ion-ios-search'"></i>
                 </button>
             </div>
-        </div>
-        <nav class="breadcrumb" v-if="!searchMode">
-            <ul>
-                <li v-for="org in currentOrganizationPathList" :key="org.id">
-                    <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
-                </li>
-            </ul>
         </nav>
         <div class="member-list-container">
             <ul>
@@ -231,7 +231,7 @@ export default {
 .title-bar {
     display: flex;
     align-items: center;
-    padding: 0 10px 0 20px;
+    padding: 0 20px;
     height: 63px;
     flex-shrink: 0;
     border-bottom: 1px solid var(--border-tertiary);
@@ -248,7 +248,7 @@ export default {
     display: flex;
     align-items: center;
     flex-direction: row;
-    padding: 0 20px;
+    padding: 0 10px;
 }
 
 .search-expand-input {
@@ -299,10 +299,16 @@ export default {
 }
 
 .breadcrumb {
-    padding: 20px 0 0 20px;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    height: 50px;
+    flex-shrink: 0;
+    //border-bottom: 1px solid var(--border-tertiary);
 }
 
 .breadcrumb ul {
+    flex: 1;
     display: flex;
     flex-wrap: wrap;
     list-style: none;
