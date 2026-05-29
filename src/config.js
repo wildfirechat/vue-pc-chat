@@ -108,6 +108,11 @@ export default class Config {
     // 打开消息链接的策略，0=不限制, 1=提醒, 2=禁止
     static OPEN_LINK_POLICY = 1;
 
+    // AI会议纪要机器人ID，为空时不启用会议纪要跳转功能
+    static AI_MINUTES_ROBOT_ID = "robotminutes";
+    // 会议纪要页面URL
+    static MINUTES_URL = "http://101.42.4.222:8883/index.html";
+
     static getWFCPlatform() {
         if (isElectron()) {
             if (window.process && window.process.platform === 'darwin') {

@@ -83,6 +83,8 @@ import RestoreResponseNotificationContent from "../messages/backup/restoreRespon
 import CollectionMessageContent from "../messages/collectionMessageContent";
 import PollMessageContent from "../messages/pollMessageContent";
 import PollResultMessageContent from "../messages/pollResultMessageContent";
+import MeetingMinutesMessageContent from "../messages/meetingMinutesMessageContent";
+import TranscriptionMessageContent from "../messages/transcriptionMessageContent";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -592,6 +594,18 @@ export default class MessageConfig {
             flag: PersistFlag.Persist_And_Count,
             type: MessageContentType.Poll_Result,
             contentClazz: PollResultMessageContent,
+        },
+        {
+            name: 'meetingMinutes',
+            flag: PersistFlag.Persist_And_Count,
+            type: MessageContentType.Meeting_Minutes,
+            contentClazz: MeetingMinutesMessageContent,
+        },
+        {
+            name: 'switch',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.Transcription,
+            contentClazz: TranscriptionMessageContent,
         },
     ];
 }
