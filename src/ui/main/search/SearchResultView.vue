@@ -86,6 +86,22 @@
                         {{ $t('search.view_all') + this.sharedSearchState.conversationSearchResult.length }}
                     </div>
                 </li>
+                <li class="category-item" v-if="employeeSearchResult.length > 0">
+                    <label>组织结构</label>
+                    <ul>
+                        <li v-for="(employee, index) in toShowOrgEmployeeList" :key="'emp-' + index">
+                            <div class="search-result-item contact" @click.stop="chatToEmployee(employee)">
+                                <img :src="employeePortrait(employee)">
+                                <span class="single-line">{{ employee.name }}</span>
+                            </div>
+                        </li>
+                    </ul>
+                    <div v-if="!shouldShowAllOrgEmployee && employeeSearchResult.length > 5"
+                         class="show-all"
+                         @click.stop="showAllOrgEmployee">
+                        {{ $t('search.view_all') + employeeSearchResult.length }}
+                    </div>
+                </li>
                 <li class="category-item" v-if="sharedMiscState.isElectron">
                     <label>{{ $t('search.message_history') }}</label>
                     <div class="search-result-item message" @click.stop="showMessageHistoryPage">
@@ -108,6 +124,7 @@ import FriendRequestView from '../contact/FriendRequestView.vue';
 import IpcEventType from '../../../ipcEventType';
 import { ipcRenderer } from '../../../platform';
 import wfc from '../../../wfc/client/wfc';
+import organizationServerApi from '../../../api/organizationServerApi';
 
 const FLOATING_PANEL_MIN_WIDTH = 320;
 const FLOATING_PANEL_MIN_HEIGHT = 180;
@@ -129,6 +146,9 @@ export default {
             shouldShowAllContact: false,
             shouldShowAllGroup: false,
             shouldShowAllConversation: false,
+            shouldShowAllOrgEmployee: false,
+            employeeSearchResult: [],
+            rootOrgId: null,
             floatingStyle: {
                 left: '0px',
                 top: '0px',
@@ -139,8 +159,18 @@ export default {
         }
     },
 
-    mounted() {
-        store.setSearchQuery(this.query)
+    async mounted() {
+        if (organizationServerApi.isServiceAvailable) {
+            try {
+                const orgs = await organizationServerApi.getRootOrganization();
+                if (orgs && orgs.length > 0) {
+                    this.rootOrgId = orgs[0].id;
+                }
+            } catch (e) {
+                // org service not available
+            }
+        }
+        this.search(this.query);
         this.bindFloatingEvents()
         this.$nextTick(() => {
             this.updateFloatingPosition()
@@ -170,7 +200,7 @@ export default {
         // or
         query() {
             console.log('searchView query changed:', this.query)
-            store.setSearchQuery(this.query)
+            this.search(this.query)
             this.$nextTick(() => {
                 this.updateFloatingPosition()
             })
@@ -363,8 +393,41 @@ export default {
                 url: url,
             });
             console.log(IpcEventType.showMessageHistoryPage, url)
-        }
+        },
 
+        search(query) {
+            store.setSearchQuery(query);
+            this.shouldShowAllOrgEmployee = false;
+            this.searchEmployee(query);
+        },
+
+        async searchEmployee(keyword) {
+            if (!keyword || !this.rootOrgId) {
+                this.employeeSearchResult = [];
+                return;
+            }
+            if (!organizationServerApi.isServiceAvailable) {
+                return;
+            }
+            try {
+                this.employeeSearchResult = await organizationServerApi.searchEmployee(this.rootOrgId, keyword);
+            } catch (e) {
+                console.error('search employee error', e);
+                this.employeeSearchResult = [];
+            }
+        },
+
+        showAllOrgEmployee() {
+            this.shouldShowAllOrgEmployee = true;
+        },
+
+        chatToEmployee(employee) {
+            let userInfo = organizationServerApi.employeeToUserInfo(employee);
+            this.chatToContact(userInfo);
+        },
+        employeePortrait(employee) {
+            return organizationServerApi.employeePortraitUrl(employee);
+        }
     },
 
     computed: {
@@ -383,12 +446,16 @@ export default {
         toShowConversationList() {
             return !this.shouldShowAllConversation && this.sharedSearchState.conversationSearchResult.length > 5 ? this.sharedSearchState.conversationSearchResult.slice(0, 4) : this.sharedSearchState.conversationSearchResult;
         },
+        toShowOrgEmployeeList() {
+            return !this.shouldShowAllOrgEmployee && this.employeeSearchResult.length > 5 ? this.employeeSearchResult.slice(0, 4) : this.employeeSearchResult;
+        },
         isSearchResultEmpty() {
-            return this.sharedSearchState.userSearchResult.length ===0
+            return this.sharedSearchState.userSearchResult.length === 0
                 && this.sharedSearchState.channelSearchResult.length === 0
                 && this.sharedSearchState.contactSearchResult.length === 0
                 && this.sharedSearchState.groupSearchResult.length === 0
-                && this.sharedSearchState.conversationSearchResult.length === 0;
+                && this.sharedSearchState.conversationSearchResult.length === 0
+                && this.employeeSearchResult.length === 0;
         }
     },
 
