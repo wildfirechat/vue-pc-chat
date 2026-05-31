@@ -1,8 +1,9 @@
 <template>
-    <section v-if="sharedSearchState.query.length"
+    <section v-if="(query && query.length) || showHint"
              ref="floatingPanel"
              class="search-result-floating"
-             :style="floatingStyle">
+             :style="floatingStyle"
+             @mousedown.prevent>
         <div class="search-result">
             <ul>
                 <li class="category-item" v-if="sharedSearchState.userSearchResult.length > 0">
@@ -102,14 +103,17 @@
                         {{ $t('search.view_all') + employeeSearchResult.length }}
                     </div>
                 </li>
-                <li class="category-item" v-if="sharedMiscState.isElectron">
+                <li class="category-item" v-if="query && query.length && sharedMiscState.isElectron">
                     <label>{{ $t('search.message_history') }}</label>
                     <div class="search-result-item message" @click.stop="showMessageHistoryPage">
                         <p>{{ $t('search.search_message_history') }} </p>
                     </div>
                 </li>
-                <li class="category-item" v-else-if="isSearchResultEmpty">
+                <li class="category-item" v-else-if="isSearchResultEmpty && query && query.length">
                     <label style="padding-bottom: 8px">{{ $t('search.result_empty') }}</label>
+                </li>
+                <li class="category-item" v-if="showHint && (!query || !query.length)">
+                    <label style="padding: 12px 12px; font-size: 14px; color: var(--text-secondary);">搜索内容或用户</label>
                 </li>
             </ul>
         </div>
@@ -135,7 +139,8 @@ const FLOATING_PANEL_FALLBACK_TOP = 66;
 export default {
     name: 'SearchResultView',
     props: [
-        'query'
+        'query',
+        'showHint',
     ],
     data() {
         return {
@@ -154,7 +159,7 @@ export default {
                 top: '0px',
                 width: '320px',
                 maxHeight: '320px',
-                visibility: 'visible',
+                visibility: 'hidden',
             },
         }
     },
@@ -201,6 +206,11 @@ export default {
         query() {
             console.log('searchView query changed:', this.query)
             this.search(this.query)
+            this.$nextTick(() => {
+                this.updateFloatingPosition()
+            })
+        },
+        showHint() {
             this.$nextTick(() => {
                 this.updateFloatingPosition()
             })
@@ -291,7 +301,7 @@ export default {
             }
         },
         updateFloatingPosition() {
-            if (!this.sharedSearchState.query || !this.sharedSearchState.query.length) {
+            if ((!this.sharedSearchState.query || !this.sharedSearchState.query.length) && !this.showHint) {
                 return
             }
             const anchorEl = this.getAnchorElement()
@@ -393,6 +403,7 @@ export default {
                 url: url,
             });
             console.log(IpcEventType.showMessageHistoryPage, url)
+            store.hideSearchView();
         },
 
         search(query) {

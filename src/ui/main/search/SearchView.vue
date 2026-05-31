@@ -7,18 +7,30 @@
                    autocomplete="off"
                    v-model.trim="sharedSearchState.query"
                    @keydown.esc="cancel"
+                   @focus="inputFocused = true"
+                   @blur="inputFocused = false"
                    type="text" :placeholder="placeHolder"/>
             <span v-if="sharedSearchState.query" class="clear-btn" @click="sharedSearchState.query = ''">&#215;</span>
         </div>
-        <button v-if="showAddButton" @click="showCreateConversationModal">+</button>
-        <SearchResultView v-bind:query="sharedSearchState.query" v-if="sharedSearchState.query"/>
+        <div v-if="showAddButton" class="add-btn-container">
+            <button ref="addBtn" @click="toggleMenu">+</button>
+        </div>
+        <Teleport to="body">
+            <div v-if="showMenu" class="add-menu-popup" :style="popupStyle">
+                <div class="add-menu-arrow"></div>
+                <div class="add-menu">
+                    <div class="add-menu-item" @click.stop="onAddFriend">添加好友</div>
+                    <div class="add-menu-item" @click.stop="onCreateGroup">发起群聊</div>
+                </div>
+            </div>
+        </Teleport>
+        <SearchResultView v-bind:query="sharedSearchState.query" v-bind:showHint="inputFocused" v-if="sharedSearchState.query || inputFocused"/>
     </div>
 </template>
 
 <script>
 import store from "../../../store";
 import Config from "../../../config";
-import wfc from "../../../wfc/client/wfc";
 import SearchResultView from './SearchResultView.vue';
 
 export default {
@@ -39,9 +51,66 @@ export default {
             sharedSearchState: store.state.search,
             sharedContactState: store.state.contact,
             searchTip: '在测试单位搜索用户',
+            showMenu: false,
+            inputFocused: false,
+            popupStyle: { visibility: 'hidden' },
         };
     },
+    mounted() {
+        document.addEventListener('click', this.closeMenu);
+        window.addEventListener('resize', this.closeMenu);
+        window.addEventListener('contextmenu', this.closeMenu);
+        window.addEventListener('scroll', this.updateMenuPosition, true);
+    },
+    beforeUnmount() {
+        document.removeEventListener('click', this.closeMenu);
+        window.removeEventListener('resize', this.closeMenu);
+        window.removeEventListener('contextmenu', this.closeMenu);
+        window.removeEventListener('scroll', this.updateMenuPosition, true);
+    },
     methods: {
+        updateMenuPosition() {
+            if (!this.showMenu || !this.$refs.addBtn) return;
+            const rect = this.$refs.addBtn.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            this.popupStyle = {
+                position: 'fixed',
+                top: `${rect.bottom}px`,
+                left: `${centerX}px`,
+                transform: 'translateX(-50%)',
+                zIndex: 10000,
+                visibility: 'visible',
+            };
+        },
+        toggleMenu() {
+            this.showMenu = !this.showMenu;
+            if (this.showMenu) {
+                this.popupStyle = { visibility: 'hidden' };
+                this.$nextTick(() => this.updateMenuPosition());
+            }
+        },
+        closeMenu(e) {
+            if (e && this.$refs.addBtn && this.$refs.addBtn.contains(e.target)) {
+                return;
+            }
+            this.showMenu = false;
+        },
+        onAddFriend() {
+            this.showMenu = false;
+            this.$notify({
+                title: '添加好友',
+                text: '请在搜索框中输入好友账号进行搜索',
+                type: 'info',
+                duration: 3000,
+            });
+            this.$nextTick(() => {
+                this.$refs.input.focus();
+            });
+        },
+        onCreateGroup() {
+            this.showMenu = false;
+            this.showCreateConversationModal();
+        },
         showCreateConversationModal() {
             let successCB = users => {
                 store.createConversation(users);
@@ -136,10 +205,68 @@ export default {
 .search-input-container button {
     width: 30px;
     height: 25px;
-    margin-right: 10px;
     background-color: var(--background-secondary);
     border-radius: 3px;
     border: 1px solid var(--border-primary);
+}
+
+.add-btn-container {
+    position: relative;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.add-menu-popup {
+    position: fixed;
+    z-index: 10000;
+}
+
+.add-menu-arrow {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid var(--border-subtle);
+}
+
+.add-menu-arrow::after {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 2px;
+    width: 0;
+    height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid var(--background-tooltip);
+}
+
+.add-menu {
+    margin-top: 8px;
+    font-size: 14px;
+    background-color: var(--background-tooltip);
+    border: 1px solid var(--border-subtle);
+    border-radius: 4px;
+    box-shadow: var(--shadow-tooltip);
+    min-width: 120px;
+    padding: 5px 0;
+    overflow: hidden;
+}
+
+.add-menu-item {
+    padding: .4rem 1rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.add-menu-item:hover {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
 }
 
 .search-input-container .clear-btn {
