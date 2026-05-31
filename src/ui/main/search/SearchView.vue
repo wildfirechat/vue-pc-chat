@@ -32,6 +32,8 @@
 import store from "../../../store";
 import Config from "../../../config";
 import SearchResultView from './SearchResultView.vue';
+import { getItem, setItem } from '../../util/storageHelper';
+import wfc from '../../../wfc/client/wfc';
 
 export default {
     name: "SearchView",
@@ -90,21 +92,36 @@ export default {
             }
         },
         closeMenu(e) {
-            if (e && this.$refs.addBtn && this.$refs.addBtn.contains(e.target)) {
+            if (e && e.target instanceof Node && this.$refs.addBtn && this.$refs.addBtn.contains(e.target)) {
                 return;
             }
             this.showMenu = false;
         },
         onAddFriend() {
             this.showMenu = false;
-            this.$notify({
-                title: '添加好友',
-                text: '请在搜索框中输入好友账号进行搜索',
-                type: 'info',
-                duration: 3000,
-            });
-            this.$nextTick(() => {
-                this.$refs.input.focus();
+            let tipKey = `${wfc.getUserId()}-show-add_friend_tip`
+            let hasTipped = getItem(tipKey)
+            if(hasTipped){
+                this.$nextTick(() => {
+                    this.$refs.input.focus();
+                });
+                return;
+            }
+            this.$alert({
+                showIcon: false,
+                title: '提示',
+                content: '请在左上角搜索框中输入关键词，即可搜索用户，并添加好友',
+                confirmText: '知道了',
+                cancelText: '关闭',
+                confirmCallback: () => {
+                    setItem(tipKey, true);
+                    this.$nextTick(() => {
+                        this.$refs.input.focus();
+                    });
+                },
+                cancelCallback: () => {
+                    // do nothing
+                }
             });
         },
         onCreateGroup() {
