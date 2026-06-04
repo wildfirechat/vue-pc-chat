@@ -146,7 +146,7 @@ import store from "../../../store";
 import {categoriesDefault, emojisDefault, VEmojiPicker} from "@imndx/v-emoji-picker-vue3"
 import '@imndx/v-emoji-picker-vue3/lib/v-emoji-picker.esm.css'
 import Tribute from "tributejs";
-import '../../../tribute.css'
+import '../../../style/tribute.css'
 import ConversationType from "../../../wfc/model/conversationType";
 import ConversationInfo from "../../../wfc/model/conversationInfo";
 import GroupInfo from "../../../wfc/model/groupInfo";

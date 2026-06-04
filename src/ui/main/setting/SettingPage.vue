@@ -6,54 +6,56 @@
                 {{ $t('setting.enable_notification') }}
                 <input type="checkbox"
                        :checked="sharedMiscState.enableNotification"
+                       role="switch"
                        @change="enableNotification($event.target.checked)">
             </label>
             <label>
                 {{ $t('setting.enable_notification_detail') }}
                 <input v-bind:disabled="!sharedMiscState.enableNotification"
                        type="checkbox"
+                       role="switch"
                        :checked="sharedMiscState.enableNotificationMessageDetail"
                        @change="enableNotificationDetail($event.target.checked)">
             </label>
             <label v-if="sharedMiscState.isElectron">
                 {{ $t('setting.close_window_to_exit') }}
-                <input type="checkbox" :checked="sharedMiscState.enableCloseWindowToExit"
+                <input type="checkbox" role="switch" :checked="sharedMiscState.enableCloseWindowToExit"
                        @change="enableCloseWindowToExit($event.target.checked)">
             </label>
             <label v-if="sharedMiscState.isElectron">
                 {{ $t('setting.enable_minimize') }}
-                <input type="checkbox" :checked="sharedMiscState.enableMinimize"
+                <input type="checkbox" role="switch" :checked="sharedMiscState.enableMinimize"
                        @change="enableMinimize($event.target.checked)">
             </label>
             <label
                 v-if="sharedMiscState.isElectron || (sharedMiscState.config.CLIENT_ID_STRATEGY === 1 || sharedMiscState.config.CLIENT_ID_STRATEGY === 2)">
                 {{ $t('setting.auto_login') }}
-                <input type="checkbox" :checked="sharedMiscState.enableAutoLogin"
+                <input type="checkbox" role="switch" :checked="sharedMiscState.enableAutoLogin"
                        @change="enableAutoLogin($event.target.checked)">
             </label>
             <label v-if="sharedMiscState.isCommercialServer">
                 {{ $t('setting.sync_draft') }}
-                <input type="checkbox" :checked="!sharedMiscState.isDisableSyncDraft"
+                <input type="checkbox" role="switch" :checked="!sharedMiscState.isDisableSyncDraft"
                        @change="enableDraftSync($event.target.checked)">
             </label>
-            <div>
+            <div class="dropdown-toggle-container">
                 {{ $t('setting.lang') }}
-                <dropdown class="my-dropdown-toggle"
-                          :options="langs"
-                          :selected="currentLang"
-                          v-on:updateOption="setLang"
-                          :placeholder="'Select an Item'"
-                          :closeOnOutsideClick="true">
+                <dropdown
+                    :options="langs"
+                    :selected="currentLang"
+                    v-on:updateOption="setLang"
+                    :placeholder="'Select an Item'"
+                    :closeOnOutsideClick="true">
                 </dropdown>
             </div>
-            <div>
+            <div class="dropdown-toggle-container">
                 {{ $t('setting.theme') || '外观' }}
-                <dropdown class="my-dropdown-toggle"
-                          :options="themes"
-                          :selected="currentTheme"
-                          v-on:updateOption="setTheme"
-                          :placeholder="'Select Theme'"
-                          :closeOnOutsideClick="true">
+                <dropdown
+                    :options="themes"
+                    :selected="currentTheme"
+                    v-on:updateOption="setTheme"
+                    :placeholder="'Select Theme'"
+                    :closeOnOutsideClick="true">
                 </dropdown>
             </div>
         </div>
@@ -129,28 +131,28 @@
 </template>
 
 <script>
-import wfc from "../../../wfc/client/wfc";
-import store from "../../../store";
+import wfc from '../../../wfc/client/wfc';
+import store from '../../../store';
 import dropdown from 'vue-dropdowns';
-import {clear} from "../../util/storageHelper";
-import {ipcRenderer, isElectron} from "../../../platform";
-import {getItem, setItem} from "../../util/storageHelper";
-import ChangePasswordView from "./ChangePasswordView";
-import ResetPasswordView from "./ResetPasswordView";
-import BackupRestoreView from "../../../backup/BackupRestoreView.vue";
-import {shell} from "../../../platform";
-import IpcEventType from "../../../ipcEventType";
-import avenginekit from "../../../wfc/av/internal/engine.min";
+import { clear } from '../../util/storageHelper';
+import { ipcRenderer, isElectron } from '../../../platform';
+import { getItem, setItem } from '../../util/storageHelper';
+import ChangePasswordView from './ChangePasswordView';
+import ResetPasswordView from './ResetPasswordView';
+import BackupRestoreView from '../../../backup/BackupRestoreView.vue';
+import { shell } from '../../../platform';
+import IpcEventType from '../../../ipcEventType';
+import avenginekit from '../../../wfc/av/internal/engine.min';
 
 export default {
-    name: "SettingPage",
+    name: 'SettingPage',
     data() {
         return {
             sharedMiscState: store.state.misc,
             openPcChatTimeoutHandler: 0,
             updaterConfigured: false,
-            langs: [{lang: 'zh-CN', name: '简体中文'}, {lang: 'zh-TW', name: '繁體中文'}, {lang: 'en', name: 'English'}],
-            themes: [{id: 'system', name: '跟随系统'}, {id: 'light', name: '浅色'}, {id: 'dark', name: '暗黑'}],
+            langs: [{ lang: 'zh-CN', name: '简体中文' }, { lang: 'zh-TW', name: '繁體中文' }, { lang: 'en', name: 'English' }],
+            themes: [{ id: 'system', name: '跟随系统' }, { id: 'light', name: '浅色' }, { id: 'dark', name: '暗黑' }],
         }
     },
     methods: {
@@ -362,12 +364,22 @@ export default {
 
 .setting-container .content label {
     padding: 10px 0;
-    display: block;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 14px;
 }
 
 .setting-container .content label input {
     margin: 0 10px;
-    display: inline-block;
+}
+
+.setting-container .dropdown-toggle-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
 }
 
 .setting-container .ad-container {

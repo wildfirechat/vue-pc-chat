@@ -1,4 +1,7 @@
-@import './theme/index.css';
+@import '../theme/index.css';
+
+@import '~@madogai/vue-context/dist/css/vue-context.css';
+@import "./checkbox-switch.css";
 
 :root {
     /* Layout Variables (Theme Independent) */
@@ -12,9 +15,6 @@
     --composite-message-page-width: 100%;
     --composite-message-page-height: 100%;
 }
-
-/* Global Styles */
-@import '~@madogai/vue-context/dist/css/vue-context.css';
 
 .v-context {
     font-size: 14px;
@@ -105,7 +105,7 @@
 
 
 /* --- Global Input/Textarea Styling --- */
-input, textarea {
+input:not([role=switch]), textarea {
     background-color: var(--background-input);
     color: var(--text-primary);
     border: 1px solid var(--border-primary);
@@ -263,6 +263,10 @@ button.danger:hover {
     /*background-color: var(--background-input) !important;*/
     color: var(--text-primary) !important;
     /*border: 1px solid var(--border-primary) !important;*/
+}
+
+.dropdown-toggle:hover{
+    background-color: var(--background-tooltip) !important;
 }
 
 .dropdown-menu {
