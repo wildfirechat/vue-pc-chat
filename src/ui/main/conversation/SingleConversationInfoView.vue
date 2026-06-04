@@ -31,8 +31,6 @@
                 </div>
             </div>
 
-            <div class="section-divider"></div>
-
             <!-- 操作按钮 -->
             <div v-if="sharedMiscState.isElectron" class="conversation-action-item" @click="clearConversationHistory">{{ $t('conversation.clear_conversation_history') }}</div>
             <div class="conversation-action-item" @click="clearRemoteConversationHistory">{{ $t('conversation.clear_remote_conversation_history') }}</div>
@@ -198,8 +196,8 @@ export default {
 
 /* 操作格子 hover: 改变图标颜色和边框颜色 */
 .action-grid-item:hover .action-icon {
-    color: var(--primary, #07c160);
-    border-color: var(--primary, #07c160);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .action-grid-item .action-icon {

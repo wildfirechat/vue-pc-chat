@@ -94,9 +94,6 @@
                 </label>
             </header>
 
-            <!-- 分隔线 -->
-            <div class="section-divider"></div>
-
             <!-- 操作按钮 -->
             <div v-if="sharedMiscState.isElectron" @click="clearConversationHistory" class="conversation-action-item">
                 {{ $t('conversation.clear_conversation_history') }}
@@ -623,8 +620,8 @@ export default {
 
 /* action grid item hover: change icon color and border */
 .action-grid-item:hover .action-icon {
-    color: var(--primary, #07c160);
-    border-color: var(--primary, #07c160);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .member-avatar {
@@ -770,7 +767,6 @@ header label input::-webkit-input-placeholder {
     justify-content: space-between;
     width: 100%;
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-tertiary);
     margin-top: 15px;
 }
 
