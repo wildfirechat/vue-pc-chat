@@ -1425,7 +1425,6 @@ export default {
 
 i {
     font-size: 24px;
-    color: var(--text-primary);
     cursor: pointer;
 }
 
@@ -1468,18 +1467,9 @@ i:hover {
     }
 }
 
-.ptt-icon {
-    color: var(--text-primary);
-}
-
 .ptt-icon.active {
     color: var(--text-danger);
     animation: glow 2s infinite;
-}
-
-
-.record-icon {
-    color: var(--text-primary);
 }
 
 .record-icon.active {
