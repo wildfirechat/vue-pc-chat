@@ -37,7 +37,7 @@
                 <nav class="menu">
                     <ul>
                         <li>
-                            <div class="menu-item">
+                            <div class="i-button-wrapper">
                                 <i class="icon-ion-ios-chatboxes"
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home'}"
                                    @click="go2Conversation"></i>
@@ -45,7 +45,7 @@
                             </div>
                         </li>
                         <li>
-                            <div class="menu-item">
+                            <div class="i-button-wrapper">
                                 <i class="icon-ion-android-contact"
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home/contact'}"
                                    @click="go2Contact"></i>
@@ -53,35 +53,47 @@
                             </div>
                         </li>
                         <li>
-                            <i class="icon-ion-android-favorite"
-                               v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"
-                               @click="go2Fav"></i>
+                            <div class="i-button-wrapper">
+                                <i class="icon-ion-android-favorite"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"
+                                   @click="go2Fav"></i>
+                            </div>
                         </li>
                         <li v-if="sharedMiscState.isElectron && sharedMiscState.isCommercialServer">
-                            <i class="icon-ion-ios-folder"
-                               v-bind:class="{active : this.$router.currentRoute.value.path === '/home/files'}"
-                               @click="go2Files"></i>
+                            <div class="i-button-wrapper">
+                                <i class="icon-ion-ios-folder"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/files'}"
+                                   @click="go2Files"></i>
+                            </div>
                         </li>
                         <li v-if="sharedMiscState.enableOpenWorkSpace">
-                            <i class="icon-ion-code-working"
-                               v-bind:class="{active : this.$router.currentRoute.value.path === '/home/h-wp'}"
-                               @click="go2Workspace"></i>
+                            <div class="i-button-wrapper">
+                                <i class="icon-ion-code-working"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/h-wp'}"
+                                   @click="go2Workspace"></i>
+                            </div>
                         </li>
                         <li v-if="supportConference">
-                            <i class="icon-ion-speakerphone"
-                               v-bind:class="{active : this.$router.currentRoute.value.path === '/home/conference'}"
-                               @click="go2Conference"></i>
+                            <div class="i-button-wrapper">
+                                <i class="icon-ion-speakerphone"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/conference'}"
+                                   @click="go2Conference"></i>
+                            </div>
                         </li>
                         <li v-if="aiPortalUrl">
-                            <i class="icon-ion-android-sunny"
-                               v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/ai'}"
-                               @click="go2AI"></i>
+                            <div class="i-button-wrapper">
+                                <i class="icon-ion-android-sunny"
+                                   v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/ai'}"
+                                   @click="go2AI"></i>
+                            </div>
                         </li>
                         <li>
-                            <i v-show="this.$router.currentRoute.value.path !== '/home/ai'"
-                               class="icon-ion-android-settings"
-                               v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"
-                               @click="go2Setting"></i>
+                            <div class="i-button-wrapper">
+                                <i v-show="this.$router.currentRoute.value.path !== '/home/ai'"
+                                   class="icon-ion-android-settings"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"
+                                   @click="go2Setting"></i>
+                            </div>
                         </li>
                     </ul>
                 </nav>
@@ -528,11 +540,7 @@ export default {
     margin-bottom: 20px;
 }
 
-.menu .menu-item {
-    position: relative;
-}
-
-.menu .menu-item .badge {
+.menu .badge {
     position: absolute;
     color: var(--text-on-accent);
     font-size: 10px;
@@ -544,18 +552,14 @@ export default {
     line-height: 16px;
     font-style: normal;
     text-align: center;
-    right: -12px;
+    right: -10px;
     top: 4px;
 }
 
 i {
-    font-size: 26px;
+    font-size: 25px;
     color: var(--text-secondary);
     cursor: pointer;
-}
-
-i:hover {
-    color: var(--accent-color);
 }
 
 i.active {
