@@ -229,6 +229,7 @@ export default {
     height: 60px;
     border-radius: var(--default-portrait-border-radius);
     object-fit: cover;
+    cursor: pointer;
 }
 
 .header {

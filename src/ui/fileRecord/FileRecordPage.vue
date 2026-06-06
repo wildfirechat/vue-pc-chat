@@ -49,17 +49,14 @@
                 <div v-if="category === CATEGORY_CONVERSATION && !fileQuery"
                      class="conversation-list-container">
                     <!--      聊天列表-->
-                    <ul>
-                        <li v-for="conversationInfo in sharedConversationState.conversationInfoList"
-                            @click="showConversationFiles(conversationInfo.conversation)"
-                            :key="conversationInfoKey(conversationInfo)">
-                            <div class="conversation-item"
-                                 v-bind:class="{active:currentConversation && currentConversation.equal(conversationInfo.conversation)}">
-                                <img :src="conversationInfo.conversation._target.portrait" alt="">
-                                <p class="single-line">{{ conversationInfo.conversation._target._displayName }}</p>
-                            </div>
-                        </li>
-                    </ul>
+                    <virtual-list :data-component="conversationItemView" :data-sources="sharedConversationState.conversationInfoList" :data-key="conversationInfoKey"
+                                  ref="virtualList"
+                                  :estimate-size="30"
+                                  :extra-props="{
+                                        clickConversationItemFunc:showConversationFiles,
+                                  }"
+                                  style="height: 100%; overflow-y: auto;"/>
+
                 </div>
                 <div v-if="category === CATEGORY_SENDER && !fileQuery"
                      class="conversation-list-container">
@@ -67,6 +64,7 @@
                     <UserListView :users="sharedContactState.friendList"
                                  :show-category-label="false"
                                  :current-user="currentUser"
+                                 :padding-left="'15px'"
                                  :click-user-item-func="showUserFiles"
                     />
                 </div>
@@ -111,6 +109,8 @@ import InfiniteLoading from "@imndx/vue-infinite-loading";
 import {ipcRenderer, isElectron, currentWindow} from "../../platform";
 import UserListView from "../main/user/UserListView.vue";
 import IpcEventType from "../../ipcEventType";
+import { markRaw } from 'vue';
+import ConversationItemView from '../main/conversationList/ConversationItemView.vue';
 
 export default {
     name: "FileRecordPage",
@@ -130,6 +130,8 @@ export default {
             CATEGORY_ALL: 'all',
             CATEGORY_CONVERSATION: 'conversation',
             CATEGORY_SENDER: 'sender',
+
+            conversationItemView: markRaw(ConversationItemView),
         }
     },
     methods: {
@@ -182,13 +184,14 @@ export default {
             }
         },
 
-        showConversationFiles(conversation, force = false) {
-            if (!force && this.currentConversation && this.currentConversation.equal(conversation)) {
+        showConversationFiles(conversationInfo, force = false) {
+            if (!force && this.currentConversation && this.currentConversation.equal(conversationInfo.conversation)) {
                 return;
             }
-            this.currentConversation = conversation;
+            this.currentConversation = conversationInfo.conversation;
+            this.sharedConversationState.currentConversationInfo = conversationInfo;
             this.fileRecords = [];
-            this.getConversationFileRecords(conversation, '')
+            this.getConversationFileRecords(conversationInfo.conversation, '')
         },
 
         showUserFiles(user, force = false) {
@@ -196,14 +199,16 @@ export default {
                 return;
             }
             this.currentUser = user;
+            this.sharedContactState.currentFriend = user;
             this.fileRecords = [];
             this.getConversationFileRecords('', user.uid)
         },
 
 
         getMyFileRecords() {
+            this.fileRecords = [];
             store.getMyFileRecords(0, 20, fileRecords => {
-                this.fileRecords = this.fileRecords.concat(fileRecords);
+                this.fileRecords = fileRecords;
             }, err => {
                 // TODO
 
@@ -425,10 +430,6 @@ export default {
     background-color: var(--background-item-hover);
 }
 
-.category-item:active {
-    background-color: var(--background-item-active);
-}
-
 .category-item.active {
     background-color: var(--background-item-active);
 }
@@ -444,7 +445,7 @@ export default {
     border-right: 1px solid var(--border-muted);
     width: 185px;
     height: 100%;
-    overflow: auto;
+    overflow: overlay;
 }
 
 .conversation-item {

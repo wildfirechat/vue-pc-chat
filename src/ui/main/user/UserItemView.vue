@@ -1,12 +1,12 @@
 <template>
-    <div ref="contactItem" class="contact-item">
+    <template ref="contactItem" class="contact-item">
         <div v-if="showCategoryLabel && source.type === 'category'"
              class="label"
              :style="paddingStyle"
              v-bind:class="{sticky:enableCategoryLabelSticky}">
             <p>{{ source.category.toUpperCase() }}</p>
         </div>
-        <div v-else style="width: 100%">
+        <template v-else style="width: 100%">
             <tippy
                 v-if="!clickUserItemFunc"
                 :to="'#user-' + source.uid"
@@ -41,8 +41,8 @@
                 </div>
             </div>
 
-        </div>
-    </div>
+        </template>
+    </template>
 </template>
 
 <script>
@@ -181,8 +181,8 @@ ul {
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: var(--default-portrait-border-radius);
 }
 
@@ -213,7 +213,7 @@ ul {
 }
 
 .contact-item .content {
-    padding: 5px 5px 5px 0;
+    padding: 10px 10px;
     display: flex;
     width: 100%;
     align-items: center;
@@ -223,12 +223,12 @@ ul {
     margin-left: 10px;
 }
 
-.contact-item .content.active {
-    background-color: var(--background-item-placeholder);
+.contact-item .content:hover {
+    background-color: var(--background-item-hover);
 }
 
-.contact-item .content:active {
-    background-color: var(--background-item-placeholder);
+.contact-item .content.active {
+    background-color: var(--background-item-active);
 }
 
 .user-online-status {

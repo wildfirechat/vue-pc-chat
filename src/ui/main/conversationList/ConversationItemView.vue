@@ -4,7 +4,7 @@
          @dragleave="dragEvent($event, 'dragleave')"
          @dragenter="dragEvent($event,'dragenter')"
          @drop="dragEvent($event, 'drop')"
-         @click="showConversation"
+         @click="onClickConversationItem"
          v-bind:class="{
              drag: dragAndDropEnterCount > 0,
              active: shareConversationState.currentConversationInfo && shareConversationState.currentConversationInfo.conversation.equal(source.conversation),
@@ -65,6 +65,11 @@ export default {
         source: {
             type: Object,
             required: true,
+        },
+        clickConversationItemFunc: {
+            type: Function,
+            required: false,
+            default: null,
         },
     },
     data() {
@@ -137,7 +142,11 @@ export default {
             }
         },
 
-        showConversation() {
+        onClickConversationItem() {
+            if (this.clickConversationItemFunc) {
+                this.clickConversationItemFunc(this.source);
+                return;
+            }
             store.setCurrentConversationInfo(this.source);
             if (this.unread > 0) {
                 wfc.clearConversationUnreadStatus(this.source.conversation);

@@ -77,16 +77,8 @@
                         <span class="desc">{{ sharedContactState.friendList.length }}</span>
                     </div>
                 </div>
-                <UserListView
-                    v-if="sharedContactState.expandFriendList && users.length < 100 && false"
-                    :enable-pick="false"
-                    :users="users"
-                    :click-user-item-func="setCurrentUser"
-                    :padding-left="'30px'"
-                    :enable-contact-context-menu="true"
-                />
                 <virtual-list
-                    v-else-if="sharedContactState.expandFriendList"
+                    v-if="sharedContactState.expandFriendList"
                     :data-component="contactItemView" :data-sources="groupedContacts" :data-key="'uid'"
                     :estimate-size="30"
                     style="max-height: 700px; overflow-y: auto"/>
@@ -122,7 +114,6 @@ import CardMessageContent from "../../../wfc/messages/cardMessageContent";
 import wfc from "../../../wfc/client/wfc";
 import Message from "../../../wfc/messages/message";
 import ChatroomListView from "./ChatroomListView.vue";
-import Config from "../../../config";
 import {markRaw} from "vue";
 import ExternalDomainListView from "./ExternalDomainListView.vue";
 

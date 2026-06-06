@@ -30,8 +30,8 @@
                              :id="'user-' + user.uid.replace('@', '-').replace('.', '-')"
                              :style="paddingStyle"
                              v-bind:class="{active: (sharedContactState.currentFriend
-                        && user._category === sharedContactState.currentFriend._category
-                        && user.uid === sharedContactState.currentFriend.uid) || (currentUser && currentUser.uid === user.uid)}"
+                                        && user._category === sharedContactState.currentFriend._category
+                                        && user.uid === sharedContactState.currentFriend.uid) || (currentUser && currentUser.uid === user.uid)}"
                              @click.stop="clickUserItem(user)"
                              @contextmenu.prevent="showContactContextMenu($event, user)">
                             <img class="avatar" :src="user.portrait" alt="" @error="imgUrlAlt">
@@ -250,8 +250,8 @@ ul {
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
     border-radius: var(--default-portrait-border-radius);
 }
 
@@ -282,7 +282,7 @@ ul {
 }
 
 .contact-item .content {
-    padding: 5px 5px 5px 0;
+    padding: 10px;
     display: flex;
     width: 100%;
     align-items: center;
@@ -293,11 +293,11 @@ ul {
 }
 
 .contact-item .content.active {
-    background-color: var(--background-item-placeholder);
+    background-color: var(--background-item-active);
 }
 
-.contact-item .content:active {
-    background-color: var(--background-item-placeholder);
+.contact-item .content:hover {
+    background-color: var(--background-item-hover);
 }
 
 .user-online-status {
