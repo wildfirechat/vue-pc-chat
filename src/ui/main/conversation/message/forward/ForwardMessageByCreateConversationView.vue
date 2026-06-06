@@ -242,10 +242,7 @@ export default {
 }
 
 .checked-user-list-container .content .avatar {
-    width: 36px;
-    height: 36px;
     margin: 10px 10px;
-    border-radius: 3px;
 }
 
 .checked-user-list-container .content .unpick-button {

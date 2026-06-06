@@ -49,8 +49,6 @@ export default {
 .avatar {
     width: 32px;
     height: 32px;
-    border-radius: var(--default-portrait-border-radius);
-    object-fit: cover;
 }
 
 .external-domain-item {

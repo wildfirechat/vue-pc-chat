@@ -142,6 +142,7 @@ export default {
     border-radius: 3px;
     background: lightgrey;
     margin: 5px 10px;
+    object-fit: cover;
 }
 
 .type {

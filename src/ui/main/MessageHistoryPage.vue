@@ -304,7 +304,6 @@ export default {
     background: var(--background-item-placeholder);
     top: 50%;
     transform: translateY(-50%);
-    border-radius: var(--default-portrait-border-radius);
 }
 
 .content-container {

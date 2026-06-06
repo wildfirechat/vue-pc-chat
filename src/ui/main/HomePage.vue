@@ -511,11 +511,8 @@ export default {
 
 .avatar {
     background-color: var(--text-secondary);
-    width: 36px;
-    height: 36px;
     display: block;
     margin: 10px auto;
-    border-radius: var(--default-portrait-border-radius);
 }
 
 .menu {

@@ -138,9 +138,6 @@ ul {
 }
 
 .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--default-portrait-border-radius);
     margin-right: 10px;
 }
 
@@ -171,7 +168,7 @@ ul {
 }
 
 .contact-item .content {
-    padding: 5px 5px 5px 0;
+    padding: 10px 5px 10px 0;
     display: flex;
     width: 100%;
     align-items: center;

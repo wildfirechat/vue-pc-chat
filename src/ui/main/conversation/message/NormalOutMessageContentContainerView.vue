@@ -311,13 +311,6 @@ export default {
     align-items: flex-start;
 }
 
-.message-avatar-content-container .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--default-portrait-border-radius);
-    object-fit: cover;
-}
-
 .message-content-container-view.highlight {
     filter: brightness(0.9);
     z-index: 100;

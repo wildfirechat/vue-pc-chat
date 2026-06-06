@@ -496,10 +496,7 @@ export default {
 }
 
 .checked-contact-list-container .content .avatar {
-    width: 36px;
-    height: 36px;
     margin: 10px 10px;
-    border-radius: var(--default-portrait-border-radius);
 }
 
 .checked-contact-list-container .content .unpick-button {

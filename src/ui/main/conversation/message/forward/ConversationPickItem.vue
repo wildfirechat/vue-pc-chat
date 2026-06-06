@@ -67,7 +67,7 @@ export default {
 <style lang="css" scoped>
 .conversation-item {
     width: 100%;
-    height: 50px;
+    height: 56px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -90,13 +90,10 @@ export default {
 
 .conversation-item .header .avatar {
     position: relative;
-    width: 36px;
-    height: 36px;
     display: inline-block;
     top: 50%;
     background: var(--background-item-placeholder);
     transform: translateY(-50%);
-    border-radius: var(--default-portrait-border-radius);
 }
 
 .conversation-item .title {

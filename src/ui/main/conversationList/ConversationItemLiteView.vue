@@ -175,15 +175,11 @@ export default {
 
 .header .avatar {
     position: relative;
-    width: 36px;
-    height: 36px;
     min-width: 36px;
     min-height: 36px;
     background: var(--background-tertiary);
     top: 50%;
     transform: translateY(-50%);
-    border-radius: var(--default-portrait-border-radius);
-    object-fit: cover;
 }
 
 .content-container {

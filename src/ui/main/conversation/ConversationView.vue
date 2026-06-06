@@ -1394,7 +1394,6 @@ export default {
 .inputting-container .avatar {
     width: 40px;
     height: 40px;
-    border-radius: var(--default-portrait-border-radius);
     margin-right: 20px;
 }
 

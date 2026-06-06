@@ -218,13 +218,6 @@ export default {
     text-overflow: ellipsis;
 }
 
-.avatar-container .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    object-fit: cover;
-}
-
 .avatar-container {
     display: flex;
     padding-left: 2px;

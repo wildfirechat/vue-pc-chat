@@ -348,7 +348,16 @@ img.emoji {
 }
 
 
-/*--- 自定义 class ---*/
+/*--- Avatar ---*/
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--default-portrait-border-radius);
+    object-fit: cover;
+    -webkit-user-drag: none;
+}
+
+/*--- i tag button ---*/
 
 .i-button-wrapper {
     position: relative;

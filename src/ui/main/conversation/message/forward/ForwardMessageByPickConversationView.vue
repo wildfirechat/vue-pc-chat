@@ -273,8 +273,6 @@ export default {
 }
 
 .checked-conversation-list-container .content .avatar {
-    width: 36px;
-    height: 36px;
     margin: 10px 10px;
     display: inline-block;
     background: var(--background-item-placeholder);

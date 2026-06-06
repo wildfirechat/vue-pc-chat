@@ -200,12 +200,6 @@ ul {
     width: 100%;
 }
 
-.avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--default-portrait-border-radius);
-}
-
 .checkbox {
     margin-right: 10px;
 }
