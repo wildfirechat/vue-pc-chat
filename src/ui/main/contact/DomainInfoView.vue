@@ -95,7 +95,7 @@ export default {
 .header .avatar {
     width: 60px;
     height: 60px;
-    border-radius: 5px;
+    border-radius: var(--default-portrait-border-radius);
     margin-right: 20px;
 }
 

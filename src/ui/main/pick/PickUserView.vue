@@ -496,7 +496,7 @@ export default {
     width: 45px;
     height: 45px;
     margin: 10px 10px;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .checked-contact-list-container .content .unpick-button {

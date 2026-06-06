@@ -69,7 +69,7 @@ export default {
 .avatar {
     width: 80px;
     height: 80px;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .info-action-container {

@@ -80,7 +80,7 @@ export default {
     top: 50%;
     background: var(--background-item-placeholder);
     transform: translateY(-50%);
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .conversation-item .title {

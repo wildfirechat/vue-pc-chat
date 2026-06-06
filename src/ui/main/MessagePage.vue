@@ -212,7 +212,7 @@ export default {
 .portrait-container img {
     width: 100%;
     height: 100%;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 >>> .text-message-container.out {

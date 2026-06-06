@@ -666,7 +666,7 @@ export default {
 }
 
 .qr-container {
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
     width: 250px;
     height: 250px;
     background-color: var(--background-tertiary);
@@ -679,7 +679,7 @@ export default {
 .qr-container img {
     width: 250px;
     height: 250px;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
     object-fit: cover;
 }
 

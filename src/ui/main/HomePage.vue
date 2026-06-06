@@ -515,7 +515,7 @@ export default {
     height: 35px;
     display: block;
     margin: 10px auto;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .menu {

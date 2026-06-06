@@ -633,10 +633,11 @@ export default {
 }
 
 .member-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 5px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--default-portrait-border-radius);
     object-fit: cover;
+    -webkit-user-drag: none;
 }
 
 .member-name {
@@ -657,7 +658,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 5px;
+    border-radius: var(--default-portrait-border-radius);
     border: 1px dashed var(--border-dashed);
     font-size: 22px;
     color: var(--text-secondary-strong);
@@ -715,9 +716,9 @@ export default {
 }
 
 .group-info-section .group-portrait-container img {
-    width: 30px;
-    height: 30px;
-    border-radius: 5px;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--default-portrait-border-radius);
     margin-left: auto;
     cursor: pointer;
 }

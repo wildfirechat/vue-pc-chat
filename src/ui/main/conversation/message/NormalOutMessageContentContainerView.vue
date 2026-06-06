@@ -312,9 +312,9 @@ export default {
 }
 
 .message-avatar-content-container .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 3px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--default-portrait-border-radius);
     object-fit: cover;
 }
 

@@ -259,7 +259,7 @@ export default {
 .image-content-container img {
     width: 100%;
     height: 100%;
-    border-radius: 5px;
+    border-radius: 6px;
     overflow: hidden;
     object-fit: contain;
 }

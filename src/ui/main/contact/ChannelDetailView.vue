@@ -70,7 +70,7 @@ export default {
 .channel-info img {
     height: 120px;
     width: 120px;
-    border-radius: 5px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .channel-info p {

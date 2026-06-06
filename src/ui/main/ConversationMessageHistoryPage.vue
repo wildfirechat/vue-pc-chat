@@ -320,7 +320,7 @@ export default {
     width: 60px;
     height: 60px;
     margin-right: 20px;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
     background: var(--border-primary);
 }
 
@@ -339,7 +339,7 @@ export default {
     text-align: left;
     flex: 1;
     border: 1px solid var(--border-primary);
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
     outline: none;
     background-color: var(--background-input);
 }
@@ -460,7 +460,7 @@ export default {
 .portrait-container img {
     width: 100%;
     height: 100%;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 >>> .text-message-container.out {

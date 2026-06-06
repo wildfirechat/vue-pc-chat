@@ -91,7 +91,7 @@ export default {
 .user-info-container .avatar {
     width: 60px;
     height: 60px;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .header {

@@ -349,7 +349,7 @@ export default {
 .file-item .icon {
     max-width: 80px;
     max-height: 80px;
-    border-radius: 8px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .file-item .name-size {

@@ -324,7 +324,7 @@ export default {
     background: var(--background-tertiary);
     top: 50%;
     transform: translateY(-50%);
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
     object-fit: cover;
 }
 

@@ -82,7 +82,7 @@ export default {
 .group-info img {
     height: 120px;
     width: 120px;
-    border-radius: 5px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .group-info p {

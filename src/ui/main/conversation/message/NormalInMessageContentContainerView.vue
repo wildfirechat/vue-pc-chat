@@ -219,9 +219,9 @@ export default {
 }
 
 .avatar-container .avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 3px;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
     object-fit: cover;
 }
 

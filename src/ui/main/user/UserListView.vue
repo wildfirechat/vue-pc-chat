@@ -252,7 +252,7 @@ ul {
 .avatar {
     width: 40px;
     height: 40px;
-    border-radius: 3px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .checkbox {

@@ -359,7 +359,7 @@ export default {
 .organization-item img {
     width: 40px;
     height: 40px;
-    border-radius: 5px;
+    border-radius: var(--default-portrait-border-radius);
     margin-right: 10px;
 }
 

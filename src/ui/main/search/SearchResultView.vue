@@ -523,7 +523,7 @@ export default {
 .search-result-item.contact img {
     width: 34px;
     height: 34px;
-    border-radius: 2px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .search-result-item.contact span {
@@ -552,7 +552,7 @@ export default {
 .search-result-item.group img {
     width: 34px;
     height: 34px;
-    border-radius: 2px;
+    border-radius: var(--default-portrait-border-radius);
 }
 
 .search-result-item.group span {
