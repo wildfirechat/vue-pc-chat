@@ -133,8 +133,12 @@
             </section>
             <!-- sticker 智能提示栏 -->
             <Teleport to="body">
-                <div v-if="stickerSuggestions.length" class="sticker-suggestion-bar" :style="stickerBarStyle">
-                    <div class="sticker-suggestion-hint">按回车发送表情，← → 切换</div>
+                <div v-if="stickerSuggestions.length"
+                    class="sticker-suggestion-bar"
+                    :style="stickerBarStyle"
+                    v-v-on-click-outside="hideStickerSuggestions"
+                    >
+                    <div class="sticker-suggestion-hint">↑ 选择，↓ 取消选择，Enter 发送，Esc 关闭</div>
                     <div class="sticker-suggestion-list" ref="stickerList">
                         <div
                             v-for="(sticker, idx) in stickerSuggestions"
@@ -149,8 +153,11 @@
                 </div>
             </Teleport>
             <div @keydown.enter="onEnterKey($event)"
-                 @keydown.left="onStickerLeft($event)"
-                 @keydown.right="onStickerRight($event)"
+                 @keydown.left="onLeftKey($event)"
+                 @keydown.right="onRightKey($event)"
+                 @keydown.down="onDownKey($event)"
+                 @keydown.up="onUpKey($event)"
+                 @keydown.esc="onEscKey($event)"
                  ref="input" class="input"
                  @paste="handlePaste"
                  draggable="false"
@@ -265,7 +272,7 @@ export default {
             showEmojiDialog: false,
             emojiPickerPos: { left: 0, bottom: 0, arrowOffset: 0 },
             stickerSuggestions: [],
-            selectedStickerIdx: 0,
+            selectedStickerIdx: -1,
             stickerBarPos: { left: 0, bottom: 0, width: 0 },
             allStickers: (() => {
                 try {
@@ -343,7 +350,7 @@ export default {
                 s.aliases && s.aliases.some(alias => alias === text)
             );
             this.stickerSuggestions = matched;
-            this.selectedStickerIdx = 0;
+            this.selectedStickerIdx = -1;
             if (matched.length) {
                 this.$nextTick(() => {
                     const inputEl = this.$refs.input;
@@ -360,7 +367,7 @@ export default {
         },
 
         onEnterKey(e) {
-            if (this.stickerSuggestions.length) {
+            if (this.stickerSuggestions.length && this.selectedStickerIdx >= 0) {
                 e.preventDefault();
                 this.sendStickerSuggestion(this.stickerSuggestions[this.selectedStickerIdx]);
                 return;
@@ -368,21 +375,50 @@ export default {
             this.send(e);
         },
 
-        onStickerLeft(e) {
-            if (!this.stickerSuggestions.length) return;
+        onLeftKey(e) {
+            if (!this.stickerSuggestions.length || this.selectedStickerIdx === -1) return;
             e.preventDefault();
             this.selectedStickerIdx = (this.selectedStickerIdx - 1 + this.stickerSuggestions.length) % this.stickerSuggestions.length;
             this.scrollStickerItemIntoView();
         },
 
-        onStickerRight(e) {
-            if (!this.stickerSuggestions.length) return;
+        onRightKey(e) {
+            if (!this.stickerSuggestions.length || this.selectedStickerIdx === -1) return;
             e.preventDefault();
             this.selectedStickerIdx = (this.selectedStickerIdx + 1) % this.stickerSuggestions.length;
             this.scrollStickerItemIntoView();
         },
 
+        onDownKey(e) {
+            if (!this.stickerSuggestions.length || this.selectedStickerIdx === -1) return;
+            e.preventDefault();
+            this.selectedStickerIdx = -1;
+            this.scrollStickerItemIntoView();
+        },
+
+        onUpKey(e) {
+            if (!this.stickerSuggestions.length) return;
+            e.preventDefault();
+            if (this.selectedStickerIdx === -1) {
+                this.selectedStickerIdx = 0;
+            } else {
+                this.selectedStickerIdx = (this.selectedStickerIdx + 1) % this.stickerSuggestions.length;
+            }
+            this.scrollStickerItemIntoView();
+        },
+
+        onEscKey(e) {
+            this.hideEmojiView(e);
+            this.hideStickerSuggestions();
+        },
+
+        hideStickerSuggestions() {
+            this.stickerSuggestions = [];
+            this.selectedStickerIdx = -1;
+        },
+
         scrollStickerItemIntoView() {
+            if (this.selectedStickerIdx === -1) return;
             this.$nextTick(() => {
                 const list = this.$refs.stickerList;
                 if (!list) return;
@@ -398,7 +434,7 @@ export default {
             // 清空输入框
             this.$refs.input.innerHTML = '';
             this.stickerSuggestions = [];
-            this.selectedStickerIdx = 0;
+            this.selectedStickerIdx = -1;
             this.focusInput();
         },
 
