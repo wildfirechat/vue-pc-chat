@@ -201,8 +201,8 @@ ul {
 }
 
 .avatar {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--default-portrait-border-radius);
 }
 

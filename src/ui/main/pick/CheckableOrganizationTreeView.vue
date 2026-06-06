@@ -191,8 +191,8 @@ export default {
 }
 
 .organization-item img {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--default-portrait-border-radius);
     margin-right: 10px;
 }

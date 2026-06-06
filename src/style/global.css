@@ -371,12 +371,12 @@ img.emoji {
     background-color: var(--i-button-hover-bg);
 }
 
-.i-button-small{
+.i-button-small {
     width: 28px !important;
     height: 28px !important;
 }
 
-.i-button-large{
+.i-button-large {
     width: 54px !important;
     height: 54px !important;
 }

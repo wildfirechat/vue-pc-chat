@@ -4,7 +4,7 @@
         <input class="checkbox" v-bind:value="source.conversation" type="checkbox"
                v-model="pickedConversations" placeholder="">
         <div class="header">
-            <img class="avatar" :src="source.conversation._target.portrait" alt=""/>
+            <img class="avatar" :src="portrait" alt=""/>
         </div>
         <p class="title single-line">{{ source.conversation._target._displayName }}</p>
     </div>
@@ -12,6 +12,8 @@
 
 <script>
 import store from "../../../../../store";
+import ConversationType from '../../../../../wfc/model/conversationType';
+import wfc from '../../../../../wfc/client/wfc';
 
 export default {
     name: "ConversationPickItem",
@@ -38,6 +40,20 @@ export default {
                 // 更新选择状态
                 this.activeStore.state.pick.conversations = value;
             }
+        },
+        portrait() {
+            let info = this.source;
+            if (info.conversation.type === ConversationType.Group) {
+                if (info.conversation._target.portrait) {
+                    return info.conversation._target.portrait;
+                } else {
+                    let dp = wfc.defaultGroupPortrait(info.conversation._target);
+                    info.conversation._target.portrait = dp;
+                    return dp;
+                }
+            } else {
+                return info.conversation._target.portrait;
+            }
         }
     },
     methods: {
@@ -51,7 +67,7 @@ export default {
 <style lang="css" scoped>
 .conversation-item {
     width: 100%;
-    height: 60px;
+    height: 50px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -74,8 +90,8 @@ export default {
 
 .conversation-item .header .avatar {
     position: relative;
-    width: 45px;
-    height: 45px;
+    width: 36px;
+    height: 36px;
     display: inline-block;
     top: 50%;
     background: var(--background-item-placeholder);

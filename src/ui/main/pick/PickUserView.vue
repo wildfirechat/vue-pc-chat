@@ -326,6 +326,12 @@ export default {
     flex: 1;
     min-height: 0;
     overflow: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.pick-category-container::-webkit-scrollbar {
+    display: none;
 }
 
 .category-item-container {
@@ -368,9 +374,6 @@ export default {
     -webkit-transform: rotate(45deg);
 }
 
-.organization-section {
-    //border-top: 1px solid var(--border-tertiary);
-}
 
 .organization-section :deep(.organization-tree-container) {
     height: auto;
@@ -493,8 +496,8 @@ export default {
 }
 
 .checked-contact-list-container .content .avatar {
-    width: 45px;
-    height: 45px;
+    width: 36px;
+    height: 36px;
     margin: 10px 10px;
     border-radius: var(--default-portrait-border-radius);
 }

@@ -165,7 +165,7 @@ export default {
 
 .user-list-panel .user-list-container {
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .user-list-container .back {
@@ -242,8 +242,8 @@ export default {
 }
 
 .checked-user-list-container .content .avatar {
-    width: 45px;
-    height: 45px;
+    width: 36px;
+    height: 36px;
     margin: 10px 10px;
     border-radius: 3px;
 }

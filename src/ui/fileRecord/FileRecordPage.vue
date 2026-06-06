@@ -54,6 +54,7 @@
                                   :estimate-size="30"
                                   :extra-props="{
                                         clickConversationItemFunc:showConversationFiles,
+                                        showLastMessage: false
                                   }"
                                   style="height: 100%; overflow-y: auto;"/>
 
@@ -110,14 +111,14 @@ import {ipcRenderer, isElectron, currentWindow} from "../../platform";
 import UserListView from "../main/user/UserListView.vue";
 import IpcEventType from "../../ipcEventType";
 import { markRaw } from 'vue';
-import ConversationItemView from '../main/conversationList/ConversationItemView.vue';
+import ConversationItemLiteView from '../main/conversationList/ConversationItemLiteView.vue';
 
 export default {
     name: "FileRecordPage",
     data() {
         return {
             category: 'all',
-            currentConversation: null,
+            currentConversationInfo: null,
             currentUser: null,
             sharedConversationState: store.state.conversation,
             sharedContactState: store.state.contact,
@@ -131,7 +132,7 @@ export default {
             CATEGORY_CONVERSATION: 'conversation',
             CATEGORY_SENDER: 'sender',
 
-            conversationItemView: markRaw(ConversationItemView),
+            conversationItemView: markRaw(ConversationItemLiteView),
         }
     },
     methods: {
@@ -167,8 +168,8 @@ export default {
             }
             this.category = this.CATEGORY_CONVERSATION;
             this.fileRecords = [];
-            if (this.currentConversation) {
-                this.showConversationFiles(this.currentConversation, true);
+            if (this.currentConversationInfo) {
+                this.showConversationFiles(this.currentConversationInfo, true);
             }
         },
 
@@ -180,15 +181,15 @@ export default {
             this.category = this.CATEGORY_SENDER;
             this.fileRecords = [];
             if (this.currentUser) {
-                this.showUserFiles(this.currentUser)
+                this.showUserFiles(this.currentUser, true)
             }
         },
 
         showConversationFiles(conversationInfo, force = false) {
-            if (!force && this.currentConversation && this.currentConversation.equal(conversationInfo.conversation)) {
+            if (!force && this.currentConversationInfo && this.currentConversationInfo.conversation.equal(conversationInfo.conversation)) {
                 return;
             }
-            this.currentConversation = conversationInfo.conversation;
+            this.currentConversationInfo = conversationInfo;
             this.sharedConversationState.currentConversationInfo = conversationInfo;
             this.fileRecords = [];
             this.getConversationFileRecords(conversationInfo.conversation, '')
@@ -252,7 +253,7 @@ export default {
                     store.getMyFileRecords(lastMessageUid, 20, successCB, failCB);
                     break;
                 case this.CATEGORY_CONVERSATION:
-                    store.getConversationFileRecords(this.currentConversation, '', lastMessageUid, 20, successCB, failCB)
+                    store.getConversationFileRecords(this.currentConversationInfo.conversation, '', lastMessageUid, 20, successCB, failCB)
                     break;
                 case this.CATEGORY_SENDER:
                     store.getConversationFileRecords('', this.currentUser.uid, lastMessageUid, 20, successCB, failCB)
@@ -308,7 +309,7 @@ export default {
                     identifier = 'me'
                     break;
                 case this.CATEGORY_CONVERSATION:
-                    identifier = 'conversation-' + this.currentConversation.type + '-' + this.currentConversation.target + '-' + this.currentConversation.line;
+                    identifier = this.currentConversationInfo ?  'conversation-' + this.currentConversationInfo.conversation.type + '-' + this.currentConversationInfo.conversation.target + '-' + this.currentConversationInfo.conversation.line : 'conversation';
                     break;
                 case this.CATEGORY_SENDER:
                     identifier = 'user-' + this.currentUser.uid;
@@ -323,7 +324,7 @@ export default {
             if (this.fileQuery) {
                 return desc;
             }
-            if (this.category === this.CATEGORY_CONVERSATION && this.currentConversation === null) {
+            if (this.category === this.CATEGORY_CONVERSATION && this.currentConversationInfo === null) {
                 desc = '没有选择会话'
             } else if (this.category === this.CATEGORY_SENDER && this.currentUser === null) {
                 desc = '没有选择发送者';

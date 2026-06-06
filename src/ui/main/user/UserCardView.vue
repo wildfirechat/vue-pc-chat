@@ -309,12 +309,12 @@ export default {
 }
 
 .action i {
-    font-size: 20px;
+    font-size: 26px;
     color: var(--text-link);
 }
 
 .action div {
-    margin: 0 4px;
+    margin: 0 8px;
     color: var(--text-link);
 }
 
