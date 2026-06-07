@@ -7,7 +7,7 @@
             <header>
                 <div class="title-container">
                     <div>
-                        <h1 class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
+                        <h1 ref="titleEl" class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
                         <p class="single-line user-online-status" @click="clickConversationDesc">{{ targetUserOnlineStateDesc }}</p>
                         <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
                     </div>
@@ -21,7 +21,7 @@
                                v-bind:class="{active : isWindowAlwaysTop}"
                             />
                         </div>
-                        <div class="i-button-wrapper action" @click.prevent="toggleConversationInfo">
+                        <div ref="settingBtn" class="i-button-wrapper action" @click.prevent="toggleConversationInfo">
                             <i class="icon-ion-ios-settings-strong"
                                style="display: inline-block"
                                ref="setting"
@@ -439,8 +439,11 @@ export default {
             }
         },
 
-        hideConversationInfo() {
-            this.showConversationInfo && (this.showConversationInfo = false);
+        hideConversationInfo(event) {
+            const path = event.composedPath();
+            if (this.$refs.settingBtn && path.includes(this.$refs.settingBtn)) return;
+            if (this.$refs.titleEl && path.includes(this.$refs.titleEl)) return;
+            this.showConversationInfo = false;
         },
 
         isCancelable(message) {

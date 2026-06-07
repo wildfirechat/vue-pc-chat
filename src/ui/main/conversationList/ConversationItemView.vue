@@ -147,6 +147,10 @@ export default {
                 this.clickConversationItemFunc(this.source);
                 return;
             }
+            if(this.shareConversationState.currentConversationInfo && this.shareConversationState.currentConversationInfo.conversation.equal(this.source.conversation)) {
+                store.setCurrentConversationInfo(null);
+                return;
+            }
             store.setCurrentConversationInfo(this.source);
             if (this.unread > 0) {
                 wfc.clearConversationUnreadStatus(this.source.conversation);
