@@ -42,6 +42,9 @@ export default {
 .avatar {
     width: 32px;
     height: 32px;
+    border-radius: var(--default-portrait-border-radius);
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 .group-item {
@@ -49,6 +52,7 @@ export default {
     display: flex;
     font-size: var(--font-size-sm);
     align-items: center;
+    transition: background var(--duration-fast);
 }
 
 .group-item:hover{

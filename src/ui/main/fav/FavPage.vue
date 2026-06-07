@@ -142,26 +142,38 @@ export default {
     display: flex;
     flex-direction: row;
     padding: 4px 0 4px 20px;
-    height: 50px;
+    height: 44px;
     align-items: center;
+    transition: background var(--duration-fast);
 }
 
 .category-item:hover {
     background-color: var(--background-item-hover);
 }
 
-.category-item:active {
-    background-color: var(--background-item-active);
-}
-
 .category-item.active {
     background-color: var(--background-item-active);
 }
 
+.category-item i {
+    font-size: 18px;
+    color: var(--text-secondary);
+    width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+    transition: color var(--duration-fast);
+}
+
 .category-item p {
-    margin-left: 8px;
-    font-size: var(--font-size-base);
+    margin-left: 10px;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
     flex: 1;
+    transition: color var(--duration-fast);
+}
+
+.category-item.active p {
+    font-weight: 500;
 }
 
 

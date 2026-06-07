@@ -266,7 +266,7 @@ export default {
 }
 
 .content ul li label {
-    margin-right: 20px;
+    width: 40px;
     color: var(--text-secondary);
 }
 

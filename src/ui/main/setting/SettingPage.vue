@@ -76,14 +76,12 @@
             </a>
             <a v-if="sharedMiscState.isElectron && !sharedMiscState.isOhos" class="button" target="_blank" @click.prevent.stop="openLogDir">
                 打开日志目录
-                <!--        <i class="icon-ion-ios-email-outline"/>-->
             </a>
             <a v-if="sharedMiscState.isElectron && updaterConfigured && !sharedMiscState.isOhos" class="button" target="_blank" @click.prevent.stop="checkForUpdates">
                 检查更新
             </a>
             <a class="button" target="_blank" @click.prevent.stop="showChangePasswordContextMenu">
                 修改密码
-                <!--        <i class="icon-ion-ios-email-outline"/>-->
             </a>
             <vue-context ref="changePasswordContextMenu" :close-on-scroll="false" v-on:close="onChangePasswordContextMenuClose">
                 <li>
@@ -98,7 +96,6 @@
             </a>
             <a class="button" target="_blank" @click="logout">
                 {{ $t('setting.exit_switch_user') }}
-                <!--        <i class="icon-ion-ios-email-outline"/>-->
             </a>
 
             <a
@@ -352,8 +349,7 @@ export default {
 
 .setting-container .content {
     flex: 1;
-    margin-left: 20px;
-    margin-top: 8px;
+    margin: 8px 20px 0;
 }
 
 .setting-container .content h2 {
@@ -371,7 +367,8 @@ export default {
 }
 
 .setting-container .content label input {
-    margin: 0 8px;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 .setting-container .dropdown-toggle-container {
@@ -383,21 +380,21 @@ export default {
 }
 
 .setting-container .ad-container {
-    padding: 8px;
-    font-size: var(--font-size-lg);
+    padding: 10px 20px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
     background: var(--background-secondary);
-    margin: 8px;
-    border-radius: var(--radius-md);
-    /*box-shadow: 0 2px 4px 0 var(--background-mask), 0 6px 20px 0 var(--background-mask);*/
+    border-top: 1px solid var(--border-separator);
 }
 
 .ad-container p {
-    padding: 4px 0;
+    padding: 2px 0;
+    line-height: 1.6;
 }
 
 .setting-container footer {
     width: 100%;
-    height: 60px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -405,32 +402,30 @@ export default {
 }
 
 .proto-version-info {
-    justify-self: flex-start;
     margin-right: auto;
-    padding-left: 8px;
+    padding-left: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-hint);
 }
 
 .setting-container .button {
-    /* position: relative; */
-    margin-right: 17px;
-    color: var(--text-primary);
-    font-size: var(--font-size-base);
-    padding: 9px 8px;
+    margin-right: 4px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    padding: 6px 10px;
     border: 0;
     border-radius: var(--radius-sm);
-    background: 0;
+    background: transparent;
     outline: 0;
-    text-transform: uppercase;
-    text-align: left;
     cursor: pointer;
     text-decoration: none;
-    transform: translateY(0px);
-    transition: .2s;
+    transition: background-color var(--duration-fast), color var(--duration-fast);
+    white-space: nowrap;
 }
 
 .setting-container .button:hover {
     background: var(--background-item-hover);
+    color: var(--text-primary);
 }
 
 </style>

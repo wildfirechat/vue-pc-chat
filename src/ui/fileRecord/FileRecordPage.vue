@@ -423,8 +423,9 @@ export default {
     display: flex;
     flex-direction: row;
     padding: 4px 0 4px 20px;
-    height: 50px;
+    height: 44px;
     align-items: center;
+    transition: background var(--duration-fast);
 }
 
 .category-item:hover{
@@ -435,10 +436,20 @@ export default {
     background-color: var(--background-item-active);
 }
 
+.category-item i {
+    color: var(--text-secondary);
+}
+
 .category-item p {
     margin-left: 8px;
-    font-size: var(--font-size-base);
     flex: 1;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    transition: color var(--duration-fast);
+}
+
+.category-item.active p{
+    font-weight: 500;
 }
 
 .conversation-list-container {
@@ -454,28 +465,6 @@ export default {
     width: 100%;
     display: flex;
     align-items: center;
-}
-
-.conversation-item img {
-    width: 36px;
-    height: 36px;
-    margin: 8px 16px;
-    min-width: 36px;
-    min-height: 36px;
-}
-
-.conversation-item p {
-    flex: 1;
-    font-size: var(--font-size-base);
-    margin-right: 16px;
-}
-
-.conversation-item:active {
-    background-color: var(--background-item-placeholder);
-}
-
-.conversation-item.active {
-    background-color: var(--background-item-placeholder);
 }
 
 .file-record-container .file-record-list-container {

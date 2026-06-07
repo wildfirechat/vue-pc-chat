@@ -69,6 +69,9 @@ export default {
 .avatar {
     width: 80px;
     height: 80px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 .info-action-container {
@@ -83,10 +86,14 @@ export default {
     margin-top: 20px;
     height: 30px;
     width: 100%;
-    padding: 0 4px;
+    padding: 0 8px;
     outline: none;
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-sm);
+    background: var(--background-input);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    transition: border-color var(--duration-fast);
 }
 
 .info-action-container input:active {
@@ -121,27 +128,40 @@ export default {
 
 .info-action-container .action-container button {
     margin: 0 4px 0 20px;
-    padding: 3px 20px;
+    padding: 4px 20px;
     border-radius: var(--radius-sm);
     outline: none;
+    font-size: var(--font-size-sm);
+    transition: background var(--duration-fast), border-color var(--duration-fast);
 }
 
 .info-action-container .action-container .cancel {
     border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+    background: transparent;
+}
+
+.info-action-container .action-container .cancel:hover {
+    background: var(--background-item-hover);
 }
 
 .info-action-container .action-container .cancel:active {
-    background: var(--background-item-placeholder);
+    background: var(--background-item-active);
 }
 
 .info-action-container .action-container .confirm {
     background-color: var(--accent-color);
     color: var(--text-on-accent);
-    border: 1px solid white;
+    border: 1px solid var(--accent-color);
+}
+
+.info-action-container .action-container .confirm:hover {
+    background-color: var(--accent-color-active);
+    border-color: var(--accent-color-active);
 }
 
 .info-action-container .action-container .confirm:active {
-    background-color: var(--status-info);
+    background-color: var(--accent-color-active);
 }
 
 </style>

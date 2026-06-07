@@ -166,8 +166,6 @@ export default {
     display: flex;
     height: 100%;
     flex-direction: column;
-    border-top-right-radius: var(--main-border-radius);
-    border-bottom-right-radius: var(--main-border-radius);
 }
 
 .member-list-container {

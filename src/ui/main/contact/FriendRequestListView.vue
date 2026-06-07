@@ -110,6 +110,9 @@ export default {
 .avatar {
     width: 32px;
     height: 32px;
+    border-radius: var(--default-portrait-border-radius);
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 .new-friend-item {
@@ -118,8 +121,8 @@ export default {
     width: 100%;
     font-size: var(--font-size-sm);
     align-items: center;
+    transition: background var(--duration-fast);
 }
-
 
 .new-friend-item.active {
     background-color: var(--background-item-placeholder);
@@ -153,12 +156,19 @@ export default {
 }
 
 .new-friend-item .info .name-action .accept {
-    padding: 0 8px;
+    padding: 2px 10px;
     text-align: center;
     color: var(--text-on-accent);
     background: var(--accent-color);
-    border-radius: var(--main-border-radius);
+    border-radius: var(--radius-md);
     border: solid 1px var(--accent-color);
+    font-size: var(--font-size-xs);
+    transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+.new-friend-item .info .name-action .accept:hover {
+    background: var(--accent-color-active);
+    border-color: var(--accent-color-active);
 }
 
 .new-friend-item .info .name-action .status {

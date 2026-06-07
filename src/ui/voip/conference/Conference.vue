@@ -44,8 +44,8 @@
                         </a>
                     </div>
                 </header>
-                <div v-if="transcriptionMessages.length > 0" 
-                     style="position: absolute; top: 40px; left: 10%; width: 80%; max-height: 120px; overflow-y: auto; border-radius: 4px; padding: 8px; z-index: 1000;">
+                <div v-if="transcriptionMessages.length > 0"
+                     style="position: absolute; top: 40px; left: 10%; width: 80%; max-height: 120px; overflow-y: auto; border-radius: var(--radius-sm); padding: 8px; z-index: 1000;">
                     <div v-for="(msg, index) in transcriptionMessages" :key="index" style="margin-bottom: 4px; word-break: break-word;">
                         <span style="color: var(--voip-chat-username); font-size: 13px;">{{ getUserDisplayName(msg.messageContent.userId) }}:</span>
                         <span style="color: var(--text-on-accent); font-size: 13px;">{{ msg.messageContent.content }}</span>
@@ -1523,7 +1523,7 @@ export default {
         this.$watch(() => this.conferenceConversationStore.state.conversation.currentConversationMessageList, (newVal) => {
             if (!newVal) return;
             const msgs = newVal.filter(m => {
-                return m.messageContent instanceof TranscriptionMessageContent 
+                return m.messageContent instanceof TranscriptionMessageContent
                     && m.conversation.type === ConversationType.ChatRoom
                     && m.conversation.target === this.session.callId;
             });
@@ -1707,7 +1707,7 @@ i.active {
     color: var(--text-on-accent);
     text-align: center;
     vertical-align: center;
-    border-radius: 9px;
+    border-radius: var(--radius-md);
     bottom: 0;
     background: var(--background-item-placeholder);
     transform: translateX(-50%) translateY(25%);
@@ -1789,7 +1789,7 @@ i.active {
     gap: 2px;
     background: var(--voip-danger-bg);
     border: none;
-    border-radius: var(--main-border-radius);
+    border-radius: var(--radius-lg);
     padding: 8px 18px;
     cursor: pointer;
     transition: background var(--duration-fast);
@@ -1830,7 +1830,7 @@ i.active {
 .avatar {
     width: 90px;
     height: 90px;
-    border-radius: 45px;
+    border-radius: var(--radius-circle);
 }
 
 .avatar.highlight {
@@ -1879,7 +1879,7 @@ i.active {
 .hangup-menu-popup {
     z-index: 9999;
     background: var(--voip-panel-bg);
-    border-radius: var(--main-border-radius);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     min-width: 200px;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55);

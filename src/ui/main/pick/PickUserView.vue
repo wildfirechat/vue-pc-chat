@@ -504,7 +504,7 @@ export default {
     width: 20px;
     height: 20px;
     border: 1px solid white;
-    border-radius: var(--main-border-radius);
+    border-radius: var(--radius-sm);
     background-color: var(--background-tertiary);
     top: 0;
     right: 0;

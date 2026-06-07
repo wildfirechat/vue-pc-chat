@@ -246,22 +246,39 @@ export default {
     position: sticky;
     background-color: var(--background-secondary);
     top: 0;
+    user-select: none;
+    transition: background var(--duration-fast);
 }
 
 .category-item {
     display: flex;
     width: 100%;
     justify-content: space-between;
+    align-items: center;
 }
 
 .category-item span:last-of-type {
     margin-right: 16px;
 }
 
+.category-item .title {
+    font-size: var(--font-size-base);
+    font-weight: normal;
+    font-style: normal;
+    color: var(--text-primary);
+}
+
+.category-item .desc {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    min-width: 20px;
+    text-align: right;
+}
+
 .category-item .tip {
     font-size: 10px;
     padding-left: 4px;
-    color: var(--text-secondary-strong);
+    color: var(--text-secondary);
 }
 
 .arrow {
@@ -270,6 +287,8 @@ export default {
     display: inline-block;
     padding: 3px;
     margin-right: 8px;
+    flex-shrink: 0;
+    transition: transform var(--duration-fast);
 }
 
 .right {

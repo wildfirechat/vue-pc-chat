@@ -14,8 +14,9 @@
                 <ul>
                     <li v-if="isFriend">
                         <label>{{ $t('common.alias') }}</label>
-                        <div class="alias">
+                        <div class="input-wrapper">
                             <input type="text" ref="input" :value="user.friendAlias" placeholder="备注名" @keyup.enter="updateFriendAlias"/>
+                            <span class="edit-icon">&#9998;</span>
                         </div>
                     </li>
                     <li v-if="!isFriend">
@@ -37,17 +38,17 @@
                 </ul>
             </div>
             <div class="footer" v-if="isFriend">
-                <div class="action" @click="chat">
+                <div class="i-button-wrapper i-button-large" @click="chat">
                     <i class="icon-ion-ios-chatboxes-outline"></i>
-                    <a>{{ $t('message.send_message') }}</a>
+                    {{ $t('message.send_message') }}
                 </div>
-                <div class="action" @click="startAudioCall">
+                <div class="i-button-wrapper i-button-large" @click="startAudioCall">
                     <i class="icon-ion-ios-telephone-outline"></i>
-                    <a>语音通话</a>
+                    语音通话
                 </div>
-                <div class="action" @click="startVideoCall">
+                <div class="i-button-wrapper i-button-large" @click="startVideoCall">
                     <i class="icon-ion-ios-videocam-outline"></i>
-                    <a>视频通话</a>
+                    视频通话
                 </div>
             </div>
         </div>
@@ -149,6 +150,8 @@ export default {
     width: 60px;
     height: 60px;
     margin-right: 20px;
+    border-radius: var(--default-portrait-border-radius);
+    object-fit: cover;
 }
 
 .header .name {
@@ -201,25 +204,7 @@ export default {
     font-size: var(--font-size-xs);
 }
 
-.content ul li .alias > input {
-    width: 100%;
-    border: none;
-    border-radius: var(--radius-sm);
-    outline: none;
-    padding: 4px;
-    color: var(--text-hint);
-    font-size: var(--font-size-sm);
-}
-
-.content ul li .alias > input:active {
-    border: 1px solid var(--border-active);
-}
-
-.content ul li .alias input:focus {
-    border: 1px solid var(--border-active);
-}
-
-.content ul li > div {
+.content ul li > div:not(.input-wrapper) {
     display: inline-block;
     flex: 1;
 }
@@ -230,22 +215,14 @@ export default {
     padding-top: 30px;
 }
 
-.footer .action {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    align-items: center;
-    color: var(--accent-color);
-}
-
-.footer .action a {
-    font-size: 10px;
-    padding-top: 1px;
-}
-
-.footer .action i {
+.footer i {
     font-size: var(--font-size-2xl);
+    color: var(--text-link);
+}
+
+.footer div {
+    margin: 0 8px;
+    color: var(--text-link);
 }
 
 </style>

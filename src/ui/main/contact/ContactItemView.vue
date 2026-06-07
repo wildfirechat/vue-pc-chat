@@ -80,9 +80,11 @@ export default {
 
 .label p {
     padding: 4px 4px 4px 0;
-    border-bottom: 1px solid var(--border-primary);
-    font-size: 10px;
-    color: var(--text-secondary-strong);
+    border-bottom: 1px solid var(--border-tertiary);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    font-weight: 500;
 }
 
 .contact-item {
@@ -94,7 +96,7 @@ export default {
 }
 
 .contact-item:hover{
-    background-color: var(--background-item-hover)
+    background-color: var(--background-item-hover);
 }
 
 .contact-item span {
@@ -133,11 +135,14 @@ export default {
 
 .user-online-status {
     color: var(--text-secondary);
-    font-size: 10px;
+    font-size: var(--font-size-xs);
 }
 
 .avatar {
     width: 32px;
     height: 32px;
+    border-radius: var(--default-portrait-border-radius);
+    object-fit: cover;
+    flex-shrink: 0;
 }
 </style>
