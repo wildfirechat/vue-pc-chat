@@ -60,7 +60,7 @@
         <section class="checked-contact-list-container">
             <header>
                 <h2>{{ this.title ? this.title : $t('pick.pick_contact') }}</h2>
-                <div style="display: flex; justify-content: flex-end">
+                <div class="flex-row flex-justify-end">
                     <span v-if="checkedUsers.length === 0">{{ $t('pick.picked_contact') }}</span>
                     <span v-else>{{ $t('pick.picked_contact') + ':' + this.checkedUsers.length }}</span>
                     <span v-if="sharedPickState.organizations.length">{{ '组织: ' + sharedPickState.organizations.length }}</span>
@@ -72,7 +72,7 @@
                         <img class="avatar" :src="user.portrait" alt="">
                         <button @click="onPickUser(user)" class="unpick-button">X</button>
                     </div>
-                    <div style="display: flex; align-items: center; ">
+                    <div class="flex-row flex-align-center">
                         <p class="name single-line">{{ user._displayName }}</p>
                         <p v-if="isExternalDomainUser(user)" class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName(user) }}</p>
                     </div>
@@ -286,9 +286,9 @@ export default {
 
 .input-container input {
     height: 25px;
-    margin: 15px;
+    margin: 16px;
     flex: 1;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border-tertiary);
     background-color: var(--background-primary);
     padding-left: 20px;
@@ -319,7 +319,7 @@ export default {
     line-height: 25px;
     cursor: pointer;
     color: var(--text-secondary-strong);
-    font-size: 16px;
+    font-size: var(--font-size-lg);
 }
 
 .pick-category-container {
@@ -338,9 +338,9 @@ export default {
     height: 40px;
     display: flex;
     align-items: center;
-    margin-left: 15px;
+    margin-left: 16px;
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: var(--font-size-base);
     border-top: 1px solid var(--border-tertiary);
     background-color: var(--background-secondary);
 }
@@ -352,7 +352,7 @@ export default {
 }
 
 .category-item .desc {
-    margin-right: 15px;
+    margin-right: 16px;
     color: var(--text-secondary-strong);
 }
 
@@ -361,7 +361,7 @@ export default {
     border-width: 0 1px 1px 0;
     display: inline-block;
     padding: 3px;
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
 .right {
@@ -383,14 +383,14 @@ export default {
 }
 
 .organization-section :deep(.member-list-container) {
-    margin: 5px;
+    margin: 4px;
     max-height: none;
     overflow: visible;
     height: auto;
 }
 
 .pick-source-nav {
-    padding: 10px 0 0 20px;
+    padding: 8px 0 0 20px;
     width: 100%;
     display: flex;
     align-items: center;
@@ -406,12 +406,12 @@ export default {
 
 .pick-source-nav a {
     text-decoration: none;
-    font-size: 14px;
+    font-size: var(--font-size-base);
 }
 
 .pick-source-nav li:not(:last-child)::after {
     display: inline-block;
-    margin: 0 10px;
+    margin: 0 8px;
     color: var(--text-secondary-strong);
     content: ">";
 }
@@ -450,13 +450,13 @@ export default {
 }
 
 .checked-contact-list-container header h2 {
-    font-size: 16px;
+    font-size: var(--font-size-lg);
     font-weight: normal;
     margin-left: 30px;
 }
 
 .checked-contact-list-container header span {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     margin-right: 20px;
 }
 
@@ -480,13 +480,13 @@ export default {
     column-count: 1;
     justify-content: center;
     align-items: center;
-    padding: 5px 10px;
+    padding: 4px 8px;
 }
 
 .checked-contact-list-container .content .picked-user-container .name {
     text-align: center;
     max-width: 80px;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 }
 
 .checked-contact-list-container .content .picked-user-container .picked-user {
@@ -496,7 +496,7 @@ export default {
 }
 
 .checked-contact-list-container .content .avatar {
-    margin: 10px 10px;
+    margin: 8px 8px;
 }
 
 .checked-contact-list-container .content .unpick-button {
@@ -504,7 +504,7 @@ export default {
     width: 20px;
     height: 20px;
     border: 1px solid white;
-    border-radius: 10px;
+    border-radius: var(--main-border-radius);
     background-color: var(--background-tertiary);
     top: 0;
     right: 0;
@@ -519,12 +519,12 @@ export default {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 footer button {
-    padding: 5px 30px;
-    border-radius: 4px;
+    padding: 4px 30px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border-primary);
 }
 

@@ -141,7 +141,7 @@ export default {
     height: 75px;
     display: flex;
     align-items: center;
-    padding-bottom: 15px;
+    padding-bottom: 16px;
     border-bottom: 1px solid var(--border-primary);
 }
 
@@ -159,14 +159,14 @@ export default {
 }
 
 .header .name h2 {
-    font-size: 15px;
+    font-size: var(--font-size-lg);
     font-style: normal;
     font-weight: normal;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .header .name p {
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     color: var(--text-secondary-strong);
 }
 
@@ -178,7 +178,7 @@ export default {
 
 .content ul {
     list-style: none;
-    margin: 20px 0 10px 0;
+    margin: 20px 0 8px 0;
 }
 
 .content ul li {
@@ -186,7 +186,7 @@ export default {
     height: 40px;
     line-height: 40px;
     display: flex;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 }
 
 .content ul li label {
@@ -198,17 +198,17 @@ export default {
 }
 
 .content ul li p {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 }
 
 .content ul li .alias > input {
     width: 100%;
     border: none;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     outline: none;
-    padding: 5px;
+    padding: 4px;
     color: var(--text-hint);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
 }
 
 .content ul li .alias > input:active {
@@ -245,7 +245,7 @@ export default {
 }
 
 .footer .action i {
-    font-size: 20px;
+    font-size: var(--font-size-2xl);
 }
 
 </style>

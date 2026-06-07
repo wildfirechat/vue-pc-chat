@@ -415,7 +415,7 @@ export default {
 .fav-list-container h2 {
     width: 100%;
     height: 60px;
-    font-size: 16px;
+    font-size: var(--font-size-lg);
     font-style: normal;
     font-weight: normal;
     display: flex;
@@ -469,7 +469,7 @@ export default {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-primary);
 }
 
@@ -488,7 +488,7 @@ export default {
 
 .fav-item-file {
     display: flex;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     height: 110px;
     align-items: center;
 }
@@ -496,7 +496,7 @@ export default {
 .fav-item-file img {
     width: 60px;
     height: 60px;
-    margin: 0 20px 0 10px;
+    margin: 0 20px 0 8px;
 }
 
 .fav-item-file .name-size {
@@ -546,7 +546,7 @@ export default {
 }
 
 .fav-item-audio {
-    margin: 0 10px;
+    margin: 0 8px;
 }
 
 .fav-item-audio audio {
@@ -560,12 +560,12 @@ export default {
 }
 
 .fav-item-sender-time .time {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-hint);
 }
 
 .fav-item-sender-time .sender {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-hint);
     padding-top: 3px;
 }
@@ -577,8 +577,8 @@ export default {
 }
 
 .media-category-container p {
-    font-size: 14px;
-    padding: 20px 0 10px 0;
+    font-size: var(--font-size-base);
+    padding: 20px 0 8px 0;
 }
 
 .media-category-items {

@@ -170,7 +170,7 @@ export default {
     flex-direction: column;
     align-items: center;
     padding: 6px 4px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     min-width: 0;
     overflow: hidden;
 }
@@ -225,12 +225,12 @@ export default {
     display: flex;
     color: var(--text-danger);
     align-items: center;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     justify-content: center;
     height: 42px;
     flex-shrink: 0;
     border-top: 1px solid var(--border-tertiary);
-    margin: 0 10px;
+    margin: 0 8px;
 }
 
 .conversation-action-item:active {

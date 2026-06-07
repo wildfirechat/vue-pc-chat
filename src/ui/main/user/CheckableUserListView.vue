@@ -201,13 +201,13 @@ ul {
 }
 
 .checkbox {
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
 .contact-item {
     display: flex;
     flex-direction: column;
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     align-items: flex-start;
 }
 
@@ -217,7 +217,7 @@ ul {
 }
 
 .contact-item .label p {
-    padding: 5px 5px 5px 0;
+    padding: 4px 4px 4px 0;
     border-bottom: 1px solid var(--border-primary);
 }
 
@@ -227,14 +227,14 @@ ul {
 }
 
 .contact-item .content {
-    padding: 5px 5px 5px 0;
+    padding: 4px 4px 4px 0;
     display: flex;
     width: 100%;
     align-items: center;
 }
 
 .contact-item .content span {
-    margin-left: 10px;
+    margin-left: 8px;
 }
 
 .contact-item .content.active {

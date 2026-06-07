@@ -172,20 +172,20 @@ export default {
 
 .conversation-list-panel .input-container input {
     height: 25px;
-    margin: 15px 20px 0 15px;
+    margin: 16px 20px 0 16px;
     flex: 1;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border-tertiary);
     background-color: var(--background-primary);
-    padding-left: 10px;
+    padding-left: 8px;
     text-align: left;
 }
 
 .conversation-list-panel .create-group {
     background-color: var(--background-item-normal);
     height: 40px;
-    font-size: 13px;
-    padding-left: 15px;
+    font-size: var(--font-size-sm);
+    padding-left: 16px;
     display: flex;
     align-items: center;
 }
@@ -203,9 +203,9 @@ export default {
 
 .conversation-list-container > p {
     background-color: var(--background-item-normal);
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-hint);
-    padding-left: 15px;
+    padding-left: 16px;
     padding-top: 8px;
     padding-bottom: 8px;
     flex-shrink: 0;
@@ -226,13 +226,13 @@ export default {
 }
 
 .checked-conversation-list-container header h2 {
-    font-size: 16px;
+    font-size: var(--font-size-lg);
     font-weight: normal;
     margin-left: 30px;
 }
 
 .checked-conversation-list-container header span {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     margin-right: 20px;
 }
 
@@ -256,14 +256,14 @@ export default {
     column-count: 1;
     justify-content: center;
     align-items: center;
-    padding: 5px 10px;
+    padding: 4px 8px;
     overflow: hidden;
 }
 
 .checked-conversation-list-container .content .picked-user-container .name {
     text-align: center;
     max-width: 80px;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 }
 
 .checked-conversation-list-container .content .picked-user-container .picked-user {
@@ -273,10 +273,10 @@ export default {
 }
 
 .checked-conversation-list-container .content .avatar {
-    margin: 10px 10px;
+    margin: 8px 8px;
     display: inline-block;
     background: var(--background-item-placeholder);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
 }
 
 .checked-conversation-list-container .content .unpick-button {
@@ -284,7 +284,7 @@ export default {
     width: 20px;
     height: 20px;
     border: 1px solid var(--border-primary);
-    border-radius: 10px;
+    border-radius: var(--main-border-radius);
     top: 0;
     right: 0;
 }
@@ -298,12 +298,12 @@ export default {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .checked-conversation-list-container footer button {
-    padding: 5px 30px;
-    border-radius: 4px;
+    padding: 4px 30px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--border-primary);
 }
 
@@ -316,7 +316,7 @@ export default {
 
 .checked-conversation-list-container label {
     width: 100%;
-    padding: 5px 10px;
+    padding: 4px 8px;
     height: 30px;
 }
 

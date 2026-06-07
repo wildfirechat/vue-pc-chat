@@ -60,10 +60,10 @@ export default {
 
 .group-info-container a {
     color: var(--text-on-accent);
-    padding: 10px 40px;
+    padding: 8px 40px;
     background-color: var(--status-info);
-    border-radius: 5px;
-    font-size: 14px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
     border: 1px solid transparent;
     margin-bottom: 150px;
 }
@@ -87,7 +87,7 @@ export default {
 
 .group-info p {
     margin-top: 20px;
-    font-size: 20px;
+    font-size: var(--font-size-2xl);
     margin-bottom: 100px;
 }
 
@@ -100,7 +100,7 @@ export default {
     display: flex;
     justify-content: center;
     color: var(--accent-color);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
 }
 
 </style>

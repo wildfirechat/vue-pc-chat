@@ -35,9 +35,9 @@
                              @click.stop="clickUserItem(user)"
                              @contextmenu.prevent="showContactContextMenu($event, user)">
                             <img class="avatar" :src="user.portrait" alt="" @error="imgUrlAlt">
-                            <div style="padding-left: 10px">
-                                <div style="display: flex; align-items: center; ">
-                                    <p class="single-line">{{ user._displayName }}</p>
+                            <div class="user-item-info">
+                                <div class="flex-row flex-align-center user-item-name-row">
+                                    <p class="single-line user-item-name">{{ user._displayName }}</p>
                                     <p v-if="isExternalDomainUser(user)" class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName(user) }}</p>
                                 </div>
                                 <p v-if="user._userOnlineStatusDesc" class="single-line user-online-status"> {{ user._userOnlineStatusDesc }}</p>
@@ -255,13 +255,13 @@ ul {
 }
 
 .checkbox {
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
 .contact-item {
     display: flex;
     flex-direction: column;
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     align-items: flex-start;
 }
 
@@ -271,7 +271,7 @@ ul {
 }
 
 .contact-item .label p {
-    padding: 5px 5px 5px 0;
+    padding: 4px 4px 4px 0;
     border-bottom: 1px solid var(--border-primary);
 }
 
@@ -281,14 +281,14 @@ ul {
 }
 
 .contact-item .content {
-    padding: 10px;
+    padding: 8px;
     display: flex;
     width: 100%;
     align-items: center;
 }
 
 .contact-item .content span {
-    margin-left: 10px;
+    margin-left: 8px;
 }
 
 .contact-item .content.active {
@@ -297,6 +297,23 @@ ul {
 
 .contact-item .content:hover {
     background-color: var(--background-item-hover);
+}
+
+.user-item-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding-left: 8px;
+}
+
+.user-item-name-row {
+    min-width: 0;
+    overflow: hidden;
+}
+
+.user-item-name {
+    flex: 1;
+    min-width: 0;
 }
 
 .user-online-status {

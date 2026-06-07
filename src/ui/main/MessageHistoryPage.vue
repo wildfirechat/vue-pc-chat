@@ -227,11 +227,11 @@ export default {
 
 .search-input-container input {
     height: 25px;
-    padding: 0 10px 0 20px;
+    padding: 0 8px 0 20px;
     text-align: left;
     flex: 1;
     border: 1px solid var(--border-primary);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     outline: none;
     background-color: var(--background-input);
 }
@@ -291,16 +291,12 @@ export default {
 
 .header {
     height: 100%;
-    padding: 10px;
+    padding: 8px;
     position: relative;
 }
 
 .header .avatar {
     position: relative;
-    width: 45px;
-    height: 45px;
-    min-width: 45px;
-    min-height: 45px;
     background: var(--background-item-placeholder);
     top: 50%;
     transform: translateY(-50%);
@@ -318,17 +314,17 @@ export default {
 
 .content-container .title {
     display: inline-block;
-    font-size: 14px;
+    font-size: var(--font-size-base);
     color: var(--text-primary);
     font-style: normal;
     font-weight: normal;
-    padding-right: 10px;
+    padding-right: 8px;
     flex: 1;
 }
 
 .content-container .desc {
     color: var(--text-placeholder);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
 }
 
 .conversation-message-list {
@@ -349,7 +345,7 @@ export default {
 
 .desc-action-container .desc {
     color: var(--text-placeholder);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
 }
 
 .desc-action-container .action {
@@ -357,11 +353,11 @@ export default {
     align-items: center;
     color: var(--text-primary);
     margin-left: auto;
-    font-size: 14px;
+    font-size: var(--font-size-base);
 }
 
 .desc-action-container .action i {
-    padding-right: 5px;
+    padding-right: 4px;
 }
 
 .message-list-container {
@@ -369,7 +365,7 @@ export default {
     flex-direction: column;
     flex: 1;
     padding-bottom: 20px;
-    margin-left: -10px;
+    margin-left: -8px;
     overflow: scroll;
 }
 
@@ -381,7 +377,7 @@ export default {
 
 .message-list-container ul li {
     position: relative;
-    padding: 10px 0;
+    padding: 8px 0;
 }
 
 .message-list-container ul li:not(:last-child)::after {
@@ -389,7 +385,7 @@ export default {
     width: calc(100% - 55px);
     position: absolute;
     margin-left: 55px;
-    padding: 5px 0;
+    padding: 4px 0;
     border-bottom: 1px solid var(--border-tertiary);
 }
 
@@ -404,19 +400,19 @@ export default {
 
 .name-time-container {
     width: 100%;
-    padding: 5px 0;
+    padding: 4px 0;
     display: flex;
     justify-content: space-between;
 }
 
 .name-time-container p {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-tertiary);
 }
 
 .name-time-content-container .content {
     display: inline-block;
-    margin-left: -10px;
+    margin-left: -8px;
     margin-right: 65px;
 }
 
@@ -425,7 +421,7 @@ export default {
     position: absolute;
     right: 0;
     top: 40px;
-    font-size: 14px;
+    font-size: var(--font-size-base);
     color: var(--text-link);
 }
 
@@ -440,7 +436,7 @@ export default {
     min-width: 40px;
     min-height: 40px;
     overflow: hidden;
-    margin: 10px;
+    margin: 8px;
 }
 
 .portrait-container img {

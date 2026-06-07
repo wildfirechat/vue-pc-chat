@@ -353,25 +353,25 @@ export default {
 .setting-container .content {
     flex: 1;
     margin-left: 20px;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .setting-container .content h2 {
     font-weight: normal;
     font-style: normal;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
 }
 
 .setting-container .content label {
-    padding: 10px 0;
+    padding: 8px 0;
     display: flex;
     justify-content: space-between;
     width: 100%;
-    font-size: 14px;
+    font-size: var(--font-size-base);
 }
 
 .setting-container .content label input {
-    margin: 0 10px;
+    margin: 0 8px;
 }
 
 .setting-container .dropdown-toggle-container {
@@ -379,20 +379,20 @@ export default {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    font-size: 14px;
+    font-size: var(--font-size-base);
 }
 
 .setting-container .ad-container {
-    padding: 10px;
-    font-size: 15px;
+    padding: 8px;
+    font-size: var(--font-size-lg);
     background: var(--background-secondary);
-    margin: 10px;
-    border-radius: 5px;
+    margin: 8px;
+    border-radius: var(--radius-md);
     /*box-shadow: 0 2px 4px 0 var(--background-mask), 0 6px 20px 0 var(--background-mask);*/
 }
 
 .ad-container p {
-    padding: 5px 0;
+    padding: 4px 0;
 }
 
 .setting-container footer {
@@ -407,7 +407,7 @@ export default {
 .proto-version-info {
     justify-self: flex-start;
     margin-right: auto;
-    padding-left: 10px;
+    padding-left: 8px;
     color: var(--text-hint);
 }
 
@@ -415,10 +415,10 @@ export default {
     /* position: relative; */
     margin-right: 17px;
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: var(--font-size-base);
     padding: 9px 8px;
     border: 0;
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
     background: 0;
     outline: 0;
     text-transform: uppercase;

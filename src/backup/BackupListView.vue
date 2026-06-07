@@ -285,7 +285,7 @@ export default {
 .backup-list-container h2 {
     font-weight: normal;
     font-size: 20px;
-    margin-bottom: 15px; /* 减小margin */
+    margin-bottom: 16px; /* 减小margin */
     text-align: center;
     color: var(--text-primary);
     flex-shrink: 0; /* 标题不缩小 */
@@ -301,7 +301,7 @@ export default {
 
 .empty .hint {
     font-size: 14px;
-    margin-top: 10px;
+    margin-top: 8px;
     color: var(--text-tertiary);
 }
 
@@ -310,7 +310,7 @@ export default {
     overflow-y: auto;
     border: 1px solid var(--border-primary);
     border-radius: 8px;
-    padding: 10px;
+    padding: 8px;
     min-height: 0; /* 允许flex子元素缩小 */
     max-height: 350px; /* 限制列表最大高度 */
 }
@@ -319,7 +319,7 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 15px; /* 减小padding */
+    padding: 12px 16px; /* 减小padding */
     border-bottom: 1px solid var(--border-tertiary);
     transition: background 0.2s;
     flex-shrink: 0; /* 防止item被压缩 */
@@ -342,7 +342,7 @@ export default {
     font-size: 16px;
     font-weight: 500;
     color: var(--text-primary);
-    margin-bottom: 5px; /* 减小margin */
+    margin-bottom: 4px; /* 减小margin */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -355,7 +355,7 @@ export default {
 }
 
 .backup-detail span {
-    margin-right: 15px;
+    margin-right: 16px;
 }
 
 .backup-size {
@@ -400,15 +400,15 @@ export default {
 }
 
 .footer {
-    margin-top: 15px; /* 减小margin */
-    padding-top: 15px; /* 增加顶部padding */
+    margin-top: 16px; /* 减小margin */
+    padding-top: 16px; /* 增加顶部padding */
     text-align: center;
     flex-shrink: 0; /* 确保footer不被压缩 */
     border-top: 1px solid var(--border-primary); /* 添加分隔线 */
 }
 
 .close-btn {
-    padding: 10px 40px;
+    padding: 8px 40px;
     background: var(--accent-color);
     color: var(--text-on-accent);
     border: none;
@@ -462,12 +462,12 @@ export default {
 
 .dialog-buttons {
     display: flex;
-    gap: 10px;
+    gap: 8px;
 }
 
 .dialog-buttons button {
     flex: 1;
-    padding: 10px;
+    padding: 8px;
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -495,7 +495,7 @@ export default {
 
 .dialog-button {
     width: 100%;
-    padding: 10px;
+    padding: 8px;
     background: var(--accent-color);
     color: var(--text-on-accent);
     border: none;

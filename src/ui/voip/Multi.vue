@@ -641,7 +641,7 @@ export default {
 
 .duration-action-container p {
     color: var(--text-on-accent);
-    padding: 10px 0;
+    padding: 8px 0;
 }
 
 .action-container {
@@ -656,7 +656,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-on-accent);
 }
 
@@ -684,7 +684,7 @@ export default {
 }
 
 .circle {
-    border-radius: 50%;
+    border-radius: var(--radius-circle);
     background: var(--background-action);
 }
 </style>

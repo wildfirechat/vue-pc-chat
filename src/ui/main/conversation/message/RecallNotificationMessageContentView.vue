@@ -79,13 +79,13 @@ export default {
 .notification-container .notification {
     color: var(--text-placeholder);
     margin: 20px 0;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 }
 
 .notification-container a {
     text-decoration: none;
-    margin-left: 10px;
-    font-size: 14px;
+    margin-left: 8px;
+    font-size: var(--font-size-base);
 }
 
 </style>

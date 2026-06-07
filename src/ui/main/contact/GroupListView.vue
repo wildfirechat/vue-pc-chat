@@ -6,7 +6,7 @@
                      v-bind:class="{active: sharedContactState.currentGroup && sharedContactState.currentGroup.target === group.target}"
                      @contextmenu.prevent="showGroupContextMenu($event, group)">
                     <img class="avatar" :src="group.portrait">
-                    <div style="padding-left: 10px">
+                    <div class="group-item-info">
                         <p class="single-line">{{ group.remark ? group.remark : group.name }}</p>
                     </div>
                 </div>
@@ -45,9 +45,9 @@ export default {
 }
 
 .group-item {
-    padding: 10px 5px 10px 30px;
+    padding: 8px 4px 8px 30px;
     display: flex;
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     align-items: center;
 }
 
@@ -59,8 +59,15 @@ export default {
     background-color: var(--background-item-placeholder);
 }
 
+.group-item-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    padding-left: 8px;
+}
+
 .group-item span {
-    margin-left: 10px;
+    margin-left: 8px;
 }
 
 </style>

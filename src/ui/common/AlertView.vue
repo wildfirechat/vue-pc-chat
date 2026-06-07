@@ -85,7 +85,7 @@ export default {
 .portrait-container {
     width: 60px;
     height: 60px;
-    margin: 10px 0;
+    margin: 8px 0;
 }
 
 .portrait-container > img {
@@ -94,20 +94,20 @@ export default {
 }
 
 .title {
-    font-size: 15px;
+    font-size: var(--font-size-lg);
     text-align: center;
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .content {
-    font-size: 12px;
-    padding: 10px;
+    font-size: var(--font-size-xs);
+    padding: 8px;
     flex: 1;
 }
 
 .content.alone {
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     padding-top: 14px;
 }
 
@@ -123,9 +123,9 @@ export default {
 
 .action-container button {
     flex: 1;
-    border-radius: 4px;
-    padding: 5px 0;
-    margin: 0 15px;
+    border-radius: var(--radius-sm);
+    padding: 4px 0;
+    margin: 0 16px;
     border: 1px solid var(--border-primary);
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }

@@ -150,8 +150,8 @@ ul li {
 }
 
 .action {
-    font-size: 13px;
-    padding: 0 15px;
+    font-size: var(--font-size-sm);
+    padding: 0 16px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -181,11 +181,11 @@ ul li {
 }
 
 .action p {
-    padding-top: 10px;
+    padding-top: 8px;
 }
 
 .action i {
-    font-size: 20px;
+    font-size: var(--font-size-2xl);
 }
 
 

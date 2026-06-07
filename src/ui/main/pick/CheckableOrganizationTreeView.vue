@@ -6,7 +6,7 @@
                     <li v-for="(org, index) in subOrganizations" :key="org.id">
                         <div class="organization-item"
                              @click.stop="clickOrganizationItem(org)">
-                            <input type="checkbox" style="margin-right: 10px"
+                            <input type="checkbox" style="margin-right: 12px"
                                    v-bind:value="org"
                                    :checked="isOrganizationChecked(org)">
                             <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
@@ -17,7 +17,7 @@
                     <li v-for="(employee, index) in employees" :key="employee.employeeId">
                         <div class="organization-item "
                              @click.stop="clickEmployeeItem(employee)">
-                            <input type="checkbox" style="margin-right: 10px"
+                            <input type="checkbox" style="margin-right: 12px"
                                    v-bind:value="employee"
                                    :checked="isEmployeeChecked(employee)">
                             <img :src="employeePortraitUrl(employee)">
@@ -32,7 +32,7 @@
                     <li v-for="(employee, index) in searchResults" :key="'search-' + employee.employeeId">
                         <div class="organization-item"
                              @click.stop="clickEmployeeItem(employee)">
-                            <input type="checkbox" style="margin-right: 10px"
+                            <input type="checkbox" style="margin-right: 12px"
                                    v-bind:value="employee"
                                    :checked="isEmployeeChecked(employee)">
                             <img :src="employeePortraitUrl(employee)">
@@ -171,7 +171,7 @@ export default {
 }
 
 .member-list-container {
-    margin: 5px 5px 20px 5px;
+    margin: 4px 4px 20px 4px;
     flex: 1;
     overflow-y: scroll;
 }
@@ -183,7 +183,7 @@ export default {
     height: 56px;
     padding: 0 20px;
     border-radius: var(--default-portrait-border-radius);
-    font-size: 14px;
+    font-size: var(--font-size-base);
 }
 
 .organization-item:hover {
@@ -194,20 +194,20 @@ export default {
     width: 36px;
     height: 36px;
     border-radius: var(--default-portrait-border-radius);
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
 .organization-item .button {
     justify-self: flex-end;
     margin-left: auto;
-    padding: 5px;
-    font-size: 14px;
+    padding: 4px;
+    font-size: var(--font-size-base);
     color: var(--accent-color);
 }
 
 .organization-item .button:not(.disabled):hover {
     background: var(--background-selected-dim);
-    border-radius: 5px;
+    border-radius: var(--radius-md);
 }
 
 .organization-item .button.disabled {
@@ -218,7 +218,7 @@ export default {
     padding: 20px;
     color: var(--text-secondary);
     text-align: center;
-    font-size: 14px;
+    font-size: var(--font-size-base);
 }
 
 </style>

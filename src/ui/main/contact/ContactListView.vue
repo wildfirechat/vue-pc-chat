@@ -240,9 +240,9 @@ export default {
     height: 40px;
     display: flex;
     align-items: center;
-    padding-left: 15px;
+    padding-left: 16px;
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: var(--font-size-base);
     position: sticky;
     background-color: var(--background-secondary);
     top: 0;
@@ -255,12 +255,12 @@ export default {
 }
 
 .category-item span:last-of-type {
-    margin-right: 15px;
+    margin-right: 16px;
 }
 
 .category-item .tip {
     font-size: 10px;
-    padding-left: 5px;
+    padding-left: 4px;
     color: var(--text-secondary-strong);
 }
 
@@ -269,7 +269,7 @@ export default {
     border-width: 0 1px 1px 0;
     display: inline-block;
     padding: 3px;
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
 .right {

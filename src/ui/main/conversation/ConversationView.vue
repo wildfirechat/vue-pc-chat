@@ -1220,7 +1220,7 @@ export default {
 
 
 .title-container h1 {
-    font-size: 16px;
+    font-size: var(--font-size-lg);
     word-wrap: break-word;
     max-width: 500px;
     text-overflow: ellipsis;
@@ -1229,7 +1229,7 @@ export default {
 
 .title-container a {
     text-decoration: none;
-    padding: 15px;
+    padding: 16px;
     color: var(--text-primary);
 }
 
@@ -1259,11 +1259,11 @@ export default {
 
 .conversation-action-container {
     display: flex;
-    margin: 0 10px;
+    margin: 0 8px;
 }
 
 .conversation-action-container .action{
-    margin: 0 5px;
+    margin: 0 4px;
     width: 30px !important;
     height: 30px !important;
 }
@@ -1287,14 +1287,14 @@ export default {
     width: 100%;
     z-index: 100;
     height: 100%;
-    padding: 20px 15px 15px 15px;
+    padding: 20px 16px 16px 16px;
 }
 
 .conversation-content-container .drag-drop {
     border: 2px dashed var(--border-dashed-active);
     height: 100%;
     width: 100%;
-    border-radius: 5px;
+    border-radius: var(--radius-md);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1312,7 +1312,7 @@ export default {
 }
 
 .ongoing-call-item {
-    padding: 10px 20px;
+    padding: 8px 20px;
     display: flex;
     border-bottom: 1px solid var(--border-secondary);
 }
@@ -1322,9 +1322,9 @@ export default {
 }
 
 .ongoing-call-item button {
-    padding: 5px 10px;
+    padding: 4px 8px;
     border: 1px solid var(--border-primary);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
 }
 
 .ongoing-call-item button:active {
@@ -1347,7 +1347,7 @@ export default {
 }
 
 .header {
-    padding: 10px;
+    padding: 8px;
     text-align: center;
 }
 
@@ -1357,7 +1357,7 @@ export default {
     height: 20px;
     border: 2px solid var(--background-tertiary);
     border-top: 2px solid var(--border-active);
-    border-radius: 50%;
+    border-radius: var(--radius-circle);
     animation: spin 1s linear infinite;
 }
 
@@ -1368,7 +1368,7 @@ export default {
 
 .finished {
     color: var(--text-hint);
-    font-size: 14px;
+    font-size: var(--font-size-base);
 }
 
 .unread-count-tip-container {
@@ -1377,7 +1377,7 @@ export default {
     background: var(--background-primary);
     width: auto;
     color: var(--border-active);
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 }
 
 /*.handler {*/
@@ -1387,7 +1387,7 @@ export default {
 
 .inputting-container {
     display: flex;
-    padding: 10px 20px;
+    padding: 8px 20px;
     align-items: center;
 }
 

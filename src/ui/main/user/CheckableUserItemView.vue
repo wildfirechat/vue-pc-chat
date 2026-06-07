@@ -15,7 +15,7 @@
                    type="checkbox"
                    :checked="isUserChecked(source)">
             <img class="avatar" :src="source.portrait" alt="">
-            <div style="display: flex; align-items: center; ">
+            <div class="flex-row flex-align-center">
                 <p class="single-line">{{ source._displayName || (source.groupAlias ? source.groupAlias : (source.friendAlias ? source.friendAlias : (source.displayName ? source.displayName : '用户'))) }}</p>
                 <p v-if="isExternalDomainUser" class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName }}</p>
             </div>
@@ -138,17 +138,17 @@ ul {
 }
 
 .avatar {
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
 .checkbox {
-    margin-right: 10px;
+    margin-right: 12px;
 }
 
 .contact-item {
     display: flex;
     flex-direction: column;
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     align-items: flex-start;
 }
 
@@ -158,7 +158,7 @@ ul {
 }
 
 .contact-item .label p {
-    padding: 5px 5px 5px 0;
+    padding: 4px 4px 4px 0;
     border-bottom: 1px solid var(--border-primary);
 }
 
@@ -168,14 +168,14 @@ ul {
 }
 
 .contact-item .content {
-    padding: 10px 5px 10px 0;
+    padding: 8px 4px 8px 0;
     display: flex;
     width: 100%;
     align-items: center;
 }
 
 .contact-item .content span {
-    margin-left: 10px;
+    margin-left: 8px;
 }
 
 .contact-item .content.active {

@@ -1,7 +1,7 @@
 <template>
     <div ref="message-input-container" class="message-input-container" :class="{resized: resized}">
         <div v-if="convMuted"
-             style="width: 100%; height: 50px; margin-top: -2px; background: lightgrey; display: flex; flex-direction: row; justify-content: center; align-items: center">
+             class="flex-center" style="width: 100%; height: 50px; margin-top: -2px; background: lightgrey">
             <p style="color: white">群禁言或者群已被解散</p>
         </div>
         <section v-else-if="!sharedConversationState.showChannelMenu" class="message-input-section">
@@ -25,7 +25,7 @@
                         <div class="emoji-arrow" :style="{ left: emojiPickerPos.arrowOffset + 'px' }"></div>
                     </div>
                 </Teleport>
-                <ul style="display: flex; align-content: center; padding: 0 10px">
+                <ul class="flex-row" style="align-content: center; padding: 0 8px">
                     <li v-if="!inputOptions['disableEmoji']">
                         <div class="i-button-wrapper i-button-small">
                             <i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart" :title="$t('conversation.action_tip_emoji')"/>
@@ -42,7 +42,7 @@
                         <div class="screen-shot-wrapper">
                             <i id="screenShot" @click="screenShot(false)" class="icon-ion-scissors" :title="$t('conversation.action_tip_screenshot')"/>
                             <span style="align-self: flex-end; padding-bottom: 4px" class="screen-shot-more">
-                                <i class="icon-ion-chevron-down" style="font-size: 10px; color: var(--text-primary); padding-left: 5px;"/>
+                                <i class="icon-ion-chevron-down" style="font-size: 10px; color: var(--text-primary); padding-left: 4px;"/>
                                 <span @click="screenShot(true)" class="screen-shot-button">{{ $t('conversation.action_tip_screenshot_hide') }}</span>
                             </span>
                         </div>
@@ -106,7 +106,7 @@
                         </div>
                     </li>
                 </ul>
-                <ul style="display: flex; padding: 0 10px">
+                <ul class="flex-row" style="padding: 0 8px">
                     <template v-if="!inputOptions['disableVoip']  && [0, 1, 5].indexOf(conversationInfo.conversation.type) >= 0 && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
                         <li v-if="!inputOptions['disableAudioCall']">
                             <div class="i-button-wrapper i-button-small">
@@ -185,7 +185,7 @@
             </vue-context>
             <QuoteMessageView
                 v-if="quotedMessage"
-                style="padding: 10px 20px"
+                style="padding: 8px 20px"
                 v-on:cancelQuoteMessage="cancelQuoteMessage"
                 :enable-message-preview="false"
                 :quoted-message="quotedMessage" :show-close-button="true"/>
@@ -1599,7 +1599,7 @@ export default {
     z-index: 99999;
     background-color: var(--background-secondary, var(--background-primary));
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
     padding: 8px 8px 6px;
     display: flex;
@@ -1628,14 +1628,14 @@ export default {
 
 .sticker-suggestion-list::-webkit-scrollbar-thumb {
     background-color: var(--scrollbar-thumb);
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
 }
 
 .sticker-suggestion-item {
     flex-shrink: 0;
     width: 56px;
     height: 56px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     border: 2px solid transparent;
     display: flex;
     align-items: center;
@@ -1671,7 +1671,7 @@ export default {
 }
 
 .input-action-container i{
-    font-size: 18px;
+    font-size: var(--font-size-2xl);
 }
 
 .input {
@@ -1685,7 +1685,7 @@ export default {
     overflow-x: hidden;
     user-select: text;
     -webkit-user-select: text;
-    font-size: 13px;
+    font-size: var(--font-size-sm);
 }
 
 .message-input-container.resized .input {
@@ -1701,10 +1701,10 @@ export default {
 .input:empty:before {
     content: attr(title);
     color: var(--text-hint);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
 }
 .input-action-container ul li {
-    padding: 0 5px;
+    padding: 0 4px;
 }
 
 .input-action-container ul li .screen-shot-button {
@@ -1712,10 +1712,10 @@ export default {
     left: 0;
     top: 100%;
     display: none;
-    padding: 5px 10px;
-    font-size: 12px;
+    padding: 4px 8px;
+    font-size: var(--font-size-xs);
     background-color: var(--text-placeholder);
-    border-radius: 5px;
+    border-radius: var(--radius-md);
     color: var(--text-on-accent);
 }
 
@@ -1725,11 +1725,11 @@ export default {
     align-items: center;
     flex-direction: row;
     justify-content: space-around;
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     width: 40px;
     height: 28px;
     transition: background-color 0.15s ease;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 }
 
 .screen-shot-wrapper:hover {
@@ -1775,9 +1775,9 @@ export default {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     background: var(--gradient-recording);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     padding: 12px 20px;
     box-shadow: var(--shadow-accent-recording);
     min-width: 180px;
@@ -1797,7 +1797,7 @@ export default {
 .recording-content {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 4px;
 }
 
@@ -1812,7 +1812,7 @@ export default {
     width: 3px;
     height: 100%;
     background: var(--background-primary);
-    border-radius: 2px;
+    border-radius: var(--radius-sm);
     animation: wave 1s ease-in-out infinite;
 }
 
@@ -1827,14 +1827,14 @@ export default {
 
 .recording-text {
     color: var(--text-on-accent);
-    font-size: 14px;
+    font-size: var(--font-size-base);
     font-weight: 500;
     letter-spacing: 0.5px;
 }
 
 .recording-time {
     color: var(--background-trans-light);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     font-family: 'Monaco', 'Courier New', monospace;
     margin-left: auto;

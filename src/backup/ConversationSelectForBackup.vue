@@ -655,7 +655,7 @@ export default {
     font-size: 18px;
     font-weight: 500;
     color: var(--text-primary);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .detail-text {
@@ -673,7 +673,7 @@ export default {
     background: var(--border-primary);
     border-radius: 4px;
     overflow: hidden;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .progress-fill {
@@ -718,7 +718,7 @@ export default {
 .conversation-select-container h2 {
     font-weight: normal;
     font-size: 20px;
-    margin-bottom: 15px;
+    margin-bottom: 16px;
     text-align: center;
     color: var(--text-primary);
     flex-shrink: 0;
@@ -728,8 +728,8 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
-    padding: 10px;
+    margin-bottom: 16px;
+    padding: 8px;
     background: var(--background-tertiary);
     border-radius: 6px;
     flex-shrink: 0; /* 确保不缩小 */
@@ -768,7 +768,7 @@ export default {
     overflow-y: auto;
     border: 1px solid var(--border-primary);
     border-radius: 8px;
-    padding: 10px;
+    padding: 8px;
     min-height: 0;
     max-height: 400px; /* 限制列表最大高度，确保footer可见 */
 }
@@ -872,17 +872,17 @@ export default {
 }
 
 .footer {
-    margin-top: 15px;
+    margin-top: 16px;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     justify-content: center;
     flex-shrink: 0; /* 确保footer不被压缩 */
-    padding-top: 15px;
+    padding-top: 16px;
     border-top: 1px solid var(--border-primary);
 }
 
 .cancel-btn {
-    padding: 10px 30px;
+    padding: 8px 30px;
     background: var(--border-primary);
     color: var(--text-muted);
     border: none;
@@ -897,7 +897,7 @@ export default {
 }
 
 .confirm-btn {
-    padding: 10px 30px;
+    padding: 8px 30px;
     background: var(--accent-color);
     color: var(--text-on-accent);
     border: none;

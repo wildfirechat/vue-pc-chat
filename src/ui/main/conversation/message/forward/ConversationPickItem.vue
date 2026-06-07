@@ -72,7 +72,7 @@ export default {
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
-    padding-left: 15px;
+    padding-left: 16px;
 }
 
 .conversation-item:hover {
@@ -85,7 +85,7 @@ export default {
 
 .conversation-item .header {
     height: 100%;
-    padding: 10px 12px 10px 15px;
+    padding: 8px 12px 8px 12px;
 }
 
 .conversation-item .header .avatar {
@@ -97,11 +97,11 @@ export default {
 }
 
 .conversation-item .title {
-    font-size: 14px;
+    font-size: var(--font-size-base);
     color: var(--text-primary);
     font-style: normal;
     font-weight: normal;
-    padding-right: 10px;
+    padding-right: 8px;
 }
 
 .checkbox {

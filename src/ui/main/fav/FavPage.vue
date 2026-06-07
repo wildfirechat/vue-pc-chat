@@ -141,7 +141,7 @@ export default {
 .category-item {
     display: flex;
     flex-direction: row;
-    padding: 5px 0 5px 20px;
+    padding: 4px 0 4px 20px;
     height: 50px;
     align-items: center;
 }
@@ -159,8 +159,8 @@ export default {
 }
 
 .category-item p {
-    margin-left: 10px;
-    font-size: 14px;
+    margin-left: 8px;
+    font-size: var(--font-size-base);
     flex: 1;
 }
 

@@ -497,7 +497,7 @@ export default {
     font-size: 18px;
     font-weight: 500;
     color: var(--text-primary);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .detail-text {
@@ -526,7 +526,7 @@ export default {
     background: var(--border-primary);
     border-radius: 4px;
     overflow: hidden;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .progress-fill {
@@ -573,7 +573,7 @@ export default {
 }
 
 .close-btn, .cancel-btn, .confirm-btn {
-    padding: 10px 40px;
+    padding: 8px 40px;
     border: none;
     border-radius: 4px;
     font-size: 16px;

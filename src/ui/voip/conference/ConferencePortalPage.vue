@@ -266,7 +266,7 @@ export default {
 
 
 .left-slider > .title {
-    font-size: 20px;
+    font-size: var(--font-size-2xl);
 }
 
 .action-container {
@@ -281,9 +281,9 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    border-radius: 10px;
-    padding: 15px;
-    margin: 10px 10px 10px 0;
+    border-radius: var(--main-border-radius);
+    padding: 16px;
+    margin: 8px 8px 8px 0;
 }
 
 .action:hover {
@@ -297,15 +297,15 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
+    border-radius: var(--main-border-radius);
 }
 
 .action .icon i {
-    font-size: 20px;
+    font-size: var(--font-size-2xl);
 }
 
 .action .title {
-    margin-top: 15px;
+    margin-top: 16px;
 }
 
 .right-slider {
@@ -322,21 +322,21 @@ export default {
 .empty {
     display: flex;
     align-items: center;
-    padding: 15px;
+    padding: 16px;
     background: var(--background-primary);
-    border-radius: 10px;
-    font-size: 12px;
+    border-radius: var(--main-border-radius);
+    font-size: var(--font-size-xs);
 }
 
 .fav-container .fav-list {
     background: var(--background-primary);
-    border-radius: 10px;
+    border-radius: var(--main-border-radius);
 }
 
 .fav-conference {
     display: flex;
     align-items: center;
-    padding: 15px;
+    padding: 16px;
     box-sizing: content-box;
 }
 
@@ -352,7 +352,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-right: 10px;
+    margin-right: 8px;
 }
 
 .fav-conference:not(:last-of-type) {
@@ -366,7 +366,7 @@ export default {
 .fav-conference .desc {
     color: var(--text-secondary);
     margin-top: 3px;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
 }
 
 .history-container {

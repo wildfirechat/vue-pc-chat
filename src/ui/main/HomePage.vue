@@ -512,7 +512,7 @@ export default {
 .avatar {
     background-color: var(--text-secondary);
     display: block;
-    margin: 10px auto;
+    margin: 8px auto;
 }
 
 .menu {
@@ -527,7 +527,7 @@ export default {
 }
 
 .menu ul li {
-    margin: 10px;
+    margin: 8px;
     height: 40px;
     line-height: 50px;
 }
@@ -542,10 +542,10 @@ export default {
     color: var(--text-on-accent);
     font-size: 10px;
     background-color: var(--background-badge);
-    border-radius: 8px;
+    border-radius: var(--radius-lg);
     min-width: 16px;
     height: 16px;
-    padding: 0 5px;
+    padding: 0 4px;
     line-height: 16px;
     font-style: normal;
     text-align: center;
@@ -578,7 +578,7 @@ i.active {
     left: 60px;
     right: 0;
     color: var(--text-danger);
-    padding: 15px 0;
+    padding: 16px 0;
     text-align: center;
     background: var(--background-tertiary);
     /*box-shadow: 0 0 1px #000;*/
@@ -588,7 +588,7 @@ i.active {
     background: var(--background-voip);
     position: fixed;
     margin: auto;
-    border-radius: 5px;
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-main), 0 6px 20px 0 var(--background-mask);
     display: flex;
     flex-direction: column;
@@ -620,7 +620,7 @@ i.active {
 
 .voip-div-container .title {
     text-align: center;
-    padding: 5px 0;
+    padding: 4px 0;
     background: var(--background-item-placeholder);
     display: flex;
     justify-content: center;
@@ -665,7 +665,7 @@ i.active {
 }
 
 .voip-titlebar-title {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: rgba(255, 255, 255, 0.65);
     user-select: none;
     pointer-events: none;
@@ -679,7 +679,7 @@ i.active {
     height: 22px;
     border: none;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
+    border-radius: var(--radius-md);
     cursor: pointer;
     color: rgba(255, 255, 255, 0.75);
     padding: 0;
@@ -688,7 +688,7 @@ i.active {
 
 .voip-minimize-btn:hover {
     background: rgba(255, 255, 255, 0.25);
-    color: #fff;
+    color: var(--text-on-accent);
 }
 
 /* Content wrapper so Single/Multi/Conference fill remaining flex height */
@@ -705,8 +705,8 @@ i.active {
     bottom: calc(var(--main-margin-bottom) + 78px);
     width: 42px;
     height: 42px;
-    border-radius: 10px;
-    background: #4a7cf7;
+    border-radius: var(--main-border-radius);
+    background: var(--voip-pip-bg);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -727,8 +727,8 @@ i.active {
 }
 
 .voip-minimized-pip .icon-ion-ios-telephone {
-    font-size: 20px;
-    color: #fff;
+    font-size: var(--font-size-2xl);
+    color: var(--text-on-accent);
 }
 
 .voip-pip-label {

@@ -205,9 +205,9 @@ export default {
 }
 
 .workspace-portal button {
-    padding: 10px;
+    padding: 8px;
     margin: 20px;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
 }
 
 >>> .etabs-tab {

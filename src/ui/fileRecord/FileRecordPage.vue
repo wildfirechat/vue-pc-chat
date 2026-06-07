@@ -396,12 +396,12 @@ export default {
 .search-input-container input {
     height: 25px;
     width: 110px;
-    margin: 0 10px;
-    padding: 0 10px 0 20px;
+    margin: 0 8px;
+    padding: 0 8px 0 20px;
     text-align: left;
     flex: 1;
     border: 1px solid var(--border-primary);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     outline: none;
     background-color: var(--background-input);
 }
@@ -422,7 +422,7 @@ export default {
 .category-item {
     display: flex;
     flex-direction: row;
-    padding: 5px 0 5px 20px;
+    padding: 4px 0 4px 20px;
     height: 50px;
     align-items: center;
 }
@@ -436,8 +436,8 @@ export default {
 }
 
 .category-item p {
-    margin-left: 10px;
-    font-size: 14px;
+    margin-left: 8px;
+    font-size: var(--font-size-base);
     flex: 1;
 }
 
@@ -466,7 +466,7 @@ export default {
 
 .conversation-item p {
     flex: 1;
-    font-size: 14px;
+    font-size: var(--font-size-base);
     margin-right: 16px;
 }
 
@@ -523,7 +523,7 @@ export default {
 .file-record-item img {
     width: 40px;
     height: 40px;
-    margin: 0 15px 0 0;
+    margin: 0 16px 0 0;
 }
 
 .file-name-sender-container {
@@ -535,14 +535,14 @@ export default {
 }
 
 .file-name-sender-container .name {
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     color: var(--text-primary);
     padding-bottom: 3px;
 }
 
 .file-name-sender-container .sender {
     padding-top: 3px;
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-hint);
 }
 
@@ -555,14 +555,14 @@ export default {
 }
 
 .file-date-size-container .date {
-    font-size: 12px;
-    padding-left: 15px;
+    font-size: var(--font-size-xs);
+    padding-left: 16px;
     color: var(--text-hint);
     padding-bottom: 3px;
 }
 
 .file-date-size-container .size {
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     color: var(--text-hint);
     padding-top: 3px;
 }

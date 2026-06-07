@@ -45,7 +45,7 @@
                                                          :message="message"
                                                          @contextmenu.prevent.native="openMessageContextMenu($event, message)"/>
                         </div>
-                        <QuoteMessageView style="padding: 5px 0; max-width: 400px"
+                        <QuoteMessageView style="padding: 4px 0; max-width: 400px"
                                           v-if="quotedMessage"
                                           :message="message"
                                           :quoted-message="quotedMessage"
@@ -193,7 +193,7 @@ export default {
     width: 100%;
     display: flex;
     flex-direction: column;
-    padding: 10px 20px;
+    padding: 8px 20px;
     align-items: flex-start;
 }
 
@@ -236,9 +236,9 @@ export default {
 }
 
 .message-name-content-container .name {
-    margin-left: 10px;
+    margin-left: 8px;
     color: var(--text-hint);
-    font-size: 12px;
+    font-size: var(--font-size-xs);
     margin-bottom: 2px;
 }
 

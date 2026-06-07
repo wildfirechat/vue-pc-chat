@@ -2,7 +2,7 @@
     <section @click.stop="" class="user-info-container">
         <div class="header">
             <div class="desc">
-                <div style="display: flex; align-items: center">
+                <div class="flex-row flex-align-center">
                     <h2>{{ userInfo.displayName }}</h2>
                     <p v-if="isExternalDomainUser" class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName }}</p>
                 </div>
@@ -232,7 +232,7 @@ export default {
 
 .header {
     width: calc(100% - 40px);
-    margin: 10px 20px;
+    margin: 8px 20px;
     padding-bottom: 20px;
     display: flex;
     justify-content: space-between;
@@ -254,7 +254,7 @@ export default {
 
 .content ul {
     list-style: none;
-    margin: 10px 20px;
+    margin: 8px 20px;
 }
 
 .content ul li {
@@ -279,7 +279,7 @@ export default {
     outline: none;
     border: none;
     background-color: var(--background-tooltip);
-    padding: 2px 5px;
+    padding: 2px 4px;
     color: var(--text-primary);
 }
 
@@ -303,7 +303,7 @@ export default {
     justify-content: center;
 
     padding-top: 20px;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
 }
 
 .action i {

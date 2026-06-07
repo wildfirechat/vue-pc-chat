@@ -184,13 +184,13 @@ export default {
 .options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
 }
 
 .option-button {
     display: flex;
     align-items: center;
-    padding: 15px 20px;
+    padding: 16px 20px;
     border: 1px solid var(--border-primary);
     border-radius: 8px;
     background: var(--background-primary);
@@ -206,7 +206,7 @@ export default {
 
 .option-button .icon {
     font-size: 28px;
-    margin-right: 15px;
+    margin-right: 16px;
 }
 
 .option-button .text {
@@ -255,7 +255,7 @@ export default {
 
 .dialog-button {
     width: 100%;
-    padding: 10px;
+    padding: 8px;
     background: var(--accent-color);
     color: var(--text-on-accent);
     border: none;

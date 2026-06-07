@@ -83,10 +83,10 @@ export default {
     margin-top: 20px;
     height: 30px;
     width: 100%;
-    padding: 0 5px;
+    padding: 0 4px;
     outline: none;
     border: 1px solid var(--border-primary);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
 }
 
 .info-action-container input:active {
@@ -105,13 +105,13 @@ export default {
 }
 
 .info-container .title {
-    font-size: 20px;
-    padding-top: 5px;
+    font-size: var(--font-size-2xl);
+    padding-top: 4px;
 }
 
 .info-container .desc {
-    font-size: 16px;
-    padding-bottom: 5px;
+    font-size: var(--font-size-lg);
+    padding-bottom: 4px;
 }
 
 .info-action-container .action-container {
@@ -120,9 +120,9 @@ export default {
 }
 
 .info-action-container .action-container button {
-    margin: 0 5px 0 20px;
+    margin: 0 4px 0 20px;
     padding: 3px 20px;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     outline: none;
 }
 
