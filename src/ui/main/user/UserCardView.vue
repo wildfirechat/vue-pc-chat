@@ -19,11 +19,12 @@
             <ul>
                 <li v-if="isFriend">
                     <label>{{ $t('common.alias') }}</label>
-                    <div class="alias">
+                    <div class="input-wrapper">
                         <input @click.stop="" type="text"
                                v-model.trim="friendAlias"
                                @keyup.enter="updateFriendAlias"
                                placeholder="备注名"/>
+                        <span class="edit-icon">&#9998;</span>
                     </div>
                 </li>
                 <li>
@@ -269,29 +270,18 @@ export default {
     color: var(--text-secondary);
 }
 
-.content ul li .alias {
-    border: none;
-    background: none;
-}
-
-.content ul li .alias > input {
-    width: 100%;
-    outline: none;
-    border: none;
-    background-color: var(--background-tooltip);
+.content ul li .input-wrapper > input {
     padding: 2px 4px;
     color: var(--text-primary);
+    font-size: var(--font-size-sm);
 }
 
-.content ul li .alias > input:focus {
+.content ul li .input-wrapper > input:focus,
+.content ul li .input-wrapper > input:active {
     border: 1px solid var(--border-active);
 }
 
-.content ul li .alias > input:active {
-    border: 1px solid var(--border-active);
-}
-
-.content ul li > div {
+.content ul li > div:not(.input-wrapper) {
     display: inline-block;
     flex: 1;
     color: var(--text-primary);

@@ -354,7 +354,7 @@ i {
 }
 
 .dropdown-toggle:hover{
-    background-color: var(--background-tooltip) !important;
+    background-color: var(--background-item-hover) !important;
 }
 
 .dropdown-menu {
@@ -431,4 +431,36 @@ img.emoji {
 .i-button-large {
     width: 54px !important;
     height: 54px !important;
+}
+
+/* --- Inline-edit input wrapper with hover pencil icon --- */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.input-wrapper input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background-color: transparent;
+    outline: none;
+}
+
+.input-wrapper .edit-icon {
+    position: absolute;
+    right: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary-strong);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duration-fast);
+    line-height: 1;
+    transform: rotateZ(90deg);
+}
+
+.input-wrapper:has(input:not(:disabled)):hover .edit-icon {
+    opacity: 1;
 }

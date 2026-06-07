@@ -17,8 +17,9 @@
                 <ul>
                     <li>
                         <label>{{ $t('common.alias') }}</label>
-                        <div class="alias">
+                        <div class="input-wrapper">
                             <input type="text" ref="input" :value="sharedStateContact.currentFriend.friendAlias" placeholder="备注名" @keyup.enter="updateFriendAlias"/>
+                            <span class="edit-icon">&#9998;</span>
                         </div>
                     </li>
                     <li>
@@ -210,25 +211,19 @@ export default {
     font-size: var(--font-size-xs);
 }
 
-.content ul li .alias > input {
-    width: 100%;
-    border: none;
-    border-radius: var(--radius-sm);
-    outline: none;
+.content ul li .input-wrapper > input {
     padding: 4px;
+    border-radius: var(--radius-sm);
     color: var(--text-hint);
     font-size: var(--font-size-sm);
 }
 
-.content ul li .alias > input:active {
+.content ul li .input-wrapper > input:focus,
+.content ul li .input-wrapper > input:active {
     border: 1px solid var(--border-active);
 }
 
-.content ul li .alias input:focus {
-    border: 1px solid var(--border-active);
-}
-
-.content ul li > div {
+.content ul li > div:not(.input-wrapper) {
     display: inline-block;
     flex: 1;
 }

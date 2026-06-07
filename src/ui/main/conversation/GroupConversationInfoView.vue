@@ -738,38 +738,12 @@ export default {
 }
 
 .group-info-section .input-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    width: 100%;
     margin-top: 4px;
 }
 
 .group-info-section label .input-wrapper input {
-    flex: 1;
-    border: none;
-    outline: none;
-    width: 100%;
     font-size: 11px;
-    background-color: transparent;
     padding: 0;
-    min-width: 0;
-}
-
-.group-info-section .edit-icon {
-    position: absolute;
-    right: 0;
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary-strong);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s;
-    line-height: 1;
-    transform: rotateZ(90deg);
-}
-
-.group-info-section .input-wrapper:has(input:not(:disabled)):hover .edit-icon {
-    opacity: 1;
 }
 
 .group-info-section label input::-webkit-input-placeholder {
