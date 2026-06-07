@@ -15,19 +15,17 @@
                         v-bind:style="{marginTop:(sharedMiscState.isElectronWindowsOrLinux || sharedMiscState.isOhos) ?  '30px' : '0'}"
                         class="conversation-action-container"
                     >
-                        <div class="i-button-wrapper action" v-if="sharedMiscState.isElectron" href="#" @click.prevent>
+                        <div class="i-button-wrapper action" v-if="sharedMiscState.isElectron" @click.prevent="setWindowAlwaysTop">
                             <i class="icon-ion-pin"
                                style="display: inline-block"
                                v-bind:class="{active : isWindowAlwaysTop}"
-                               @click.prevent="setWindowAlwaysTop"
                             />
                         </div>
-                        <div class="i-button-wrapper action" href="#" @click.prevent>
+                        <div class="i-button-wrapper action" @click.prevent="toggleConversationInfo">
                             <i class="icon-ion-ios-settings-strong"
                                style="display: inline-block"
                                ref="setting"
                                v-bind:class="{active : showConversationInfo}"
-                               @click.prevent="toggleConversationInfo"
                             />
                         </div>
                     </div>

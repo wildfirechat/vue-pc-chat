@@ -27,13 +27,13 @@
                 </Teleport>
                 <ul class="flex-row" style="align-content: center; padding: 0 8px">
                     <li v-if="!inputOptions['disableEmoji']">
-                        <div class="i-button-wrapper i-button-small">
-                            <i id="showEmoji" @click="toggleEmojiView" class="icon-ion-ios-heart" :title="$t('conversation.action_tip_emoji')"/>
+                        <div class="i-button-wrapper i-button-small" @click="toggleEmojiView">
+                            <i id="showEmoji" class="icon-ion-ios-heart" :title="$t('conversation.action_tip_emoji')"/>
                         </div>
                     </li>
                     <li v-if="!inputOptions['disableFile']">
-                        <div class="i-button-wrapper i-button-small">
-                            <i @click="pickFile" class="icon-ion-android-attach" :title="$t('conversation.action_tip_file')"/>
+                        <div class="i-button-wrapper i-button-small" @click="pickFile">
+                            <i class="icon-ion-android-attach" :title="$t('conversation.action_tip_file')"/>
                             <input ref="fileInput" multiple @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
                                    style="display: none">
                         </div>
@@ -48,8 +48,8 @@
                         </div>
                     </li>
                     <li v-if="!inputOptions['disableHistory'] && sharedMiscState.isElectron">
-                        <div class="i-button-wrapper i-button-small">
-                            <i id="messageHistory" @click="showMessageHistory" class="icon-ion-android-chat" :title="$t('conversation.action_tip_history')"/>
+                        <div class="i-button-wrapper i-button-small" @click="showMessageHistory">
+                            <i id="messageHistory" class="icon-ion-android-chat" :title="$t('conversation.action_tip_history')"/>
                         </div>
                     </li>
                     <li v-if="!inputOptions['disablePtt'] && enablePtt" style="position: relative;">
@@ -66,9 +66,9 @@
                                 <div class="recording-tip">松开结束</div>
                             </div>
                         </transition>
-                        <div class="i-button-wrapper i-button-small">
-                            <i id="ptt" v-bind:class="{active: isPttTalking}" @mousedown="requestPttTalk(true)"
-                                        :title="$t('conversation.action_tip_ptt')"
+                        <div class="i-button-wrapper i-button-small" @mousedown="requestPttTalk(true)">
+                            <i id="ptt" v-bind:class="{active: isPttTalking}"
+                               :title="$t('conversation.action_tip_ptt')"
                                class="icon-ion-android-radio-button-on ptt-icon"/>
                         </div>
                     </li>
@@ -89,8 +89,8 @@
                                 <div class="recording-tip" :class="{cancel: isRecordingCancelMode}">{{ isRecordingCancelMode ? '松开取消发送' : '松开发送' }}</div>
                             </div>
                         </transition>
-                        <div class="i-button-wrapper i-button-small">
-                            <i id="voice" v-bind:class="{active: isRecording}" @mousedown="recordAudio(true)"
+                        <div class="i-button-wrapper i-button-small" @mousedown="recordAudio(true)">
+                            <i id="voice" v-bind:class="{active: isRecording}"
                                :title="$t('conversation.action_tip_voice')"
                                class="icon-ion-android-microphone record-icon"/>
                         </div>
@@ -109,24 +109,24 @@
                 <ul class="flex-row" style="padding: 0 8px">
                     <template v-if="!inputOptions['disableVoip']  && [0, 1, 5].indexOf(conversationInfo.conversation.type) >= 0 && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
                         <li v-if="!inputOptions['disableAudioCall']">
-                            <div class="i-button-wrapper i-button-small">
-                                <i @click="startAudioCall" class="icon-ion-ios-telephone" :title="$t('conversation.action_tip_audio_call')"/>
+                            <div class="i-button-wrapper i-button-small" @click="startAudioCall">
+                                <i class="icon-ion-ios-telephone" :title="$t('conversation.action_tip_audio_call')"/>
                             </div>
                         </li>
                         <li v-if="!inputOptions['disableVideoCall']">
-                            <div class="i-button-wrapper i-button-small">
-                                <i @click="startVideoCall" class="icon-ion-ios-videocam" :title="$t('conversation.action_tip_video_call')"/>
+                            <div class="i-button-wrapper i-button-small" @click="startVideoCall">
+                                <i class="icon-ion-ios-videocam" :title="$t('conversation.action_tip_video_call')"/>
                             </div>
                         </li>
                         <li v-if="false && sharedMiscState.isElectron && !inputOptions['disableVideoCall'] && conversationInfo.conversation.type === 0">
-                            <div class="i-button-wrapper i-button-small">
-                                <i @click="requestRemoteControl" class="icon-ion-android-desktop"/>
+                            <div class="i-button-wrapper i-button-small" @click="requestRemoteControl">
+                                <i class="icon-ion-android-desktop"/>
                             </div>
                         </li>
                     </template>
                     <li v-if="!inputOptions['disableChannelMenu'] && conversationInfo.conversation.type === 3 && conversationInfo.conversation._target.menus && conversationInfo.conversation._target.menus.length">
-                        <div class="i-button-wrapper i-button-small">
-                            <i @click="toggleChannelMenu" class="icon-ion-android-menu"/>
+                        <div class="i-button-wrapper i-button-small" @click="toggleChannelMenu">
+                            <i class="icon-ion-android-menu"/>
                         </div>
                     </li>
                 </ul>

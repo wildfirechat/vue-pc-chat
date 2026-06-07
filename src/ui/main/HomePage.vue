@@ -37,62 +37,55 @@
                 <nav class="menu">
                     <ul>
                         <li>
-                            <div class="i-button-wrapper">
+                            <div class="i-button-wrapper" @click="go2Conversation">
                                 <i class="icon-ion-ios-chatboxes"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home'}"
-                                   @click="go2Conversation"></i>
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home'}"></i>
                                 <em v-show="unread > 0" class="badge">{{ unread > 99 ? '···' : unread }}</em>
                             </div>
                         </li>
                         <li>
-                            <div class="i-button-wrapper">
+                            <div class="i-button-wrapper" @click="go2Contact">
                                 <i class="icon-ion-android-contact"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/contact'}"
-                                   @click="go2Contact"></i>
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/contact'}"></i>
                                 <em v-show="sharedContactState.unreadFriendRequestCount > 0" class="badge">{{ sharedContactState.unreadFriendRequestCount > 99 ? '99' : sharedContactState.unreadFriendRequestCount }}</em>
                             </div>
                         </li>
                         <li>
-                            <div class="i-button-wrapper">
+                            <div class="i-button-wrapper" @click="go2Fav">
                                 <i class="icon-ion-android-favorite"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"
-                                   @click="go2Fav"></i>
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"></i>
                             </div>
                         </li>
                         <li v-if="sharedMiscState.isElectron && sharedMiscState.isCommercialServer">
-                            <div class="i-button-wrapper">
+                            <div class="i-button-wrapper" @click="go2Files">
                                 <i class="icon-ion-ios-folder"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/files'}"
-                                   @click="go2Files"></i>
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/files'}"></i>
                             </div>
                         </li>
                         <li v-if="sharedMiscState.enableOpenWorkSpace">
-                            <div class="i-button-wrapper">
+                            <div class="i-button-wrapper" @click="go2Workspace">
                                 <i class="icon-ion-code-working"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/h-wp'}"
-                                   @click="go2Workspace"></i>
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/h-wp'}"></i>
                             </div>
                         </li>
                         <li v-if="supportConference">
-                            <div class="i-button-wrapper">
+                            <div class="i-button-wrapper" @click="go2Conference">
                                 <i class="icon-ion-speakerphone"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/conference'}"
-                                   @click="go2Conference"></i>
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/conference'}"></i>
                             </div>
                         </li>
                         <li v-if="aiPortalUrl">
-                            <div class="i-button-wrapper">
+                            <div class="i-button-wrapper" @click="go2AI">
                                 <i class="icon-ion-android-sunny"
-                                   v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/ai'}"
-                                   @click="go2AI"></i>
+                                   v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/ai'}"></i>
                             </div>
                         </li>
                         <li>
-                            <div class="i-button-wrapper">
-                                <i v-show="this.$router.currentRoute.value.path !== '/home/ai'"
-                                   class="icon-ion-android-settings"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"
-                                   @click="go2Setting"></i>
+                            <div class="i-button-wrapper"
+                                 v-show="this.$router.currentRoute.value.path !== '/home/ai'"
+                                 @click="go2Setting">
+                                <i class="icon-ion-android-settings"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"></i>
                             </div>
                         </li>
                     </ul>

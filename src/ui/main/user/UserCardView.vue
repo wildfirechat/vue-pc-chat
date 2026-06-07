@@ -38,20 +38,20 @@
         </div>
         <div class="action">
             <!--            <a href="#"><i class="icon-ion-ios-shuffle" @click="share"></i></a>-->
-            <div class="i-button-wrapper i-button-large" @click.prevent>
-                <i class="icon-ion-ios-chatboxes-outline" @click.prevent="chat"></i>
+            <div class="i-button-wrapper i-button-large" @click.prevent="chat">
+                <i class="icon-ion-ios-chatboxes-outline"></i>
                 发消息
             </div>
-            <div class="i-button-wrapper i-button-large" v-if="!isSelf" @click.prevent>
-                <i class="icon-ion-ios-telephone-outline" @click.prevent="startAudioCall"></i>
+            <div class="i-button-wrapper i-button-large" v-if="!isSelf" @click.prevent="startAudioCall">
+                <i class="icon-ion-ios-telephone-outline"></i>
                 语音通话
             </div>
-            <div class="i-button-wrapper i-button-large" v-if="!isSelf" @click.prevent>
-                <i class="icon-ion-ios-videocam-outline" @click.prevent="startVideoCall"></i>
+            <div class="i-button-wrapper i-button-large" v-if="!isSelf" @click.prevent="startVideoCall">
+                <i class="icon-ion-ios-videocam-outline"></i>
                 视频通话
             </div>
-            <div class="i-button-wrapper i-button-large" v-if="!isFriend" @click.prevent>
-                <i class="icon-ion-ios-personadd-outline" @click.prevent="addFriend"></i>
+            <div class="i-button-wrapper i-button-large" v-if="!isFriend" @click.prevent="addFriend">
+                <i class="icon-ion-ios-personadd-outline"></i>
                 添加好友
             </div>
         </div>
