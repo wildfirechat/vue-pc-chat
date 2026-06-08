@@ -169,7 +169,6 @@ export default {
 }
 
 .member-list-container {
-    margin: 4px 4px 20px 4px;
     flex: 1;
     overflow-y: scroll;
 }
@@ -180,12 +179,11 @@ export default {
     align-items: center;
     height: 56px;
     padding: 0 20px;
-    border-radius: var(--default-portrait-border-radius);
     font-size: var(--font-size-base);
 }
 
 .organization-item:hover {
-    background: var(--background-item-placeholder);
+    background: var(--background-item-hover);
 }
 
 .organization-item img {

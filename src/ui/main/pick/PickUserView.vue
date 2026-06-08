@@ -295,6 +295,13 @@ export default {
     padding-right: 20px;
     text-align: left;
     outline: none;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    transition: border-color var(--duration-fast);
+}
+
+.input-container input::placeholder {
+    color: var(--text-placeholder);
 }
 
 .input-container input:active {
@@ -309,6 +316,8 @@ export default {
     position: absolute;
     top: 20px;
     left: 20px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
 }
 
 .input-container .clear-btn {
@@ -343,17 +352,26 @@ export default {
     font-size: var(--font-size-base);
     border-top: 1px solid var(--border-tertiary);
     background-color: var(--background-secondary);
+    transition: background var(--duration-fast);
 }
 
 .category-item {
     display: flex;
     width: 100%;
     justify-content: space-between;
+    align-items: center;
+}
+
+.category-item .title {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
 .category-item .desc {
     margin-right: 16px;
-    color: var(--text-secondary-strong);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
 }
 
 .arrow {
@@ -362,6 +380,8 @@ export default {
     display: inline-block;
     padding: 3px;
     margin-right: 8px;
+    flex-shrink: 0;
+    transition: transform var(--duration-fast);
 }
 
 .right {
@@ -380,13 +400,6 @@ export default {
     max-height: none;
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
-}
-
-.organization-section :deep(.member-list-container) {
-    margin: 4px;
-    max-height: none;
-    overflow: visible;
-    height: auto;
 }
 
 .pick-source-nav {
@@ -447,16 +460,20 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--border-primary);
+    flex-shrink: 0;
 }
 
 .checked-contact-list-container header h2 {
     font-size: var(--font-size-lg);
-    font-weight: normal;
+    font-weight: 500;
+    color: var(--text-primary);
     margin-left: 30px;
 }
 
 .checked-contact-list-container header span {
     font-size: var(--font-size-xs);
+    color: var(--text-secondary);
     margin-right: 20px;
 }
 
@@ -491,27 +508,41 @@ export default {
 
 .checked-contact-list-container .content .picked-user-container .picked-user {
     position: relative;
-    height: 65px;
-    width: 65px;
+    height: 64px;
+    width: 64px;
 }
 
 .checked-contact-list-container .content .avatar {
-    margin: 8px 8px;
+    width: 48px;
+    height: 48px;
+    border-radius: var(--default-portrait-border-radius);
+    object-fit: cover;
+    margin: 8px;
 }
 
 .checked-contact-list-container .content .unpick-button {
     position: absolute;
-    width: 20px;
-    height: 20px;
-    border: 1px solid white;
-    border-radius: var(--radius-sm);
-    background-color: var(--background-tertiary);
-    top: 0;
-    right: 0;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border-primary);
+    padding: 0;
+    border-radius: var(--radius-circle);
+    background-color: var(--background-secondary);
+    top: 2px;
+    right: 2px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background var(--duration-fast), color var(--duration-fast);
 }
 
-.checked-contact-list-container .content .unpick-button:active {
-    background-color: var(--border-primary);
+.checked-contact-list-container .content .unpick-button:hover {
+    background-color: var(--background-error-subtle);
+    color: var(--text-danger);
+    border-color: var(--text-danger);
 }
 
 .checked-contact-list-container footer {
@@ -523,20 +554,35 @@ export default {
 }
 
 footer button {
-    padding: 4px 30px;
+    padding: 5px 30px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-primary);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: transparent;
+    transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
+}
+
+footer button.cancel:hover {
+    background-color: var(--background-item-hover);
 }
 
 footer button.confirm {
     background-color: var(--accent-color);
+    border-color: var(--accent-color);
     margin-left: 20px;
     margin-right: 20px;
     color: var(--text-on-accent);
 }
 
+footer button.confirm:hover {
+    background-color: var(--accent-color-active);
+    border-color: var(--accent-color-active);
+}
+
 footer button.confirm.disable {
     background-color: var(--background-tertiary);
+    border-color: transparent;
     color: var(--text-tertiary);
 }
 

@@ -121,6 +121,18 @@ export default {
     border-right: 0;
     border-left: 0;
     border-bottom: 1px solid var(--border-primary);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    transition: border-color var(--duration-fast);
+}
+
+.forward-message-container label input::placeholder {
+    color: var(--text-hint);
+}
+
+.forward-message-container label input:focus {
+    border-bottom-color: var(--accent-color);
 }
 
 </style>

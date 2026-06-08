@@ -139,6 +139,43 @@ input::placeholder, textarea::placeholder {
     color: var(--text-placeholder);
 }
 
+/* --- Global Circular Checkbox --- */
+input[type="checkbox"]:not([role="switch"]) {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    padding: 0;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 50%;
+    background: transparent;
+    flex-shrink: 0;
+    position: relative;
+    transition: background var(--duration-fast), border-color var(--duration-fast);
+}
+
+input[type="checkbox"]:not([role="switch"]):checked {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+input[type="checkbox"]:not([role="switch"]):checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 8px;
+    border-right: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: translate(-50%, -60%) rotate(45deg);
+}
+
+input[type="checkbox"]:not([role="switch"]):disabled {
+    opacity: 0.35;
+}
+
 /* --- Global Button Styling --- */
 button {
     appearance: none;

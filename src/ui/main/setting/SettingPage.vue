@@ -67,7 +67,7 @@
             <p>私有化部署，请微信联系：wildfirechat 或 wfchat </p>
         </div>
         <footer>
-            <p class="proto-version-info">{{ protoRevision() }}</p>
+            <p class="proto-version-info single-line">{{ protoRevision() }}</p>
             <a
                 class="button"
                 href="https://github.com/wildfirechat/vue-pc-chat/issues"
@@ -406,6 +406,7 @@ export default {
     padding-left: 12px;
     font-size: var(--font-size-xs);
     color: var(--text-hint);
+    max-width: 300px;
 }
 
 .setting-container .button {

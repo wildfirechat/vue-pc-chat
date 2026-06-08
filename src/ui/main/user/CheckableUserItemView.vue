@@ -138,6 +138,11 @@ ul {
 }
 
 .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--default-portrait-border-radius);
+    object-fit: cover;
+    flex-shrink: 0;
     margin-right: 8px;
 }
 
@@ -159,7 +164,11 @@ ul {
 
 .contact-item .label p {
     padding: 4px 4px 4px 0;
-    border-bottom: 1px solid var(--border-primary);
+    border-bottom: 1px solid var(--border-tertiary);
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    font-weight: 500;
 }
 
 .contact-item .label.sticky {
@@ -184,6 +193,7 @@ ul {
 
 .contact-item .content:hover {
     background-color: var(--background-item-hover);
+    transition: background var(--duration-fast);
 }
 
 .contact-item .content:active {
