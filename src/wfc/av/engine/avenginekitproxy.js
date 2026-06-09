@@ -119,7 +119,6 @@ export class AvEngineKitProxy {
         let content = new contentClazz();
         content.decode(msg.content);
         console.log('to send voip message', content.type, content.callId, content);
-        let delta = wfc.getServerDeltaTime();
         if (content.type === MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT) {
             this.participants.push(content.participants);
         } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_END) {
@@ -147,7 +146,7 @@ export class AvEngineKitProxy {
                 error: 0,
                 sendMessageId: msg.sendMessageId,
                 messageUid: messageUid,
-                timestamp: longValue(numberValue(timestamp) - delta)
+                timestamp: timestamp
             })
             if (content.type === MessageContentType.VOIP_CONTENT_TYPE_START) {
                 this.inviteMessageUid = messageUid;
@@ -264,7 +263,6 @@ export class AvEngineKitProxy {
                         if (this.conversation) {
                             msg.participantUserInfos = participantUserInfos;
                             msg.selfUserInfo = selfUserInfo;
-                            msg.timestamp = longValue(numberValue(msg.timestamp) - delta)
                             this.showCallUI(msg.conversation, false, {
                                 event: 'message',
                                 args: {
@@ -318,7 +316,6 @@ export class AvEngineKitProxy {
 
                 msg.participantUserInfos = participantUserInfos;
                 msg.selfUserInfo = selfUserInfo;
-                msg.timestamp = longValue(numberValue(msg.timestamp) - delta)
                 if (this.callWin) {
                     let ignore = false;
                     // start,add消息，显示 ui 的时候，会传过去，这儿就不用再次传了
