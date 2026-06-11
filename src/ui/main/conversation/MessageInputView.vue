@@ -1544,7 +1544,7 @@ export default {
         },
 
         showSendButton() {
-            return Config.SHOW_SEND_BUTTON;
+            return this.sharedMiscState.showSendButton;
         }
     },
 

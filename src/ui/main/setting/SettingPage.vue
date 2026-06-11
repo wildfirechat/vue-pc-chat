@@ -38,6 +38,11 @@
                 <input type="checkbox" role="switch" :checked="!sharedMiscState.isDisableSyncDraft"
                        @change="enableDraftSync($event.target.checked)">
             </label>
+            <label>
+                {{ $t('setting.show_send_button') }}
+                <input type="checkbox" role="switch" :checked="sharedMiscState.showSendButton"
+                       @change="setShowSendButton($event.target.checked)">
+            </label>
             <div class="dropdown-toggle-container">
                 {{ $t('setting.lang') }}
                 <dropdown
@@ -265,6 +270,10 @@ export default {
         },
         enableDraftSync(enable) {
             wfc.setDisableSyncDraft(!enable)
+        },
+
+        setShowSendButton(enable) {
+            store.setShowSendButton(enable);
         },
 
         setLang(lang) {
