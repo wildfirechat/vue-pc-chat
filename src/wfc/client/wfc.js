@@ -59,6 +59,9 @@ export class WfcManager {
             pttClient.init();
         }
         //self.setProxyInfo("", "192.168.1.80", 1080, "", "");
+        // self.useSM4();
+        // self.setDataVerify(true);
+        // self.setEncryptMaxMinutes(5);
     }
 
     /**
@@ -103,6 +106,24 @@ export class WfcManager {
     }
 
     /**
+     * 启用数据校验。需要在connect之前调用。注意必须和服务器同时配置，否则无法连接。
+     * 
+     * @param {boolean} enabled 是否启用
+     */
+    setDataVerify(enabled) {
+        impl.setDataVerify(enabled);
+    }
+
+    /**
+     * 设置加密最大时间段（分钟）。需要在connect之前调用。注意必须和服务器同时配置，否则无法连接。
+     * 
+     * @param {int} minutes 有效时间
+     */
+    setEncryptMaxMinutes(minutes) {
+        impl.setEncryptMaxMinutes(minutes);
+    }
+
+    /**
      * 启动 TCP 短连接
      */
     useTcpShortLink() {
@@ -117,7 +138,7 @@ export class WfcManager {
         return impl.isTcpShortLink();
     }
 
-        /**
+    /**
      * 设置使用KCP，需要专业版IM服务，且开启KCP端口。
      *
      * @param {string} kcpPort kcp端口
