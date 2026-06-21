@@ -249,7 +249,7 @@
                     <div class="card-row link-row">
                         <div class="row-info">
                             <span class="row-title">微信联系</span>
-                            <span class="row-desc">wildfirechat 或 wfchat (商务/私有化部署咨询)</span>
+                            <span class="row-desc" style="user-select: text">wildfirechat 或 wfchat (商务/私有化部署咨询)</span>
                         </div>
                     </div>
                 </div>
@@ -261,6 +261,14 @@
                     <a href="https://github.com/wildfirechat/vue-pc-chat" target="_blank">GitHub</a>
                     <span class="link-separator">|</span>
                     <a href="https://github.com/wildfirechat/vue-pc-chat/issues" target="_blank">问题反馈</a>
+  					<template v-if="!sharedMiscState.isElectron && !sharedMiscState.isOhos">
+                        <span class="link-separator">|</span>
+                        <a href="javascript:" @click.prevent.stop="webrtcTest">音视频能力测试</a>
+                    </template>
+					<template v-if="!sharedMiscState.isElectron && !sharedMiscState.isOhos">
+                        <span class="link-separator">|</span>
+                        <a href="javascript:" @click.prevent.stop="openPcChat">打开野火PC端</a>
+                    </template>
                     <template v-if="sharedMiscState.isElectron && !sharedMiscState.isOhos">
                         <span class="link-separator">|</span>
                         <a href="javascript:" @click.prevent.stop="openLogDir">日志目录</a>
@@ -268,10 +276,6 @@
                     <template v-if="sharedMiscState.isElectron && updaterConfigured && !sharedMiscState.isOhos">
                         <span class="link-separator">|</span>
                         <a href="javascript:" @click.prevent.stop="checkForUpdates">检查更新</a>
-                    </template>
-                    <template v-if="!sharedMiscState.isElectron">
-                        <span class="link-separator">|</span>
-                        <a href="javascript:" @click.prevent.stop="openPcChat">打开野火PC端</a>
                     </template>
                 </div>
             </div>
@@ -430,7 +434,10 @@ export default {
         },
 
         openPcChat() {
+            // pc 端，deeplink 的 scheme 是 wfc://
+            // 打开和 小火的会话
             let url = 'wfc://conversation?target=FireRobot&line=0&type=0';
+            // 未安装 pc  版时，跳转到 pc 版的下载链接
             let fallback = 'https://github.com/wildfirechat/vue-pc-chat';
             window.location = url;
             this.openPcChatTimeoutHandler = setTimeout(() => {
@@ -455,6 +462,23 @@ export default {
             }
             let supportConference = avenginekit.startConference !== undefined
             return version + (supportConference ? ' av-conference' : ' av-multi');
+        },
+        webrtcTest() {
+            if (!location.href.startsWith('https://') && !location.href.startsWith('http://localhost')) {
+                this.$notify({
+                    text: '只有通过https://，或者http://localhost 访问站点时，才支持音视频通话功能',
+                    type: 'warn'
+                });
+            } else {
+                this.$notify({
+                    title: '请稍后',
+                    text: '将进入新页面测试音视频能力',
+                    type: 'info'
+                });
+                setTimeout(() => {
+                    window.open('https://docs.wildfirechat.cn/webrtc/abilitytest/')
+                }, 2000)
+            }
         },
 
         imgUrlAlt(e) {
@@ -681,7 +705,7 @@ export default {
 /* --- 设置项卡片样式 --- */
 .setting-card {
     background-color: var(--background-secondary);
-    border: 1px solid var(--border-primary);
+    border: 1px solid var(--border-secondary);
     border-radius: var(--radius-lg);
     overflow: hidden;
     display: flex;
