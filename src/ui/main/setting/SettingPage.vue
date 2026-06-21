@@ -32,6 +32,8 @@
             </ul>
         </div>
 
+        <ResizeBar/>
+
         <!-- 右侧内容区域 -->
         <div class="setting-content-panel">
             <!-- 选项卡内容：通用 -->
@@ -307,6 +309,7 @@ import { shell } from '../../../platform';
 import IpcEventType from '../../../ipcEventType';
 import avenginekit from '../../../wfc/av/internal/engine.min';
 import Config from '../../../config';
+import ResizeBar from '../../common/ResizeBar.vue';
 
 export default {
     name: 'SettingPage',
@@ -561,6 +564,7 @@ export default {
     },
     components: {
         'dropdown': dropdown,
+        ResizeBar,
     },
 }
 </script>
@@ -580,13 +584,13 @@ export default {
 
 /* --- 左侧选项栏 --- */
 .setting-menu-panel {
-    width: 260px;
+    width: var(--list-panel-width);
     height: 100%;
     background: var(--background-secondary);
     border-right: 1px solid var(--border-primary);
     display: flex;
     flex-direction: column;
-    flex-shrink: 0;
+    flex: 0 0 var(--list-panel-width);
 }
 
 .setting-menu-header {

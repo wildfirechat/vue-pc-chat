@@ -14,6 +14,8 @@
     --home-menu-padding-top: 60px;
     --composite-message-page-width: 100%;
     --composite-message-page-height: 100%;
+    /* 会话/联系人/收藏等页面左侧列表分栏宽度，可由分隔条拖拽调整 */
+    --list-panel-width: 261px;
     --default-portrait-border-radius: var(--radius-md);
 
     /* --- Border Radius Scale --- */

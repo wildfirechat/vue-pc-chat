@@ -26,6 +26,7 @@
                 </div>
             </div>
         </div>
+        <ResizeBar/>
         <div class="right-slider">
             <div class="fav-container">
                 <p>即将开始</p>
@@ -78,9 +79,13 @@ import conferenceApi from "../../../api/conferenceApi";
 import ConferenceInfoView from "./ConferenceInfoView";
 import conferenceManager from "./conferenceManager";
 import wfc from "../../../wfc/client/wfc";
+import ResizeBar from "../../common/ResizeBar.vue";
 
 export default {
     name: "ConferencePortalPage",
+    components: {
+        ResizeBar,
+    },
     data() {
         return {
             favConferenceInfos: [],
@@ -259,8 +264,10 @@ export default {
 
 .left-slider {
     height: 100%;
-    width: 30%;
+    width: var(--list-panel-width);
+    flex: 0 0 var(--list-panel-width);
     background: var(--background-primary);
+    border-right: 1px solid var(--border-primary);
     padding: 8px 20px 0;
 }
 
