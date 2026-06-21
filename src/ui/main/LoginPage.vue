@@ -656,7 +656,7 @@ export default {
     height: 500px;
     margin: auto;
     background: var(--background-primary);
-    border-radius: var(--radius-xl);
+    border-radius: var(--radius-lg);
 }
 
 .web-login-container {
