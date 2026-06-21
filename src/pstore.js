@@ -183,6 +183,7 @@ export const pstore = (id) => defineStore(id, () => {
         enableOpenWorkSpace: !!(Config.OPEN_PLATFORM_WORK_SPACE_URL),
         isLocked: false,
         theme: getItem('theme') || 'system',
+        fontScale: parseFloat(getItem('fontScale')) || 1,
 
         _reset() {
             this.connectionStatus = ConnectionStatus.ConnectionStatusUnconnected;
@@ -206,6 +207,7 @@ export const pstore = (id) => defineStore(id, () => {
             this.enableOpenWorkSpace = !!(Config.OPEN_PLATFORM_WORK_SPACE_URL);
             this.isLocked = false;
             this.theme = getItem('theme') || 'system';
+            this.fontScale = parseFloat(getItem('fontScale')) || 1;
         }
     })
 

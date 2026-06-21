@@ -63,6 +63,31 @@
                     :closeOnOutsideClick="true">
                 </dropdown>
             </div>
+            <div class="font-size-section">
+                <p class="font-size-title">{{ $t('setting.font_size') }}</p>
+                <div class="font-size-slider">
+                    <div class="slider-track-wrapper">
+                        <div class="slider-rail" :style="sliderFillStyle"></div>
+                        <div class="slider-ticks">
+                            <span v-for="(step, index) in fontScaleSteps"
+                                  :key="index"
+                                  class="slider-tick"></span>
+                        </div>
+                        <input type="range"
+                               min="0"
+                               :max="fontScaleSteps.length - 1"
+                               step="1"
+                               :value="fontScaleIndex"
+                               @input="onFontScaleInput($event.target.value)"/>
+                    </div>
+                    <div class="font-size-labels">
+                        <span class="font-size-label start">{{ $t('setting.font_size_small') }}</span>
+                        <span class="font-size-label standard"
+                              :style="{ left: standardLabelLeft }">{{ $t('setting.font_size_standard') }}</span>
+                        <span class="font-size-label end">{{ $t('setting.font_size_large') }}</span>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="ad-container">
             <p>
@@ -151,10 +176,13 @@ export default {
     data() {
         return {
             sharedMiscState: store.state.misc,
+            sharedContactState: store.state.contact,
             openPcChatTimeoutHandler: 0,
             updaterConfigured: false,
             langs: [{ lang: 'zh-CN', name: '简体中文' }, { lang: 'zh-TW', name: '繁體中文' }, { lang: 'en', name: 'English' }],
             themes: [{ id: 'system', name: '跟随系统' }, { id: 'light', name: '浅色' }, { id: 'dark', name: '暗黑' }],
+            // 字体缩放档位，1 为标准（参考微信PC端）
+            fontScaleSteps: [0.85, 1, 1.15, 1.3, 1.45],
         }
     },
     methods: {
@@ -285,6 +313,11 @@ export default {
             store.setTheme(theme.id);
         },
 
+        onFontScaleInput(index) {
+            let scale = this.fontScaleSteps[parseInt(index)] || 1;
+            store.setFontScale(scale);
+        },
+
         openPcChat() {
             // pc 端，deeplink 的 scheme 是 wfc://
             // 打开和 小火的会话
@@ -338,7 +371,54 @@ export default {
         currentTheme() {
             let themeId = this.sharedMiscState.theme || 'light';
             return this.themes.find(t => t.id === themeId) || this.themes[0];
-        }
+        },
+        fontScaleIndex() {
+            let scale = this.sharedMiscState.fontScale || 1;
+            // 取最接近当前缩放值的档位
+            let index = this.fontScaleSteps.indexOf(scale);
+            if (index >= 0) {
+                return index;
+            }
+            let closest = 0;
+            let minDiff = Infinity;
+            this.fontScaleSteps.forEach((step, i) => {
+                let diff = Math.abs(step - scale);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closest = i;
+                }
+            });
+            return closest;
+        },
+        // “标准”档位（缩放为 1）所在的下标，用于定位刻度标签
+        fontStandardIndex() {
+            let index = this.fontScaleSteps.indexOf(1);
+            return index >= 0 ? index : 0;
+        },
+        // “标准”标签水平位置（与对应刻度对齐）
+        standardLabelLeft() {
+            let max = this.fontScaleSteps.length - 1;
+            let pct = max > 0 ? (this.fontStandardIndex / max) * 100 : 0;
+            return pct + '%';
+        },
+        // 已选档位之前的轨道填充主题色，之后为浅色（iOS/鸿蒙风格）
+        sliderFillStyle() {
+            let max = this.fontScaleSteps.length - 1;
+            let pct = max > 0 ? (this.fontScaleIndex / max) * 100 : 0;
+            return {
+                background: `linear-gradient(to right,` +
+                    ` var(--accent-color) 0%, var(--accent-color) ${pct}%,` +
+                    ` var(--border-primary) ${pct}%, var(--border-primary) 100%)`,
+            };
+        },
+        selfPortrait() {
+            let self = this.sharedContactState.selfUserInfo;
+            return (self && self.portrait) || '';
+        },
+        selfDisplayName() {
+            let self = this.sharedContactState.selfUserInfo;
+            return (self && (self._displayName || self.displayName)) || '';
+        },
     },
     components: {
         'dropdown':
@@ -350,10 +430,12 @@ export default {
 <style lang="css" scoped>
 .setting-container {
     height: 100%;
+    max-width: calc(100% - 60px);
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    overflow-y: auto;
 }
 
 .setting-container .content {
@@ -386,6 +468,112 @@ export default {
     align-items: center;
     justify-content: space-between;
     font-size: var(--font-size-base);
+}
+
+.font-size-section {
+    padding: 12px 0 4px;
+}
+
+.font-size-title {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    padding-bottom: 12px;
+}
+
+.font-size-slider {
+    padding: 0 0 16px 0;
+}
+
+.slider-track-wrapper {
+    position: relative;
+    height: 24px;
+}
+
+/* 轨道（填充进度由 sliderFillStyle 内联设置） */
+.slider-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 6px;
+    border-radius: 3px;
+}
+
+/* 档位刻度：位于轨道之上、滑块之下 */
+.slider-ticks {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.slider-ticks .slider-tick {
+    width: 2px;
+    height: 6px;
+    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.65);
+}
+
+/* 原生 range 轨道透明，仅保留滑块；滑块层级最高，覆盖刻度 */
+.slider-track-wrapper input[type="range"] {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    outline: none;
+    cursor: pointer;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.slider-track-wrapper input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 0.5px solid rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+/* 刻度标签：小 / 标准 / 大，与对应刻度对齐 */
+.font-size-labels {
+    position: relative;
+    height: 18px;
+    margin-top: 6px;
+}
+
+.font-size-labels .font-size-label {
+    position: absolute;
+    top: 0;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.font-size-labels .font-size-label.start {
+    left: 0;
+}
+
+.font-size-labels .font-size-label.standard {
+    transform: translateX(-50%);
+}
+
+.font-size-labels .font-size-label.end {
+    right: 0;
 }
 
 .setting-container .ad-container {
