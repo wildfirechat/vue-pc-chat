@@ -248,12 +248,12 @@
                 </div>
 
                 <div class="setting-card">
-                    <div class="card-row" v-if="sharedMiscState.isElectron">
+                    <div class="card-row">
                         <div class="row-info">
                             <span class="row-title">版本信息</span>
                             <span class="row-desc" style="user-select: text">{{ versionInfo() }}</span>
                         </div>
-                        <button class="check-update-btn" @click="checkForUpdates">检查更新</button>
+                        <button v-if="sharedMiscState.isElectron" class="check-update-btn" @click="checkForUpdates">检查更新</button>
                     </div>
                     <div class="card-row link-row">
                         <div class="row-info">
