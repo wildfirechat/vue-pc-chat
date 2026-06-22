@@ -1490,6 +1490,10 @@ app.on('ready', () => {
             return shouldShowUpdateMenu();
         });
 
+        ipcMain.handle('get-app-version', () => {
+            return app.getVersion();
+        });
+
     }
 );
 
