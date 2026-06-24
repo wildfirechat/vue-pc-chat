@@ -2096,6 +2096,9 @@ let store = {
         this.state.misc.enableMinimize = setting === null || setting === '1'
         setting = getItem(userId + '-' + 'showSendButton')
         this.state.misc.showSendButton = setting !== null ? setting === '1' : false
+        // 会话列表分组默认开启
+        setting = getItem(userId + '-' + 'conversationListFilter')
+        this.state.misc.enableConversationListFilter = setting === null || setting === '1'
     },
 
     setEnableNotification(enable) {
@@ -2128,6 +2131,11 @@ let store = {
     setShowSendButton(enable) {
         this.state.misc.showSendButton = enable;
         setItem(this.state.contact.selfUserInfo.uid + '-' + 'showSendButton', enable ? '1' : '0')
+    },
+
+    setEnableConversationListFilter(enable) {
+        this.state.misc.enableConversationListFilter = enable;
+        setItem(this.state.contact.selfUserInfo.uid + '-' + 'conversationListFilter', enable ? '1' : '0')
     },
 
     // clone一下，别影响到好友列表

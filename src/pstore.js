@@ -170,6 +170,8 @@ export const pstore = (id) => defineStore(id, () => {
         enableCloseWindowToExit: false,
         enableAutoLogin: false,
         showSendButton: false,
+        // 会话列表分组（全部/未读/@我），默认开启
+        enableConversationListFilter: true,
         isElectron: isElectron(),
         isElectronWindowsOrLinux: process && (process.platform === 'win32' || process.platform === 'linux'),
         isOhos: process && (process.platform === 'openharmony'),
@@ -194,6 +196,7 @@ export const pstore = (id) => defineStore(id, () => {
             this.enableCloseWindowToExit = false;
             this.enableAutoLogin = false;
             this.showSendButton = false;
+            this.enableConversationListFilter = true;
             this.isElectron = isElectron();
             this.isElectronWindowsOrLinux = process && (process.platform === 'win32' || process.platform === 'linux');
             this.isOhos = process && (process.platform === 'openharmony');
