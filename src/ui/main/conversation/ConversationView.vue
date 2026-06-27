@@ -1178,7 +1178,7 @@ export default {
                 if (info.conversation._target.type === 0) {
                     return info.conversation._targetOnlineStateDesc;
                 } else if (info.conversation._target.type === 1) {
-                    return 'bot';
+                    return 'bot ' + info.conversation._targetOnlineStateDesc;
                 }
             } else if (info.conversation.type === ConversationType.Channel) {
                 let desc = info.conversation._target.desc;
