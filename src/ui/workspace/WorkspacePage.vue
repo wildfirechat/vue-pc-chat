@@ -25,7 +25,7 @@ export default {
     data() {
         return {
             shouldShowWorkspacePortal: true,
-            url: Config.OPEN_PLATFORM_WORK_SPACE_URL,
+            url: Config.getOpenPlatformWorkSpaceUrl(),
             sharedMiscState: store.state.misc,
         }
     },

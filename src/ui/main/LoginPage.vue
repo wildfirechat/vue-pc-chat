@@ -534,7 +534,7 @@ export default {
                 return
             }
             let configInfo = '';
-            configInfo += `APP-Server: ${Config.APP_SERVER}\n`
+            configInfo += `APP-Server: ${Config.APP_SERVER}${Config.APP_BACKUP_SERVER ? ' / ' + Config.APP_BACKUP_SERVER : ''}\n`
             configInfo += `Route-Host: ${this.routeHost}\n`
             configInfo += `Route-Port: ${this.routePort}\n`
             configInfo += `Long-Link-Host: ${this.longLinkHost}\n`
@@ -553,7 +553,7 @@ export default {
             console.warn('-----configInfo end---------\n')
 
             let result = '';
-            let appServerResponse = await axios.get(Config.APP_SERVER, {
+            let appServerResponse = await axios.get(Config.getAppServer(), {
                 transformResponse: [data => data],
             })
             if (appServerResponse.data === 'Ok') {
