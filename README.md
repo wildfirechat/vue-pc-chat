@@ -232,6 +232,14 @@ npm run cross-package-linux-arm64
     一般是依赖缺失导致的，安装依赖：`sudo apt install zlib1g zlib1g-dev`
      
     如果还有问题，可参考：https://github.com/AppImage/AppImageKit/issues/1092
+     
+25. 使用自签证书报错
+
+    ```angular2html
+    // backbound.js 里面取消下面的注释
+    //app.commandLine.appendSwitch('ignore-certificate-errors')
+    ```
+    
 
 ## 截图
 
