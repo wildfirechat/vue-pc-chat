@@ -125,9 +125,6 @@
                     <li v-if="isDownloadable(message)">
                         <a @click.prevent="download(message)">{{ $t('common.save') }}</a>
                     </li>
-                    <li>
-                        <a @click.prevent="delMessage(message)">{{ $t('common.delete') }}</a>
-                    </li>
                     <li v-if="isForwardable(message)">
                         <a @click.prevent="_forward(message)">{{ $t('common.forward') }}</a>
                     </li>
@@ -157,6 +154,9 @@
                     </li>
                     <li v-if="isSupportCancelSpeechToText(message)">
                         <a @click.prevent="cancelSpeechToText(message)">{{ $t('common.cancelSpeech2text') }}</a>
+                    </li>
+                    <li>
+                        <a class="danger-action" @click.prevent="delMessage(message)">{{ $t('common.delete') }}</a>
                     </li>
                 </vue-context>
                 <vue-context ref="messageSenderContextMenu" v-slot="{data: message}" :close-on-scroll="true" v-on:close="onMessageSenderContextMenuClose">
@@ -888,6 +888,7 @@ export default {
             this.$alert({
                 title: ' 删除消息',
                 content: '确定删除消息？',
+                confirmButtonType: isSuperGroup ? 'danger' : 'primary',
                 confirmText: this.sharedMiscState.isElectron ? '本地删除' : '删除',
                 cancelText: isSuperGroup || !this.sharedMiscState.isElectron ? '取消' : '远程删除',
                 cancelCallback: () => {
