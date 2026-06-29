@@ -279,8 +279,20 @@ export default {
 
 <style scoped>
 .conversation-item-container {
+    position: relative;
     padding-left: 12px;
     background-color: var(--background-item-normal);
+}
+
+/* 分隔线从头像(.header)右侧开始，不贯穿整个会话项 */
+.conversation-item-container::after {
+    content: '';
+    position: absolute;
+    left: calc(26px + var(--size-avatar));
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--border-separator);
 }
 
 .conversation-item-container:hover{
@@ -297,6 +309,10 @@ export default {
 
 .conversation-item-container.top {
     background-color: var(--background-item-top);
+}
+
+.conversation-item-container.top::after {
+    background: var(--border-strong);
 }
 
 .conversation-item-container.top:hover{

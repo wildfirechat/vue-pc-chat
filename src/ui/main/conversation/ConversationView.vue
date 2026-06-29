@@ -1382,7 +1382,6 @@ export default {
 
 .conversation-content-container .drag-drop-container {
     position: absolute;
-    background-color: var(--background-unconnected);
     top: 0;
     left: 0;
     width: 100%;
