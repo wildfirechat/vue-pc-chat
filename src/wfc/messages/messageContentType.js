@@ -132,4 +132,11 @@ export default class MessageContentType {
     static MESSAGE_CONTENT_TYPE_BACKUP_RESPONSE = 612;
     // 备份请求 - iOS端请求备份到PC
     static MESSAGE_CONTENT_TYPE_BACKUP_REQUEST = 613;
+
+    // ============ DSH 结构化交互（200-209，官方预留 AI 交互段） ============
+    static DSH_QUESTION = 200;            // 机器人→用户 提问卡片
+    static DSH_ANSWER = 201;              // 用户→机器人 结构化回答
+    static DSH_APPROVAL = 202;            // 机器人→用户 工具审批卡片
+    static DSH_APPROVAL_RESULT = 203;     // 用户→机器人 审批结果
+    static DSH_GOAL = 206;                // 机器人→用户 目标进度卡片
 }

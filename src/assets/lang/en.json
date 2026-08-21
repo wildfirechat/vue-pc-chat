@@ -333,5 +333,48 @@
         "collection_create_success": "Created successfully",
         "collection_create_failed": "Failed to create",
         "collection_not_in_group": "You are not in this group"
+    },
+    "dsh": {
+        "card": {
+            "approve": "Approve",
+            "reject": "Reject",
+            "submit": "Submit",
+            "answered": "Answered",
+            "expired": "Expired",
+            "approved": "Approved",
+            "rejected": "Rejected",
+            "custom_placeholder": "Or type a custom answer…"
+        },
+        "plan": {
+            "toggle": "View plan details"
+        },
+        "input": {
+            "waiting_placeholder": "Type your answer directly, or click the card buttons above",
+            "running_placeholder": "Agent is running…"
+        },
+        "cmd": {
+            "title": "Commands"
+        },
+        "progress": {
+            "thinking": "Thinking…",
+            "tool": "Running tool",
+            "done": "Done",
+            "running": "Processing…"
+        },
+        "status": {
+            "idle": "Idle",
+            "running": "Running",
+            "waiting": "Waiting for input",
+            "done": "Done"
+        },
+        "goal": {
+            "active": "Active",
+            "paused": "Paused",
+            "blocked": "Blocked",
+            "complete": "Complete",
+            "rounds": "{0} rounds run"
+        },
+        "stop": "Stop",
+        "stop_tip": "Stop the current agent run"
     }
 }

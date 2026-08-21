@@ -14,7 +14,14 @@
             <header>
                 <div class="title-container">
                     <div>
-                        <h1 ref="titleEl" class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
+                        <h1 ref="titleEl" class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}
+                            <span v-if="dshState" class="dsh-title-badge" :class="dshStateClass">{{ dshStateText }}</span>
+                            <button v-if="dshState && dshState.state === 'running'"
+                                    class="dsh-stop-btn"
+                                    :disabled="dshStopSending"
+                                    :title="$t('dsh.stop_tip')"
+                                    @click.stop="stopDshAgent">■ {{ $t('dsh.stop') }}</button>
+                        </h1>
                         <p class="single-line user-online-status" @click="clickConversationDesc">{{ targetUserOnlineStateDesc }}</p>
                         <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
                     </div>
@@ -178,6 +185,7 @@ import MessageInputView from "../../main/conversation/MessageInputView";
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
+import {getDshState, dshStateLabel} from '../../util/dshState';
 import wfc from "../../../wfc/client/wfc";
 import {numberValue} from "../../../wfc/util/longUtil";
 import InfiniteLoading from '@imndx/vue-infinite-loading';
@@ -256,6 +264,8 @@ export default {
         localConversationEventBus.$off = localConversationEventBus.off;
         localConversationEventBus.$emit = localConversationEventBus.emit;
         return {
+            dshState: null,
+            dshStopSending: false,
             conversationInfo: null,
             showConversationInfo: false,
             infoOpen: false,
@@ -305,6 +315,26 @@ export default {
     },
 
     methods: {
+        async refreshDshState() {
+            const info = this.sharedConversationState.currentConversationInfo;
+            if (!info || !info.conversation || !info.conversation.target) {
+                this.dshState = null;
+                return;
+            }
+            const st = await getDshState(info.conversation);
+            this.dshState = st;
+        },
+        // 标题栏停止按钮：向当前 DSH 会话发送 /stop 命令文本，中断当前 Agent turn
+        stopDshAgent() {
+            if (this.dshStopSending) return;
+            const info = this.sharedConversationState.currentConversationInfo;
+            if (!info || !info.conversation) return;
+            this.dshStopSending = true;
+            wfc.sendConversationMessage(info.conversation, new TextMessageContent('/stop'));
+            setTimeout(() => {
+                this.dshStopSending = false;
+            }, 1500);
+        },
         async dragEvent(e, v) {
             if (v === 'dragenter') {
                 this.dragAndDropEnterCount++;
@@ -1072,6 +1102,11 @@ export default {
     },
 
     mounted() {
+        this.refreshDshState();
+        wfc.eventEmitter.on(EventType.SettingUpdate, this.refreshDshState);
+        // 用户/群信息可能异步拉取，拉取回来后重新判断是否为 DSH 会话
+        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.refreshDshState);
+        wfc.eventEmitter.on(EventType.GroupInfosUpdate, this.refreshDshState);
         this.popupItem = this.$refs['setting'];
         document.addEventListener('mouseup', this.dragEnd);
         document.addEventListener('mousemove', this.drag);
@@ -1085,6 +1120,9 @@ export default {
     },
 
     beforeUnmount() {
+        wfc.eventEmitter.off(EventType.SettingUpdate, this.refreshDshState);
+        wfc.eventEmitter.off(EventType.UserInfosUpdate, this.refreshDshState);
+        wfc.eventEmitter.off(EventType.GroupInfosUpdate, this.refreshDshState);
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
         document.removeEventListener('mouseup', this.dragEnd);
@@ -1133,12 +1171,25 @@ export default {
                 clearInterval(this.ongoingCallTimer);
                 this.ongoingCallTimer = 0;
             }
+            this.refreshDshState();
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
         this.enableLoadRemoteHistoryMessage = true;
     },
 
     computed: {
+        dshStateText() {
+            const label = this.dshState ? dshStateLabel(this.dshState.state) : null;
+            if (!label) return '';
+            let text = this.$t(label);
+            if (this.dshState.phase === 'tool') {
+                text += ` · ${this.dshState.toolName || this.$t('dsh.progress.tool')}`;
+            }
+            return text;
+        },
+        dshStateClass() {
+            return `dsh-title-state-${this.dshState ? this.dshState.state : 'idle'}`;
+        },
         conversationTitle() {
             if (this.title) {
                 return this.title;
@@ -1565,5 +1616,41 @@ i:hover {
 i.active {
     color: var(--accent-color-active);
 }
+
+.dsh-title-badge {
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: normal;
+    vertical-align: middle;
+    color: var(--text-secondary);
+    background-color: var(--background-tertiary);
+}
+.dsh-title-state-running { color: var(--accent-color); }
+.dsh-title-state-waiting_user { color: #f59e0b; }
+.dsh-title-state-done { color: #22c55e; }
+
+.dsh-stop-btn {
+    margin-left: 6px;
+    padding: 1px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--status-error);
+    background: transparent;
+    color: var(--status-error);
+    font-size: 12px;
+    font-weight: normal;
+    vertical-align: middle;
+    cursor: pointer;
+}
+.dsh-stop-btn:hover {
+    background: var(--status-error);
+    color: var(--text-on-accent);
+}
+.dsh-stop-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 </style>
 

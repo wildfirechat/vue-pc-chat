@@ -161,7 +161,7 @@
                  ref="input" class="input"
                  @paste="handlePaste"
                  draggable="false"
-                 title="Enter发送，Ctrl+Enter换行"
+                 :title="inputPlaceholder"
                  autofocus
                  @input="onInput"
                  @contextmenu.prevent="$refs.menu.open($event)"
@@ -229,6 +229,7 @@ import Config from "../../../config";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import BenzAMRRecorder from "benz-amr-recorder";
 import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
+import {getDshState, dshConversationKind} from "../../util/dshState";
 import {currentWindow, fs} from "../../../platform";
 import {vOnClickOutside} from '@vueuse/components'
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
@@ -309,11 +310,83 @@ export default {
             isRecording: false,
             hasInputContent: false,
 
+            // DSH 会话：输入框输入 / 弹出命令菜单（Tribute 第二实例，触发符 '/'），
+            // 选中命令填入输入框（不直接发送）；_dshCmdConvKey 用于会话切换时重建菜单
+            dshState: null,
+            dshConvKind: null,
+            dshCommandTribute: null,
+            _dshCmdConvKey: null,
+            // 单聊机器人命令（/create-group 等私聊专属命令在群内会被插件拒绝；/stop 危险语义放最后）
+            dshSingleCommands: ['/help', '/create-group', '/workspaces', '/goal', '/jobs', '/model', '/effort', '/plan', '/compact', '/cwd', '/ls', '/sandbox', '/stop'],
+            // DSH 群聊命令（群内可用；/stop 危险语义放最后）
+            dshGroupCommands: ['/help', '/cwd', '/ls', '/model', '/effort', '/plan', '/compact', '/sandbox', '/reset', '/stop'],
+
             isCollectionEnable: !!Config.getCollectionServer(),
             isPollEnable: !!Config.getPollServer()
         }
     },
     methods: {
+        async refreshDshState() {
+            const conv = this.conversationInfo && this.conversationInfo.conversation;
+            if (!conv || !conv.target) {
+                this.dshState = null;
+                this.dshConvKind = null;
+                this._dshCmdConvKey = null;
+                this.initDshCommandMenu(); // 拆除旧菜单
+                return;
+            }
+            // 'single'（单聊机器人）/ 'group'（群 extra 带 dsh 标记）/ null
+            this.dshConvKind = dshConversationKind(conv);
+            // 会话切换（或初次判定成功）时重建 '/' 命令菜单：命令集随单聊/群聊变化
+            const convKey = `${conv.type}-${conv.line}-${conv.target}`;
+            if (this._dshCmdConvKey !== convKey) {
+                this._dshCmdConvKey = convKey;
+                this.initDshCommandMenu();
+            }
+            // getDshState 内部已按 isDshConversation 门控，非 DSH 会话直接返回 null
+            const state = await getDshState(conv);
+            // 防止会话切换后旧会话的异步结果覆盖新会话
+            if (this.conversationInfo && this.conversationInfo.conversation.equal(conv)) {
+                this.dshState = state;
+            }
+        },
+
+        // '/' 命令菜单：仅 DSH 会话挂载（单聊机器人 / DSH 群），命令集见 dshCommands。
+        // 与 '@' 提及（this.tribute）各自独立，互不干扰。选中命令填入输入框（补一个空格方便接参数），不直接发送。
+        initDshCommandMenu() {
+            if (this.dshCommandTribute) {
+                if (this.$refs['input']) {
+                    this.dshCommandTribute.detach(this.$refs['input']);
+                }
+                this.dshCommandTribute = null;
+            }
+            // 清理历史残留的命令菜单 DOM（重建/会话切换时 detach 不会移除菜单节点，
+            // 残留的可见菜单会让 DOM 级守卫误判或显示错乱）
+            document.querySelectorAll('.tribute-container').forEach((el) => {
+                if (el.querySelector('.dsh-cmd-menu-item')) el.remove();
+            });
+            if (this.dshConvKind === null) return; // 非 DSH 会话不挂载
+            const input = this.$refs['input'];
+            if (!input) return;
+            const commands = this.dshCommands.map((cmd) => ({key: cmd, value: cmd, searchKey: cmd}));
+            this.dshCommandTribute = new Tribute({
+                trigger: '/',
+                values: commands,
+                requireLeadingSpace: false,
+                selectTemplate: (item) => {
+                    if (typeof item === 'undefined') return null;
+                    // 命令填入输入框（不直接发送）；execCommand/Tribute 插入不一定触发 @input，手动刷新发送按钮状态
+                    this.$nextTick(() => this.updateInputState());
+                    return item.original.value + ' ';
+                },
+                menuItemTemplate: (item) => '<span class="dsh-cmd-menu-item">' + item.original.key + '</span>',
+                noMatchTemplate: () => '<span style="visibility:hidden;"></span>',
+                lookup: (item) => item.searchKey,
+                menuContainer: document.getElementById('conversation-content'),
+            });
+            this.dshCommandTribute.attach(input);
+        },
+
         onTributeReplaced(e) {
             // 正常下面这两行应当就生效了，不知道为啥不生效，所以采用了后面的 trick
             e.detail.event.preventDefault();
@@ -680,6 +753,17 @@ export default {
             }
             if (this.tribute && this.tribute.isActive) {
                 this.tributeReplaced = false;
+                return;
+            }
+            // '/' 命令菜单打开时，回车用于选择命令而非发送。
+            // 双重检查：实例状态 + DOM 实测（防陈旧实例/空引用窗口——热更新残留旧模块时
+            // this.dshCommandTribute 可能为 null/过期，但可见菜单仍在，DOM 检查可兜底）。
+            const cmdMenuVisible =
+                (this.dshCommandTribute && this.dshCommandTribute.isActive) ||
+                Array.from(document.querySelectorAll('.tribute-container')).some(
+                    (el) => el.style.display !== 'none' && el.querySelector('.dsh-cmd-menu-item')
+                );
+            if (cmdMenuVisible) {
                 return;
             }
 
@@ -1454,6 +1538,7 @@ export default {
             this.focusInput();
         }
         this.lastConversationInfo = this.conversationInfo;
+        this.refreshDshState();
 
         if (isElectron()) {
             ipcRenderer.on('screenshots-ok', (event, args) => {
@@ -1477,6 +1562,10 @@ export default {
 
     created() {
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
+        wfc.eventEmitter.on(EventType.SettingUpdate, this.refreshDshState)
+        // 用户/群信息可能异步拉取，拉取回来后重新判断是否为 DSH 会话（机器人单聊 / DSH 群）
+        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.refreshDshState)
+        wfc.eventEmitter.on(EventType.GroupInfosUpdate, this.refreshDshState)
     },
 
     unmounted() {
@@ -1487,10 +1576,21 @@ export default {
             clearInterval(this.storeDraftIntervalId)
         }
         wfc.eventEmitter.removeListener(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
+        wfc.eventEmitter.removeListener(EventType.SettingUpdate, this.refreshDshState)
+        wfc.eventEmitter.removeListener(EventType.UserInfosUpdate, this.refreshDshState)
+        wfc.eventEmitter.removeListener(EventType.GroupInfosUpdate, this.refreshDshState)
+        // 拆除 '/' 命令菜单
+        if (this.dshCommandTribute) {
+            if (this.$refs['input']) {
+                this.dshCommandTribute.detach(this.$refs['input']);
+            }
+            this.dshCommandTribute = null;
+        }
     },
 
     watch: {
         conversationInfo() {
+            this.refreshDshState();
             if (this.lastConversationInfo && !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation)) {
                 this.$nextTick(() => {
                     if (this.sharedConversationState.showChannelMenu) {
@@ -1574,6 +1674,24 @@ export default {
             let type = this.conversationInfo.conversation.type;
             return searchServerApi.isServiceAvailable
                 && (type === ConversationType.Single || type === ConversationType.Group);
+        },
+
+        // 命令集合：单聊机器人与 DSH 群不同（私聊专属命令在群内会被插件拒绝）
+        dshCommands() {
+            return this.dshConvKind === 'group' ? this.dshGroupCommands : this.dshSingleCommands;
+        },
+
+        // 输入框占位：contenteditable 的 placeholder 由 .input:empty:before { content: attr(title) } 实现
+        inputPlaceholder() {
+            if (this.dshState) {
+                if (this.dshState.state === 'waiting_user') {
+                    return this.$t('dsh.input.waiting_placeholder');
+                }
+                if (this.dshState.state === 'running') {
+                    return this.$t('dsh.input.running_placeholder');
+                }
+            }
+            return 'Enter发送，Ctrl+Enter换行';
         }
     },
 
@@ -1942,5 +2060,11 @@ export default {
         opacity: 0;
         transform: translateX(-50%) translateY(5px);
     }
+}
+
+/* DSH '/' 命令菜单条目（Tribute 弹层，等宽字体便于识别命令） */
+.dsh-cmd-menu-item {
+    font-family: monospace;
+    font-size: var(--font-size-sm);
 }
 </style>

@@ -70,7 +70,6 @@
     "group_announcement": "群公告",
     "add_member": "添加成員",
     "remove_member": "移除成員",
-    "quit_group": "退出群聊",
     "quit_group": "解散群組",
     "click_to_edit_group_announcement": "點擊編輯群公告",
     "all_people": "所有人",
@@ -143,7 +142,7 @@
     "exit_switch_user": "退出/切換賬號",
     "feedback": "發送反饋給我們",
     "lang": "語言(重啟生效)",
-        "zh_cn": "简体中文",
+    "zh_cn": "简体中文",
     "zh_tw": "繁體中文",
     "en": "English",
     "sync_draft": "同步草稿",
@@ -335,5 +334,48 @@
     "collection_create_success": "接龍建立成功",
     "collection_create_failed": "建立失敗",
     "collection_not_in_group": "您已不在該群組中"
+  },
+  "dsh": {
+    "card": {
+      "approve": "同意",
+      "reject": "拒絕",
+      "submit": "提交",
+      "answered": "已作答",
+      "expired": "已過期",
+      "approved": "已同意",
+      "rejected": "已拒絕",
+      "custom_placeholder": "或輸入自訂回答…"
+    },
+    "plan": {
+      "toggle": "檢視計畫詳情"
+    },
+    "input": {
+      "waiting_placeholder": "可直接輸入文字回答，或點擊上方卡片按鈕",
+      "running_placeholder": "Agent 運行中…"
+    },
+    "cmd": {
+      "title": "快捷命令"
+    },
+    "progress": {
+      "thinking": "正在思考…",
+      "tool": "正在執行工具",
+      "done": "完成",
+      "running": "處理中…"
+    },
+    "status": {
+      "idle": "空閒",
+      "running": "運行中",
+      "waiting": "等待確認",
+      "done": "已完成"
+    },
+    "goal": {
+      "active": "進行中",
+      "paused": "已暫停",
+      "blocked": "受阻",
+      "complete": "已完成",
+      "rounds": "已執行 {0} 輪"
+    },
+    "stop": "停止",
+    "stop_tip": "中斷目前 Agent 任務"
   }
 }

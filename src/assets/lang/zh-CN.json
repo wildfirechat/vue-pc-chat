@@ -347,5 +347,48 @@
         "forward_not_implemented": "转发功能尚未实现",
         "result_stats": "{totalVotes}票 · {voterCount}人参与",
         "poll_updated": "投票有更新"
+    },
+    "dsh": {
+        "card": {
+            "approve": "同意",
+            "reject": "拒绝",
+            "submit": "提交",
+            "answered": "已作答",
+            "expired": "已过期",
+            "approved": "已同意",
+            "rejected": "已拒绝",
+            "custom_placeholder": "或输入自定义回答…"
+        },
+        "plan": {
+            "toggle": "查看计划详情"
+        },
+        "input": {
+            "waiting_placeholder": "可直接输入文字回答，或点击上方卡片按钮",
+            "running_placeholder": "Agent 运行中…"
+        },
+        "cmd": {
+            "title": "快捷命令"
+        },
+        "progress": {
+            "thinking": "正在思考…",
+            "tool": "正在执行工具",
+            "done": "完成",
+            "running": "处理中…"
+        },
+        "status": {
+            "idle": "空闲",
+            "running": "运行中",
+            "waiting": "等待确认",
+            "done": "已完成"
+        },
+        "goal": {
+            "active": "进行中",
+            "paused": "已暂停",
+            "blocked": "受阻",
+            "complete": "已完成",
+            "rounds": "已执行 {0} 轮"
+        },
+        "stop": "停止",
+        "stop_tip": "中断当前 Agent 任务"
     }
 }

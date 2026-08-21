@@ -22,14 +22,18 @@
                 <div class="title-time-container">
                     <i v-if="source.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 4px"></i>
                     <div v-if="isOrganizationGroupConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
-                        <h2 class="title single-line">{{ conversationTitle }}</h2>
+                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
+                        <span v-if="isDshGroup" class="dsh-group-badge">DSH</span>
                         <p class="single-line" style="background: var(--accent-color); border-radius: 2px; color: var(--text-on-accent); padding: 1px 2px; font-size: 9px">官方</p>
                     </div>
                     <div v-else-if="isExternalDomainSingleConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
-                        <h2 class="title single-line">{{ conversationTitle }}</h2>
+                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
                         <p class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: var(--font-size-xxs)">{{ domainName }}</p>
                     </div>
-                    <h2 v-else class="title single-line">{{ conversationTitle }}</h2>
+                    <template v-else>
+                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
+                        <span v-if="isDshGroup" class="dsh-group-badge">DSH</span>
+                    </template>
                     <p class="time single-line">{{ source._timeStr }}</p>
                 </div>
                 <div class="content">
@@ -52,6 +56,7 @@ import Draft from "../../util/draft";
 import FileMessageContent from "../../../wfc/messages/fileMessageContent";
 import Message from "../../../wfc/messages/message";
 import wfc from "../../../wfc/client/wfc";
+import {getDshState, dshStateClass, isDshGroupExtra} from '../../util/dshState';
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import Config from "../../../config";
 import ConversationType from "../../../wfc/model/conversationType";
@@ -74,15 +79,26 @@ export default {
     },
     data() {
         return {
+            dshState: null,
             dragAndDropEnterCount: 0,
             shareConversationState: store.state.conversation,
             groupPortrait: Config.DEFAULT_GROUP_PORTRAIT_URL,
         };
     },
     mounted() {
+        this.refreshDshState();
+        wfc.eventEmitter.on('settingUpdate', this.refreshDshState);
         // this.refreshGroupPortrait();
     },
     methods: {
+        async refreshDshState() {
+            const conv = this.source && this.source.conversation;
+            if (!conv || !conv.target) {
+                this.dshState = null;
+                return;
+            }
+            this.dshState = await getDshState(conv);
+        },
         dragEvent(e, v) {
             if (v === 'dragenter') {
                 this.dragAndDropEnterCount++;
@@ -162,7 +178,22 @@ export default {
         },
 
     },
+    beforeUnmount() {
+        wfc.eventEmitter.off('settingUpdate', this.refreshDshState);
+    },
+
     computed: {
+        dshStateClass() {
+            return this.dshState ? dshStateClass(this.dshState.state) : '';
+        },
+        // 群 extra 带 {"dsh":true} 标记时显示 DSH 标识
+        isDshGroup() {
+            if (this.source.conversation.type !== ConversationType.Group) {
+                return false;
+            }
+            let target = this.conversationTarget;
+            return !!target && isDshGroupExtra(target.extra);
+        },
         // target（头像/名称）在展示时才按需解析：本地没有还会发远程拉取，
         // 会话很多（2000+ 群）时不能在加载会话列表时批量做，见 store._loadConversationList。
         // store 内部按 conversation._target 缓存，重复调用是廉价的。
@@ -479,5 +510,29 @@ export default {
     color: var(--text-placeholder);
 }
 
+
+
+.dsh-list-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+    background-color: #94a3b8;
+}
+.dsh-dot-running { background-color: var(--accent-color); }
+.dsh-dot-waiting_user { background-color: #f59e0b; }
+.dsh-dot-done { background-color: #22c55e; }
+
+.dsh-group-badge {
+    align-self: center;
+    margin-left: 4px;
+    padding: 0 4px;
+    border-radius: 2px;
+    font-size: 9px;
+    color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+}
 
 </style>
