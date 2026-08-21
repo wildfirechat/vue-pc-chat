@@ -55,6 +55,20 @@
         <TestCustomMessageContentView :message="message"
                                       v-else-if="message.messageContent.type === CustomMessageContentType.MESSAGE_CONTENT_TYPE_CUSTOM_MESSAGE_TEST"
                                       v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+        <!-- ============ DSH 结构化交互（200-209，官方预留 AI 交互段） ============ -->
+        <DshQuestionContentView :message="message"
+                                v-else-if="message.messageContent.type === MessageContentType.DSH_QUESTION"
+                                v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+        <DshApprovalContentView :message="message"
+                                v-else-if="message.messageContent.type === MessageContentType.DSH_APPROVAL"
+                                v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+        <DshGoalContentView :message="message"
+                            v-else-if="message.messageContent.type === MessageContentType.DSH_GOAL"
+                            v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+        <!-- DSH_ANSWER(201) / DSH_APPROVAL_RESULT(203) 是用户侧应答消息，按摘要文本展示 -->
+        <TextMessageContentView :message="message"
+                                v-else-if="message.messageContent.type === MessageContentType.DSH_ANSWER || message.messageContent.type === MessageContentType.DSH_APPROVAL_RESULT"
+                                v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
         <!--更多自定义消息，注意 v-else-if -->
         <UnknownMessageContentView :message="message"
                                    v-else
@@ -85,6 +99,9 @@ import LinkMessageContentView from "./content/LinkMessageContentView";
 import StreamingTextMessageContentView from "./content/StreamingTextMessageContentView.vue";
 import CustomMessageContentType from "../../../../wfc_custom_message/customMessageContentType";
 import TestCustomMessageContentView from "./content/TestCustomMessageContentView.vue";
+import DshQuestionContentView from "./content/DshQuestionContentView.vue";
+import DshApprovalContentView from "./content/DshApprovalContentView.vue";
+import DshGoalContentView from "./content/DshGoalContentView.vue";
 import MixMultiMediaTextMessageContentView from "./content/MixMultiMediaTextMessageContentView.vue";
 import MessageContentType from "../../../../wfc/messages/messageContentType";
 import MixFileTextMessageContentView from "./content/MixFileTextMessageContentView.vue";
@@ -117,6 +134,9 @@ export default {
         MixFileTextMessageContentView,
         MixMultiMediaTextMessageContentView,
         TestCustomMessageContentView,
+        DshQuestionContentView,
+        DshApprovalContentView,
+        DshGoalContentView,
         LinkMessageContentView,
         UnknownMessageContentView,
         ConferenceInviteMessageContentView,

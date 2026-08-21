@@ -86,6 +86,13 @@ import PollMessageContent from "../messages/pollMessageContent";
 import PollResultMessageContent from "../messages/pollResultMessageContent";
 import MeetingMinutesMessageContent from "../messages/meetingMinutesMessageContent";
 import TranscriptionMessageContent from "../messages/transcriptionMessageContent";
+import {
+    DshQuestionMessageContent,
+    DshAnswerMessageContent,
+    DshApprovalMessageContent,
+    DshApprovalResultMessageContent,
+    DshGoalMessageContent,
+} from "../messages/dshMessageContents";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -613,6 +620,37 @@ export default class MessageConfig {
             flag: PersistFlag.Transparent,
             type: MessageContentType.Transcription,
             contentClazz: TranscriptionMessageContent,
+        },
+        // ============ DSH 结构化交互（200-209，官方预留 AI 交互段） ============
+        {
+            name: 'dshQuestion',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.DSH_QUESTION,
+            contentClazz: DshQuestionMessageContent,
+        },
+        {
+            name: 'dshAnswer',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.DSH_ANSWER,
+            contentClazz: DshAnswerMessageContent,
+        },
+        {
+            name: 'dshApproval',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.DSH_APPROVAL,
+            contentClazz: DshApprovalMessageContent,
+        },
+        {
+            name: 'dshApprovalResult',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.DSH_APPROVAL_RESULT,
+            contentClazz: DshApprovalResultMessageContent,
+        },
+        {
+            name: 'dshGoal',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.DSH_GOAL,
+            contentClazz: DshGoalMessageContent,
         },
     ];
 }
