@@ -23,7 +23,7 @@
                     <i v-if="source.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 4px"></i>
                     <div v-if="isOrganizationGroupConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
                         <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
-                        <span v-if="isDshGroup" class="dsh-group-badge">DSH</span>
+                        <span v-if="isAiGroup" class="dsh-group-badge">AI</span>
                         <p class="single-line" style="background: var(--accent-color); border-radius: 2px; color: var(--text-on-accent); padding: 1px 2px; font-size: 9px">官方</p>
                     </div>
                     <div v-else-if="isExternalDomainSingleConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
@@ -32,7 +32,7 @@
                     </div>
                     <template v-else>
                         <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
-                        <span v-if="isDshGroup" class="dsh-group-badge">DSH</span>
+                        <span v-if="isAiGroup" class="dsh-group-badge">AI</span>
                     </template>
                     <p class="time single-line">{{ source._timeStr }}</p>
                 </div>
@@ -56,7 +56,7 @@ import Draft from "../../util/draft";
 import FileMessageContent from "../../../wfc/messages/fileMessageContent";
 import Message from "../../../wfc/messages/message";
 import wfc from "../../../wfc/client/wfc";
-import {getDshState, dshStateClass, isDshGroupExtra} from '../../util/dshState';
+import {getDshState, dshStateClass} from '../../util/dshState';
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import Config from "../../../config";
 import ConversationType from "../../../wfc/model/conversationType";
@@ -186,13 +186,10 @@ export default {
         dshStateClass() {
             return this.dshState ? dshStateClass(this.dshState.state) : '';
         },
-        // 群 extra 带 {"dsh":true} 标记时显示 DSH 标识
-        isDshGroup() {
-            if (this.source.conversation.type !== ConversationType.Group) {
-                return false;
-            }
-            let target = this.conversationTarget;
-            return !!target && isDshGroupExtra(target.extra);
+        // line 2 的群聊会话显示 AI 标识（AI 消息统一使用 line 2）
+        isAiGroup() {
+            return this.source.conversation.type === ConversationType.Group
+                && this.source.conversation.line === 2;
         },
         // target（头像/名称）在展示时才按需解析：本地没有还会发远程拉取，
         // 会话很多（2000+ 群）时不能在加载会话列表时批量做，见 store._loadConversationList。

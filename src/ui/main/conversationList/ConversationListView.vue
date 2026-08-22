@@ -76,6 +76,7 @@ export default {
                 {value: 'all', label: 'conversation.filter_all'},
                 {value: 'unread', label: 'conversation.filter_unread'},
                 {value: 'mention', label: 'conversation.filter_mention'},
+                {value: 'ai', label: 'conversation.filter_ai'},
             ],
         };
     },
@@ -131,6 +132,10 @@ export default {
             if (filter === 'mention') {
                 let uc = conversationInfo.unreadCount;
                 return !!uc && (uc.unreadMention > 0 || uc.unreadMentionAll > 0);
+            }
+            if (filter === 'ai') {
+                // AI 会话统一使用 line 2
+                return conversationInfo.conversation.line === 2;
             }
             return true;
         },
@@ -330,6 +335,9 @@ export default {
         filterEmptyHintText() {
             if (this.currentFilter === 'mention') {
                 return this.$t('conversation.filter_mention_empty');
+            }
+            if (this.currentFilter === 'ai') {
+                return this.$t('conversation.filter_ai_empty');
             }
             return this.$t('conversation.filter_unread_empty');
         },

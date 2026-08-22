@@ -98,8 +98,10 @@
         "filter_all": "All",
         "filter_unread": "Unread",
         "filter_mention": "{'@Me'}",
+        "filter_ai": "AI",
         "filter_unread_empty": "No unread conversations",
-        "filter_mention_empty": "{'No conversations that @me'}"
+        "filter_mention_empty": "{'No conversations that @me'}",
+        "filter_ai_empty": "No AI conversations"
     },
     "fav": {
         "fav": "Collection",

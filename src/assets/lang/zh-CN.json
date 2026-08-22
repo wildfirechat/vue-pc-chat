@@ -111,8 +111,10 @@
         "filter_all": "全部",
         "filter_unread": "未读",
         "filter_mention": "{'@我'}",
+        "filter_ai": "AI",
         "filter_unread_empty": "暂无未读消息",
-        "filter_mention_empty": "{'暂无@我的消息'}"
+        "filter_mention_empty": "{'暂无@我的消息'}",
+        "filter_ai_empty": "暂无AI会话"
     },
     "fav": {
         "fav": "收藏",
