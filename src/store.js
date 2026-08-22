@@ -354,6 +354,7 @@ let store = {
                 if (msgIndex > -1) {
                     // FYI: https://v2.vuejs.org/v2/guide/reactivity#Change-Detection-Caveats
                     this.state.conversation.currentConversationMessageList.splice(msgIndex, 1, msg);
+                    this._pinStreamingGeneratingToBottom();
                     console.log('msg duplicate, update message')
                     return;
                 } else {
@@ -365,6 +366,7 @@ let store = {
                 }
 
                 this.state.conversation.currentConversationMessageList.push(msg);
+                this._pinStreamingGeneratingToBottom();
             }
 
             if (this.state.misc.isMainWindow && this.isConversationInCurrentWindow(msg.conversation)) {
@@ -482,6 +484,7 @@ let store = {
             if (this.state.conversation.currentConversationMessageList.length > defaultRenderMessageCount) {
                 this.state.conversation.currentConversationMessageList = this.state.conversation.currentConversationMessageList.slice(this.state.conversation.currentConversationMessageList.length - defaultRenderMessageCount);
             }
+            this._pinStreamingGeneratingToBottom();
         });
 
         const messageStatusOrContentUpdateListener = (message) => {
@@ -502,6 +505,7 @@ let store = {
             let msg = this.state.conversation.currentConversationMessageList[index];
             msg = Object.assign(msg, message)
             this.state.conversation.currentConversationMessageList.splice(index, 1, msg)
+            this._pinStreamingGeneratingToBottom();
 
             if (this.state.conversation.currentConversationInfo.lastMessage && this.state.conversation.currentConversationInfo.lastMessage.messageId === message.messageId) {
                 Object.assign(this.state.conversation.currentConversationInfo.lastMessage, message);
@@ -717,7 +721,8 @@ let store = {
     _loadDefaultConversationList() {
         console.log('store _loadDefaultConversationList');
         let conversationTypes = isElectron() ? [0, 1, 3, 5] : [0, 1, 3];
-        this._loadConversationList(conversationTypes, [0])
+        // 普通消息 line 0，AI 消息 line 2（朋友圈 line 1 不展示）
+        this._loadConversationList(conversationTypes, [0, 2])
     },
 
     _loadConversationList(conversationType = [0, 1, 3], lines = [0]) {
@@ -2819,6 +2824,39 @@ let store = {
         if (idx > -1) {
             list.splice(idx, 1);
         }
+    },
+
+    /**
+     * 生成中的流式消息（type 14，Streaming_Text_Generating）必须固定在列表最新位置（视觉最底部）。
+     * 生成期间用户自己发消息、或其它消息（含最终 type 15 完成消息）插入/替换，
+     * 都可能把它顶到中间。这里在每次列表变更后把「最后一条生成中的消息」移到数组末尾，
+     * 其余消息保持相对顺序；本来就已在末尾则不动。整体赋值新数组触发刷新。
+     */
+    _pinStreamingGeneratingToBottom() {
+        const list = this.state.conversation.currentConversationMessageList;
+        if (!list || list.length <= 1) {
+            return;
+        }
+        const last = list[list.length - 1];
+        if (last.messageContent.type === MessageContentType.Streaming_Text_Generating) {
+            return;
+        }
+        let idx = -1;
+        for (let i = list.length - 1; i >= 0; i--) {
+            if (list[i].messageContent.type === MessageContentType.Streaming_Text_Generating) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx === -1) {
+            return;
+        }
+        // 整体赋值新数组触发刷新，勿原地 splice
+        const newList = list.slice(0);
+        const generating = newList[idx];
+        newList.splice(idx, 1);
+        newList.push(generating);
+        this.state.conversation.currentConversationMessageList = newList;
     },
 
     _conversationKey(conv){

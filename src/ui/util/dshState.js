@@ -26,25 +26,15 @@ export function isDshGroupExtra(extra) {
 }
 
 /**
- * DSH 会话类型：'single'（单聊且对方是机器人 UserInfo.type === 1）/
- * 'group'（群 extra 带 {"dsh":true} 标记）/ null（非 DSH 会话）。
- * 用户信息/群信息未缓存时返回 null，待 UserInfosUpdate/GroupInfosUpdate 后再判断。
+ * AI 会话类型（原 DSH）：'single'（line 2 单聊）/
+ * 'group'（line 2 群聊）/ null（非 AI 会话）。
+ * 判断依据：会话 line === 2（AI 消息统一使用 line 2，普通消息 line 0，朋友圈 line 1）。
  */
 export function dshConversationKind(conversation) {
     if (!conversation || !conversation.target) return null;
-    try {
-        if (conversation.type === ConversationType.Single) {
-            const userInfo = wfc.getUserInfo(conversation.target, false);
-            return userInfo && userInfo.type === 1 ? 'single' : null;
-        }
-        if (conversation.type === ConversationType.Group) {
-            const groupInfo = wfc.getGroupInfo(conversation.target, false);
-            return isDshGroupExtra(groupInfo && groupInfo.extra) ? 'group' : null;
-        }
-    } catch (e) {
-        return null;
-    }
-    return null;
+    // AI 会话统一使用 line 2
+    if (conversation.line !== 2) return null;
+    return conversation.type === ConversationType.Group ? 'group' : 'single';
 }
 
 /**
