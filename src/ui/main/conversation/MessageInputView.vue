@@ -338,9 +338,11 @@ export default {
             dshAgentPanelPos: {left: 0, bottom: 0},
             dshAgentPanelConvKey: "",
             // 单聊机器人命令（/create 等私聊专属命令在群内会被插件拒绝；/stop 危险语义放最后）
+            // 模型/推理/沙箱/计划/目录/压缩/重置等已由 AI 设置面板覆盖（仅群聊），单聊无面板故保留
             dshSingleCommands: ['/help', '/create', '/workspaces', '/goal', '/jobs', '/model', '/effort', '/plan', '/compact', '/cwd', '/ls', '/sandbox', '/stop'],
-            // DSH 群聊命令（群内可用，含群管理；/stop 危险语义放最后）
-            dshGroupCommands: ['/help', '/cwd', '/ls', '/model', '/effort', '/plan', '/compact', '/sandbox', '/reset', '/members', '/kick', '/invite', '/mute', '/unmute', '/stop'],
+            // DSH 群聊命令（面板已覆盖 model/effort/cwd/sandbox/plan/compact/reset，故不再出现在 / 菜单；
+            // 保留帮助/群管理/停止）
+            dshGroupCommands: ['/help', '/members', '/kick', '/invite', '/mute', '/unmute', '/stop'],
 
             isCollectionEnable: !!Config.getCollectionServer(),
             isPollEnable: !!Config.getPollServer()

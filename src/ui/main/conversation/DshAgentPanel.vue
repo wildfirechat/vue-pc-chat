@@ -1,9 +1,9 @@
 <!--
   DshAgentPanel.vue — AI 会话设置面板（第一层 Agent 可改属性，UI 选择式交互）
-  打开时读取 scope=31 状态（当前模型/推理等级/工作目录）并发送查询命令
-  （/model /effort /sandbox /plan）解析可选值与当前值；所有操作以命令形式
-  发送到会话（与手打命令等价，插件端逻辑不变）。
-  工作目录：点"切换"弹出独立窗口（/ls 目录列表）选择，选中后发 /cwd。
+  静默通道：打开面板发 DSH_Command(207) query（组合查询）→ 插件聚合面板数据写
+  scope=31 type=3 → 本组件读 type=3 渲染（模型/effort/沙箱/计划/cwd/目录列表）。
+  所有操作发 DSH_Command(207) set（cmd=命令文本），插件执行后写 type=1 lastChange
+  （变更可见）+ 刷新 type=3；本组件监听设置更新事件重读。207 为透明消息不显示。
 -->
 <template>
     <div class="dsh-agent-panel" @click.stop>
@@ -51,7 +51,7 @@
                         <span class="dsh-agent-cwd-current">{{ currentCwd || '未设置' }}</span>
                         <button class="dsh-agent-btn dsh-agent-btn-sm" :disabled="applying" @click="openCwdPicker">切换</button>
                     </div>
-                    <p class="dsh-agent-hint">切换目录 = 新会话（上下文清空）</p>
+                    <p class="dsh-agent-hint">切换目录 = 切换会话（该目录上下文可恢复）</p>
                 </div>
 
                 <!-- 沙箱模式 -->
@@ -86,10 +86,13 @@
         <footer class="dsh-agent-footer">
             <button class="dsh-agent-btn" :disabled="applying || loading" @click="compact">压缩上下文</button>
             <button class="dsh-agent-btn dsh-agent-btn-danger" :disabled="applying || loading" @click="resetSession">重置会话</button>
+            <!-- 销毁按钮不受 applying 限制：危险操作必须始终可点（点击后弹确认，确认才发送） -->
+            <button class="dsh-agent-btn dsh-agent-btn-destroy" @click="destroyGroup">销毁会话</button>
         </footer>
-        <p v-if="applying" class="dsh-agent-applying">指令已发送…</p>
+        <!-- 指令提示区：常驻占位（min-height 固定），避免出现/消失导致高度跳动 -->
+        <p class="dsh-agent-applying">{{ applying ? '指令已发送…' : '' }}</p>
 
-        <!-- 工作目录选择弹窗（独立窗口） -->
+        <!-- 工作目录选择弹窗（独立窗口，数据来自 type=3 dirs） -->
         <Teleport to="body">
             <div v-if="cwdPickerOpen" class="dsh-agent-picker-mask" @click="closeCwdPicker">
                 <div class="dsh-agent-picker" @click.stop>
@@ -98,9 +101,7 @@
                         <button class="dsh-agent-close" title="关闭" @click="closeCwdPicker">×</button>
                     </header>
                     <div class="dsh-agent-picker-body">
-                        <div v-if="cwdLoading" class="dsh-agent-cwd-empty">正在获取目录列表…</div>
-                        <div v-else-if="cwdTimedOut" class="dsh-agent-cwd-empty">获取目录列表超时，请重试</div>
-                        <div v-else-if="!cwdCandidates.length" class="dsh-agent-cwd-empty">未获取到目录列表，可稍后重试</div>
+                        <div v-if="!cwdCandidates.length" class="dsh-agent-cwd-empty">未获取到目录列表，可稍后重试</div>
                         <ul v-else class="dsh-agent-cwd-list">
                             <li v-for="d in cwdCandidates" :key="d" class="dsh-agent-cwd-item" @click="switchCwd(d)">
                                 📂 {{ d }}
@@ -116,8 +117,8 @@
 <script>
 import wfc from "../../../wfc/client/wfc";
 import EventType from "../../../wfc/client/wfcEvent";
-import TextMessageContent from "../../../wfc/messages/textMessageContent";
-import {getDshState} from "../../util/dshState";
+import DshCommandMessageContent from "../../../wfc/messages/dshCommandMessageContent";
+import {getDshPanelData} from "../../util/dshState";
 
 export default {
     name: "DshAgentPanel",
@@ -132,45 +133,58 @@ export default {
         return {
             loading: true,
             applying: false,
-            currentModel: "",
-            currentEffort: "",
-            currentCwd: "",
-            currentSandbox: "",
-            planOn: false,
-            modelOptions: [],
-            effortOptions: [],
-            sandboxModes: [
-                {value: "read-only", label: "只读"},
-                {value: "workspace-write", label: "仅写工作区"},
-                {value: "danger-full-access", label: "完全放开"},
-            ],
-            // 工作目录选择弹窗
+            panelData: null,
             cwdPickerOpen: false,
-            cwdCandidates: [],
-            cwdLoading: false,
-            cwdTimedOut: false,
-            _cwdTimeoutTimer: 0,
             _flashTimer: 0,
         };
     },
+    computed: {
+        currentModel() {
+            return (this.panelData && this.panelData.model && this.panelData.model.current) || '';
+        },
+        modelOptions() {
+            return (this.panelData && this.panelData.model && this.panelData.model.options) || [];
+        },
+        currentEffort() {
+            return (this.panelData && this.panelData.effort && this.panelData.effort.current) || '';
+        },
+        effortOptions() {
+            const opts = (this.panelData && this.panelData.effort && this.panelData.effort.options) || [];
+            return opts.map(v => ({value: v, label: v}));
+        },
+        currentCwd() {
+            return (this.panelData && this.panelData.cwd) || '';
+        },
+        currentSandbox() {
+            return (this.panelData && this.panelData.sandbox && this.panelData.sandbox.current) || '';
+        },
+        sandboxModes() {
+            const opts = (this.panelData && this.panelData.sandbox && this.panelData.sandbox.options) || [];
+            const labels = {'read-only': '只读', 'workspace-write': '仅写工作区', 'danger-full-access': '完全放开'};
+            const modes = opts.length ? opts : ['read-only', 'workspace-write', 'danger-full-access'];
+            return modes.map(v => ({value: v, label: labels[v] || v}));
+        },
+        planOn() {
+            return !!(this.panelData && this.panelData.plan && this.panelData.plan.on);
+        },
+        cwdCandidates() {
+            return (this.panelData && this.panelData.dirs) || [];
+        },
+    },
     async mounted() {
-        wfc.eventEmitter.on(EventType.ReceiveMessage, this.onReceiveMessage);
+        // 设置更新事件：插件执行更新/查询后写 type=3，重读刷新
+        wfc.eventEmitter.on(EventType.SettingUpdate, this.refreshPanelData);
         // ESC 关闭面板（目录弹窗优先）
         window.addEventListener("keydown", this.onKeyDown);
-        // 当前值直接读 scope=31 状态（零解析）
-        const state = await this.readState();
-        this.setCurrentFromState(state);
+        // 先读已有面板数据（若有），再发组合查询刷新
+        await this.refreshPanelData();
         this.loading = false;
-        // 查询可选值（回复经 ReceiveMessage 解析）
-        this.send("/model");
-        this.send("/effort");
-        this.send("/sandbox");
-        this.send("/plan");
+        // 组合查询：插件聚合面板数据写 type=3（不回复消息）
+        this.sendCommand("query");
     },
     beforeUnmount() {
-        wfc.eventEmitter.removeListener(EventType.ReceiveMessage, this.onReceiveMessage);
+        wfc.eventEmitter.removeListener(EventType.SettingUpdate, this.refreshPanelData);
         window.removeEventListener("keydown", this.onKeyDown);
-        clearTimeout(this._cwdTimeoutTimer);
         clearTimeout(this._flashTimer);
     },
     methods: {
@@ -182,161 +196,68 @@ export default {
                 this.$emit("close");
             }
         },
-        async readState() {
+        async refreshPanelData() {
             try {
-                return await getDshState(this.conversation);
+                const data = await getDshPanelData(this.conversation);
+                if (data) this.panelData = data;
             } catch (e) {
-                return null;
+                // 忽略，保持旧数据
             }
         },
-        setCurrentFromState(state) {
-            if (!state) return;
-            this.currentModel = state.model || "";
-            this.currentEffort = state.reasoningEffort || "";
-            this.currentCwd = state.cwd || "";
-        },
-        /** 向会话发送命令文本（与手打命令等价）。 */
-        send(cmd) {
-            wfc.sendConversationMessage(this.conversation, new TextMessageContent(cmd));
-        },
-        /** 解析机器人对查询命令的回复（按文本特征前缀匹配，不依赖发送者）。 */
-        onReceiveMessage(message) {
-            if (!message || !message.conversation || !message.conversation.equal(this.conversation)) return;
-            const content = message.messageContent;
-            if (!content || typeof content.content !== "string") return;
-            const text = content.content;
-            if (text.includes("当前模型:")) this.parseModelReply(text);
-            else if (text.includes("当前推理等级:")) this.parseEffortReply(text);
-            else if (text.includes("当前沙箱模式:")) this.parseSandboxReply(text);
-            else if (text.includes("当前计划模式:")) this.parsePlanReply(text);
-            else if (text.includes("用法: /ls") || text.includes("项目根目录")) this.parseLsReply(text);
-            else if (text.includes("工作目录已绑定:") || text.includes("目录已创建并绑定:")) this.parseCwdReply(text);
-            else if (text.includes("已清除自定义工作目录")) this.currentCwd = "";
-        },
-        parseModelReply(text) {
-            for (const line of text.split("\n")) {
-                if (line.startsWith("当前模型:")) {
-                    this.currentModel = line
-                        .replace(/^当前模型:\s*/, "")
-                        .replace(/\s*\(推理等级=.*\)\s*$/, "")
-                        .trim();
-                }
-            }
-            if (!text.includes("可用模型（运行时目录）")) return;
-            const options = [];
-            for (const line of text.split("\n")) {
-                const m = line.match(/^\s{4}([A-Za-z0-9_-]+\/[A-Za-z0-9._-]+)\s*（(.+?)）\s*$/);
-                if (m) options.push({value: m[1], label: `${m[1]}（${m[2]}）`});
-            }
-            // 当前模型可能不在 DSH 模型目录里（如 agent-default-model 配了目录外的模型），
-            // 必须补进候选，否则下拉无法选中/显示当前值。
-            if (this.currentModel && !options.some((o) => o.value === this.currentModel)) {
-                options.unshift({value: this.currentModel, label: `${this.currentModel}（当前）`});
-            }
-            if (options.length > 0) this.modelOptions = options;
-        },
-        parseEffortReply(text) {
-            for (const line of text.split("\n")) {
-                if (line.startsWith("当前推理等级:")) {
-                    this.currentEffort = line.replace(/^当前推理等级:\s*/, "").replace(/（.*/, "").trim();
-                }
-                if (line.startsWith("当前模型支持:")) {
-                    const list = line
-                        .replace(/^当前模型支持:\s*/, "")
-                        .replace(/（默认:.*/, "")
-                        .split("/")
-                        .map((s) => s.trim())
-                        .filter(Boolean);
-                    if (list.length > 0) this.effortOptions = list.map((v) => ({value: v, label: v}));
-                }
-            }
-        },
-        parseSandboxReply(text) {
-            for (const line of text.split("\n")) {
-                if (line.startsWith("当前沙箱模式:")) {
-                    this.currentSandbox = line.replace(/^当前沙箱模式:\s*/, "").replace(/（.*/, "").trim();
-                }
-            }
-        },
-        parsePlanReply(text) {
-            const m = text.match(/当前计划模式:\s*已(开启|关闭)/);
-            if (m) this.planOn = m[1] === "开启";
-        },
-        /** /cwd 切换成功回复 → 刷新当前工作目录（避免依赖 scope=31 状态的旧值）。 */
-        parseCwdReply(text) {
-            // 回复形如 "群 xxx 工作目录已绑定: /abs/path（已持久化，会话上下文已重置）"
-            // 路径与全角括号之间无空格，须以 [^\s（] 精确截到括号前。
-            const m = text.match(/(?:工作目录已绑定|目录已创建并绑定):\s*([^\s（]+)/);
-            if (m) this.currentCwd = m[1];
-        },
-        /** /ls 回复 → 解析项目根目录的子目录。 */
-        parseLsReply(text) {
-            const dirs = [];
-            for (const line of text.split("\n")) {
-                const m = line.match(/^\s*📂\s+([^/]+)\//);
-                if (m) dirs.push(m[1]);
-            }
-            this.cwdCandidates = dirs;
-            this.cwdLoading = false;
-            this.cwdTimedOut = false;
+        /** 发送 207 面板指令（透明消息，不显示在消息流）。 */
+        sendCommand(op, cmd) {
+            const content = new DshCommandMessageContent(op, cmd, Date.now() % 100000);
+            wfc.sendConversationMessage(this.conversation, content);
         },
 
-        // ─── 工作目录选择弹窗 ───
-        openCwdPicker() {
-            this.cwdPickerOpen = true;
-            this.cwdCandidates = [];
-            this.cwdLoading = true;
-            this.cwdTimedOut = false;
-            this.send("/ls");
-            clearTimeout(this._cwdTimeoutTimer);
-            this._cwdTimeoutTimer = setTimeout(() => {
-                this.cwdLoading = false;
-                this.cwdTimedOut = true;
-            }, 8000);
-        },
-        closeCwdPicker() {
-            this.cwdPickerOpen = false;
-            clearTimeout(this._cwdTimeoutTimer);
-        },
-        switchCwd(dir) {
-            if (!dir) return;
-            this.send(`/cwd ${dir}`);
-            this.closeCwdPicker();
-            this.flash();
-        },
-
-        // ─── 其它操作 ───
+        // ─── 操作：207 set（cmd=命令文本） ───
         selectModel(v) {
             if (!v) return;
-            this.currentModel = v;
-            this.send(`/model ${v}`);
+            this.sendCommand("set", `/model ${v}`);
             this.flash();
         },
         selectEffort(v) {
             if (!v) return;
-            this.currentEffort = v;
-            this.send(`/effort ${v}`);
+            this.sendCommand("set", `/effort ${v}`);
             this.flash();
         },
         selectSandbox(v) {
-            this.currentSandbox = v;
-            this.send(`/sandbox ${v}`);
+            this.sendCommand("set", `/sandbox ${v}`);
             this.flash();
         },
         togglePlan(on) {
-            this.planOn = on;
-            this.send(`/plan ${on ? "on" : "off"}`);
+            this.sendCommand("set", `/plan ${on ? "on" : "off"}`);
             this.flash();
         },
         compact() {
             if (!window.confirm("压缩会话上下文（折叠历史，减少 token 占用），继续？")) return;
-            this.send("/compact");
+            this.sendCommand("set", "/compact");
             this.flash();
         },
         resetSession() {
             if (!window.confirm("重置会话将清空全部上下文（工作目录保留），继续？")) return;
-            this.send("/reset");
+            this.sendCommand("set", "/reset");
             this.flash();
+        },
+        destroyGroup() {
+            // 毁灭性操作：单次强警告确认（确认后即发请求）
+            if (!window.confirm("⚠️ 销毁会话将解散本群、删除工作区目录及全部会话数据，且不可恢复！\n\n请确认是否销毁？")) return;
+            this.sendCommand("set", "/destroy");
+            this.flash();
+        },
+        switchCwd(dir) {
+            if (!dir) return;
+            this.sendCommand("set", `/cwd ${dir}`);
+            this.closeCwdPicker();
+            this.flash();
+        },
+        openCwdPicker() {
+            this.cwdPickerOpen = true;
+            // 目录列表来自 type=3（组合查询已含）；若为空可再发一次 query 刷新
+            if (!this.cwdCandidates.length) this.sendCommand("query");
+        },
+        closeCwdPicker() {
+            this.cwdPickerOpen = false;
         },
         flash() {
             this.applying = true;
@@ -545,6 +466,16 @@ export default {
     background: rgba(229, 72, 77, 0.08);
 }
 
+.dsh-agent-btn-destroy {
+    border-color: var(--status-error, #e5484d);
+    background: var(--status-error, #e5484d);
+    color: #fff;
+}
+
+.dsh-agent-btn-destroy:hover:not(:disabled) {
+    opacity: 0.85;
+}
+
 .dsh-agent-loading {
     flex: 1;
     display: flex;
@@ -555,6 +486,7 @@ export default {
 
 .dsh-agent-applying {
     margin: 8px 0 0;
+    min-height: 16px; /* 常驻占位：不随提示出现/消失改变面板高度 */
     font-size: 11px;
     color: var(--accent-color, #4f8ff7);
 }

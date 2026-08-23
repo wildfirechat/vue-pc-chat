@@ -65,6 +65,9 @@
         <DshGoalContentView :message="message"
                             v-else-if="message.messageContent.type === MessageContentType.DSH_GOAL"
                             v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+        <DshTaskProgressContentView :message="message"
+                                    v-else-if="message.messageContent.type === MessageContentType.DSH_TASK_PROGRESS"
+                                    v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
         <!-- DSH_ANSWER(201) / DSH_APPROVAL_RESULT(203) 是用户侧应答消息，按摘要文本展示 -->
         <TextMessageContentView :message="message"
                                 v-else-if="message.messageContent.type === MessageContentType.DSH_ANSWER || message.messageContent.type === MessageContentType.DSH_APPROVAL_RESULT"
@@ -102,6 +105,7 @@ import TestCustomMessageContentView from "./content/TestCustomMessageContentView
 import DshQuestionContentView from "./content/DshQuestionContentView.vue";
 import DshApprovalContentView from "./content/DshApprovalContentView.vue";
 import DshGoalContentView from "./content/DshGoalContentView.vue";
+import DshTaskProgressContentView from "./content/DshTaskProgressContentView.vue";
 import MixMultiMediaTextMessageContentView from "./content/MixMultiMediaTextMessageContentView.vue";
 import MessageContentType from "../../../../wfc/messages/messageContentType";
 import MixFileTextMessageContentView from "./content/MixFileTextMessageContentView.vue";
@@ -137,6 +141,7 @@ export default {
         DshQuestionContentView,
         DshApprovalContentView,
         DshGoalContentView,
+        DshTaskProgressContentView,
         LinkMessageContentView,
         UnknownMessageContentView,
         ConferenceInviteMessageContentView,

@@ -185,7 +185,7 @@ import MessageInputView from "../../main/conversation/MessageInputView";
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
-import {getDshState, dshStateLabel, dshMetricsText} from '../../util/dshState';
+import {getDshState, getDshMetrics, dshStateLabel, dshMetricsText, dshStatusHint} from '../../util/dshState';
 import wfc from "../../../wfc/client/wfc";
 import {numberValue} from "../../../wfc/util/longUtil";
 import InfiniteLoading from '@imndx/vue-infinite-loading';
@@ -265,6 +265,7 @@ export default {
         localConversationEventBus.$emit = localConversationEventBus.emit;
         return {
             dshState: null,
+            dshMetrics: null,
             dshStopSending: false,
             conversationInfo: null,
             showConversationInfo: false,
@@ -319,10 +320,15 @@ export default {
             const info = this.sharedConversationState.currentConversationInfo;
             if (!info || !info.conversation || !info.conversation.target) {
                 this.dshState = null;
+                this.dshMetrics = null;
                 return;
             }
-            const st = await getDshState(info.conversation);
+            const [st, metrics] = await Promise.all([
+                getDshState(info.conversation),
+                getDshMetrics(info.conversation),
+            ]);
             this.dshState = st;
+            this.dshMetrics = metrics;
         },
         // 标题栏停止按钮：向当前 DSH 会话发送 /stop 命令文本，中断当前 Agent turn
         stopDshAgent() {
@@ -1191,17 +1197,28 @@ export default {
             return `dsh-title-state-${this.dshState ? this.dshState.state : 'idle'}`;
         },
         dshMetricsText() {
-            return this.dshState ? dshMetricsText(this.dshState) : '';
+            // Token 统计（type=2 独立通道）
+            if (!this.dshMetrics) return '';
+            // 统计属于当前会话才显示：切目录后旧会话统计（sessionId 不匹配）不显示
+            if (this.dshMetrics.sessionId && this.dshState && this.dshMetrics.sessionId !== this.dshState.sessionId) {
+                return '';
+            }
+            return dshMetricsText(this.dshMetrics);
+        },
+        dshStatusHint() {
+            // 运行态提示（type=1）：等待确认/审批、出错、已取消
+            return this.dshState ? dshStatusHint(this.dshState) : '';
         },
         /**
-         * 标题下方状态行：AI 群的 AI 在线状态与 Token 计量合并为一行
-         * （如 "AI 在线 · 上下文 0.9% · 缓存 98%"）；非 DSH 会话保持原逻辑。
+         * 标题下方状态行：AI 在线状态 + 运行态提示 + Token 统计合并为一行
+         * （如 "AI 在线 · 🤔 等待确认 · 上下文 0.9% · 缓存 98%"）。
+         * 修改结果（lastChange）由 tip 小灰条展示，标题栏固定显示统计。
          */
         conversationStatusLine() {
             const online = this.targetUserOnlineStateDesc;
+            const hint = this.dshStatusHint;
             const metrics = this.dshMetricsText;
-            if (online && metrics) return `${online} · ${metrics}`;
-            return online || metrics;
+            return [online, hint, metrics].filter(Boolean).join(' · ');
         },
         conversationTitle() {
             if (this.title) {

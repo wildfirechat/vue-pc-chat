@@ -10,9 +10,19 @@ import UserSettingScope from "../../wfc/client/userSettingScope";
 import ConversationType from "../../wfc/model/conversationType";
 
 const DSH_STATE_TYPE = 1; // 1=状态 (business convention)
+const DSH_METRICS_TYPE = 2; // 2=Token 统计（与运行状态分开，低频累积数据）
+const DSH_PANEL_TYPE = 3; // 3=AI 面板数据（组合查询结果，面板打开/更新后刷新）
 
 export function dshStateKey(conversation) {
     return `${conversation.type}-${conversation.line}-${conversation.target}_${DSH_STATE_TYPE}`;
+}
+
+export function dshMetricsKey(conversation) {
+    return `${conversation.type}-${conversation.line}-${conversation.target}_${DSH_METRICS_TYPE}`;
+}
+
+export function dshPanelKey(conversation) {
+    return `${conversation.type}-${conversation.line}-${conversation.target}_${DSH_PANEL_TYPE}`;
 }
 
 /** 群 extra 是否带 {"dsh":true} 标记（容错：非 JSON 时返回 false）。 */
@@ -59,6 +69,40 @@ export async function getDshState(conversation) {
     }
 }
 
+/**
+ * Read the DSH Token 统计 of a conversation (scope=31, type=2 计量).
+ * 独立于运行状态（type=1）：回合结束必推（含出错/取消），带 metricsAt 时间戳。
+ * Returns null when unset/invalid.
+ */
+export async function getDshMetrics(conversation) {
+    if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
+    try {
+        const raw = await wfc.getUserSetting(UserSettingScope.Conversation_User_Setting, dshMetricsKey(conversation));
+        if (!raw) return null;
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * Read the AI 面板数据 of a conversation (scope=31, type=3).
+ * 组合查询（DSH_Command 207 query）结果：model/effort/sandbox/plan/cwd/sessionId/dirs。
+ * Returns null when unset/invalid.
+ */
+export async function getDshPanelData(conversation) {
+    if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
+    try {
+        const raw = await wfc.getUserSetting(UserSettingScope.Conversation_User_Setting, dshPanelKey(conversation));
+        if (!raw) return null;
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch (e) {
+        return null;
+    }
+}
+
 /** Human label for the state (i18n keys resolved by the caller). */
 export function dshStateLabel(state) {
     const map = {
@@ -82,45 +126,53 @@ function fmtNum(n) {
 }
 
 /**
- * 会话状态里的 Token/上下文计量 → 一行展示文本（客户端展示用）。
- * 字段来自插件推送的 scope=31 状态（type=1）：
- *   context.usedPct / cacheHitRatePct / speed.tokensPerSec / turn.outputTokens
- *   usage.totalTokens / reason / error / interaction
- * 返回 '' 表示没有可展示的计量信息。
+ * Token 统计（scope=31 type=2 计量）→ 一行展示文本。
+ * 字段：context.usedPct / cacheHitRatePct / speed.tokensPerSec /
+ *      turn.outputTokens / usage.totalTokens
+ * 运行态提示（waiting/reason/error）走 dshStatusHint（type=1），不在此处。
+ * 返回 '' 表示没有可展示的统计。
  */
-export function dshMetricsText(state) {
-    if (!state || typeof state !== 'object') return '';
+export function dshMetricsText(metrics) {
+    if (!metrics || typeof metrics !== 'object') return '';
     const parts = [];
 
-    // 交互等待：优先提示在等什么
-    if (state.state === 'waiting_user') {
-        parts.push(state.interaction === 'approval' ? '🔐 等待审批' : '🤔 等待确认');
-    }
-
     // 上下文占用（下一请求预估成本 / 模型窗口）
-    if (state.context && typeof state.context.usedPct === 'number') {
-        parts.push(`上下文 ${fmtNum(state.context.usedPct)}%`);
+    if (metrics.context && typeof metrics.context.usedPct === 'number') {
+        parts.push(`上下文 ${fmtNum(metrics.context.usedPct)}%`);
     }
     // 缓存命中率（累计口径）
-    if (typeof state.cacheHitRatePct === 'number') {
-        parts.push(`缓存 ${fmtNum(state.cacheHitRatePct)}%`);
+    if (typeof metrics.cacheHitRatePct === 'number') {
+        parts.push(`缓存 ${fmtNum(metrics.cacheHitRatePct)}%`);
     }
     // 本轮生成速度 + 输出 token
-    if (state.speed && typeof state.speed.tokensPerSec === 'number') {
-        parts.push(`${fmtNum(state.speed.tokensPerSec)} tok/s`);
+    if (metrics.speed && typeof metrics.speed.tokensPerSec === 'number') {
+        parts.push(`${fmtNum(metrics.speed.tokensPerSec)} tok/s`);
     }
-    if (state.turn && typeof state.turn.outputTokens === 'number' && state.turn.outputTokens > 0) {
-        parts.push(`本轮 ${state.turn.outputTokens} tok`);
+    if (metrics.turn && typeof metrics.turn.outputTokens === 'number' && metrics.turn.outputTokens > 0) {
+        parts.push(`本轮 ${metrics.turn.outputTokens} tok`);
     }
     // 累计用量
-    if (state.usage && typeof state.usage.totalTokens === 'number') {
-        parts.push(`累计 ${state.usage.totalTokens} tok`);
-    }
-    // 结果原因 / 错误
-    if (state.reason === 'error') {
-        parts.push(`⚠️ ${state.error || '出错了'}`);
-    } else if (state.reason === 'cancelled') {
-        parts.push('已取消');
+    if (metrics.usage && typeof metrics.usage.totalTokens === 'number') {
+        parts.push(`累计 ${metrics.usage.totalTokens} tok`);
     }
     return parts.join(' · ');
+}
+
+/**
+ * 运行态提示（scope=31 type=1 状态）→ 一段文本：
+ *   waiting_user → 🤔 等待确认 / 🔐 等待审批；reason=error → ⚠️ 错误；cancelled → 已取消
+ * 返回 '' 表示无提示。
+ */
+export function dshStatusHint(state) {
+    if (!state || typeof state !== 'object') return '';
+    if (state.state === 'waiting_user') {
+        return state.interaction === 'approval' ? '🔐 等待审批' : '🤔 等待确认';
+    }
+    if (state.reason === 'error') {
+        return `⚠️ ${state.error || '出错了'}`;
+    }
+    if (state.reason === 'cancelled') {
+        return '已取消';
+    }
+    return '';
 }
