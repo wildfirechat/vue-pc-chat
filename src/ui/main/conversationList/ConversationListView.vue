@@ -134,8 +134,9 @@ export default {
                 return !!uc && (uc.unreadMention > 0 || uc.unreadMentionAll > 0);
             }
             if (filter === 'ai') {
-                // AI 会话统一使用 line 2
-                return conversationInfo.conversation.line === 2;
+                // AI 会话 = 群聊会话且 line 2（单聊是控制面板，不属于 AI 分组）
+                const conv = conversationInfo.conversation;
+                return conv.type === 1 && conv.line === 2;
             }
             return true;
         },

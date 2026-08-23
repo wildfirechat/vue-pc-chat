@@ -376,6 +376,7 @@
       "rounds": "已執行 {0} 輪"
     },
     "stop": "停止",
-    "stop_tip": "中斷目前 Agent 任務"
+    "stop_tip": "中斷目前 Agent 任務",
+    "agent_panel_tip": "AI 會話設置"
   }
 }

@@ -22,7 +22,7 @@
                                     :title="$t('dsh.stop_tip')"
                                     @click.stop="stopDshAgent">■ {{ $t('dsh.stop') }}</button>
                         </h1>
-                        <p class="single-line user-online-status" @click="clickConversationDesc">{{ targetUserOnlineStateDesc }}</p>
+                        <p class="single-line user-online-status" @click="clickConversationDesc">{{ conversationStatusLine }}</p>
                         <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
                     </div>
                     <div
@@ -185,7 +185,7 @@ import MessageInputView from "../../main/conversation/MessageInputView";
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
-import {getDshState, dshStateLabel} from '../../util/dshState';
+import {getDshState, dshStateLabel, dshMetricsText} from '../../util/dshState';
 import wfc from "../../../wfc/client/wfc";
 import {numberValue} from "../../../wfc/util/longUtil";
 import InfiniteLoading from '@imndx/vue-infinite-loading';
@@ -1190,6 +1190,19 @@ export default {
         dshStateClass() {
             return `dsh-title-state-${this.dshState ? this.dshState.state : 'idle'}`;
         },
+        dshMetricsText() {
+            return this.dshState ? dshMetricsText(this.dshState) : '';
+        },
+        /**
+         * 标题下方状态行：AI 群的 AI 在线状态与 Token 计量合并为一行
+         * （如 "AI 在线 · 上下文 0.9% · 缓存 98%"）；非 DSH 会话保持原逻辑。
+         */
+        conversationStatusLine() {
+            const online = this.targetUserOnlineStateDesc;
+            const metrics = this.dshMetricsText;
+            if (online && metrics) return `${online} · ${metrics}`;
+            return online || metrics;
+        },
         conversationTitle() {
             if (this.title) {
                 return this.title;
@@ -1238,6 +1251,9 @@ export default {
                     desc = 'channel'
                 }
                 return desc;
+            } else if (info.conversation.type === ConversationType.Group && info.conversation.line === 2) {
+                // AI 群：显示群主（AI 机器人）的在线状态
+                return info.conversation._aiOwnerOnlineStateDesc ? 'AI ' + info.conversation._aiOwnerOnlineStateDesc : '';
             } else {
                 return '';
             }

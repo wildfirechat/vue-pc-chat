@@ -5,6 +5,17 @@
             <p style="color: white">群禁言或者群已被解散</p>
         </div>
         <section v-else-if="!sharedConversationState.showChannelMenu" class="message-input-section">
+            <Teleport to="body">
+                <div v-if="showDshAgentPanel" class="dsh-agent-mask" @click="hideDshAgentPanel">
+                    <div class="dsh-agent-popup" :style="dshAgentPanelStyle" @click.stop>
+                        <DshAgentPanel
+                            :key="dshAgentPanelConvKey"
+                            :conversation="conversationInfo.conversation"
+                            @close="hideDshAgentPanel"
+                        />
+                    </div>
+                </div>
+            </Teleport>
             <section class="input-action-container">
                 <Teleport to="body">
                     <div
@@ -26,6 +37,11 @@
                     </div>
                 </Teleport>
                 <ul class="flex-row" style="align-content: center; padding: 0 8px">
+                    <li v-if="dshConvKind === 'group'">
+                        <div ref="dshAiBtn" class="i-button-wrapper i-button-small" :class="{active: showDshAgentPanel}" @click="toggleDshAgentPanel">
+                            <span class="dsh-ai-btn-text" :title="$t('dsh.agent_panel_tip')">AI</span>
+                        </div>
+                    </li>
                     <li v-if="!inputOptions['disableEmoji']">
                         <div class="i-button-wrapper i-button-small" @click="toggleEmojiView">
                             <i ref="showEmojiBtn" class="icon-ion-ios-heart" :title="$t('conversation.action_tip_emoji')"/>
@@ -230,6 +246,7 @@ import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import BenzAMRRecorder from "benz-amr-recorder";
 import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
 import {getDshState, dshConversationKind} from "../../util/dshState";
+import DshAgentPanel from "./DshAgentPanel.vue";
 import {currentWindow, fs} from "../../../platform";
 import {vOnClickOutside} from '@vueuse/components'
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
@@ -316,10 +333,14 @@ export default {
             dshConvKind: null,
             dshCommandTribute: null,
             _dshCmdConvKey: null,
-            // 单聊机器人命令（/create-group 等私聊专属命令在群内会被插件拒绝；/stop 危险语义放最后）
-            dshSingleCommands: ['/help', '/create-group', '/workspaces', '/goal', '/jobs', '/model', '/effort', '/plan', '/compact', '/cwd', '/ls', '/sandbox', '/stop'],
-            // DSH 群聊命令（群内可用；/stop 危险语义放最后）
-            dshGroupCommands: ['/help', '/cwd', '/ls', '/model', '/effort', '/plan', '/compact', '/sandbox', '/reset', '/stop'],
+            // AI 设置面板（输入框工具栏 AI 按钮）
+            showDshAgentPanel: false,
+            dshAgentPanelPos: {left: 0, bottom: 0},
+            dshAgentPanelConvKey: "",
+            // 单聊机器人命令（/create 等私聊专属命令在群内会被插件拒绝；/stop 危险语义放最后）
+            dshSingleCommands: ['/help', '/create', '/workspaces', '/goal', '/jobs', '/model', '/effort', '/plan', '/compact', '/cwd', '/ls', '/sandbox', '/stop'],
+            // DSH 群聊命令（群内可用，含群管理；/stop 危险语义放最后）
+            dshGroupCommands: ['/help', '/cwd', '/ls', '/model', '/effort', '/plan', '/compact', '/sandbox', '/reset', '/members', '/kick', '/invite', '/mute', '/unmute', '/stop'],
 
             isCollectionEnable: !!Config.getCollectionServer(),
             isPollEnable: !!Config.getPollServer()
@@ -342,7 +363,10 @@ export default {
             if (this._dshCmdConvKey !== convKey) {
                 this._dshCmdConvKey = convKey;
                 this.initDshCommandMenu();
+                // 会话切换：关闭 AI 设置面板（旧会话的查询/操作不得串到新会话）
+                this.showDshAgentPanel = false;
             }
+            this.dshAgentPanelConvKey = convKey;
             // getDshState 内部已按 isDshConversation 门控，非 DSH 会话直接返回 null
             const state = await getDshState(conv);
             // 防止会话切换后旧会话的异步结果覆盖新会话
@@ -870,9 +894,17 @@ export default {
             e.preventDefault();
         },
 
+        toggleDshAgentPanel() {
+            this.showDshAgentPanel = !this.showDshAgentPanel;
+            this.focusInput();
+        },
+
+        hideDshAgentPanel() {
+            this.showDshAgentPanel = false;
+        },
+
         toggleEmojiView() {
-            this.showEmojiDialog = !this.showEmojiDialog;
-            if (this.showEmojiDialog) {
+            this.showEmojiDialog = !this.showEmojiDialog;            if (this.showEmojiDialog) {
                 this.$nextTick(() => {
                     const btn = this.$refs.showEmojiBtn;
                     if (btn) {
@@ -1640,6 +1672,17 @@ export default {
             };
         },
 
+        dshAgentPanelStyle() {
+            // 弹窗居中于当前窗口
+            return {
+                position: 'fixed',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 100000,
+            };
+        },
+
         stickerBarStyle() {
             return {
                 left: this.stickerBarPos.left + 'px',
@@ -1698,7 +1741,8 @@ export default {
     components: {
         ChannelMenuView,
         QuoteMessageView,
-        VEmojiPicker
+        VEmojiPicker,
+        DshAgentPanel
     },
     directives: {
         vOnClickOutside,
@@ -1728,6 +1772,25 @@ export default {
 /*pls refer to https://vue-loader.vuejs.org/guide/scoped-css.html#child-component-root-elements*/
 #emoji >>> .container-emoji {
     height: 280px;
+}
+
+.dsh-ai-btn-text {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-color);
+    letter-spacing: 0.5px;
+}
+
+.dsh-agent-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 99999;
+}
+
+.dsh-agent-popup {
+    position: fixed;
+    z-index: 100000;
 }
 
 .emoji-popup {
