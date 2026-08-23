@@ -38,7 +38,10 @@
                 {{ $t('dsh.card.submit') }}
             </button>
         </div>
-        <div class="dsh-card-state" v-if="isLocked">{{ stateText }}</div>
+        <div class="dsh-card-state" v-if="isLocked">
+            <span>{{ stateText }}</span>
+            <span v-if="mySelectionText" class="dsh-card-selection">{{ mySelectionText }}</span>
+        </div>
     </div>
 </template>
 
@@ -87,6 +90,18 @@ export default {
             if (this.content.state === "answered") return this.$t('dsh.card.answered');
             if (this.content.state === "expired") return this.$t('dsh.card.expired');
             return "";
+        },
+        // 服务端更新后的用户选择（插件 updateMessage 写入 content.answers）：
+        // "你的选择：✅ 创建" / 自定义文本
+        mySelectionText() {
+            if (this.content.state !== "answered") return "";
+            const answers = Array.isArray(this.content.answers) ? this.content.answers : [];
+            const parts = answers.map(a => {
+                if (a.selected && a.selected.length) return a.selected.join('、');
+                if (a.custom) return a.custom;
+                return '';
+            }).filter(Boolean);
+            return parts.length ? `（${parts.join('；')}）` : "";
         },
         selectedCount() {
             return Object.values(this.localSelected).reduce((n, arr) => n + (arr || []).length, 0);

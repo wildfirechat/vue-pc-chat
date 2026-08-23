@@ -913,6 +913,13 @@ let store = {
                 if (wfc.isUserOnlineStateEnabled() && ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target))) {
                     wfc.unwatchOnlineState(conversation.type, [conversation.target]);
                 }
+                // AI 群（line 2，群主=AI 机器人）：离开时取消订阅群主在线状态
+                if (wfc.isUserOnlineStateEnabled() && conversation.type === ConversationType.Group && conversation.line === 2) {
+                    let owner = this._dshGroupOwner(conversation.target);
+                    if (owner) {
+                        wfc.unwatchOnlineState(ConversationType.Single, [owner]);
+                    }
+                }
                 if (conversation.type === ConversationType.Channel) {
                     let content = new LeaveChannelChatMessageContent();
                     wfc.sendConversationMessage(conversation, content);
@@ -947,6 +954,20 @@ let store = {
             }, (err) => {
                 console.log('watchOnlineState error', err);
             })
+        }
+        // AI 群（line 2，群主=AI 机器人）：进入时订阅群主在线状态
+        if (wfc.isUserOnlineStateEnabled() && conversation.type === ConversationType.Group && conversation.line === 2) {
+            let owner = this._dshGroupOwner(conversation.target);
+            if (owner) {
+                wfc.watchOnlineState(ConversationType.Single, [owner], 1000, (states) => {
+                    states.forEach((e => {
+                        this.state.misc.userOnlineStateMap.set(e.userId, e);
+                    }))
+                    this._patchCurrentConversationOnlineStatus();
+                }, (err) => {
+                    console.log('watchOnlineState error', err);
+                });
+            }
         }
         if (conversation.type === ConversationType.Channel) {
             let content = new EnterChannelChatMessageContent();
@@ -1847,6 +1868,12 @@ let store = {
         return '';
     },
 
+    // AI 群（line 2）的群主 ID（=AI 机器人）；非 AI 群返回空
+    _dshGroupOwner(groupId) {
+        let groupInfo = wfc.getGroupInfo(groupId, false);
+        return groupInfo && groupInfo.owner ? groupInfo.owner : '';
+    },
+
     _patchCurrentConversationOnlineStatus() {
         let convInfo = this.state.conversation.currentConversationInfo;
         if (convInfo && convInfo.conversation.type === ConversationType.Single) {
@@ -1855,8 +1882,10 @@ let store = {
             // this.state.conversation.currentConversationInfo.conversation._targetOnlineStateDesc = userOnlineStatus.desc();
             // Vue.set(this.state.conversation.currentConversationInfo.conversation, '_targetOnlineStateDesc', this.getUserOnlineState(convInfo.conversation.target))
             this.state.conversation.currentConversationInfo.conversation._targetOnlineStateDesc = this.getUserOnlineState(convInfo.conversation.target);
-        } else {
-            //TODO
+        } else if (convInfo && convInfo.conversation.type === ConversationType.Group && convInfo.conversation.line === 2) {
+            // AI 群：显示群主（AI 机器人）的在线状态
+            let owner = this._dshGroupOwner(convInfo.conversation.target);
+            this.state.conversation.currentConversationInfo.conversation._aiOwnerOnlineStateDesc = owner ? this.getUserOnlineState(owner) : '';
         }
     },
     _loadFriendRequest() {

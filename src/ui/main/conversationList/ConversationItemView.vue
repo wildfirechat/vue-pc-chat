@@ -520,7 +520,8 @@ export default {
 }
 .dsh-dot-running { background-color: var(--accent-color); }
 .dsh-dot-waiting_user { background-color: #f59e0b; }
-.dsh-dot-done { background-color: #22c55e; }
+.dsh-dot-idle { background-color: #22c55e; }   /* 空闲=可输入，绿色 */
+.dsh-dot-done { background-color: #22c55e; }   /* 已完成=可继续指示，绿色 */
 
 .dsh-group-badge {
     align-self: center;
