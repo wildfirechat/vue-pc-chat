@@ -70,6 +70,8 @@ import ModifyGroupSettingNotification from "../messages/notification/modifyGroup
 import StreamingTextGeneratingMessageContent from "../messages/streamingTextGeneratingMessageContent";
 import StreamingTextGeneratedMessageContent from "../messages/streamingTextGeneratedMessageContent";
 import StreamingTextCancelledMessageContent from "../messages/streamingTextCancelledMessageContent";
+import DshCommandMessageContent from "../messages/dshCommandMessageContent";
+import DshTaskProgressMessageContent from "../messages/dshTaskProgressMessageContent";
 import MixMultiMediaTextMessageContent from "../messages/mixMultiMediaTextMessageContent";
 import MixFileTextMessageContent from "../messages/mixFileTextMessageContent";
 import RCInviteMessageContent from "../av/messages/rcInviteMessageContent";
@@ -404,6 +406,18 @@ export default class MessageConfig {
             flag: PersistFlag.Transparent,
             type: MessageContentType.Streaming_Text_Cancelled,
             contentClazz: StreamingTextCancelledMessageContent,
+        },
+        {
+            name: 'dshCommand',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.DSH_COMMAND,
+            contentClazz: DshCommandMessageContent,
+        },
+        {
+            name: 'dshTaskProgress',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.DSH_TASK_PROGRESS,
+            contentClazz: DshTaskProgressMessageContent,
         },
         {
             name: 'callStartMessageContent',

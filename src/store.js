@@ -713,6 +713,10 @@ let store = {
 
     _isDisplayMessage(message) {
         // return [PersistFlag.Persist, PersistFlag.Persist_And_Count].indexOf(MessageConfig.getMessageContentPersitFlag(message.messageContent.type)) > -1;
+        // DSH_Command (207) 是 AI 面板静默指令（透明消息），一律不显示
+        if (message.messageContent.type === MessageContentType.DSH_COMMAND) {
+            return false;
+        }
         return message.messageId !== 0
             || message.messageContent.type === MessageContentType.Streaming_Text_Generating
             || message.messageContent.type === MessageContentType.Transcription;
