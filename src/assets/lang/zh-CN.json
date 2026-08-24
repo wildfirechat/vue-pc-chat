@@ -380,7 +380,8 @@
       "idle": "空闲",
       "running": "运行中",
       "waiting": "等待确认",
-      "done": "已完成"
+      "done": "已完成",
+      "ai_offline": "AI 不在线"
     },
     "goal": {
       "active": "进行中",

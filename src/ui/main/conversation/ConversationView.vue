@@ -15,8 +15,8 @@
                 <div class="title-container">
                     <div>
                         <h1 ref="titleEl" class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}
-                            <span v-if="dshState" class="dsh-title-badge" :class="dshStateClass">{{ dshStateText }}</span>
-                            <button v-if="dshState && dshState.state === 'running'"
+                            <span v-if="dshState && !dshAiOffline" class="dsh-title-badge" :class="dshStateClass">{{ dshStateText }}</span>
+                            <button v-if="dshState && dshState.state === 'running' && !dshAiOffline"
                                     class="dsh-stop-btn"
                                     :disabled="dshStopSending"
                                     :title="$t('dsh.stop_tip')"
@@ -185,7 +185,7 @@ import MessageInputView from "../../main/conversation/MessageInputView";
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
-import {getDshState, getDshMetrics, dshStateLabel, dshMetricsText, dshStatusHint} from '../../util/dshState';
+import {getDshState, getDshMetrics, dshStateLabel, dshMetricsText, dshStatusHint, dshConversationKind} from '../../util/dshState';
 import wfc from "../../../wfc/client/wfc";
 import {numberValue} from "../../../wfc/util/longUtil";
 import InfiniteLoading from '@imndx/vue-infinite-loading';
@@ -1210,11 +1210,25 @@ export default {
             return this.dshState ? dshStatusHint(this.dshState) : '';
         },
         /**
+         * AI 群（line 2）群主（AI 机器人）是否不在线。
+         * 复用 store 维护的 _aiOwnerOnlineStateDesc（进入 AI 群时 watch 群主在线状态，
+         * 见 store.setCurrentConversationInfo；desc 在线时有平台描述、离线/未取到为空）。
+         */
+        dshAiOffline() {
+            const info = this.sharedConversationState.currentConversationInfo;
+            if (!info || dshConversationKind(info.conversation) !== 'group') return false;
+            return !info.conversation._aiOwnerOnlineStateDesc;
+        },
+        /**
          * 标题下方状态行：AI 在线状态 + 运行态提示 + Token 统计合并为一行
          * （如 "AI 在线 · 🤔 等待确认 · 上下文 0.9% · 缓存 98%"）。
          * 修改结果（lastChange）由 tip 小灰条展示，标题栏固定显示统计。
+         * AI 不在线时去掉所有 AI 状态（状态/提示/统计），只显示 "AI 不在线"。
          */
         conversationStatusLine() {
+            if (this.dshAiOffline) {
+                return this.$t('dsh.status.ai_offline');
+            }
             const online = this.targetUserOnlineStateDesc;
             const hint = this.dshStatusHint;
             const metrics = this.dshMetricsText;

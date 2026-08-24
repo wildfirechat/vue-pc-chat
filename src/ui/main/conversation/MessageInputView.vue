@@ -38,8 +38,8 @@
                 </Teleport>
                 <ul class="flex-row" style="align-content: center; padding: 0 8px">
                     <li v-if="dshConvKind === 'group'">
-                        <div ref="dshAiBtn" class="i-button-wrapper i-button-small" :class="{active: showDshAgentPanel}" @click="toggleDshAgentPanel">
-                            <span class="dsh-ai-btn-text" :title="$t('dsh.agent_panel_tip')">AI</span>
+                        <div ref="dshAiBtn" class="i-button-wrapper i-button-small" :class="{active: showDshAgentPanel, 'dsh-ai-btn-offline': dshAiOffline}" :title="dshAiOffline ? $t('dsh.status.ai_offline') : $t('dsh.agent_panel_tip')" @click="toggleDshAgentPanel">
+                            <span class="dsh-ai-btn-text">AI</span>
                         </div>
                     </li>
                     <li v-if="!inputOptions['disableEmoji']">
@@ -897,6 +897,7 @@ export default {
         },
 
         toggleDshAgentPanel() {
+            if (this.dshAiOffline) return;
             this.showDshAgentPanel = !this.showDshAgentPanel;
             this.focusInput();
         },
@@ -1665,6 +1666,16 @@ export default {
     },
 
     computed: {
+        /**
+         * AI 群（line 2）群主（AI 机器人）是否不在线：不在线时 AI 按钮置灰不可点。
+         * 复用 store 维护的 _aiOwnerOnlineStateDesc（进入 AI 群时 watch 群主在线状态）。
+         */
+        dshAiOffline() {
+            const info = this.sharedConversationState.currentConversationInfo;
+            if (!info || dshConversationKind(info.conversation) !== 'group') return false;
+            return !info.conversation._aiOwnerOnlineStateDesc;
+        },
+
         emojiPickerStyle() {
             return {
                 position: 'fixed',
@@ -1781,6 +1792,17 @@ export default {
     font-weight: 700;
     color: var(--accent-color);
     letter-spacing: 0.5px;
+}
+
+/* AI 不在线：按钮置灰、无 hover 反馈、不可点击 */
+.dsh-ai-btn-offline {
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.4;
+}
+
+.dsh-ai-btn-offline .dsh-ai-btn-text {
+    color: var(--text-secondary);
 }
 
 .dsh-agent-mask {

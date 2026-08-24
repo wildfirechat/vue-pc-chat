@@ -366,7 +366,8 @@
       "idle": "Idle",
       "running": "Running",
       "waiting": "Waiting for input",
-      "done": "Done"
+      "done": "Done",
+      "ai_offline": "AI offline"
     },
     "goal": {
       "active": "Active",

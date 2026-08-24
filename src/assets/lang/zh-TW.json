@@ -366,7 +366,8 @@
       "idle": "空閒",
       "running": "運行中",
       "waiting": "等待確認",
-      "done": "已完成"
+      "done": "已完成",
+      "ai_offline": "AI 不在線"
     },
     "goal": {
       "active": "進行中",
