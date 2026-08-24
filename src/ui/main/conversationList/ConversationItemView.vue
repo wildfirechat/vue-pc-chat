@@ -56,7 +56,8 @@ import Draft from "../../util/draft";
 import FileMessageContent from "../../../wfc/messages/fileMessageContent";
 import Message from "../../../wfc/messages/message";
 import wfc from "../../../wfc/client/wfc";
-import {getDshState, dshStateClass} from '../../util/dshState';
+import {getDshState, dshStateClass, dshConversationKind} from '../../util/dshState';
+import EventType from '../../../wfc/client/wfcEvent';
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import Config from "../../../config";
 import ConversationType from "../../../wfc/model/conversationType";
@@ -80,6 +81,8 @@ export default {
     data() {
         return {
             dshState: null,
+            // 在线状态事件 tick：UserOnlineEvent 时自增触发重渲染（store map 非响应式）
+            onlineTick: 0,
             dragAndDropEnterCount: 0,
             shareConversationState: store.state.conversation,
             groupPortrait: Config.DEFAULT_GROUP_PORTRAIT_URL,
@@ -88,9 +91,17 @@ export default {
     mounted() {
         this.refreshDshState();
         wfc.eventEmitter.on('settingUpdate', this.refreshDshState);
+        wfc.eventEmitter.on(EventType.UserOnlineEvent, this.onUserOnlineEvent);
         // this.refreshGroupPortrait();
     },
+    beforeUnmount() {
+        wfc.eventEmitter.off('settingUpdate', this.refreshDshState);
+        wfc.eventEmitter.off(EventType.UserOnlineEvent, this.onUserOnlineEvent);
+    },
     methods: {
+        onUserOnlineEvent() {
+            this.onlineTick++;
+        },
         async refreshDshState() {
             const conv = this.source && this.source.conversation;
             if (!conv || !conv.target) {
@@ -184,7 +195,24 @@ export default {
 
     computed: {
         dshStateClass() {
+            // AI 不在线：状态点显示为灰色"不在线"（不显示运行态颜色）
+            if (this.dshAiOffline) {
+                return 'dsh-dot-offline';
+            }
             return this.dshState ? dshStateClass(this.dshState.state) : '';
+        },
+        // AI 群（line 2）群主（AI 机器人）是否不在线：列表项读 store 在线状态 map
+        //（机器人上线/下线事件维护，UserOnlineEvent 触发刷新）
+        dshAiOffline() {
+            this.onlineTick;
+            const conv = this.source && this.source.conversation;
+            if (!conv || dshConversationKind(conv) !== 'group') return false;
+            const groupInfo = wfc.getGroupInfo(conv.target, false);
+            const owner = groupInfo && groupInfo.owner;
+            if (!owner) return false;
+            const uos = store.state.misc.userOnlineStateMap.get(owner);
+            if (!uos || !uos.clientStates || !uos.clientStates.length) return true;
+            return !uos.clientStates.some(s => s.state === 0);
         },
         // line 2 的群聊会话显示 AI 标识（AI 消息统一使用 line 2）
         isAiGroup() {
@@ -521,6 +549,7 @@ export default {
 .dsh-dot-running { background-color: var(--accent-color); }
 .dsh-dot-waiting_user { background-color: #f59e0b; }
 .dsh-dot-idle { background-color: #22c55e; }   /* 空闲=可输入，绿色 */
+.dsh-dot-offline { background-color: #94a3b8; }   /* AI 不在线=灰色 */
 .dsh-dot-done { background-color: #22c55e; }   /* 已完成=可继续指示，绿色 */
 
 .dsh-group-badge {
