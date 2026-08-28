@@ -367,6 +367,7 @@
     "status": {
       "idle": "Idle",
       "running": "Running",
+      "thinking": "Thinking",
       "waiting": "Waiting for input",
       "done": "Done",
       "ai_offline": "AI offline"
