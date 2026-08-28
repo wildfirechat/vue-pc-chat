@@ -379,6 +379,7 @@
     "status": {
       "idle": "空闲",
       "running": "运行中",
+      "thinking": "思考中",
       "waiting": "等待确认",
       "done": "已完成",
       "ai_offline": "AI 不在线"

@@ -1188,8 +1188,11 @@ export default {
             const label = this.dshState ? dshStateLabel(this.dshState.state) : null;
             if (!label) return '';
             let text = this.$t(label);
-            if (this.dshState.phase === 'tool') {
+            // 仅运行中追加活动后缀：thinking → 思考中；tool → 工具名（等待确认等状态不残留旧后缀）
+            if (this.dshState.state === 'running' && this.dshState.phase === 'tool') {
                 text += ` · ${this.dshState.toolName || this.$t('dsh.progress.tool')}`;
+            } else if (this.dshState.state === 'running' && this.dshState.phase === 'thinking') {
+                text += ` · ${this.$t('dsh.status.thinking')}`;
             }
             return text;
         },
