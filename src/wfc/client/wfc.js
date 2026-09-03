@@ -1252,6 +1252,15 @@ export class WfcManager {
     }
 
     /**
+     * 获取某个命名空间下指定前缀Key的所有设置
+     * @param scope 命名空间，可选值参考{@link UserSettingScope}
+     * @returns {Map} key-value
+     */
+    getUserSettingsLike(scope, keyPrefix) {
+        return impl.getUserSettingsLike(scope, keyPrefix);
+    }
+
+    /**
      * 设置或更新用户设置
      * @param {number} scope 命名空间
      * @param {string} key 设置的key
