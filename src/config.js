@@ -39,6 +39,12 @@ export default class Config {
     // 投票服务备选地址，双网环境下使用
     static POLL_BACKUP_SERVER = null;
 
+    // 服务器搜索服务地址（会话内消息搜索），对应 wf-search-server 项目（https://gitee.com/wfchat/search_server）
+    static SEARCH_SERVER = null;
+
+    // 服务器搜索服务备选地址，双网环境下使用
+    static SEARCH_BACKUP_SERVER = null;
+
     // 语音转文字服务地址，如果没有部署语音转文字服务，或者不需要语音转文字的话，可置为 null
     static ASR_SERVER = 'https://app.wildfirechat.net/asr/api/recognize';
 
@@ -167,6 +173,9 @@ export default class Config {
         return Config._selectServer(Config.POLL_SERVER, Config.POLL_BACKUP_SERVER);
     }
 
+    static getSearchServer() {
+        return Config._selectServer(Config.SEARCH_SERVER, Config.SEARCH_BACKUP_SERVER);
+    }
     static getAsrServer() {
         return Config._selectServer(Config.ASR_SERVER, Config.ASR_BACKUP_SERVER);
     }

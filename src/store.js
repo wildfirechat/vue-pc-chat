@@ -23,6 +23,7 @@ import TextMessageContent from "./wfc/messages/textMessageContent";
 import {currentWindow, ipcRenderer, isElectron} from "./platform";
 import SearchType from "./wfc/model/searchType";
 import Config from "./config";
+import searchServerApi from "./api/searchServerApi";
 import {getItem, setItem} from "./ui/util/storageHelper";
 import watermark from "./ui/util/waterMark";
 import CompositeMessageContent from "./wfc/messages/compositeMessageContent";
@@ -84,6 +85,30 @@ function convertPinyinCached(name) {
         pinyinCache.set(name, entry);
     }
     return entry;
+}
+// 会话内服务器搜索的请求序号：输入抖动/筛选切换会并发多次请求，
+// 用序号丢弃过期响应，避免先发后到的旧结果覆盖新结果
+let conversationSearchSeq = 0;
+
+/**
+ * 判断是否为同一条消息。
+ * 优先比较 messageUid（服务端唯一 id，本地库消息与远程消息都有），
+ * 其次比较 messageId（本地库自增 id，远程消息没有，故不能只比它）。
+ * @param a {Message}
+ * @param b {Message}
+ * @return {boolean}
+ */
+function isSameMessage(a, b) {
+    if (!a || !b) {
+        return false;
+    }
+    if (a === b) {
+        return true;
+    }
+    if (a.messageUid && b.messageUid && eq(a.messageUid, b.messageUid)) {
+        return true;
+    }
+    return !!(a.messageId && b.messageId && String(a.messageId) === String(b.messageId));
 }
 
 let store = {
@@ -1015,28 +1040,41 @@ let store = {
         this.state.pick.messages.length = 0;
     },
 
-    forwardMessage(forwardType, targetConversations, messages, extraMessageText) {
+    async forwardMessage(forwardType, targetConversations, messages, extraMessageText) {
         // web 端，避免撤回消息等操作，影响组合消息
         if (!isElectron()) {
             messages = messages.map(m => Object.assign({}, m));
         }
-        targetConversations.forEach(conversation => {
+        for (const conversation of targetConversations) {
             // let msg =new Message(conversation, message.messageContent)
             // wfc.sendMessage(msg)
             // 或者下面这种
+            let ps = (conversation, message) => {
+                return new Promise((resolve, reject) => {
+                    wfc.sendConversationMessage(conversation, message, [], null, null, (messageUid, timestamp) => {
+                        // resolve(messageUid, timestamp);
+                        // ignore result
+                        resolve()
+                    }, err => {
+                        // reject(err);
+                        // ignore error
+                        resolve()
+                    });
+                })
+            }
             if (forwardType === ForwardType.NORMAL || forwardType === ForwardType.ONE_BY_ONE) {
-                messages.forEach(message => {
+                for (const message of messages) {
                     if (message.messageContent instanceof ArticlesMessageContent) {
                         let linkContents = message.messageContent.toLinkMessageContent();
-                        linkContents.forEach(lm => {
-                            wfc.sendConversationMessage(conversation, lm);
-                        })
+                        for (const lm of linkContents) {
+                            await ps(conversation, lm);
+                        }
 
                     } else {
                         message.messageContent = this._filterForwardMessageContent(message)
-                        wfc.sendConversationMessage(conversation, message.messageContent);
+                        await ps(conversation, message.messageContent);
                     }
-                });
+                }
             } else {
                 // 合并转发
                 let compositeMessageContent = new CompositeMessageContent();
@@ -1055,14 +1093,14 @@ let store = {
                 })
                 compositeMessageContent.setMessages(msgs);
 
-                wfc.sendConversationMessage(conversation, compositeMessageContent);
+                await ps(conversation, compositeMessageContent);
             }
 
             if (extraMessageText) {
                 let textMessage = new TextMessageContent(extraMessageText)
-                wfc.sendConversationMessage(conversation, textMessage);
+                await ps(conversation, textMessage);
             }
-        });
+        }
     },
 
     forwardByCreateConversation(forwardType, users, messages, extraMessageText) {
@@ -1111,47 +1149,61 @@ let store = {
     },
 
     /**
+     * 媒体消息 → lightbox 预览项
+     * @param message
+     * @return {{src: String, thumb: String, autoplay: Boolean}}
+     */
+    _previewMediaItemOf(message) {
+        let content = message.messageContent;
+        let thumb = content.thumbnail ? 'data:image/png;base64,' + content.thumbnail : '';
+        let mediaUrl = content.remotePath;
+        if (!mediaUrl && content.file) {
+            mediaUrl = URL.createObjectURL(content.file)
+        }
+        return {
+            // src 为空时 lightbox 内部取不到 url，会直接抛错（getYoutubeID(undefined)），
+            // 故兜底用缩略图，保证至少能展示
+            src: mediaUrl ? mediaUrl : thumb,
+            thumb: thumb,
+            autoplay: true,
+        };
+    },
+
+    /**
+
      *
      * @param message
      * @param {Boolean} continuous  true，预览周围的媒体消息；false，只预览第一个参数传入的那条媒体消息
      */
     previewMessage(message, continuous) {
-        this.state.conversation.previewMediaItems.length = 0;
-        this.state.conversation.previewMediaIndex = 0;
+        let items = [];
+        let index = 0;
         if (continuous && this.state.conversation.currentConversationMessageList.length > 0) {
             let mediaMsgs = this.state.conversation.currentConversationMessageList.filter(m => [MessageContentType.Image, MessageContentType.Video].indexOf(m.messageContent.type) > -1)
-            let msg;
+            let target = -1;
             for (let i = 0; i < mediaMsgs.length; i++) {
-                msg = mediaMsgs[i];
-                if (msg.messageId === message.messageId) {
-                    this.state.conversation.previewMediaIndex = i;
+                let msg = mediaMsgs[i];
+                if (isSameMessage(msg, message)) {
+                    target = i;
                 }
-                let mediaUrl = msg.messageContent.remotePath;
-                if (!mediaUrl) {
-                    if (msg.messageContent.file) {
-                        mediaUrl = URL.createObjectURL(msg.messageContent.file)
-                    }
-                }
-                this.state.conversation.previewMediaItems.push({
-                    src: mediaUrl,
-                    thumb: 'data:image/png;base64,' + msg.messageContent.thumbnail,
-                    autoplay: true,
-                });
+                items.push(this._previewMediaItemOf(msg));
             }
-        } else {
-            this.state.conversation.previewMediaIndex = 0;
-            let mediaUrl = message.messageContent.remotePath;
-            if (!mediaUrl) {
-                if (message.messageContent.file) {
-                    mediaUrl = URL.createObjectURL(message.messageContent.file)
-                }
+            // 待预览的消息不在当前会话消息列表里（比如从消息搜索、消息上下文页面点开的消息），
+            // 此时连续预览的列表与它无关：轻则预览到别的媒体消息，重则列表为空
+            // （当前会话没有媒体消息）导致 lightbox 取 src 报错，故回退成只预览这一条
+            if (target < 0) {
+                items = [];
+            } else {
+                index = target;
             }
-            this.state.conversation.previewMediaItems.push({
-                src: mediaUrl,
-                thumb: 'data:image/png;base64,' + message.messageContent.thumbnail,
-                autoplay: true,
-            });
         }
+        if (items.length === 0) {
+            index = 0;
+            items.push(this._previewMediaItemOf(message));
+        }
+        this.state.conversation.previewMediaItems.length = 0;
+        this.state.conversation.previewMediaItems.push(...items);
+        this.state.conversation.previewMediaIndex = index;
     },
 
     previewCompositeMessage(compositeMessage, focusMessageUid) {
@@ -2035,6 +2087,84 @@ let store = {
         this.state.search.searchDomainInfo = domainInfo;
     },
 
+    // ==================== 会话内服务器搜索（wf-search-server） ====================
+
+    resetConversationSearch() {
+        this.state.search.conversationSearch._reset();
+    },
+
+    /**
+     * 会话内消息搜索（服务器搜索服务）。
+     * cursor 为空视为新搜索（重置结果），非空为翻页（追加）。
+     *
+     * keyword 可为空串：服务端语义为"仅按筛选（类型/发送人/时间）浏览"。
+     *
+     * @param {Object} conversation {type, target, line}
+     * @param {Object} options {keyword, contentTypes, fromUser, startTime, endTime, cursor}
+     * @returns {Promise<Object>} 服务端返回 data
+     */
+    async searchConversationMessages(conversation, options = {}) {
+        const cs = this.state.search.conversationSearch;
+        const keyword = (options.keyword || '').trim();
+        if (!options.cursor) {
+            cs.conversation = conversation;
+            cs.query = keyword;
+            cs.contentTypes = options.contentTypes || [];
+            cs.fromUser = options.fromUser || null;
+            cs.startTime = options.startTime || null;
+            cs.endTime = options.endTime || null;
+            cs.items = [];
+            cs.cursor = null;
+            cs.hasMore = false;
+            cs.truncated = false;
+            cs.total = 0;
+        }
+        const seq = ++conversationSearchSeq;
+        cs.loading = true;
+        cs.error = null;
+        try {
+            const data = await searchServerApi.searchConversationMessages(conversation, {
+                keyword,
+                contentTypes: options.contentTypes || [],
+                fromUser: options.fromUser || null,
+                startTime: options.startTime || null,
+                endTime: options.endTime || null,
+                cursor: options.cursor || null,
+                size: options.size || 20,
+            });
+            // 已有更新的请求发出，丢弃这次过期响应
+            if (seq !== conversationSearchSeq) {
+                return data;
+            }
+            let items = options.cursor ? cs.items.concat(data.items || []) : (data.items || []);
+            cs.items = items.filter(item => item.payload.persistFlag > 0); // 过滤掉未持久化的消息
+            cs.total = cs.items.length|| 0;
+            cs.cursor = data.nextCursor || null;
+            cs.hasMore = !!data.hasMore;
+            cs.truncated = !!data.truncated;
+            return data;
+        } catch (e) {
+            if (seq === conversationSearchSeq) {
+                cs.error = (e && e.message) ? e.message : '搜索失败';
+            }
+            throw e;
+        } finally {
+            if (seq === conversationSearchSeq) {
+                cs.loading = false;
+            }
+        }
+    },
+
+    /**
+     * 消息上下文（服务器搜索服务）：锚点 ±N 条 + 上一处/下一处命中
+     * @param {Object} conversation {type, target, line}
+     * @param {number} anchorMid 锚点消息 mid
+     * @param {Object} options {beforeCount, afterCount, keyword, contentTypes, fromUser, startTime, endTime}
+     * @returns {Promise<Object>}
+     */
+    searchConversationMessageContext(conversation, anchorMid, options = {}) {
+        return searchServerApi.getMessageContext(conversation, anchorMid, options);
+    },
     searchUser(query, domainId = '') {
         console.log('search user', query)
         wfc.searchUserEx(domainId, query, SearchType.General, 0, ((keyword, userInfos) => {
@@ -2069,7 +2199,7 @@ let store = {
     // TODO 到底是什么匹配了
     filterContact(query) {
         let result = this.state.contact.friendList.filter(u => {
-            return u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query.toLowerCase()) > -1 || u._pinyin.indexOf(query.toLowerCase()) > -1
+            return u.displayName.indexOf(query) > -1 || u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query.toLowerCase()) > -1 || u._pinyin.indexOf(query.toLowerCase()) > -1
         });
 
         console.log('friend searchResult', result)
@@ -2097,7 +2227,7 @@ let store = {
         }
         let queryPinyin = convertPinyinCached(filter).pinyin;
         let result = users.filter(u => {
-            return u._displayName.indexOf(filter) > -1 || u._displayName.indexOf(queryPinyin) > -1
+            return u.displayName.indexOf(filter) > -1 || u._displayName.indexOf(filter) > -1 || u._displayName.indexOf(queryPinyin) > -1
                 || u._pinyin.indexOf(filter) > -1 || u._pinyin.indexOf(queryPinyin) > -1
                 || u._firstLetters.indexOf(filter) > -1 || u._firstLetters.indexOf(queryPinyin) > -1
         });

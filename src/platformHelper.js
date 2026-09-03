@@ -115,7 +115,7 @@ export function downloadFile2(url, name, messageUid) {
             messageUid: stringValue(messageUid),
             remotePath: url,
             fileName: name,
-            windowId: remote.getCurrentWindow().getMediaSourceId(),
+            windowId: remote.getCurrentWindow().getMediaSourceId()
         });
     } else {
         let fileHref = url;
@@ -150,7 +150,7 @@ export function previewMM(message, mixMultiMediaItemIndex = 0, continuous = true
             url += '/mmpreview';
         }
 
-        url += `?messageUid=${stringValue(message.messageUid)}&mmmIndex=${mixMultiMediaItemIndex}`;
+        url += `?messageUid=${stringValue(message.messageUid)}&mmmIndex=${mixMultiMediaItemIndex}&continuous=${continuous}`;
         let size;
         if (message.messageContent instanceof ImageMessageContent) {
             let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
@@ -164,7 +164,7 @@ export function previewMM(message, mixMultiMediaItemIndex = 0, continuous = true
         ipcRenderer.send(IpcEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, {
             url: url,
             messageUid: stringValue(message.messageUid),
-            size,
+            size
         });
         console.log('show-multimedia-preview-window', url);
     } else {
