@@ -7,11 +7,11 @@
 import MessageContent from './messageContent'
 import MessageContentType from './messageContentType';
 
-export default class DshTaskProgressMessageContent extends MessageContent {
+export default class AgentTaskProgressMessageContent extends MessageContent {
     content = null;
 
     constructor(content) {
-        super(MessageContentType.DSH_TASK_PROGRESS);
+        super(MessageContentType.AGENT_TASK_PROGRESS);
         this.content = content || {tasks: [], updatedAt: 0};
     }
 

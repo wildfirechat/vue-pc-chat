@@ -14,7 +14,7 @@
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import {DshApprovalResultMessageContent} from "../../../../../wfc/messages/dshMessageContents";
+import {AgentApprovalResultMessageContent} from "../../../../../wfc/messages/dshMessageContents";
 import wfc from "../../../../../wfc/client/wfc";
 
 export default {
@@ -47,7 +47,7 @@ export default {
     methods: {
         decide(action) {
             if (this.isLocked) return;
-            const content = new DshApprovalResultMessageContent({aid: this.content.aid, action});
+            const content = new AgentApprovalResultMessageContent({aid: this.content.aid, action});
             const msg = new Message(this.message.conversation, content);
             wfc.sendMessage(msg);
             this.locallyDecided = true;
