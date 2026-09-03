@@ -41,9 +41,9 @@ function encodeJson(content, summary) {
     };
 }
 
-export class DshQuestionMessageContent extends MessageContent {
+export class AgentQuestionMessageContent extends MessageContent {
     constructor(content) {
-        super(MessageContentType.DSH_QUESTION);
+        super(MessageContentType.AGENT_QUESTION);
         this.content = content || { questions: [], state: 'pending' };
     }
 
@@ -61,9 +61,9 @@ export class DshQuestionMessageContent extends MessageContent {
     }
 }
 
-export class DshAnswerMessageContent extends MessageContent {
+export class AgentAnswerMessageContent extends MessageContent {
     constructor(content) {
-        super(MessageContentType.DSH_ANSWER);
+        super(MessageContentType.AGENT_ANSWER);
         this.content = content || { qid: '', answers: [] };
     }
 
@@ -87,9 +87,9 @@ export class DshAnswerMessageContent extends MessageContent {
     }
 }
 
-export class DshApprovalMessageContent extends MessageContent {
+export class AgentApprovalMessageContent extends MessageContent {
     constructor(content) {
-        super(MessageContentType.DSH_APPROVAL);
+        super(MessageContentType.AGENT_APPROVAL);
         this.content = content || { aid: '', toolName: '', state: 'pending' };
     }
 
@@ -107,9 +107,9 @@ export class DshApprovalMessageContent extends MessageContent {
     }
 }
 
-export class DshApprovalResultMessageContent extends MessageContent {
+export class AgentApprovalResultMessageContent extends MessageContent {
     constructor(content) {
-        super(MessageContentType.DSH_APPROVAL_RESULT);
+        super(MessageContentType.AGENT_APPROVAL_RESULT);
         this.content = content || { aid: '', action: 'reject' };
     }
 
@@ -127,9 +127,9 @@ export class DshApprovalResultMessageContent extends MessageContent {
     }
 }
 
-export class DshGoalMessageContent extends MessageContent {
+export class AgentGoalMessageContent extends MessageContent {
     constructor(content) {
-        super(MessageContentType.DSH_GOAL);
+        super(MessageContentType.AGENT_GOAL);
         this.content = content || { gid: '', objective: '', phase: 'active', roundsStarted: 0 };
     }
 

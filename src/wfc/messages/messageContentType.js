@@ -134,11 +134,11 @@ export default class MessageContentType {
     static MESSAGE_CONTENT_TYPE_BACKUP_REQUEST = 613;
 
     // ============ DSH 结构化交互（200-209，官方预留 AI 交互段） ============
-    static DSH_QUESTION = 200;            // 机器人→用户 提问卡片
-    static DSH_ANSWER = 201;              // 用户→机器人 结构化回答
-    static DSH_APPROVAL = 202;            // 机器人→用户 工具审批卡片
-    static DSH_APPROVAL_RESULT = 203;     // 用户→机器人 审批结果
-    static DSH_GOAL = 206;                // 机器人→用户 目标进度卡片
-    static DSH_COMMAND = 207;             // 用户→机器人 AI 面板指令（透明，不显示；query=组合查询 / set=更新）
-    static DSH_TASK_PROGRESS = 208;       // 机器人→用户 任务进度卡片（子任务/后台任务，updateMessage 原地更新）
+    static AGENT_QUESTION = 200;            // 机器人→用户 提问卡片
+    static AGENT_ANSWER = 201;              // 用户→机器人 结构化回答
+    static AGENT_APPROVAL = 202;            // 机器人→用户 工具审批卡片
+    static AGENT_APPROVAL_RESULT = 203;     // 用户→机器人 审批结果
+    static AGENT_GOAL = 206;                // 机器人→用户 目标进度卡片
+    static AGENT_COMMAND = 207;             // 用户→机器人 AI 面板指令（透明，不显示；query=组合查询 / set=更新）
+    static AGENT_TASK_PROGRESS = 208;       // 机器人→用户 任务进度卡片（子任务/后台任务，updateMessage 原地更新）
 }

@@ -47,7 +47,7 @@
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import {DshAnswerMessageContent} from "../../../../../wfc/messages/dshMessageContents";
+import {AgentAnswerMessageContent} from "../../../../../wfc/messages/dshMessageContents";
 import wfc from "../../../../../wfc/client/wfc";
 
 export default {
@@ -150,7 +150,7 @@ export default {
         },
         sendAnswerPayload(answers) {
             if (this.isLocked) return;
-            const content = new DshAnswerMessageContent({qid: this.qid, answers});
+            const content = new AgentAnswerMessageContent({qid: this.qid, answers});
             const msg = new Message(this.message.conversation, content);
             wfc.sendMessage(msg);
             this.locallyAnswered = true;

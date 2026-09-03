@@ -7,13 +7,13 @@
 import MessageContent from './messageContent'
 import MessageContentType from './messageContentType';
 
-export default class DshCommandMessageContent extends MessageContent {
+export default class AgentCommandMessageContent extends MessageContent {
     op;
     cmd;
     seq;
 
     constructor(op, cmd, seq) {
-        super(MessageContentType.DSH_COMMAND);
+        super(MessageContentType.AGENT_COMMAND);
         this.op = op;
         this.cmd = cmd;
         this.seq = seq;

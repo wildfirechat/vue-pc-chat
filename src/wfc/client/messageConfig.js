@@ -70,8 +70,8 @@ import ModifyGroupSettingNotification from "../messages/notification/modifyGroup
 import StreamingTextGeneratingMessageContent from "../messages/streamingTextGeneratingMessageContent";
 import StreamingTextGeneratedMessageContent from "../messages/streamingTextGeneratedMessageContent";
 import StreamingTextCancelledMessageContent from "../messages/streamingTextCancelledMessageContent";
-import DshCommandMessageContent from "../messages/dshCommandMessageContent";
-import DshTaskProgressMessageContent from "../messages/dshTaskProgressMessageContent";
+import AgentCommandMessageContent from "../messages/dshCommandMessageContent";
+import AgentTaskProgressMessageContent from "../messages/dshTaskProgressMessageContent";
 import MixMultiMediaTextMessageContent from "../messages/mixMultiMediaTextMessageContent";
 import MixFileTextMessageContent from "../messages/mixFileTextMessageContent";
 import RCInviteMessageContent from "../av/messages/rcInviteMessageContent";
@@ -89,11 +89,11 @@ import PollResultMessageContent from "../messages/pollResultMessageContent";
 import MeetingMinutesMessageContent from "../messages/meetingMinutesMessageContent";
 import TranscriptionMessageContent from "../messages/transcriptionMessageContent";
 import {
-    DshQuestionMessageContent,
-    DshAnswerMessageContent,
-    DshApprovalMessageContent,
-    DshApprovalResultMessageContent,
-    DshGoalMessageContent,
+    AgentQuestionMessageContent,
+    AgentAnswerMessageContent,
+    AgentApprovalMessageContent,
+    AgentApprovalResultMessageContent,
+    AgentGoalMessageContent,
 } from "../messages/dshMessageContents";
 
 export default class MessageConfig {
@@ -410,14 +410,14 @@ export default class MessageConfig {
         {
             name: 'dshCommand',
             flag: PersistFlag.Transparent,
-            type: MessageContentType.DSH_COMMAND,
-            contentClazz: DshCommandMessageContent,
+            type: MessageContentType.AGENT_COMMAND,
+            contentClazz: AgentCommandMessageContent,
         },
         {
             name: 'dshTaskProgress',
             flag: PersistFlag.Persist,
-            type: MessageContentType.DSH_TASK_PROGRESS,
-            contentClazz: DshTaskProgressMessageContent,
+            type: MessageContentType.AGENT_TASK_PROGRESS,
+            contentClazz: AgentTaskProgressMessageContent,
         },
         {
             name: 'callStartMessageContent',
@@ -639,32 +639,32 @@ export default class MessageConfig {
         {
             name: 'dshQuestion',
             flag: PersistFlag.Persist,
-            type: MessageContentType.DSH_QUESTION,
-            contentClazz: DshQuestionMessageContent,
+            type: MessageContentType.AGENT_QUESTION,
+            contentClazz: AgentQuestionMessageContent,
         },
         {
             name: 'dshAnswer',
             flag: PersistFlag.Persist,
-            type: MessageContentType.DSH_ANSWER,
-            contentClazz: DshAnswerMessageContent,
+            type: MessageContentType.AGENT_ANSWER,
+            contentClazz: AgentAnswerMessageContent,
         },
         {
             name: 'dshApproval',
             flag: PersistFlag.Persist,
-            type: MessageContentType.DSH_APPROVAL,
-            contentClazz: DshApprovalMessageContent,
+            type: MessageContentType.AGENT_APPROVAL,
+            contentClazz: AgentApprovalMessageContent,
         },
         {
             name: 'dshApprovalResult',
             flag: PersistFlag.Persist,
-            type: MessageContentType.DSH_APPROVAL_RESULT,
-            contentClazz: DshApprovalResultMessageContent,
+            type: MessageContentType.AGENT_APPROVAL_RESULT,
+            contentClazz: AgentApprovalResultMessageContent,
         },
         {
             name: 'dshGoal',
             flag: PersistFlag.Persist,
-            type: MessageContentType.DSH_GOAL,
-            contentClazz: DshGoalMessageContent,
+            type: MessageContentType.AGENT_GOAL,
+            contentClazz: AgentGoalMessageContent,
         },
     ];
 }

@@ -117,7 +117,7 @@
 <script>
 import wfc from "../../../wfc/client/wfc";
 import EventType from "../../../wfc/client/wfcEvent";
-import DshCommandMessageContent from "../../../wfc/messages/dshCommandMessageContent";
+import AgentCommandMessageContent from "../../../wfc/messages/dshCommandMessageContent";
 import {getDshPanelData} from "../../util/dshState";
 
 export default {
@@ -206,7 +206,7 @@ export default {
         },
         /** 发送 207 面板指令（透明消息，不显示在消息流）。 */
         sendCommand(op, cmd) {
-            const content = new DshCommandMessageContent(op, cmd, Date.now() % 100000);
+            const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000);
             wfc.sendConversationMessage(this.conversation, content);
         },
 

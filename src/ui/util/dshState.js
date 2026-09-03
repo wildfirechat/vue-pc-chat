@@ -1,8 +1,10 @@
 /**
- * DSH conversation runtime state (scope=31 user setting, type=1 状态).
- * The robot writes {state, phase, toolName, model, ...} JSON under the key
- * `<convType>-<line>-<target>_1`; every group member receives it as a user
- * setting (scope=31, conversation-scoped).
+ * Agent conversation runtime state (scope=31 user setting).
+ *
+ * 服务端 key（v2）：`<convType>-<line>-<target>_<type>_<机器人uid>`
+ * —— 写入方是机器人，key 末尾由 im-server 按请求身份追加该机器人的 uid。
+ * 客户端不预知机器人 uid，统一用「前缀 + 槽位」扫描本地 scope=31 设置表
+ * （后缀通配，兼容任意机器人与将来的多机器人会话）。
  */
 
 import wfc from "../../wfc/client/wfc";
@@ -13,16 +15,24 @@ const DSH_STATE_TYPE = 1; // 1=状态 (business convention)
 const DSH_METRICS_TYPE = 2; // 2=Token 统计（与运行状态分开，低频累积数据）
 const DSH_PANEL_TYPE = 3; // 3=AI 面板数据（组合查询结果，面板打开/更新后刷新）
 
-export function dshStateKey(conversation) {
-    return `${conversation.type}-${conversation.line}-${conversation.target}_${DSH_STATE_TYPE}`;
+/** scope=31 key 前缀：`<convType>-<line>-<target>_<type>_`（服务端在其后追加机器人 uid）。 */
+function dshSlotPrefix(conversation, slot) {
+    return `${conversation.type}-${conversation.line}-${conversation.target}_${slot}_`;
 }
 
-export function dshMetricsKey(conversation) {
-    return `${conversation.type}-${conversation.line}-${conversation.target}_${DSH_METRICS_TYPE}`;
-}
-
-export function dshPanelKey(conversation) {
-    return `${conversation.type}-${conversation.line}-${conversation.target}_${DSH_PANEL_TYPE}`;
+/** 扫描 scope=31 本地设置表，返回首个 key 以 prefix 开头的 value；无匹配返回 null。 */
+function findSettingByPrefix(prefix) {
+    try {
+        const all = wfc.getUserSettings(UserSettingScope.Conversation_User_Setting);
+        if (!all) return null;
+        const entries = typeof Map !== 'undefined' && all instanceof Map ? all.entries() : Object.entries(all);
+        for (const [key, value] of entries) {
+            if (key && key.indexOf(prefix) === 0) return value;
+        }
+    } catch (e) {
+        // 忽略：底层不可用时按"无状态"处理
+    }
+    return null;
 }
 
 /** 群 extra 是否带 {"dsh":true} 标记（容错：非 JSON 时返回 false）。 */
@@ -55,12 +65,12 @@ export function isDshConversation(conversation) {
 }
 
 /**
- * Read the DSH runtime state of a conversation. Returns null when unset/invalid.
+ * Read the Agent runtime state of a conversation. Returns null when unset/invalid.
  */
 export async function getDshState(conversation) {
     if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
     try {
-        const raw = await wfc.getUserSetting(UserSettingScope.Conversation_User_Setting, dshStateKey(conversation));
+        const raw = findSettingByPrefix(dshSlotPrefix(conversation, DSH_STATE_TYPE));
         if (!raw) return null;
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         return parsed && parsed.state ? parsed : null;
@@ -70,14 +80,14 @@ export async function getDshState(conversation) {
 }
 
 /**
- * Read the DSH Token 统计 of a conversation (scope=31, type=2 计量).
+ * Read the Agent Token 统计 of a conversation (scope=31, type=2 计量).
  * 独立于运行状态（type=1）：回合结束必推（含出错/取消），带 metricsAt 时间戳。
  * Returns null when unset/invalid.
  */
 export async function getDshMetrics(conversation) {
     if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
     try {
-        const raw = await wfc.getUserSetting(UserSettingScope.Conversation_User_Setting, dshMetricsKey(conversation));
+        const raw = findSettingByPrefix(dshSlotPrefix(conversation, DSH_METRICS_TYPE));
         if (!raw) return null;
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         return parsed && typeof parsed === 'object' ? parsed : null;
@@ -94,7 +104,7 @@ export async function getDshMetrics(conversation) {
 export async function getDshPanelData(conversation) {
     if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
     try {
-        const raw = await wfc.getUserSetting(UserSettingScope.Conversation_User_Setting, dshPanelKey(conversation));
+        const raw = findSettingByPrefix(dshSlotPrefix(conversation, DSH_PANEL_TYPE));
         if (!raw) return null;
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         return parsed && typeof parsed === 'object' ? parsed : null;
