@@ -15,12 +15,12 @@
                 <div class="title-container">
                     <div>
                         <h1 ref="titleEl" class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}
-                            <span v-if="dshState && !dshAiOffline" class="dsh-title-badge" :class="dshStateClass">{{ dshStateText }}</span>
-                            <button v-if="dshState && dshState.state === 'running' && !dshAiOffline"
-                                    class="dsh-stop-btn"
-                                    :disabled="dshStopSending"
-                                    :title="$t('dsh.stop_tip')"
-                                    @click.stop="stopDshAgent">■ {{ $t('dsh.stop') }}</button>
+                            <span v-if="agentState && !agentAiOffline" class="agent-title-badge" :class="agentStateClass">{{ agentStateText }}</span>
+                            <button v-if="agentState && agentState.state === 'running' && !agentAiOffline"
+                                    class="agent-stop-btn"
+                                    :disabled="agentStopSending"
+                                    :title="$t('agent.stop_tip')"
+                                    @click.stop="stopAgent">■ {{ $t('agent.stop') }}</button>
                         </h1>
                         <p class="single-line user-online-status" @click="clickConversationDesc">{{ conversationStatusLine }}</p>
                         <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
@@ -185,7 +185,7 @@ import MessageInputView from "../../main/conversation/MessageInputView";
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
-import {getDshState, getDshMetrics, dshStateLabel, dshMetricsText, dshStatusHint, dshConversationKind} from '../../util/dshState';
+import {getAgentState, getAgentMetrics, agentStateLabel, agentMetricsText, agentStatusHint, agentConversationKind} from '../../util/agentState';
 import wfc from "../../../wfc/client/wfc";
 import {numberValue} from "../../../wfc/util/longUtil";
 import InfiniteLoading from '@imndx/vue-infinite-loading';
@@ -264,9 +264,9 @@ export default {
         localConversationEventBus.$off = localConversationEventBus.off;
         localConversationEventBus.$emit = localConversationEventBus.emit;
         return {
-            dshState: null,
-            dshMetrics: null,
-            dshStopSending: false,
+            agentState: null,
+            agentMetrics: null,
+            agentStopSending: false,
             conversationInfo: null,
             showConversationInfo: false,
             infoOpen: false,
@@ -316,29 +316,29 @@ export default {
     },
 
     methods: {
-        async refreshDshState() {
+        async refreshAgentState() {
             const info = this.sharedConversationState.currentConversationInfo;
             if (!info || !info.conversation || !info.conversation.target) {
-                this.dshState = null;
-                this.dshMetrics = null;
+                this.agentState = null;
+                this.agentMetrics = null;
                 return;
             }
             const [st, metrics] = await Promise.all([
-                getDshState(info.conversation),
-                getDshMetrics(info.conversation),
+                getAgentState(info.conversation),
+                getAgentMetrics(info.conversation),
             ]);
-            this.dshState = st;
-            this.dshMetrics = metrics;
+            this.agentState = st;
+            this.agentMetrics = metrics;
         },
-        // 标题栏停止按钮：向当前 DSH 会话发送 /stop 命令文本，中断当前 Agent turn
-        stopDshAgent() {
-            if (this.dshStopSending) return;
+        // 标题栏停止按钮：向当前 Agent 会话发送 /stop 命令文本，中断当前 Agent turn
+        stopAgent() {
+            if (this.agentStopSending) return;
             const info = this.sharedConversationState.currentConversationInfo;
             if (!info || !info.conversation) return;
-            this.dshStopSending = true;
+            this.agentStopSending = true;
             wfc.sendConversationMessage(info.conversation, new TextMessageContent('/stop'));
             setTimeout(() => {
-                this.dshStopSending = false;
+                this.agentStopSending = false;
             }, 1500);
         },
         async dragEvent(e, v) {
@@ -1108,11 +1108,11 @@ export default {
     },
 
     mounted() {
-        this.refreshDshState();
-        wfc.eventEmitter.on(EventType.SettingUpdate, this.refreshDshState);
-        // 用户/群信息可能异步拉取，拉取回来后重新判断是否为 DSH 会话
-        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.refreshDshState);
-        wfc.eventEmitter.on(EventType.GroupInfosUpdate, this.refreshDshState);
+        this.refreshAgentState();
+        wfc.eventEmitter.on(EventType.SettingUpdate, this.refreshAgentState);
+        // 用户/群信息可能异步拉取，拉取回来后重新判断是否为 Agent 会话
+        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.refreshAgentState);
+        wfc.eventEmitter.on(EventType.GroupInfosUpdate, this.refreshAgentState);
         this.popupItem = this.$refs['setting'];
         document.addEventListener('mouseup', this.dragEnd);
         document.addEventListener('mousemove', this.drag);
@@ -1126,9 +1126,9 @@ export default {
     },
 
     beforeUnmount() {
-        wfc.eventEmitter.off(EventType.SettingUpdate, this.refreshDshState);
-        wfc.eventEmitter.off(EventType.UserInfosUpdate, this.refreshDshState);
-        wfc.eventEmitter.off(EventType.GroupInfosUpdate, this.refreshDshState);
+        wfc.eventEmitter.off(EventType.SettingUpdate, this.refreshAgentState);
+        wfc.eventEmitter.off(EventType.UserInfosUpdate, this.refreshAgentState);
+        wfc.eventEmitter.off(EventType.GroupInfosUpdate, this.refreshAgentState);
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
         document.removeEventListener('mouseup', this.dragEnd);
@@ -1177,50 +1177,51 @@ export default {
                 clearInterval(this.ongoingCallTimer);
                 this.ongoingCallTimer = 0;
             }
-            this.refreshDshState();
+            this.refreshAgentState();
         }
         this.conversationInfo = this.sharedConversationState.currentConversationInfo;
         this.enableLoadRemoteHistoryMessage = true;
     },
 
     computed: {
-        dshStateText() {
-            const label = this.dshState ? dshStateLabel(this.dshState.state) : null;
+        agentStateText() {
+            const label = this.agentState ? agentStateLabel(this.agentState.state) : null;
             if (!label) return '';
             let text = this.$t(label);
             // 仅运行中追加活动后缀：thinking → 思考中；tool → 工具名（等待确认等状态不残留旧后缀）
-            if (this.dshState.state === 'running' && this.dshState.phase === 'tool') {
-                text += ` · ${this.dshState.toolName || this.$t('dsh.progress.tool')}`;
-            } else if (this.dshState.state === 'running' && this.dshState.phase === 'thinking') {
-                text += ` · ${this.$t('dsh.status.thinking')}`;
+            if (this.agentState.state === 'running' && this.agentState.phase === 'tool') {
+                text += ` · ${this.agentState.toolName || this.$t('agent.progress.tool')}`;
+            } else if (this.agentState.state === 'running' && this.agentState.phase === 'thinking') {
+                text += ` · ${this.$t('agent.status.thinking')}`;
             }
             return text;
         },
-        dshStateClass() {
-            return `dsh-title-state-${this.dshState ? this.dshState.state : 'idle'}`;
+        agentStateClass() {
+            return `agent-title-state-${this.agentState ? this.agentState.state : 'idle'}`;
         },
-        dshMetricsText() {
+        agentMetricsText() {
             // Token 统计（type=2 独立通道）
-            if (!this.dshMetrics) return '';
+            if (!this.agentMetrics) return '';
             // 统计属于当前会话才显示：切目录后旧会话统计（sessionId 不匹配）不显示
-            if (this.dshMetrics.sessionId && this.dshState && this.dshMetrics.sessionId !== this.dshState.sessionId) {
+            if (this.agentMetrics.sessionId && this.agentState && this.agentMetrics.sessionId !== this.agentState.sessionId) {
                 return '';
             }
-            return dshMetricsText(this.dshMetrics);
+            return agentMetricsText(this.agentMetrics);
         },
-        dshStatusHint() {
+        agentStatusHint() {
             // 运行态提示（type=1）：等待确认/审批、出错、已取消
-            return this.dshState ? dshStatusHint(this.dshState) : '';
+            return this.agentState ? agentStatusHint(this.agentState) : '';
         },
         /**
          * AI 群（line 2）群主（AI 机器人）是否不在线。
-         * 复用 store 维护的 _aiOwnerOnlineStateDesc（进入 AI 群时 watch 群主在线状态，
-         * 见 store.setCurrentConversationInfo；desc 在线时有平台描述、离线/未取到为空）。
+         * 与 Android 语义对齐：store 按群主 clientStates 维护 _aiOwnerOnline
+         * （进入/群信息更新/在线事件时刷新，见 store._patchCurrentConversationOnlineStatus）；
+         * 群主未知或未启用在线状态时不判离线（避免误报"AI 不在线"）。
          */
-        dshAiOffline() {
+        agentAiOffline() {
             const info = this.sharedConversationState.currentConversationInfo;
-            if (!info || dshConversationKind(info.conversation) !== 'group') return false;
-            return !info.conversation._aiOwnerOnlineStateDesc;
+            if (!info || agentConversationKind(info.conversation) !== 'group') return false;
+            return info.conversation._aiOwnerOnline === false;
         },
         /**
          * 标题下方状态行：AI 在线状态 + 运行态提示 + Token 统计合并为一行
@@ -1229,12 +1230,12 @@ export default {
          * AI 不在线时去掉所有 AI 状态（状态/提示/统计），只显示 "AI 不在线"。
          */
         conversationStatusLine() {
-            if (this.dshAiOffline) {
-                return this.$t('dsh.status.ai_offline');
+            if (this.agentAiOffline) {
+                return this.$t('agent.status.ai_offline');
             }
             const online = this.targetUserOnlineStateDesc;
-            const hint = this.dshStatusHint;
-            const metrics = this.dshMetricsText;
+            const hint = this.agentStatusHint;
+            const metrics = this.agentMetricsText;
             return [online, hint, metrics].filter(Boolean).join(' · ');
         },
         conversationTitle() {
@@ -1667,7 +1668,7 @@ i.active {
     color: var(--accent-color-active);
 }
 
-.dsh-title-badge {
+.agent-title-badge {
     margin-left: 8px;
     padding: 1px 8px;
     border-radius: 10px;
@@ -1677,11 +1678,11 @@ i.active {
     color: var(--text-secondary);
     background-color: var(--background-tertiary);
 }
-.dsh-title-state-running { color: var(--accent-color); }
-.dsh-title-state-waiting_user { color: #f59e0b; }
-.dsh-title-state-done { color: #22c55e; }
+.agent-title-state-running { color: var(--accent-color); }
+.agent-title-state-waiting_user { color: #f59e0b; }
+.agent-title-state-done { color: #22c55e; }
 
-.dsh-stop-btn {
+.agent-stop-btn {
     margin-left: 6px;
     padding: 1px 8px;
     border-radius: 10px;
@@ -1693,11 +1694,11 @@ i.active {
     vertical-align: middle;
     cursor: pointer;
 }
-.dsh-stop-btn:hover {
+.agent-stop-btn:hover {
     background: var(--status-error);
     color: var(--text-on-accent);
 }
-.dsh-stop-btn:disabled {
+.agent-stop-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }

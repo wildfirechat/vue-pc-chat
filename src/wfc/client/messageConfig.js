@@ -70,8 +70,8 @@ import ModifyGroupSettingNotification from "../messages/notification/modifyGroup
 import StreamingTextGeneratingMessageContent from "../messages/streamingTextGeneratingMessageContent";
 import StreamingTextGeneratedMessageContent from "../messages/streamingTextGeneratedMessageContent";
 import StreamingTextCancelledMessageContent from "../messages/streamingTextCancelledMessageContent";
-import AgentCommandMessageContent from "../messages/dshCommandMessageContent";
-import AgentTaskProgressMessageContent from "../messages/dshTaskProgressMessageContent";
+import AgentCommandMessageContent from "../messages/agentCommandMessageContent";
+import AgentTaskProgressMessageContent from "../messages/agentTaskProgressMessageContent";
 import MixMultiMediaTextMessageContent from "../messages/mixMultiMediaTextMessageContent";
 import MixFileTextMessageContent from "../messages/mixFileTextMessageContent";
 import RCInviteMessageContent from "../av/messages/rcInviteMessageContent";
@@ -94,7 +94,7 @@ import {
     AgentApprovalMessageContent,
     AgentApprovalResultMessageContent,
     AgentGoalMessageContent,
-} from "../messages/dshMessageContents";
+} from "../messages/agentMessageContents";
 
 export default class MessageConfig {
     static getMessageContentClazz(type) {
@@ -408,13 +408,13 @@ export default class MessageConfig {
             contentClazz: StreamingTextCancelledMessageContent,
         },
         {
-            name: 'dshCommand',
+            name: 'agentCommand',
             flag: PersistFlag.Transparent,
             type: MessageContentType.AGENT_COMMAND,
             contentClazz: AgentCommandMessageContent,
         },
         {
-            name: 'dshTaskProgress',
+            name: 'agentTaskProgress',
             flag: PersistFlag.Persist,
             type: MessageContentType.AGENT_TASK_PROGRESS,
             contentClazz: AgentTaskProgressMessageContent,
@@ -635,33 +635,33 @@ export default class MessageConfig {
             type: MessageContentType.Transcription,
             contentClazz: TranscriptionMessageContent,
         },
-        // ============ DSH 结构化交互（200-209，官方预留 AI 交互段） ============
+        // ============ Agent 结构化交互（200-209，官方预留 AI 交互段） ============
         {
-            name: 'dshQuestion',
+            name: 'agentQuestion',
             flag: PersistFlag.Persist,
             type: MessageContentType.AGENT_QUESTION,
             contentClazz: AgentQuestionMessageContent,
         },
         {
-            name: 'dshAnswer',
+            name: 'agentAnswer',
             flag: PersistFlag.Persist,
             type: MessageContentType.AGENT_ANSWER,
             contentClazz: AgentAnswerMessageContent,
         },
         {
-            name: 'dshApproval',
+            name: 'agentApproval',
             flag: PersistFlag.Persist,
             type: MessageContentType.AGENT_APPROVAL,
             contentClazz: AgentApprovalMessageContent,
         },
         {
-            name: 'dshApprovalResult',
+            name: 'agentApprovalResult',
             flag: PersistFlag.Persist,
             type: MessageContentType.AGENT_APPROVAL_RESULT,
             contentClazz: AgentApprovalResultMessageContent,
         },
         {
-            name: 'dshGoal',
+            name: 'agentGoal',
             flag: PersistFlag.Persist,
             type: MessageContentType.AGENT_GOAL,
             contentClazz: AgentGoalMessageContent,

@@ -335,7 +335,7 @@
     "collection_create_failed": "Failed to create",
     "collection_not_in_group": "You are not in this group"
   },
-  "dsh": {
+  "agent": {
     "card": {
       "approve": "Approve",
       "reject": "Reject",
@@ -344,7 +344,8 @@
       "expired": "Expired",
       "approved": "Approved",
       "rejected": "Rejected",
-      "custom_placeholder": "Or type a custom answer…"
+      "custom_placeholder": "Or type a custom answer…",
+      "pending_tip": "Some questions remain unanswered"
     },
     "plan": {
       "toggle": "View plan details"

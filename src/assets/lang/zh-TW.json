@@ -335,7 +335,7 @@
     "collection_create_failed": "建立失敗",
     "collection_not_in_group": "您已不在該群組中"
   },
-  "dsh": {
+  "agent": {
     "card": {
       "approve": "同意",
       "reject": "拒絕",
@@ -344,7 +344,8 @@
       "expired": "已過期",
       "approved": "已同意",
       "rejected": "已拒絕",
-      "custom_placeholder": "或輸入自訂回答…"
+      "custom_placeholder": "或輸入自訂回答…",
+      "pending_tip": "尚有題目未作答"
     },
     "plan": {
       "toggle": "檢視計畫詳情"

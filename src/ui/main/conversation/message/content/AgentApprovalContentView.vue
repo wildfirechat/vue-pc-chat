@@ -1,24 +1,24 @@
 <template>
-    <div class="dsh-card"
+    <div class="agent-card"
          v-bind:class="{out: message.direction === 0}">
-        <div class="dsh-card-title">🔐 工具审批</div>
-        <div class="dsh-approval-tool">{{ content.toolName }}</div>
-        <div class="dsh-approval-reason" v-if="content.reason">原因：{{ content.reason }}</div>
-        <div class="dsh-approval-actions" v-if="!isLocked">
-            <button class="dsh-btn approve" @click="decide('approve')">{{ $t('dsh.card.approve') }}</button>
-            <button class="dsh-btn reject" @click="decide('reject')">{{ $t('dsh.card.reject') }}</button>
+        <div class="agent-card-title">🔐 工具审批</div>
+        <div class="agent-approval-tool">{{ content.toolName }}</div>
+        <div class="agent-approval-reason" v-if="content.reason">原因：{{ content.reason }}</div>
+        <div class="agent-approval-actions" v-if="!isLocked">
+            <button class="agent-btn approve" @click="decide('approve')">{{ $t('agent.card.approve') }}</button>
+            <button class="agent-btn reject" @click="decide('reject')">{{ $t('agent.card.reject') }}</button>
         </div>
-        <div class="dsh-card-state" v-if="isLocked">{{ stateText }}</div>
+        <div class="agent-card-state" v-if="isLocked">{{ stateText }}</div>
     </div>
 </template>
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import {AgentApprovalResultMessageContent} from "../../../../../wfc/messages/dshMessageContents";
+import {AgentApprovalResultMessageContent} from "../../../../../wfc/messages/agentMessageContents";
 import wfc from "../../../../../wfc/client/wfc";
 
 export default {
-    name: "DshApprovalContentView",
+    name: "AgentApprovalContentView",
     props: {
         message: {
             type: Object,
@@ -38,9 +38,9 @@ export default {
             return this.locallyDecided || ["approved", "rejected", "expired"].indexOf(this.content.state) >= 0;
         },
         stateText() {
-            if (this.locallyDecided || this.content.state === "approved") return this.$t('dsh.card.approved');
-            if (this.content.state === "rejected") return this.$t('dsh.card.rejected');
-            if (this.content.state === "expired") return this.$t('dsh.card.expired');
+            if (this.locallyDecided || this.content.state === "approved") return this.$t('agent.card.approved');
+            if (this.content.state === "rejected") return this.$t('agent.card.rejected');
+            if (this.content.state === "expired") return this.$t('agent.card.expired');
             return "";
         },
     },
@@ -57,7 +57,7 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.dsh-card {
+.agent-card {
     margin: 4px 8px;
     padding: 10px;
     background-color: var(--background-primary);
@@ -65,44 +65,44 @@ export default {
     max-width: 420px;
     border: 1px solid var(--background-tertiary);
 }
-.dsh-card.out {
+.agent-card.out {
     background-color: var(--background-message-out);
 }
-.dsh-card-title {
+.agent-card-title {
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 6px;
 }
-.dsh-approval-tool {
+.agent-approval-tool {
     color: var(--text-primary);
     font-size: var(--font-size-sm);
     font-family: monospace;
 }
-.dsh-approval-reason {
+.agent-approval-reason {
     color: var(--text-secondary);
     font-size: var(--font-size-xs);
     margin-top: 4px;
     word-break: break-word;
 }
-.dsh-approval-actions {
+.agent-approval-actions {
     display: flex;
     gap: 8px;
     margin-top: 10px;
 }
-.dsh-btn {
+.agent-btn {
     padding: 5px 16px;
     border: none;
     border-radius: var(--radius-sm);
     cursor: pointer;
     color: var(--text-on-accent);
 }
-.dsh-btn.approve {
+.agent-btn.approve {
     background-color: var(--accent-color);
 }
-.dsh-btn.reject {
+.agent-btn.reject {
     background-color: var(--status-error);
 }
-.dsh-card-state {
+.agent-card-state {
     margin-top: 6px;
     color: var(--text-secondary);
     font-size: var(--font-size-xs);

@@ -55,17 +55,17 @@
         <TestCustomMessageContentView :message="message"
                                       v-else-if="message.messageContent.type === CustomMessageContentType.MESSAGE_CONTENT_TYPE_CUSTOM_MESSAGE_TEST"
                                       v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
-        <!-- ============ DSH 结构化交互（200-209，官方预留 AI 交互段） ============ -->
-        <DshQuestionContentView :message="message"
+        <!-- ============ Agent 结构化交互（200-209，官方预留 AI 交互段） ============ -->
+        <AgentQuestionContentView :message="message"
                                 v-else-if="message.messageContent.type === MessageContentType.AGENT_QUESTION"
                                 v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
-        <DshApprovalContentView :message="message"
+        <AgentApprovalContentView :message="message"
                                 v-else-if="message.messageContent.type === MessageContentType.AGENT_APPROVAL"
                                 v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
-        <DshGoalContentView :message="message"
+        <AgentGoalContentView :message="message"
                             v-else-if="message.messageContent.type === MessageContentType.AGENT_GOAL"
                             v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
-        <DshTaskProgressContentView :message="message"
+        <AgentTaskProgressContentView :message="message"
                                     v-else-if="message.messageContent.type === MessageContentType.AGENT_TASK_PROGRESS"
                                     v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
         <!-- AGENT_ANSWER(201) / AGENT_APPROVAL_RESULT(203) 是用户侧应答消息，按摘要文本展示 -->
@@ -102,10 +102,10 @@ import LinkMessageContentView from "./content/LinkMessageContentView";
 import StreamingTextMessageContentView from "./content/StreamingTextMessageContentView.vue";
 import CustomMessageContentType from "../../../../wfc_custom_message/customMessageContentType";
 import TestCustomMessageContentView from "./content/TestCustomMessageContentView.vue";
-import DshQuestionContentView from "./content/DshQuestionContentView.vue";
-import DshApprovalContentView from "./content/DshApprovalContentView.vue";
-import DshGoalContentView from "./content/DshGoalContentView.vue";
-import DshTaskProgressContentView from "./content/DshTaskProgressContentView.vue";
+import AgentQuestionContentView from "./content/AgentQuestionContentView.vue";
+import AgentApprovalContentView from "./content/AgentApprovalContentView.vue";
+import AgentGoalContentView from "./content/AgentGoalContentView.vue";
+import AgentTaskProgressContentView from "./content/AgentTaskProgressContentView.vue";
 import MixMultiMediaTextMessageContentView from "./content/MixMultiMediaTextMessageContentView.vue";
 import MessageContentType from "../../../../wfc/messages/messageContentType";
 import MixFileTextMessageContentView from "./content/MixFileTextMessageContentView.vue";
@@ -138,10 +138,10 @@ export default {
         MixFileTextMessageContentView,
         MixMultiMediaTextMessageContentView,
         TestCustomMessageContentView,
-        DshQuestionContentView,
-        DshApprovalContentView,
-        DshGoalContentView,
-        DshTaskProgressContentView,
+        AgentQuestionContentView,
+        AgentApprovalContentView,
+        AgentGoalContentView,
+        AgentTaskProgressContentView,
         LinkMessageContentView,
         UnknownMessageContentView,
         ConferenceInviteMessageContentView,

@@ -349,7 +349,7 @@
     "result_stats": "{totalVotes}票 · {voterCount}人参与",
     "poll_updated": "投票有更新"
   },
-  "dsh": {
+  "agent": {
     "card": {
       "approve": "同意",
       "reject": "拒绝",
@@ -358,7 +358,8 @@
       "expired": "已过期",
       "approved": "已同意",
       "rejected": "已拒绝",
-      "custom_placeholder": "或输入自定义回答…"
+      "custom_placeholder": "或输入自定义回答…",
+      "pending_tip": "还有题目未作答"
     },
     "plan": {
       "toggle": "查看计划详情"

@@ -6,12 +6,12 @@
         </div>
         <section v-else-if="!sharedConversationState.showChannelMenu" class="message-input-section">
             <Teleport to="body">
-                <div v-if="showDshAgentPanel" class="dsh-agent-mask" @click="hideDshAgentPanel">
-                    <div class="dsh-agent-popup" :style="dshAgentPanelStyle" @click.stop>
-                        <DshAgentPanel
-                            :key="dshAgentPanelConvKey"
+                <div v-if="showAgentPanel" class="agent-agent-mask" @click="hideAgentPanel">
+                    <div class="agent-agent-popup" :style="agentPanelStyle" @click.stop>
+                        <AgentPanel
+                            :key="agentPanelConvKey"
                             :conversation="conversationInfo.conversation"
-                            @close="hideDshAgentPanel"
+                            @close="hideAgentPanel"
                         />
                     </div>
                 </div>
@@ -37,9 +37,9 @@
                     </div>
                 </Teleport>
                 <ul class="flex-row" style="align-content: center; padding: 0 8px">
-                    <li v-if="dshConvKind === 'group'">
-                        <div ref="dshAiBtn" class="i-button-wrapper i-button-small" :class="{active: showDshAgentPanel, 'dsh-ai-btn-offline': dshAiOffline}" :title="dshAiOffline ? $t('dsh.status.ai_offline') : $t('dsh.agent_panel_tip')" @click="toggleDshAgentPanel">
-                            <span class="dsh-ai-btn-text">AI</span>
+                    <li v-if="agentConvKind === 'group'">
+                        <div ref="agentAiBtn" class="i-button-wrapper i-button-small" :class="{active: showAgentPanel, 'agent-ai-btn-offline': agentAiOffline}" :title="agentAiOffline ? $t('agent.status.ai_offline') : $t('agent.agent_panel_tip')" @click="toggleAgentPanel">
+                            <span class="agent-ai-btn-text">AI</span>
                         </div>
                     </li>
                     <li v-if="!inputOptions['disableEmoji']">
@@ -245,8 +245,8 @@ import Config from "../../../config";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import BenzAMRRecorder from "benz-amr-recorder";
 import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
-import {getDshState, dshConversationKind} from "../../util/dshState";
-import DshAgentPanel from "./DshAgentPanel.vue";
+import {getAgentState, agentConversationKind} from "../../util/agentState";
+import AgentPanel from "./AgentPanel.vue";
 import {currentWindow, fs} from "../../../platform";
 import {vOnClickOutside} from '@vueuse/components'
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
@@ -327,75 +327,75 @@ export default {
             isRecording: false,
             hasInputContent: false,
 
-            // DSH 会话：输入框输入 / 弹出命令菜单（Tribute 第二实例，触发符 '/'），
-            // 选中命令填入输入框（不直接发送）；_dshCmdConvKey 用于会话切换时重建菜单
-            dshState: null,
-            dshConvKind: null,
-            dshCommandTribute: null,
-            _dshCmdConvKey: null,
+            // Agent 会话：输入框输入 / 弹出命令菜单（Tribute 第二实例，触发符 '/'），
+            // 选中命令填入输入框（不直接发送）；_agentCmdConvKey 用于会话切换时重建菜单
+            agentState: null,
+            agentConvKind: null,
+            agentCommandTribute: null,
+            _agentCmdConvKey: null,
             // AI 设置面板（输入框工具栏 AI 按钮）
-            showDshAgentPanel: false,
-            dshAgentPanelPos: {left: 0, bottom: 0},
-            dshAgentPanelConvKey: "",
+            showAgentPanel: false,
+            agentPanelPos: {left: 0, bottom: 0},
+            agentPanelConvKey: "",
             // 单聊机器人命令（/create 等私聊专属命令在群内会被插件拒绝；/stop 危险语义放最后）
             // 模型/推理/沙箱/计划/目录/压缩/重置等已由 AI 设置面板覆盖（仅群聊），单聊无面板故保留
-            dshSingleCommands: ['/help', '/create', '/workspaces', '/goal', '/jobs', '/model', '/effort', '/plan', '/compact', '/cwd', '/ls', '/sandbox', '/stop'],
-            // DSH 群聊命令（面板已覆盖 model/effort/cwd/sandbox/plan/compact/reset，故不再出现在 / 菜单；
+            agentSingleCommands: ['/help', '/create', '/workspaces', '/goal', '/jobs', '/model', '/effort', '/plan', '/compact', '/cwd', '/ls', '/sandbox', '/stop'],
+            // Agent 群聊命令（面板已覆盖 model/effort/cwd/sandbox/plan/compact/reset，故不再出现在 / 菜单；
             // 保留帮助/群管理/停止）
-            dshGroupCommands: ['/help', '/members', '/kick', '/invite', '/mute', '/unmute', '/stop'],
+            agentGroupCommands: ['/help', '/members', '/kick', '/invite', '/mute', '/unmute', '/stop'],
 
             isCollectionEnable: !!Config.getCollectionServer(),
             isPollEnable: !!Config.getPollServer()
         }
     },
     methods: {
-        async refreshDshState() {
+        async refreshAgentState() {
             const conv = this.conversationInfo && this.conversationInfo.conversation;
             if (!conv || !conv.target) {
-                this.dshState = null;
-                this.dshConvKind = null;
-                this._dshCmdConvKey = null;
-                this.initDshCommandMenu(); // 拆除旧菜单
+                this.agentState = null;
+                this.agentConvKind = null;
+                this._agentCmdConvKey = null;
+                this.initAgentCommandMenu(); // 拆除旧菜单
                 return;
             }
-            // 'single'（单聊机器人）/ 'group'（群 extra 带 dsh 标记）/ null
-            this.dshConvKind = dshConversationKind(conv);
+            // 'single'（单聊机器人）/ 'group'（群 extra 带 agent 标记）/ null
+            this.agentConvKind = agentConversationKind(conv);
             // 会话切换（或初次判定成功）时重建 '/' 命令菜单：命令集随单聊/群聊变化
             const convKey = `${conv.type}-${conv.line}-${conv.target}`;
-            if (this._dshCmdConvKey !== convKey) {
-                this._dshCmdConvKey = convKey;
-                this.initDshCommandMenu();
+            if (this._agentCmdConvKey !== convKey) {
+                this._agentCmdConvKey = convKey;
+                this.initAgentCommandMenu();
                 // 会话切换：关闭 AI 设置面板（旧会话的查询/操作不得串到新会话）
-                this.showDshAgentPanel = false;
+                this.showAgentPanel = false;
             }
-            this.dshAgentPanelConvKey = convKey;
-            // getDshState 内部已按 isDshConversation 门控，非 DSH 会话直接返回 null
-            const state = await getDshState(conv);
+            this.agentPanelConvKey = convKey;
+            // getAgentState 内部已按 isAgentConversation 门控，非 Agent 会话直接返回 null
+            const state = await getAgentState(conv);
             // 防止会话切换后旧会话的异步结果覆盖新会话
             if (this.conversationInfo && this.conversationInfo.conversation.equal(conv)) {
-                this.dshState = state;
+                this.agentState = state;
             }
         },
 
-        // '/' 命令菜单：仅 DSH 会话挂载（单聊机器人 / DSH 群），命令集见 dshCommands。
+        // '/' 命令菜单：仅 Agent 会话挂载（单聊机器人 / Agent 群），命令集见 agentCommands。
         // 与 '@' 提及（this.tribute）各自独立，互不干扰。选中命令填入输入框（补一个空格方便接参数），不直接发送。
-        initDshCommandMenu() {
-            if (this.dshCommandTribute) {
+        initAgentCommandMenu() {
+            if (this.agentCommandTribute) {
                 if (this.$refs['input']) {
-                    this.dshCommandTribute.detach(this.$refs['input']);
+                    this.agentCommandTribute.detach(this.$refs['input']);
                 }
-                this.dshCommandTribute = null;
+                this.agentCommandTribute = null;
             }
             // 清理历史残留的命令菜单 DOM（重建/会话切换时 detach 不会移除菜单节点，
             // 残留的可见菜单会让 DOM 级守卫误判或显示错乱）
             document.querySelectorAll('.tribute-container').forEach((el) => {
-                if (el.querySelector('.dsh-cmd-menu-item')) el.remove();
+                if (el.querySelector('.agent-cmd-menu-item')) el.remove();
             });
-            if (this.dshConvKind === null) return; // 非 DSH 会话不挂载
+            if (this.agentConvKind === null) return; // 非 Agent 会话不挂载
             const input = this.$refs['input'];
             if (!input) return;
-            const commands = this.dshCommands.map((cmd) => ({key: cmd, value: cmd, searchKey: cmd}));
-            this.dshCommandTribute = new Tribute({
+            const commands = this.agentCommands.map((cmd) => ({key: cmd, value: cmd, searchKey: cmd}));
+            this.agentCommandTribute = new Tribute({
                 trigger: '/',
                 values: commands,
                 requireLeadingSpace: false,
@@ -405,12 +405,12 @@ export default {
                     this.$nextTick(() => this.updateInputState());
                     return item.original.value + ' ';
                 },
-                menuItemTemplate: (item) => '<span class="dsh-cmd-menu-item">' + item.original.key + '</span>',
+                menuItemTemplate: (item) => '<span class="agent-cmd-menu-item">' + item.original.key + '</span>',
                 noMatchTemplate: () => '<span style="visibility:hidden;"></span>',
                 lookup: (item) => item.searchKey,
                 menuContainer: document.getElementById('conversation-content'),
             });
-            this.dshCommandTribute.attach(input);
+            this.agentCommandTribute.attach(input);
         },
 
         onTributeReplaced(e) {
@@ -783,11 +783,11 @@ export default {
             }
             // '/' 命令菜单打开时，回车用于选择命令而非发送。
             // 双重检查：实例状态 + DOM 实测（防陈旧实例/空引用窗口——热更新残留旧模块时
-            // this.dshCommandTribute 可能为 null/过期，但可见菜单仍在，DOM 检查可兜底）。
+            // this.agentCommandTribute 可能为 null/过期，但可见菜单仍在，DOM 检查可兜底）。
             const cmdMenuVisible =
-                (this.dshCommandTribute && this.dshCommandTribute.isActive) ||
+                (this.agentCommandTribute && this.agentCommandTribute.isActive) ||
                 Array.from(document.querySelectorAll('.tribute-container')).some(
-                    (el) => el.style.display !== 'none' && el.querySelector('.dsh-cmd-menu-item')
+                    (el) => el.style.display !== 'none' && el.querySelector('.agent-cmd-menu-item')
                 );
             if (cmdMenuVisible) {
                 return;
@@ -896,14 +896,14 @@ export default {
             e.preventDefault();
         },
 
-        toggleDshAgentPanel() {
-            if (this.dshAiOffline) return;
-            this.showDshAgentPanel = !this.showDshAgentPanel;
+        toggleAgentPanel() {
+            if (this.agentAiOffline) return;
+            this.showAgentPanel = !this.showAgentPanel;
             this.focusInput();
         },
 
-        hideDshAgentPanel() {
-            this.showDshAgentPanel = false;
+        hideAgentPanel() {
+            this.showAgentPanel = false;
         },
 
         toggleEmojiView() {
@@ -1573,7 +1573,7 @@ export default {
             this.focusInput();
         }
         this.lastConversationInfo = this.conversationInfo;
-        this.refreshDshState();
+        this.refreshAgentState();
 
         if (isElectron()) {
             ipcRenderer.on('screenshots-ok', (event, args) => {
@@ -1597,10 +1597,10 @@ export default {
 
     created() {
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
-        wfc.eventEmitter.on(EventType.SettingUpdate, this.refreshDshState)
-        // 用户/群信息可能异步拉取，拉取回来后重新判断是否为 DSH 会话（机器人单聊 / DSH 群）
-        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.refreshDshState)
-        wfc.eventEmitter.on(EventType.GroupInfosUpdate, this.refreshDshState)
+        wfc.eventEmitter.on(EventType.SettingUpdate, this.refreshAgentState)
+        // 用户/群信息可能异步拉取，拉取回来后重新判断是否为 Agent 会话（机器人单聊 / Agent 群）
+        wfc.eventEmitter.on(EventType.UserInfosUpdate, this.refreshAgentState)
+        wfc.eventEmitter.on(EventType.GroupInfosUpdate, this.refreshAgentState)
     },
 
     unmounted() {
@@ -1611,21 +1611,21 @@ export default {
             clearInterval(this.storeDraftIntervalId)
         }
         wfc.eventEmitter.removeListener(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
-        wfc.eventEmitter.removeListener(EventType.SettingUpdate, this.refreshDshState)
-        wfc.eventEmitter.removeListener(EventType.UserInfosUpdate, this.refreshDshState)
-        wfc.eventEmitter.removeListener(EventType.GroupInfosUpdate, this.refreshDshState)
+        wfc.eventEmitter.removeListener(EventType.SettingUpdate, this.refreshAgentState)
+        wfc.eventEmitter.removeListener(EventType.UserInfosUpdate, this.refreshAgentState)
+        wfc.eventEmitter.removeListener(EventType.GroupInfosUpdate, this.refreshAgentState)
         // 拆除 '/' 命令菜单
-        if (this.dshCommandTribute) {
+        if (this.agentCommandTribute) {
             if (this.$refs['input']) {
-                this.dshCommandTribute.detach(this.$refs['input']);
+                this.agentCommandTribute.detach(this.$refs['input']);
             }
-            this.dshCommandTribute = null;
+            this.agentCommandTribute = null;
         }
     },
 
     watch: {
         conversationInfo() {
-            this.refreshDshState();
+            this.refreshAgentState();
             if (this.lastConversationInfo && !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation)) {
                 this.$nextTick(() => {
                     if (this.sharedConversationState.showChannelMenu) {
@@ -1668,12 +1668,13 @@ export default {
     computed: {
         /**
          * AI 群（line 2）群主（AI 机器人）是否不在线：不在线时 AI 按钮置灰不可点。
-         * 复用 store 维护的 _aiOwnerOnlineStateDesc（进入 AI 群时 watch 群主在线状态）。
+         * 与 Android 语义对齐：读取 store 维护的 _aiOwnerOnline（群主 clientStates 判定）；
+         * 群主未知/未启用在线状态时不判离线。
          */
-        dshAiOffline() {
+        agentAiOffline() {
             const info = this.sharedConversationState.currentConversationInfo;
-            if (!info || dshConversationKind(info.conversation) !== 'group') return false;
-            return !info.conversation._aiOwnerOnlineStateDesc;
+            if (!info || agentConversationKind(info.conversation) !== 'group') return false;
+            return info.conversation._aiOwnerOnline === false;
         },
 
         emojiPickerStyle() {
@@ -1685,7 +1686,7 @@ export default {
             };
         },
 
-        dshAgentPanelStyle() {
+        agentPanelStyle() {
             // 弹窗居中于当前窗口
             return {
                 position: 'fixed',
@@ -1732,19 +1733,19 @@ export default {
                 && (type === ConversationType.Single || type === ConversationType.Group);
         },
 
-        // 命令集合：单聊机器人与 DSH 群不同（私聊专属命令在群内会被插件拒绝）
-        dshCommands() {
-            return this.dshConvKind === 'group' ? this.dshGroupCommands : this.dshSingleCommands;
+        // 命令集合：单聊机器人与 Agent 群不同（私聊专属命令在群内会被插件拒绝）
+        agentCommands() {
+            return this.agentConvKind === 'group' ? this.agentGroupCommands : this.agentSingleCommands;
         },
 
         // 输入框占位：contenteditable 的 placeholder 由 .input:empty:before { content: attr(title) } 实现
         inputPlaceholder() {
-            if (this.dshState) {
-                if (this.dshState.state === 'waiting_user') {
-                    return this.$t('dsh.input.waiting_placeholder');
+            if (this.agentState) {
+                if (this.agentState.state === 'waiting_user') {
+                    return this.$t('agent.input.waiting_placeholder');
                 }
-                if (this.dshState.state === 'running') {
-                    return this.$t('dsh.input.running_placeholder');
+                if (this.agentState.state === 'running') {
+                    return this.$t('agent.input.running_placeholder');
                 }
             }
             return 'Enter发送，Ctrl+Enter换行';
@@ -1755,7 +1756,7 @@ export default {
         ChannelMenuView,
         QuoteMessageView,
         VEmojiPicker,
-        DshAgentPanel
+        AgentPanel
     },
     directives: {
         vOnClickOutside,
@@ -1787,7 +1788,7 @@ export default {
     height: 280px;
 }
 
-.dsh-ai-btn-text {
+.agent-ai-btn-text {
     font-size: 12px;
     font-weight: 700;
     color: var(--accent-color);
@@ -1795,24 +1796,24 @@ export default {
 }
 
 /* AI 不在线：按钮置灰、无 hover 反馈、不可点击 */
-.dsh-ai-btn-offline {
+.agent-ai-btn-offline {
     cursor: default;
     pointer-events: none;
     opacity: 0.4;
 }
 
-.dsh-ai-btn-offline .dsh-ai-btn-text {
+.agent-ai-btn-offline .agent-ai-btn-text {
     color: var(--text-secondary);
 }
 
-.dsh-agent-mask {
+.agent-agent-mask {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     z-index: 99999;
 }
 
-.dsh-agent-popup {
+.agent-agent-popup {
     position: fixed;
     z-index: 100000;
 }
@@ -2149,8 +2150,8 @@ export default {
     }
 }
 
-/* DSH '/' 命令菜单条目（Tribute 弹层，等宽字体便于识别命令） */
-.dsh-cmd-menu-item {
+/* Agent '/' 命令菜单条目（Tribute 弹层，等宽字体便于识别命令） */
+.agent-cmd-menu-item {
     font-family: monospace;
     font-size: var(--font-size-sm);
 }
