@@ -11,12 +11,12 @@ import wfc from "../../wfc/client/wfc";
 import UserSettingScope from "../../wfc/client/userSettingScope";
 import ConversationType from "../../wfc/model/conversationType";
 
-const DSH_STATE_TYPE = 1; // 1=状态 (business convention)
-const DSH_METRICS_TYPE = 2; // 2=Token 统计（与运行状态分开，低频累积数据）
-const DSH_PANEL_TYPE = 3; // 3=AI 面板数据（组合查询结果，面板打开/更新后刷新）
+const AGENT_STATE_TYPE = 1; // 1=状态 (business convention)
+const AGENT_METRICS_TYPE = 2; // 2=Token 统计（与运行状态分开，低频累积数据）
+const AGENT_PANEL_TYPE = 3; // 3=AI 面板数据（组合查询结果，面板打开/更新后刷新）
 
 /** scope=31 key 前缀：`<convType>-<line>-<target>_<type>_`（服务端在其后追加机器人 uid）。 */
-function dshSlotPrefix(conversation, slot) {
+function agentSlotPrefix(conversation, slot) {
     return `${conversation.type}-${conversation.line}-${conversation.target}_${slot}_`;
 }
 
@@ -25,8 +25,16 @@ function findSettingByPrefix(prefix) {
     try {
         const all = wfc.getUserSettings(UserSettingScope.Conversation_User_Setting);
         if (!all) return null;
-        const entries = typeof Map !== 'undefined' && all instanceof Map ? all.entries() : Object.entries(all);
-        for (const [key, value] of entries) {
+        // 核心可能返回三种形态：Map / UserSettingEntry[]（{key,value}）/ 键值对象——统一归一为 [key,value] 对
+        let pairs;
+        if (all instanceof Map) {
+            pairs = [...all.entries()];
+        } else if (Array.isArray(all)) {
+            pairs = all.map(e => [e && e.key !== undefined ? e.key : (e && e[0]), e && e.value !== undefined ? e.value : (e && e[1])]);
+        } else {
+            pairs = Object.entries(all);
+        }
+        for (const [key, value] of pairs) {
             if (key && key.indexOf(prefix) === 0) return value;
         }
     } catch (e) {
@@ -36,7 +44,7 @@ function findSettingByPrefix(prefix) {
 }
 
 /** 群 extra 是否带 {"dsh":true} 标记（容错：非 JSON 时返回 false）。 */
-export function isDshGroupExtra(extra) {
+export function isAgentGroupExtra(extra) {
     if (!extra) return false;
     try {
         return !!JSON.parse(extra).dsh;
@@ -46,11 +54,11 @@ export function isDshGroupExtra(extra) {
 }
 
 /**
- * AI 会话类型（原 DSH）：'group'（群聊会话 line 2）/ null（非 AI 会话）。
+ * AI 会话类型（原 Agent）：'group'（群聊会话 line 2）/ null（非 AI 会话）。
  * 设计：单聊（与机器人私聊）是全局控制面板，不是 AI 会话；
  * AI 对话仅限群聊会话 line 2（AI 消息统一使用 line 2，普通消息 line 0，朋友圈 line 1）。
  */
-export function dshConversationKind(conversation) {
+export function agentConversationKind(conversation) {
     if (!conversation || !conversation.target) return null;
     // AI 会话 = 群聊且 line === 2；单聊不判 AI（控制面板）
     if (conversation.type !== ConversationType.Group || conversation.line !== 2) return null;
@@ -58,19 +66,19 @@ export function dshConversationKind(conversation) {
 }
 
 /**
- * 是否 DSH 会话。非 DSH 会话不查询/不展示 DSH 状态。
+ * 是否 Agent 会话。非 Agent 会话不查询/不展示 Agent 状态。
  */
-export function isDshConversation(conversation) {
-    return dshConversationKind(conversation) !== null;
+export function isAgentConversation(conversation) {
+    return agentConversationKind(conversation) !== null;
 }
 
 /**
  * Read the Agent runtime state of a conversation. Returns null when unset/invalid.
  */
-export async function getDshState(conversation) {
-    if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
+export async function getAgentState(conversation) {
+    if (!conversation || !conversation.target || !isAgentConversation(conversation)) return null;
     try {
-        const raw = findSettingByPrefix(dshSlotPrefix(conversation, DSH_STATE_TYPE));
+        const raw = findSettingByPrefix(agentSlotPrefix(conversation, AGENT_STATE_TYPE));
         if (!raw) return null;
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         return parsed && parsed.state ? parsed : null;
@@ -84,10 +92,10 @@ export async function getDshState(conversation) {
  * 独立于运行状态（type=1）：回合结束必推（含出错/取消），带 metricsAt 时间戳。
  * Returns null when unset/invalid.
  */
-export async function getDshMetrics(conversation) {
-    if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
+export async function getAgentMetrics(conversation) {
+    if (!conversation || !conversation.target || !isAgentConversation(conversation)) return null;
     try {
-        const raw = findSettingByPrefix(dshSlotPrefix(conversation, DSH_METRICS_TYPE));
+        const raw = findSettingByPrefix(agentSlotPrefix(conversation, AGENT_METRICS_TYPE));
         if (!raw) return null;
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         return parsed && typeof parsed === 'object' ? parsed : null;
@@ -98,13 +106,13 @@ export async function getDshMetrics(conversation) {
 
 /**
  * Read the AI 面板数据 of a conversation (scope=31, type=3).
- * 组合查询（DSH_Command 207 query）结果：model/effort/sandbox/plan/cwd/sessionId/dirs。
+ * 组合查询（AGENT_Command 207 query）结果：model/effort/sandbox/plan/cwd/sessionId/dirs。
  * Returns null when unset/invalid.
  */
-export async function getDshPanelData(conversation) {
-    if (!conversation || !conversation.target || !isDshConversation(conversation)) return null;
+export async function getAgentPanelData(conversation) {
+    if (!conversation || !conversation.target || !isAgentConversation(conversation)) return null;
     try {
-        const raw = findSettingByPrefix(dshSlotPrefix(conversation, DSH_PANEL_TYPE));
+        const raw = findSettingByPrefix(agentSlotPrefix(conversation, AGENT_PANEL_TYPE));
         if (!raw) return null;
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
         return parsed && typeof parsed === 'object' ? parsed : null;
@@ -114,19 +122,19 @@ export async function getDshPanelData(conversation) {
 }
 
 /** Human label for the state (i18n keys resolved by the caller). */
-export function dshStateLabel(state) {
+export function agentStateLabel(state) {
     const map = {
-        idle: 'dsh.status.idle',
-        running: 'dsh.status.running',
-        waiting_user: 'dsh.status.waiting',
-        done: 'dsh.status.done',
+        idle: 'agent.status.idle',
+        running: 'agent.status.running',
+        waiting_user: 'agent.status.waiting',
+        done: 'agent.status.done',
     };
     return map[state] || null;
 }
 
 /** Compact dot class for list badges. */
-export function dshStateClass(state) {
-    return `dsh-dot-${state || 'idle'}`;
+export function agentStateClass(state) {
+    return `agent-dot-${state || 'idle'}`;
 }
 
 /** 数字格式化：整数不带小数，否则保留 1 位。 */
@@ -139,10 +147,10 @@ function fmtNum(n) {
  * Token 统计（scope=31 type=2 计量）→ 一行展示文本。
  * 字段：context.usedPct / cacheHitRatePct / speed.tokensPerSec /
  *      turn.outputTokens / usage.totalTokens
- * 运行态提示（waiting/reason/error）走 dshStatusHint（type=1），不在此处。
+ * 运行态提示（waiting/reason/error）走 agentStatusHint（type=1），不在此处。
  * 返回 '' 表示没有可展示的统计。
  */
-export function dshMetricsText(metrics) {
+export function agentMetricsText(metrics) {
     if (!metrics || typeof metrics !== 'object') return '';
     const parts = [];
 
@@ -173,7 +181,7 @@ export function dshMetricsText(metrics) {
  *   waiting_user → 🤔 等待确认 / 🔐 等待审批；reason=error → ⚠️ 错误；cancelled → 已取消
  * 返回 '' 表示无提示。
  */
-export function dshStatusHint(state) {
+export function agentStatusHint(state) {
     if (!state || typeof state !== 'object') return '';
     if (state.state === 'waiting_user') {
         return state.interaction === 'approval' ? '🔐 等待审批' : '🤔 等待确认';

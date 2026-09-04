@@ -22,17 +22,17 @@
                 <div class="title-time-container">
                     <i v-if="source.conversation.type === 5" class="icon-ion-android-lock" style="padding-right: 4px"></i>
                     <div v-if="isOrganizationGroupConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
-                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
-                        <span v-if="isAiGroup" class="dsh-group-badge">AI</span>
+                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="agentState" class="agent-list-dot" :class="agentStateClass"></i></h2>
+                        <span v-if="isAiGroup" class="agent-group-badge">AI</span>
                         <p class="single-line" style="background: var(--accent-color); border-radius: 2px; color: var(--text-on-accent); padding: 1px 2px; font-size: 9px">官方</p>
                     </div>
                     <div v-else-if="isExternalDomainSingleConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
-                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
+                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="agentState" class="agent-list-dot" :class="agentStateClass"></i></h2>
                         <p class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: var(--font-size-xxs)">{{ domainName }}</p>
                     </div>
                     <template v-else>
-                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="dshState" class="dsh-list-dot" :class="dshStateClass"></i></h2>
-                        <span v-if="isAiGroup" class="dsh-group-badge">AI</span>
+                        <h2 class="title single-line">{{ conversationTitle }}<i v-if="agentState" class="agent-list-dot" :class="agentStateClass"></i></h2>
+                        <span v-if="isAiGroup" class="agent-group-badge">AI</span>
                     </template>
                     <p class="time single-line">{{ source._timeStr }}</p>
                 </div>
@@ -56,7 +56,7 @@ import Draft from "../../util/draft";
 import FileMessageContent from "../../../wfc/messages/fileMessageContent";
 import Message from "../../../wfc/messages/message";
 import wfc from "../../../wfc/client/wfc";
-import {getDshState, dshStateClass, dshConversationKind} from '../../util/dshState';
+import {getAgentState, agentStateClass, agentConversationKind} from '../../util/agentState';
 import EventType from '../../../wfc/client/wfcEvent';
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import Config from "../../../config";
@@ -80,7 +80,7 @@ export default {
     },
     data() {
         return {
-            dshState: null,
+            agentState: null,
             // 在线状态事件 tick：UserOnlineEvent 时自增触发重渲染（store map 非响应式）
             onlineTick: 0,
             dragAndDropEnterCount: 0,
@@ -89,26 +89,26 @@ export default {
         };
     },
     mounted() {
-        this.refreshDshState();
-        wfc.eventEmitter.on('settingUpdate', this.refreshDshState);
+        this.refreshAgentState();
+        wfc.eventEmitter.on('settingUpdate', this.refreshAgentState);
         wfc.eventEmitter.on(EventType.UserOnlineEvent, this.onUserOnlineEvent);
         // this.refreshGroupPortrait();
     },
     beforeUnmount() {
-        wfc.eventEmitter.off('settingUpdate', this.refreshDshState);
+        wfc.eventEmitter.off('settingUpdate', this.refreshAgentState);
         wfc.eventEmitter.off(EventType.UserOnlineEvent, this.onUserOnlineEvent);
     },
     methods: {
         onUserOnlineEvent() {
             this.onlineTick++;
         },
-        async refreshDshState() {
+        async refreshAgentState() {
             const conv = this.source && this.source.conversation;
             if (!conv || !conv.target) {
-                this.dshState = null;
+                this.agentState = null;
                 return;
             }
-            this.dshState = await getDshState(conv);
+            this.agentState = await getAgentState(conv);
         },
         dragEvent(e, v) {
             if (v === 'dragenter') {
@@ -190,29 +190,32 @@ export default {
 
     },
     beforeUnmount() {
-        wfc.eventEmitter.off('settingUpdate', this.refreshDshState);
+        wfc.eventEmitter.off('settingUpdate', this.refreshAgentState);
     },
 
     computed: {
-        dshStateClass() {
+        agentStateClass() {
             // AI 不在线：状态点显示为灰色"不在线"（不显示运行态颜色）
-            if (this.dshAiOffline) {
-                return 'dsh-dot-offline';
+            if (this.agentAiOffline) {
+                return 'agent-dot-offline';
             }
-            return this.dshState ? dshStateClass(this.dshState.state) : '';
+            return this.agentState ? agentStateClass(this.agentState.state) : '';
         },
         // AI 群（line 2）群主（AI 机器人）是否不在线：列表项读 store 在线状态 map
-        //（机器人上线/下线事件维护，UserOnlineEvent 触发刷新）
-        dshAiOffline() {
+        //（机器人上线/下线事件维护，UserOnlineEvent 触发刷新）。
+        // 语义与 Android 一致：未启用在线状态或群主未知时不判离线（避免误报）；
+        // 在线 = 存在 state===0 的平台客户端（platform 1-9）。
+        agentAiOffline() {
             this.onlineTick;
             const conv = this.source && this.source.conversation;
-            if (!conv || dshConversationKind(conv) !== 'group') return false;
+            if (!conv || agentConversationKind(conv) !== 'group') return false;
+            if (!wfc.isUserOnlineStateEnabled()) return false;
             const groupInfo = wfc.getGroupInfo(conv.target, false);
             const owner = groupInfo && groupInfo.owner;
             if (!owner) return false;
             const uos = store.state.misc.userOnlineStateMap.get(owner);
             if (!uos || !uos.clientStates || !uos.clientStates.length) return true;
-            return !uos.clientStates.some(s => s.state === 0);
+            return !uos.clientStates.some(s => s.state === 0 && s.platform >= 1 && s.platform <= 9);
         },
         // line 2 的群聊会话显示 AI 标识（AI 消息统一使用 line 2）
         isAiGroup() {
@@ -537,7 +540,7 @@ export default {
 
 
 
-.dsh-list-dot {
+.agent-list-dot {
     display: inline-block;
     width: 8px;
     height: 8px;
@@ -546,13 +549,13 @@ export default {
     vertical-align: middle;
     background-color: #94a3b8;
 }
-.dsh-dot-running { background-color: var(--accent-color); }
-.dsh-dot-waiting_user { background-color: #f59e0b; }
-.dsh-dot-idle { background-color: #22c55e; }   /* 空闲=可输入，绿色 */
-.dsh-dot-offline { background-color: #94a3b8; }   /* AI 不在线=灰色 */
-.dsh-dot-done { background-color: #22c55e; }   /* 已完成=可继续指示，绿色 */
+.agent-dot-running { background-color: var(--accent-color); }
+.agent-dot-waiting_user { background-color: #f59e0b; }
+.agent-dot-idle { background-color: #22c55e; }   /* 空闲=可输入，绿色 */
+.agent-dot-offline { background-color: #94a3b8; }   /* AI 不在线=灰色 */
+.agent-dot-done { background-color: #22c55e; }   /* 已完成=可继续指示，绿色 */
 
-.dsh-group-badge {
+.agent-group-badge {
     align-self: center;
     margin-left: 4px;
     padding: 0 4px;

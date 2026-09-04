@@ -1,16 +1,16 @@
 <template>
-    <div class="dsh-card">
-        <div class="dsh-card-title">🎯 目标进度
-            <span class="dsh-goal-phase" :class="phaseClass">{{ phaseText }}</span>
+    <div class="agent-card">
+        <div class="agent-card-title">🎯 目标进度
+            <span class="agent-goal-phase" :class="phaseClass">{{ phaseText }}</span>
         </div>
-        <div class="dsh-goal-objective">{{ content.objective }}</div>
-        <div class="dsh-goal-meta">{{ $t('dsh.goal.rounds', [content.roundsStarted ?? 0]) }}</div>
+        <div class="agent-goal-objective">{{ content.objective }}</div>
+        <div class="agent-goal-meta">{{ $t('agent.goal.rounds', [content.roundsStarted ?? 0]) }}</div>
     </div>
 </template>
 
 <script>
 export default {
-    name: "DshGoalContentView",
+    name: "AgentGoalContentView",
     props: {
         message: {
             type: Object,
@@ -22,18 +22,18 @@ export default {
             return this.message.messageContent.content || {};
         },
         phaseText() {
-            const map = {active: this.$t('dsh.goal.active'), paused: this.$t('dsh.goal.paused'), blocked: this.$t('dsh.goal.blocked'), complete: this.$t('dsh.goal.complete')};
+            const map = {active: this.$t('agent.goal.active'), paused: this.$t('agent.goal.paused'), blocked: this.$t('agent.goal.blocked'), complete: this.$t('agent.goal.complete')};
             return map[this.content.phase] || this.content.phase || '';
         },
         phaseClass() {
-            return `dsh-goal-phase-${this.content.phase || 'active'}`;
+            return `agent-goal-phase-${this.content.phase || 'active'}`;
         },
     },
 };
 </script>
 
 <style lang="css" scoped>
-.dsh-card {
+.agent-card {
     margin: 4px 8px;
     padding: 10px;
     background-color: var(--background-primary);
@@ -41,12 +41,12 @@ export default {
     max-width: 420px;
     border: 1px solid var(--background-tertiary);
 }
-.dsh-card-title {
+.agent-card-title {
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 6px;
 }
-.dsh-goal-phase {
+.agent-goal-phase {
     margin-left: 6px;
     padding: 1px 8px;
     border-radius: 10px;
@@ -55,24 +55,24 @@ export default {
     vertical-align: middle;
     color: var(--text-on-accent);
 }
-.dsh-goal-phase-active {
+.agent-goal-phase-active {
     background-color: #22c55e;
 }
-.dsh-goal-phase-paused {
+.agent-goal-phase-paused {
     background-color: #94a3b8;
 }
-.dsh-goal-phase-blocked {
+.agent-goal-phase-blocked {
     background-color: var(--status-error);
 }
-.dsh-goal-phase-complete {
+.agent-goal-phase-complete {
     background-color: var(--accent-color);
 }
-.dsh-goal-objective {
+.agent-goal-objective {
     color: var(--text-primary);
     font-size: var(--font-size-sm);
     word-break: break-word;
 }
-.dsh-goal-meta {
+.agent-goal-meta {
     color: var(--text-secondary);
     font-size: var(--font-size-xs);
     margin-top: 4px;

@@ -1,5 +1,5 @@
 /*
- * DSH × Wildfire 结构化交互消息内容类（200-206，官方预留 AI 交互段）。
+ * Agent × Wildfire 结构化交互消息内容类（200-206，官方预留 AI 交互段）。
  *
  * Payload convention:
  *   payload.content           = JSON string (structured data)

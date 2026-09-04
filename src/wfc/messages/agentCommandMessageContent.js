@@ -1,5 +1,5 @@
 /*
- * DSH_Command (207)：AI 面板静默指令消息（用户→机器人）。
+ * AGENT_Command (207)：AI 面板静默指令消息（用户→机器人）。
  * 透明消息（Transparent）：不存储、不计未读、不在消息流显示（digest 为空）。
  * content = JSON.stringify({op: "query"|"set", cmd?, seq?})
  */

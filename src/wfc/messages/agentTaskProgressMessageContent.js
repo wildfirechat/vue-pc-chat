@@ -1,5 +1,5 @@
 /*
- * DSH_TaskProgress (208)：任务进度卡片（机器人→用户）。
+ * AGENT_TaskProgress (208)：任务进度卡片（机器人→用户）。
  * content = JSON.stringify({tasks: [{kind, id, label, status, reason, result, updatedAt}], updatedAt})
  * 客户端渲染为任务列表卡片（子任务/后台任务进度），插件 updateMessage 原地更新。
  */

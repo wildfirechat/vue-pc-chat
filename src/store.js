@@ -125,6 +125,10 @@ let store = {
     _reloadTimers: null,
     // 待合并处理的群成员更新事件对应的群 id，详见 EventType.GroupMembersUpdate 监听
     _pendingGroupMemberUpdateGroupIds: new Set(),
+    // AI 群（line 2）群主（AI 机器人）在线状态订阅：当前订阅的会话 target 与群主 id（去重/切换清理用）
+    _aiOwnerWatchConvKey: '',
+    _aiOwnerWatchOwner: '',
+
 
     _addWfcListener(eventName, handler) {
         wfc.eventEmitter.on(eventName, handler);
@@ -246,6 +250,17 @@ let store = {
             console.log('store GroupInfosUpdate', groupInfos.length)
             this._reloadGroupConversationIfExist(groupInfos);
             this._deferLoadFavGroupList();
+            // AI 群（line 2）群信息异步拉回可能补上 owner：补订群主在线状态并刷新副标题（避免误报"AI 不在线"）
+            const cur = this.state.conversation.currentConversationInfo;
+            if (cur && cur.conversation && cur.conversation.type === ConversationType.Group) {
+                for (const g of groupInfos || []) {
+                    if (g && g.target === cur.conversation.target) {
+                        this._syncAgentOwnerWatch(cur.conversation);
+                        this._patchCurrentConversationOnlineStatus();
+                        break;
+                    }
+                }
+            }
             // TODO 其他相关逻辑
 
         });
@@ -354,7 +369,7 @@ let store = {
                 if (msgIndex > -1) {
                     // FYI: https://v2.vuejs.org/v2/guide/reactivity#Change-Detection-Caveats
                     this.state.conversation.currentConversationMessageList.splice(msgIndex, 1, msg);
-                    this._pinStreamingGeneratingToBottom();
+                    this._pinLiveAgentMessagesToBottom();
                     console.log('msg duplicate, update message')
                     return;
                 } else {
@@ -366,7 +381,7 @@ let store = {
                 }
 
                 this.state.conversation.currentConversationMessageList.push(msg);
-                this._pinStreamingGeneratingToBottom();
+                this._pinLiveAgentMessagesToBottom();
             }
 
             if (this.state.misc.isMainWindow && this.isConversationInCurrentWindow(msg.conversation)) {
@@ -484,7 +499,7 @@ let store = {
             if (this.state.conversation.currentConversationMessageList.length > defaultRenderMessageCount) {
                 this.state.conversation.currentConversationMessageList = this.state.conversation.currentConversationMessageList.slice(this.state.conversation.currentConversationMessageList.length - defaultRenderMessageCount);
             }
-            this._pinStreamingGeneratingToBottom();
+            this._pinLiveAgentMessagesToBottom();
         });
 
         const messageStatusOrContentUpdateListener = (message) => {
@@ -505,7 +520,7 @@ let store = {
             let msg = this.state.conversation.currentConversationMessageList[index];
             msg = Object.assign(msg, message)
             this.state.conversation.currentConversationMessageList.splice(index, 1, msg)
-            this._pinStreamingGeneratingToBottom();
+            this._pinLiveAgentMessagesToBottom();
 
             if (this.state.conversation.currentConversationInfo.lastMessage && this.state.conversation.currentConversationInfo.lastMessage.messageId === message.messageId) {
                 Object.assign(this.state.conversation.currentConversationInfo.lastMessage, message);
@@ -713,7 +728,7 @@ let store = {
 
     _isDisplayMessage(message) {
         // return [PersistFlag.Persist, PersistFlag.Persist_And_Count].indexOf(MessageConfig.getMessageContentPersitFlag(message.messageContent.type)) > -1;
-        // DSH_Command (207) 是 AI 面板静默指令（透明消息），一律不显示
+        // AGENT_Command (207) 是 AI 面板静默指令（透明消息），一律不显示
         if (message.messageContent.type === MessageContentType.AGENT_COMMAND) {
             return false;
         }
@@ -918,12 +933,7 @@ let store = {
                     wfc.unwatchOnlineState(conversation.type, [conversation.target]);
                 }
                 // AI 群（line 2，群主=AI 机器人）：离开时取消订阅群主在线状态
-                if (wfc.isUserOnlineStateEnabled() && conversation.type === ConversationType.Group && conversation.line === 2) {
-                    let owner = this._dshGroupOwner(conversation.target);
-                    if (owner) {
-                        wfc.unwatchOnlineState(ConversationType.Single, [owner]);
-                    }
-                }
+                this._stopAgentOwnerWatch();
                 if (conversation.type === ConversationType.Channel) {
                     let content = new LeaveChannelChatMessageContent();
                     wfc.sendConversationMessage(conversation, content);
@@ -960,19 +970,8 @@ let store = {
             })
         }
         // AI 群（line 2，群主=AI 机器人）：进入时订阅群主在线状态
-        if (wfc.isUserOnlineStateEnabled() && conversation.type === ConversationType.Group && conversation.line === 2) {
-            let owner = this._dshGroupOwner(conversation.target);
-            if (owner) {
-                wfc.watchOnlineState(ConversationType.Single, [owner], 1000, (states) => {
-                    states.forEach((e => {
-                        this.state.misc.userOnlineStateMap.set(e.userId, e);
-                    }))
-                    this._patchCurrentConversationOnlineStatus();
-                }, (err) => {
-                    console.log('watchOnlineState error', err);
-                });
-            }
-        }
+        // （群主可能晚于会话打开才拉到：群信息更新事件里会再次 _syncAgentOwnerWatch 补订）
+        this._syncAgentOwnerWatch(conversation);
         if (conversation.type === ConversationType.Channel) {
             let content = new EnterChannelChatMessageContent();
             wfc.sendConversationMessage(conversation, content);
@@ -1873,9 +1872,58 @@ let store = {
     },
 
     // AI 群（line 2）的群主 ID（=AI 机器人）；非 AI 群返回空
-    _dshGroupOwner(groupId) {
+    _agentGroupOwner(groupId) {
         let groupInfo = wfc.getGroupInfo(groupId, false);
         return groupInfo && groupInfo.owner ? groupInfo.owner : '';
+    },
+
+    /**
+     * AI 群（line 2）群主（AI 机器人）在线状态订阅入口：确保当前会话群主处于订阅中。
+     * owner 可能晚于会话打开才拉到（群信息异步），群信息更新后再次调用即可补订（内部去重）。
+     */
+    watchAgentOwnerFor(conversation) {
+        this._syncAgentOwnerWatch(conversation);
+    },
+
+    _syncAgentOwnerWatch(conversation) {
+        const isAiGroup = !!(conversation && conversation.type === ConversationType.Group
+            && conversation.line === 2 && wfc.isUserOnlineStateEnabled());
+        if (!isAiGroup) {
+            this._stopAgentOwnerWatch();
+            return;
+        }
+        const convKey = conversation.target;
+        if (this._aiOwnerWatchConvKey && this._aiOwnerWatchConvKey !== convKey) {
+            this._stopAgentOwnerWatch();
+        }
+        const owner = this._agentGroupOwner(convKey);
+        if (owner === this._aiOwnerWatchOwner) return;
+        if (this._aiOwnerWatchOwner) {
+            wfc.unwatchOnlineState(ConversationType.Single, [this._aiOwnerWatchOwner]);
+            this._aiOwnerWatchOwner = '';
+        }
+        this._aiOwnerWatchConvKey = convKey;
+        if (!owner) {
+            // 群主未知：暂不订阅，群信息更新后再调 watchAgentOwnerFor 补订
+            return;
+        }
+        this._aiOwnerWatchOwner = owner;
+        wfc.watchOnlineState(ConversationType.Single, [owner], 1000, (states) => {
+            states.forEach((e) => {
+                this.state.misc.userOnlineStateMap.set(e.userId, e);
+            });
+            this._patchCurrentConversationOnlineStatus();
+        }, (err) => {
+            console.log('watchAgentOwnerFor error', err);
+        });
+    },
+
+    _stopAgentOwnerWatch() {
+        if (this._aiOwnerWatchOwner) {
+            wfc.unwatchOnlineState(ConversationType.Single, [this._aiOwnerWatchOwner]);
+        }
+        this._aiOwnerWatchOwner = '';
+        this._aiOwnerWatchConvKey = '';
     },
 
     _patchCurrentConversationOnlineStatus() {
@@ -1887,9 +1935,24 @@ let store = {
             // Vue.set(this.state.conversation.currentConversationInfo.conversation, '_targetOnlineStateDesc', this.getUserOnlineState(convInfo.conversation.target))
             this.state.conversation.currentConversationInfo.conversation._targetOnlineStateDesc = this.getUserOnlineState(convInfo.conversation.target);
         } else if (convInfo && convInfo.conversation.type === ConversationType.Group && convInfo.conversation.line === 2) {
-            // AI 群：显示群主（AI 机器人）的在线状态
-            let owner = this._dshGroupOwner(convInfo.conversation.target);
-            this.state.conversation.currentConversationInfo.conversation._aiOwnerOnlineStateDesc = owner ? this.getUserOnlineState(owner) : '';
+            // AI 群：群主（AI 机器人）在线状态。语义与 Android 对齐：
+            // 在线 = 启用在线状态且群主存在 state==0 的客户端（platform 1-9）；
+            // 群主未知/未启用在线状态时不判离线（避免误报"AI 不在线"）。
+            const conversation = convInfo.conversation;
+            const owner = this._agentGroupOwner(conversation.target);
+            let online = true;
+            let desc = '';
+            if (owner && wfc.isUserOnlineStateEnabled()) {
+                const uos = this.state.misc.userOnlineStateMap.get(owner);
+                if (uos && uos.clientStates && uos.clientStates.length) {
+                    online = uos.clientStates.some(st => st.state === 0 && st.platform >= 1 && st.platform <= 9);
+                } else {
+                    online = false;
+                }
+                desc = uos && uos.desc ? (uos.desc() || (online ? '在线' : '离线')) : (online ? '在线' : '离线');
+            }
+            conversation._aiOwnerOnline = owner ? online : true;
+            conversation._aiOwnerOnlineStateDesc = owner ? desc : '';
         }
     },
     _loadFriendRequest() {
@@ -2860,36 +2923,49 @@ let store = {
     },
 
     /**
-     * 生成中的流式消息（type 14，Streaming_Text_Generating）必须固定在列表最新位置（视觉最底部）。
-     * 生成期间用户自己发消息、或其它消息（含最终 type 15 完成消息）插入/替换，
-     * 都可能把它顶到中间。这里在每次列表变更后把「最后一条生成中的消息」移到数组末尾，
-     * 其余消息保持相对顺序；本来就已在末尾则不动。整体赋值新数组触发刷新。
+     * 进行中的 AI 交互元素（流式生成中 14；提问卡 200 / 审批卡 202 且 state=pending）必须固定在
+     * 列表最新位置（视觉最底部）。生成/等待期间用户自己发消息或其它消息插入/替换都可能把它们
+     * 顶到中间；这里在每次列表变更后把所有 live 元素整体移到数组末尾（live 内部与其余消息内部
+     * 各自保持相对顺序），已连续位于末尾则不动。goal 206 / 任务 208 / 普通消息等按默认排序，
+     * 不参与钉底；type 15 由对 14 的原地替换或末尾追加到达，天然处于最新位置。整体赋值新数组触发刷新。
      */
-    _pinStreamingGeneratingToBottom() {
+    _pinLiveAgentMessagesToBottom() {
         const list = this.state.conversation.currentConversationMessageList;
         if (!list || list.length <= 1) {
             return;
         }
-        const last = list[list.length - 1];
-        if (last.messageContent.type === MessageContentType.Streaming_Text_Generating) {
+        const isLive = (m) => {
+            const t = m && m.messageContent && m.messageContent.type;
+            if (t === MessageContentType.Streaming_Text_Generating) {
+                return true;
+            }
+            if (t === MessageContentType.AGENT_QUESTION || t === MessageContentType.AGENT_APPROVAL) {
+                const c = m.messageContent.content;
+                return !!c && c.state === 'pending';
+            }
+            return false;
+        };
+        const live = [];
+        const rest = [];
+        for (const m of list) {
+            (isLive(m) ? live : rest).push(m);
+        }
+        if (live.length === 0) {
             return;
         }
-        let idx = -1;
-        for (let i = list.length - 1; i >= 0; i--) {
-            if (list[i].messageContent.type === MessageContentType.Streaming_Text_Generating) {
-                idx = i;
+        // 已连续位于末尾（顺序一致）则不动
+        const tailStart = list.length - live.length;
+        let unchanged = true;
+        for (let i = 0; i < live.length; i++) {
+            if (list[tailStart + i] !== live[i]) {
+                unchanged = false;
                 break;
             }
         }
-        if (idx === -1) {
+        if (unchanged) {
             return;
         }
-        // 整体赋值新数组触发刷新，勿原地 splice
-        const newList = list.slice(0);
-        const generating = newList[idx];
-        newList.splice(idx, 1);
-        newList.push(generating);
-        this.state.conversation.currentConversationMessageList = newList;
+        this.state.conversation.currentConversationMessageList = rest.concat(live);
     },
 
     _conversationKey(conv){

@@ -39,7 +39,7 @@ export default class UserSettingScope {
     static AddFriend_NoVerify = 28;
     static Sync_Badge = 29;
     static Lock_PC = 30;
-    // 会话级用户设置，DSH 会话状态通道（与机器人服务端约定的保留值）：key = convType-line-target_type（type 为业务类型，1=状态）。
+    // 会话级用户设置，Agent 会话状态通道（与机器人服务端约定的保留值）：key = convType-line-target_type（type 为业务类型，1=状态）。
     // 注意：第三方自定义 scope 仍须 ≥1000（见下方 kUserSettingCustomBegin），不可复用 31。
     static Conversation_User_Setting = 31;
 
