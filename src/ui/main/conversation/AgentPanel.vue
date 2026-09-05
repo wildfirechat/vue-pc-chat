@@ -8,7 +8,7 @@
 <template>
     <div class="agent-agent-panel" @click.stop>
         <header class="agent-agent-header">
-            <span class="agent-agent-title">🤖 AI 会话设置</span>
+            <span class="agent-agent-title">🤖 AI 会话设置<template v-if="robotShort"> · {{ robotShort }}</template></span>
             <button class="agent-agent-close" title="关闭" @click="$emit('close')">×</button>
         </header>
 
@@ -80,6 +80,21 @@
                     </label>
                     <span class="agent-agent-switch-text">{{ planOn ? '已开启（先审后做）' : '已关闭' }}</span>
                 </div>
+
+                <!-- 会话处理模式：interrupt=后到打断先到（默认） / queue=排队 -->
+                <div class="agent-agent-row agent-agent-row-col">
+                    <label class="agent-agent-label">会话模式</label>
+                    <div class="agent-agent-radio-group">
+                        <label class="agent-agent-radio">
+                            <input type="radio" value="interrupt" :checked="convMode === 'interrupt'" :disabled="applying" @change="setMode('interrupt')" />
+                            <span>打断（后到打断先到）</span>
+                        </label>
+                        <label class="agent-agent-radio">
+                            <input type="radio" value="queue" :checked="convMode === 'queue'" :disabled="applying" @change="setMode('queue')" />
+                            <span>排队（串行等待）</span>
+                        </label>
+                    </div>
+                </div>
             </template>
         </div>
 
@@ -118,7 +133,7 @@
 import wfc from "../../../wfc/client/wfc";
 import EventType from "../../../wfc/client/wfcEvent";
 import AgentCommandMessageContent from "../../../wfc/messages/agentCommandMessageContent";
-import {getAgentPanelData} from "../../util/agentState";
+import {getAgentPanelDataFor, agentRobotName} from "../../util/agentState";
 
 export default {
     name: "AgentPanel",
@@ -126,6 +141,11 @@ export default {
         conversation: {
             type: Object,
             required: true,
+        },
+        // 目标机器人（多机器人会话寻址；空=会话默认机器人）
+        robotUid: {
+            type: String,
+            default: '',
         },
     },
     emits: ["close"],
@@ -136,9 +156,14 @@ export default {
             panelData: null,
             cwdPickerOpen: false,
             _flashTimer: 0,
+            // 会话处理模式（interrupt=后到打断 / queue=排队），选项发送 /mode
+            convMode: 'interrupt',
         };
     },
     computed: {
+        robotShort() {
+            return this.robotUid ? agentRobotName(this.robotUid) : '';
+        },
         currentModel() {
             return (this.panelData && this.panelData.model && this.panelData.model.current) || '';
         },
@@ -198,15 +223,15 @@ export default {
         },
         async refreshPanelData() {
             try {
-                const data = await getAgentPanelData(this.conversation);
+                const data = await getAgentPanelDataFor(this.conversation, this.robotUid);
                 if (data) this.panelData = data;
             } catch (e) {
                 // 忽略，保持旧数据
             }
         },
-        /** 发送 207 面板指令（透明消息，不显示在消息流）。 */
+        /** 发送 207 面板指令（透明消息，不显示在消息流），带目标机器人 robotId。 */
         sendCommand(op, cmd) {
-            const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000);
+            const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000, this.robotUid || undefined);
             wfc.sendConversationMessage(this.conversation, content);
         },
 
@@ -227,6 +252,13 @@ export default {
         },
         togglePlan(on) {
             this.sendCommand("set", `/plan ${on ? "on" : "off"}`);
+            this.flash();
+        },
+        /** 会话处理模式：interrupt（后到打断先到，默认）/ queue（排队）。 */
+        setMode(mode) {
+            if (mode !== 'interrupt' && mode !== 'queue') return;
+            this.convMode = mode;
+            this.sendCommand("set", `/mode ${mode}`);
             this.flash();
         },
         compact() {

@@ -205,7 +205,8 @@ export default {
         showCreateConversationModal() {
             let successCB = users => {
                 let ids = users.map(u => u.uid);
-                wfc.addGroupMembers(this.conversationInfo.conversation.target, ids, null, [0])
+                // 群通知发到当前会话的 line（AI 会话 line=2），确保成员在该 line 看到入群通知
+                wfc.addGroupMembers(this.conversationInfo.conversation.target, ids, null, [this.conversationInfo.conversation.line])
             }
             let groupMemberUserInfos = this.activeStore.getGroupMemberUserInfos(this.conversationInfo.conversation.target, false);
 
@@ -221,7 +222,8 @@ export default {
         showRemoveGroupMemberModal() {
             let successCB = users => {
                 let ids = users.map(u => u.uid);
-                wfc.kickoffGroupMembers(this.conversationInfo.conversation.target, ids, [0])
+                // 群通知发到当前会话的 line（AI 会话 line=2），确保成员在该 line 看到被移出通知
+                wfc.kickoffGroupMembers(this.conversationInfo.conversation.target, ids, [this.conversationInfo.conversation.line])
             }
             let groupMemberUserInfos = this.activeStore.getGroupMemberUserInfos(this.conversationInfo.conversation.target, false, false);
             this.$pickContact({
@@ -255,7 +257,8 @@ export default {
                 return;
             }
 
-            wfc.modifyGroupInfo(groupId, ModifyGroupInfoType.Modify_Group_Name, this.newGroupName, [0], null, () => {
+            // 群通知发到当前会话的 line（AI 会话 line=2），改名通知在该 line 可见
+            wfc.modifyGroupInfo(groupId, ModifyGroupInfoType.Modify_Group_Name, this.newGroupName, [this.conversationInfo.conversation.line], null, () => {
                 this.conversationInfo.conversation._target._displayName = this.newGroupName;
                 this.$refs.groupNameInput.blur();
             }, (err) => {
@@ -274,7 +277,8 @@ export default {
 
         updateGroupAlias() {
             if (this.newGroupAlias && this.newGroupAlias !== this.groupAlias) {
-                wfc.modifyGroupAlias(this.conversationInfo.conversation.target, this.newGroupAlias, [0], null, () => {
+                // 群通知发到当前会话的 line（AI 会话 line=2）
+                wfc.modifyGroupAlias(this.conversationInfo.conversation.target, this.newGroupAlias, [this.conversationInfo.conversation.line], null, () => {
                     this.groupAlias = this.newGroupAlias;
                 }, null);
             }
