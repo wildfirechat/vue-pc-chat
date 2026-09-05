@@ -22,7 +22,12 @@
                                     :title="$t('agent.stop_tip')"
                                     @click.stop="stopAgent">■ {{ $t('agent.stop') }}</button>
                         </h1>
-                        <p class="single-line user-online-status" @click="clickConversationDesc">{{ conversationStatusLine }}</p>
+                        <p class="single-line user-online-status" @click="clickConversationDesc">
+                            <template v-if="robotStatusRows.length > 1">
+                                <span v-for="r in robotStatusRows" :key="r.uid" class="agent-status-col" :title="r.uid">{{ r.short }}:{{ r.text }}</span>
+                            </template>
+                            <template v-else>{{ conversationStatusLine }}</template>
+                        </p>
                         <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
                     </div>
                     <div
@@ -185,7 +190,7 @@ import MessageInputView from "../../main/conversation/MessageInputView";
 import NotificationMessageContent from "../../../wfc/messages/notification/notificationMessageContent";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
-import {getAgentState, getAgentMetrics, agentStateLabel, agentMetricsText, agentStatusHint, agentConversationKind} from '../../util/agentState';
+import {getAgentState, getAgentMetrics, agentStateLabel, agentMetricsText, agentStatusHint, agentConversationKind, getAgentRobotStates, agentRobotName} from '../../util/agentState';
 import wfc from "../../../wfc/client/wfc";
 import {numberValue} from "../../../wfc/util/longUtil";
 import InfiniteLoading from '@imndx/vue-infinite-loading';
@@ -1212,6 +1217,26 @@ export default {
             // 运行态提示（type=1）：等待确认/审批、出错、已取消
             return this.agentState ? agentStatusHint(this.agentState) : '';
         },
+        // 多机器人：按 agent 逐列展示状态（单机器人时为空，走 conversationStatusLine）
+        robotStatusRows() {
+            const info = this.sharedConversationState.currentConversationInfo;
+            const conv = info && info.conversation;
+            if (!conv || agentConversationKind(conv) !== 'group') return [];
+            const states = getAgentRobotStates(conv);
+            const textMap = {
+                running: '运行中',
+                waiting_user: '等待确认',
+                thinking: '思考中',
+                done: '空闲',
+                idle: '空闲',
+            };
+            return states.map(r => {
+                const st = r.state && r.state.state;
+                let text = textMap[st] || '空闲';
+                if (r.state && r.state.reason === 'error') text = '错误';
+                return {uid: r.uid, short: agentRobotName(r.uid), text};
+            });
+        },
         /**
          * AI 群（line 2）群主（AI 机器人）是否不在线。
          * 与 Android 语义对齐：store 按群主 clientStates 维护 _aiOwnerOnline
@@ -1610,6 +1635,10 @@ export default {
     margin: 0 auto;
 }
 
+.agent-status-col {
+    margin-right: 12px;
+    color: var(--text-secondary);
+}
 .user-online-status {
     color: var(--text-secondary);
     font-size: 10px;

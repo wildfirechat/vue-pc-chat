@@ -358,13 +358,19 @@ let store = {
                     lastTimestamp = this.state.conversation.currentConversationMessageList[msgListLength - 1].timestamp;
                 }
                 this._patchMessage(msg, lastTimestamp);
+                // 多 agent：流式消息（14/15）是 Transparent（messageId 常为 0），多个并发流之间
+                // 不能按 messageId 判重（0===0 会误判为同一行导致互相覆盖/挤掉）；
+                // 一律只按 streamId 识别同一回合：同 stream 替换、不同 stream 各自成行。
+                const mStreaming = (m) => {
+                    const t = m.messageContent && m.messageContent.type;
+                    return t === MessageContentType.Streaming_Text_Generating || t === MessageContentType.Streaming_Text_Generated;
+                };
                 let msgIndex = this.state.conversation.currentConversationMessageList.findIndex(m => {
+                    if (mStreaming(m) && mStreaming(msg)) {
+                        return !!(m.messageContent.streamId && m.messageContent.streamId === msg.messageContent.streamId);
+                    }
                     return m.messageId === msg.messageId
-                        || (gt(m.messageUid, 0) && eq(m.messageUid, msg.messageUid))
-                        || (m.messageContent.type === MessageContentType.Streaming_Text_Generating
-                            && (msg.messageContent.type === MessageContentType.Streaming_Text_Generating || msg.messageContent.type === MessageContentType.Streaming_Text_Generated)
-                            && m.messageContent.streamId === msg.messageContent.streamId
-                        )
+                        || (gt(m.messageUid, 0) && eq(m.messageUid, msg.messageUid));
                 });
                 if (msgIndex > -1) {
                     // FYI: https://v2.vuejs.org/v2/guide/reactivity#Change-Detection-Caveats
@@ -1505,6 +1511,8 @@ let store = {
         wfc.getMessagesV2(conversation, 0, true, 20, '', msgs => {
             this.state.conversation.currentConversationMessageList = msgs;
             this._patchCurrentConversationMessages();
+            // 多 agent：会话重开/恢复时把所有仍在生成的回合（每个 agent 一条）补到列表末尾
+            this._appendCachedStreamingMessages(conversation);
             if (msgs.length) {
                 this.state.conversation.currentConversationOldestMessageId = msgs[0].messageId;
             }
@@ -1545,11 +1553,8 @@ let store = {
             }
         });
         this.state.conversation.currentConversationMessageList = newMsgs.concat(this.state.conversation.currentConversationMessageList);
-        let streamingTextGeneratingMessage = this.state.conversation.streamingTextGeneratingMessages.get(this._conversationKey(conversation));
-        if(streamingTextGeneratingMessage){
-            this._patchMessage(streamingTextGeneratingMessage, lastTimestamp);
-            this.state.conversation.currentConversationMessageList.push(streamingTextGeneratingMessage);
-        }
+        // 多 agent：把所有仍在生成的回合（每个 agent 一条）补到列表末尾（已存在同一 streamId 的不重复补）
+        this._appendCachedStreamingMessages(conversation);
         return loadNewMsg;
     },
 
@@ -2890,14 +2895,88 @@ let store = {
         return content
     },
 
+    /**
+     * 流式消息（14/15/20）按「会话 + streamId」两级缓存管理。多 agent（多机器人）会话中
+     * 多个机器人可能同时各自生成，每个生成回合都有独立 streamId（wildfire-stream-<uuid>），
+     * 所以每个会话缓存的是 Map<streamId, message>（一回合一条，而不是整个会话只有一条）：
+     * - 14 generating：按 streamId 覆盖式 upsert 该回合最新生成内容；
+     * - 15 generated：只移除该 streamId 的缓存（其它仍在生成的 agent 不受影响）；
+     * - 20 cancelled：只移除该 streamId 的缓存，并把当前列表中该回合的 14/15 气泡移除。
+     * 会话级 Map 只在最后一个 stream 结束时整体删除，避免一个 agent 收尾把别的 agent
+     * 正在生成的缓存冲掉（否则切换/重开会话时其它 agent 的生成中气泡会丢失）。
+     */
     _handleStreamingTextMessage(msg){
-        if(msg.messageContent instanceof StreamingTextGeneratingMessageContent) {
-            this.state.conversation.streamingTextGeneratingMessages.set(this._conversationKey(msg.conversation), msg);
-        } else if(msg.messageContent instanceof  StreamingTextGeneratedMessageContent){
-            this.state.conversation.streamingTextGeneratingMessages.delete(this._conversationKey(msg.conversation));
-        } else if(msg.messageContent instanceof StreamingTextCancelledMessageContent) {
-            this.state.conversation.streamingTextGeneratingMessages.delete(this._conversationKey(msg.conversation));
+        const content = msg.messageContent;
+        const streamId = content && content.streamId;
+        if (!streamId) {
+            return;
+        }
+        const convKey = this._conversationKey(msg.conversation);
+        const convStreams = this.state.conversation.streamingTextGeneratingMessages;
+        if(content instanceof StreamingTextGeneratingMessageContent) {
+            let streams = convStreams.get(convKey);
+            if (!streams) {
+                streams = new Map();
+                convStreams.set(convKey, streams);
+            }
+            streams.set(streamId, msg);
+        } else if(content instanceof StreamingTextGeneratedMessageContent) {
+            const streams = convStreams.get(convKey);
+            if (streams) {
+                streams.delete(streamId);
+                if (streams.size === 0) {
+                    convStreams.delete(convKey);
+                }
+            }
+        } else if(content instanceof StreamingTextCancelledMessageContent) {
+            const streams = convStreams.get(convKey);
+            if (streams) {
+                streams.delete(streamId);
+                if (streams.size === 0) {
+                    convStreams.delete(convKey);
+                }
+            }
             this._removeStreamingMessage(msg);
+        }
+    },
+
+    /**
+     * 把该会话缓存中所有「仍在生成」的回合（多 agent 各自一条）补齐到当前消息列表末尾。
+     * 用于会话打开/历史加载后恢复生成中气泡：列表里已存在同一 streamId 的 14/15 时不重复补，
+     * 只补缺失的 stream；补齐后统一把 live 元素钉到最新位置。Map 保持插入顺序，多个 agent
+     * 的气泡按各自首次生成顺序追加。
+     */
+    _appendCachedStreamingMessages(conversation) {
+        const streams = this.state.conversation.streamingTextGeneratingMessages.get(this._conversationKey(conversation));
+        if (!streams || streams.size === 0) {
+            return;
+        }
+        const list = this.state.conversation.currentConversationMessageList;
+        const hasStream = (streamId) => list.some(m => {
+            const c = m && m.messageContent;
+            if (!c) {
+                return false;
+            }
+            const t = c.type;
+            if (t !== MessageContentType.Streaming_Text_Generating && t !== MessageContentType.Streaming_Text_Generated) {
+                return false;
+            }
+            return c.streamId && c.streamId === streamId;
+        });
+        let lastTimestamp = list.length > 0 ? list[list.length - 1].timestamp : 0;
+        let appended = false;
+        for (const [, msg] of streams) {
+            const streamId = msg.messageContent && msg.messageContent.streamId;
+            if (!streamId || hasStream(streamId)) {
+                continue;
+            }
+            this._patchMessage(msg, lastTimestamp);
+            list.push(msg);
+            lastTimestamp = msg.timestamp;
+            appended = true;
+        }
+        if (appended) {
+            this._pinLiveAgentMessagesToBottom();
         }
     },
 

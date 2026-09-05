@@ -6,11 +6,23 @@
         </div>
         <section v-else-if="!sharedConversationState.showChannelMenu" class="message-input-section">
             <Teleport to="body">
+                <div v-if="agentChooserOpen" class="agent-agent-mask" @click="closeAgentChooser">
+                    <div class="agent-agent-popup agent-agent-chooser" :style="agentPanelStyle" @click.stop>
+                        <header class="agent-agent-chooser-header">
+                            <span>选择机器人</span>
+                            <button class="agent-agent-close" title="关闭" @click="closeAgentChooser">×</button>
+                        </header>
+                        <ul class="agent-agent-chooser-list">
+                            <li v-for="uid in agentChooserRobots" :key="uid" :title="uid" @click="pickAgentRobot(uid)">🤖 {{ shortRobotUid(uid) }}</li>
+                        </ul>
+                    </div>
+                </div>
                 <div v-if="showAgentPanel" class="agent-agent-mask" @click="hideAgentPanel">
                     <div class="agent-agent-popup" :style="agentPanelStyle" @click.stop>
                         <AgentPanel
                             :key="agentPanelConvKey"
                             :conversation="conversationInfo.conversation"
+                            :robot-uid="activeAgentRobotUid"
                             @close="hideAgentPanel"
                         />
                     </div>
@@ -38,7 +50,7 @@
                 </Teleport>
                 <ul class="flex-row" style="align-content: center; padding: 0 8px">
                     <li v-if="agentConvKind === 'group'">
-                        <div ref="agentAiBtn" class="i-button-wrapper i-button-small" :class="{active: showAgentPanel, 'agent-ai-btn-offline': agentAiOffline}" :title="agentAiOffline ? $t('agent.status.ai_offline') : $t('agent.agent_panel_tip')" @click="toggleAgentPanel">
+                        <div ref="agentAiBtn" class="i-button-wrapper i-button-small" :class="{active: showAgentPanel, 'agent-ai-btn-offline': agentAiOffline}" :title="agentAiOffline ? $t('agent.status.ai_offline') : $t('agent.agent_panel_tip')" @click="openAgentPanel">
                             <span class="agent-ai-btn-text">AI</span>
                         </div>
                     </li>
@@ -245,7 +257,7 @@ import Config from "../../../config";
 import SoundMessageContent from "../../../wfc/messages/soundMessageContent";
 import BenzAMRRecorder from "benz-amr-recorder";
 import TypingMessageContent from "../../../wfc/messages/typingMessageContent";
-import {getAgentState, agentConversationKind} from "../../util/agentState";
+import {getAgentState, agentConversationKind, listAgentRobotUids, agentRobotName} from "../../util/agentState";
 import AgentPanel from "./AgentPanel.vue";
 import {currentWindow, fs} from "../../../platform";
 import {vOnClickOutside} from '@vueuse/components'
@@ -335,6 +347,10 @@ export default {
             _agentCmdConvKey: null,
             // AI 设置面板（输入框工具栏 AI 按钮）
             showAgentPanel: false,
+            // 多机器人：选择列表与当前选中的目标机器人
+            agentChooserOpen: false,
+            agentChooserRobots: [],
+            activeAgentRobotUid: '',
             agentPanelPos: {left: 0, bottom: 0},
             agentPanelConvKey: "",
             // 单聊机器人命令（/create 等私聊专属命令在群内会被插件拒绝；/stop 危险语义放最后）
@@ -896,12 +912,35 @@ export default {
             e.preventDefault();
         },
 
-        toggleAgentPanel() {
+        async openAgentPanel() {
             if (this.agentAiOffline) return;
-            this.showAgentPanel = !this.showAgentPanel;
+            const conv = this.conversationInfo && this.conversationInfo.conversation;
+            const robots = conv ? listAgentRobotUids(conv) : [];
+            if (robots.length > 1) {
+                // 多机器人：先列表选择，再打开对应机器人的面板
+                this.agentChooserRobots = robots;
+                this.agentChooserOpen = true;
+                this.showAgentPanel = false;
+                return;
+            }
+            this.activeAgentRobotUid = robots[0] || '';
+            this.agentChooserOpen = false;
+            this.showAgentPanel = true;
             this.focusInput();
         },
-
+        closeAgentChooser() {
+            this.agentChooserOpen = false;
+        },
+        pickAgentRobot(uid) {
+            this.activeAgentRobotUid = uid || '';
+            this.agentChooserOpen = false;
+            this.showAgentPanel = true;
+            this.focusInput();
+        },
+        shortRobotUid(uid) {
+            // 兼容旧调用：直接给完整展示名
+            return agentRobotName(uid);
+        },
         hideAgentPanel() {
             this.showAgentPanel = false;
         },
@@ -1816,6 +1855,41 @@ export default {
 .agent-agent-popup {
     position: fixed;
     z-index: 100000;
+}
+
+/* 多机器人选择列表 */
+.agent-agent-chooser {
+    width: 260px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: var(--background-secondary, #fff);
+    border: 1px solid var(--divider-color, rgba(0, 0, 0, 0.12));
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+    padding: 10px;
+}
+.agent-agent-chooser-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 13px;
+}
+.agent-agent-chooser-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.agent-agent-chooser-list li {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-primary, #222);
+    font-size: 13px;
+}
+.agent-agent-chooser-list li:hover {
+    background: var(--background-tertiary, rgba(0, 0, 0, 0.06));
 }
 
 .emoji-popup {

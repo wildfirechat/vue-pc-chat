@@ -43,14 +43,17 @@ function findSettingByPrefix(prefix) {
     return null;
 }
 
-/** 群 extra 是否带 {"dsh":true} 标记（容错：非 JSON 时返回 false）。 */
-export function isAgentGroupExtra(extra) {
-    if (!extra) return false;
+/** 机器人显示名：取 userInfo 名称；取不到时回退完整 uid（不截断 robot_xxx 的多段 id）。 */
+export function agentRobotName(uid) {
+    if (!uid) return '';
     try {
-        return !!JSON.parse(extra).dsh;
+        const u = wfc.getUserInfo(uid, false);
+        const n = u && (u.displayName || u.name || u._displayName || u.groupDisplayName);
+        if (n) return String(n);
     } catch (e) {
-        return false;
+        // 忽略
     }
+    return uid;
 }
 
 /**
@@ -121,6 +124,106 @@ export async function getAgentPanelData(conversation) {
     }
 }
 
+
+// ===================== 多机器人（多 agent）支持 =====================
+/** 归一化 scope=31 设置表为 [key,value] 数组。 */
+function getAllSettingPairs() {
+    try {
+        const all = wfc.getUserSettings(UserSettingScope.Conversation_User_Setting);
+        if (!all) return [];
+        if (all instanceof Map) return [...all.entries()];
+        if (Array.isArray(all)) return all.map(e => [e && e.key !== undefined ? e.key : (e && e[0]), e && e.value !== undefined ? e.value : (e && e[1])]);
+        return Object.entries(all);
+    } catch (e) {
+        return [];
+    }
+}
+
+function parseSettingValue(raw) {
+    if (!raw) return null;
+    try {
+        return typeof raw === 'string' ? JSON.parse(raw) : raw;
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * 列出会话内“有状态推送”的机器人 uid 列表（按 scope=31 type=1 条目后缀）。
+ * 说明：机器人首次在该会话活动（推送状态）后才会出现；始终为空的会话按单机器人处理。
+ */
+export function listAgentRobotUids(conversation) {
+    if (!conversation || !conversation.target) return [];
+    const prefix = agentSlotPrefix(conversation, AGENT_STATE_TYPE);
+    const uids = new Set();
+    for (const [key] of getAllSettingPairs()) {
+        if (key && key.indexOf(prefix) === 0) {
+            const uid = key.slice(prefix.length);
+            if (uid) uids.add(uid);
+        }
+    }
+    // 兜底：群聊里按“机器人成员”补齐（成员 id 以 robot_ 开头）——
+    // 让尚未推送过状态、但已在本群的机器人也能出现在选择列表。
+    if (conversation.type === ConversationType.Group) {
+        try {
+            const members = wfc.getGroupMembers(conversation.target, false);
+            if (Array.isArray(members)) {
+                for (const m of members) {
+                    const id = m && typeof m === 'object' ? (m.memberId || m.userId || '') : String(m || '');
+                    if (typeof id === 'string' && /^robot[-_]/i.test(id)) uids.add(id);
+                }
+            }
+        } catch (e) {
+            // 群成员读取失败忽略（已有 scope31 条目的机器人仍可列出）
+        }
+    }
+    return [...uids].sort((a, b) => (a < b ? -1 : 1));
+}
+
+/**
+ * 读取会话内每个机器人的（type=1 状态 + type=2 计量），按机器人分组。
+ * 返回 [{uid, state, metrics}]（无条目/非 AI 会话返回空数组）。
+ */
+export function getAgentRobotStates(conversation) {
+    if (!conversation || !conversation.target || !isAgentConversation(conversation)) return [];
+    const stateBy = new Map();
+    const metricsBy = new Map();
+    const keys = new Set();
+    const p1 = agentSlotPrefix(conversation, AGENT_STATE_TYPE);
+    const p2 = agentSlotPrefix(conversation, AGENT_METRICS_TYPE);
+    for (const [key, value] of getAllSettingPairs()) {
+        if (!key) continue;
+        if (key.indexOf(p1) === 0) { const u = key.slice(p1.length); if (u) { keys.add(u); stateBy.set(u, parseSettingValue(value)); } }
+        else if (key.indexOf(p2) === 0) { const u = key.slice(p2.length); if (u) { keys.add(u); metricsBy.set(u, parseSettingValue(value)); } }
+    }
+    const out = [];
+    for (const uid of keys) {
+        const state = stateBy.get(uid);
+        const metrics = metricsBy.get(uid);
+        // 只统计有有效状态的机器人（无状态的 uid 不展示）
+        if (!state || !state.state) continue;
+        out.push({ uid, state, metrics });
+    }
+    return out.sort((a, b) => (a.uid < b.uid ? -1 : 1));
+}
+
+/** 读取指定机器人的 type=3 面板数据；robotUid 为空时取会话默认（第一条）。 */
+export function getAgentPanelDataFor(conversation, robotUid) {
+    if (!conversation || !conversation.target) return null;
+    const prefix = agentSlotPrefix(conversation, AGENT_PANEL_TYPE);
+    if (robotUid) {
+        for (const [key, value] of getAllSettingPairs()) {
+            if (key && key === prefix + robotUid) return parseSettingValue(value);
+        }
+        return null;
+    }
+    try {
+        const raw = findSettingByPrefix(prefix);
+        return parseSettingValue(raw);
+    } catch (e) {
+        return null;
+    }
+}
 /** Human label for the state (i18n keys resolved by the caller). */
 export function agentStateLabel(state) {
     const map = {
