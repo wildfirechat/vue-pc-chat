@@ -1162,9 +1162,19 @@ export default {
             if (this.convMuted) {
                 return;
             }
-            if (this.tribute && this.$refs['input']) {
-                this.tribute.detach(this.$refs['input']);
-                this.tribute = null;
+            // 防竞态：initMention 是 async（中途 await 群成员），mounted / setupConversationInput /
+            // onGroupMembersUpdate 可能并发调用。若不做序号保护，两个调用交错时后一个 detach 不到
+            // 前一个已 attach 的 Tribute 实例 → 同一输入框绑两个 @ 弹层（输入 @ 弹出两个选择框）。
+            const seq = (this._mentionSeq = (this._mentionSeq || 0) + 1);
+            // 先同步 detach 旧实例（引用先置空，避免后续覆盖残留）
+            const prev = this.tribute;
+            this.tribute = null;
+            if (prev && this.$refs['input']) {
+                try {
+                    prev.detach(this.$refs['input']);
+                } catch (e) {
+                    console.warn('detach mention failed', e);
+                }
             }
             let type = conversation.conversationType;
 
@@ -1251,6 +1261,11 @@ export default {
                 },
                 menuContainer: document.getElementById('conversation-content'),
             });
+            // 竞态收尾校验：若 await 期间又有更新的 initMention 调用（seq 已前进），
+            // 本调用直接放弃，不 attach，保证输入框上始终只有一个 @ 弹层实例。
+            if (seq !== this._mentionSeq) {
+                return;
+            }
             if (this.$refs["input"]) {
                 this.tribute.attach(this.$refs['input']);
             }
