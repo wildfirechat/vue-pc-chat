@@ -2,6 +2,7 @@ import ConnectionStatus from "./wfc/client/connectionStatus";
 import wfc from "./wfc/client/wfc";
 import EventType from "./wfc/client/wfcEvent";
 import ConversationType from "./wfc/model/conversationType";
+import ConversationLine from "./wfc/model/conversationLine";
 import {eq, gt, lt, numberValue} from "./wfc/util/longUtil";
 import helper from "./ui/util/helper";
 import convert from './vendor/pinyin'
@@ -746,11 +747,11 @@ let store = {
     _loadDefaultConversationList() {
         console.log('store _loadDefaultConversationList');
         let conversationTypes = isElectron() ? [0, 1, 3, 5] : [0, 1, 3];
-        // 普通消息 line 0，AI 消息 line 2（朋友圈 line 1 不展示）
-        this._loadConversationList(conversationTypes, [0, 2])
+        // 普通消息 line 0(default)，AI 消息 line 2(agent)，朋友圈 line 1(moment) 不展示
+        this._loadConversationList(conversationTypes, [ConversationLine.Default, ConversationLine.Agent])
     },
 
-    _loadConversationList(conversationType = [0, 1, 3], lines = [0]) {
+    _loadConversationList(conversationType = [0, 1, 3], lines = [ConversationLine.Default]) {
         let conversationList = wfc.getConversationList(conversationType, lines);
         console.log('_loadConversationList size', conversationList.length);
         conversationList.forEach(info => {
