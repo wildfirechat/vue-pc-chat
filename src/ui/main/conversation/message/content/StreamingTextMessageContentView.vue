@@ -121,6 +121,9 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
+    /* 宽内容（代码块/表格）必须收在消息行上限内，不得把气泡撑破 */
+    max-width: 100%;
+    min-width: 0;
 }
 
 .streaming-text-message-container .text >>> p {
@@ -172,6 +175,7 @@ export default {
     border-radius: var(--radius-sm);
     background: var(--background-tertiary);
     overflow-x: auto;
+    max-width: 100%;
 }
 
 .streaming-text-message-container .text >>> pre code {
@@ -197,6 +201,10 @@ export default {
 .streaming-text-message-container .text >>> table {
     border-collapse: collapse;
     margin: 0 0 8px;
+    /* 宽表格在气泡内横向滚动，避免撑破消息行 */
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .streaming-text-message-container .text >>> th,
@@ -215,6 +223,9 @@ export default {
     border-radius: var(--radius-sm);
     padding: 0 4px;
     user-select: text;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .streaming-text-message-container.out {
@@ -226,19 +237,22 @@ export default {
     font-size: var(--font-size-sm);
     line-height: 1.5;
     /*max-height: 1000px;*/
-    /* 自身不设宽度上限：由消息行容器统一控制（max(400px, 可用宽度75%)），短消息仍按内容自适应 */
-    max-width: none;
+    /* 宽度由消息行容器统一上限（max(400px, 可用宽度75%)），短消息气泡仍按内容自适应：
+       但自身必须显式受容器约束，否则 pre/table 等内容的最小宽度会把气泡撑出行上限 */
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     word-spacing: normal;
     word-break: break-word;
     overflow: hidden;
-    display: inline-block;
-    text-overflow: ellipsis;
+    display: block;
     user-select: text;
 }
 
 /*style for v-html */
 .streaming-text-message-container .text >>> img {
-    max-width: 400px !important;
+    /* 大图 ≤400px；窄气泡时再收窄到气泡宽度，避免顶出消息行 */
+    max-width: min(400px, 100%) !important;
     display: inline-block;
 }
 

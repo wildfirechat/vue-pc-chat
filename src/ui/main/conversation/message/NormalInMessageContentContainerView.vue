@@ -221,6 +221,9 @@ export default {
     display: flex;
     /* 消息行宽度上限：随窗口流动（可用宽度的 75%），但不低于 400px；极窄窗口仍以可用宽度兜底 */
     max-width: min(calc(100% - 60px), max(400px, 75%));
+    /* 关键：flex 子项默认 min-width:auto（= 内容最小宽度），宽 markdown 内容会把它撑到
+       max-width 上限之外（CSS 中 min 优先于 max）；置 0 后行宽才能被上面的上限真正约束 */
+    min-width: 0;
     align-items: flex-start;
     overflow: hidden;
     /*max-height: 800px;*/
@@ -242,6 +245,8 @@ export default {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
+    /* 允许在行宽上限内收缩：markdown 代码块/表格的最小内容宽度不得把气泡撑出行限制 */
+    min-width: 0;
 }
 
 .message-name-content-container .name {
@@ -249,6 +254,18 @@ export default {
     color: var(--text-hint);
     font-size: var(--font-size-xs);
     margin-bottom: 2px;
+}
+
+/* 消息内容这一层走“align-items:flex-start”的纵向 flex，宽度是 fit-content 不会自动收缩，
+   必须显式占满父级宽度，行上限才能一路传导到气泡内容（pre/table 因此能内部滚动而不是撑破行） */
+.flex-column.flex-align-start > .flex-row {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.message-content-container {
+    min-width: 0;
 }
 
 .message-content-container.highlight {

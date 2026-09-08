@@ -315,11 +315,25 @@ export default {
     display: flex;
     /* 消息行宽度上限：随窗口流动（可用宽度的 75%），但不低于 400px；极窄窗口仍以可用宽度兜底 */
     max-width: min(calc(100% - 60px), max(400px, 75%));
+    /* 关键：flex 子项默认 min-width:auto（= 内容最小宽度），宽 markdown 内容会把它撑到
+       max-width 上限之外（CSS 中 min 优先于 max）；置 0 后行宽才能被上面的上限真正约束 */
+    min-width: 0;
     overflow: hidden;
     /*max-height: 800px;*/
     margin-left: auto;
     text-overflow: ellipsis;
     align-items: flex-start;
+}
+
+/* 与 In 侧同理：markdown 代码块/表格的最小内容宽度不得把气泡撑出行宽度上限。
+   .flex-column 是行内 flex 子项，允许收缩；内容视图层占满父级宽度后 pre/table 内部滚动 */
+.message-avatar-content-container .flex-column {
+    min-width: 0;
+}
+
+.message-content-container-view {
+    min-width: 0;
+    max-width: 100%;
 }
 
 .message-content-container-view.highlight {
