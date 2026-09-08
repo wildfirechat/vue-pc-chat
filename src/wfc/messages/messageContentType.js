@@ -141,4 +141,5 @@ export default class MessageContentType {
     static AGENT_GOAL = 206;                // 机器人→用户 目标进度卡片
     static AGENT_COMMAND = 207;             // 用户→机器人 AI 面板指令（透明，不显示；query=组合查询 / set=更新）
     static AGENT_TASK_PROGRESS = 208;       // 机器人→用户 任务进度卡片（子任务/后台任务，updateMessage 原地更新）
+    static AGENT_COMMAND_RESULT = 209;      // 机器人→用户 207 指令的应答（透明，不显示；当前 op=dirs 目录列表按需获取）
 }

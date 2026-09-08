@@ -71,6 +71,7 @@ import StreamingTextGeneratingMessageContent from "../messages/streamingTextGene
 import StreamingTextGeneratedMessageContent from "../messages/streamingTextGeneratedMessageContent";
 import StreamingTextCancelledMessageContent from "../messages/streamingTextCancelledMessageContent";
 import AgentCommandMessageContent from "../messages/agentCommandMessageContent";
+import AgentCommandResultMessageContent from "../messages/agentCommandResultMessageContent";
 import AgentTaskProgressMessageContent from "../messages/agentTaskProgressMessageContent";
 import MixMultiMediaTextMessageContent from "../messages/mixMultiMediaTextMessageContent";
 import MixFileTextMessageContent from "../messages/mixFileTextMessageContent";
@@ -412,6 +413,13 @@ export default class MessageConfig {
             flag: PersistFlag.Transparent,
             type: MessageContentType.AGENT_COMMAND,
             contentClazz: AgentCommandMessageContent,
+        },
+        {
+            // 209 是 207 的应答通道（透明消息，不落库/不显示/不计数），当前仅 op=dirs
+            name: 'agentCommandResult',
+            flag: PersistFlag.Transparent,
+            type: MessageContentType.AGENT_COMMAND_RESULT,
+            contentClazz: AgentCommandResultMessageContent,
         },
         {
             name: 'agentTaskProgress',

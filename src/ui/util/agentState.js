@@ -20,25 +20,51 @@ function agentSlotPrefix(conversation, slot) {
     return `${conversation.type}-${conversation.line}-${conversation.target}_${slot}_`;
 }
 
-/** 扫描 scope=31 本地设置表，返回首个 key 以 prefix 开头的 value；无匹配返回 null。 */
-function findSettingByPrefix(prefix) {
+/** 归一化 SDK 返回（Map / UserSettingEntry[]（{key,value}）/ 键值对象）为 [key,value] 数组。 */
+function normalizeSettingPairs(all) {
+    if (all instanceof Map) return [...all.entries()];
+    if (Array.isArray(all)) return all.map(e => [e && e.key !== undefined ? e.key : (e && e[0]), e && e.value !== undefined ? e.value : (e && e[1])]);
+    return Object.entries(all);
+}
+
+/**
+ * PC 端读取诊断日志（临时）：写 /tmp/wf-pc-agent-debug.log，
+ * Electron 渲染进程用 window.require 取 fs；取不到时退回 console。排查完可整段删除。
+ */
+function agentDebugLog(line) {
+    const text = `[agentState] ${line}`;
     try {
-        const all = wfc.getUserSettings(UserSettingScope.Conversation_User_Setting);
-        if (!all) return null;
-        // 核心可能返回三种形态：Map / UserSettingEntry[]（{key,value}）/ 键值对象——统一归一为 [key,value] 对
-        let pairs;
-        if (all instanceof Map) {
-            pairs = [...all.entries()];
-        } else if (Array.isArray(all)) {
-            pairs = all.map(e => [e && e.key !== undefined ? e.key : (e && e[0]), e && e.value !== undefined ? e.value : (e && e[1])]);
-        } else {
-            pairs = Object.entries(all);
-        }
-        for (const [key, value] of pairs) {
-            if (key && key.indexOf(prefix) === 0) return value;
-        }
+        const req = (typeof window !== 'undefined' && window.require) ? window.require : null;
+        const fs = req ? req('fs') : null;
+        if (fs) fs.appendFileSync('/tmp/wf-pc-agent-debug.log', `${new Date().toISOString()} ${text}\n`);
+    } catch (e) {
+        // 忽略：日志失败不影响读取
+    }
+    try { console.log(text); } catch (e) { /* 忽略 */ }
+}
+
+/**
+ * 按 key 前缀查询 scope=31 设置表：SDK getUserSettingsLike 只返回 key 以 prefix 开头的条目，
+ * 避免拉全量设置再自行筛选。归一化为 [key,value] 数组；底层不可用时返回 []。
+ */
+function settingPairsByPrefix(prefix) {
+    try {
+        const all = wfc.getUserSettingsLike(UserSettingScope.Conversation_User_Setting, prefix);
+        const pairs = all ? normalizeSettingPairs(all) : [];
+        agentDebugLog(`like prefix=${prefix} shape=${Array.isArray(all) ? 'array' : typeof all} pairs=${pairs.length} keys=${pairs.map(p => p[0]).slice(0, 5).join('|')}`);
+        return pairs;
     } catch (e) {
         // 忽略：底层不可用时按"无状态"处理
+        agentDebugLog(`like prefix=${prefix} error=${e && e.message}`);
+        return [];
+    }
+}
+
+/** 返回首个 key 以 prefix 开头的 value；无匹配返回 null。 */
+function findSettingByPrefix(prefix) {
+    const pairs = settingPairsByPrefix(prefix);
+    for (const [key, value] of pairs) {
+        if (key && key.indexOf(prefix) === 0) return value;
     }
     return null;
 }
@@ -109,7 +135,9 @@ export async function getAgentMetrics(conversation) {
 
 /**
  * Read the AI 面板数据 of a conversation (scope=31, type=3).
- * 组合查询（AGENT_Command 207 query）结果：model/effort/sandbox/plan/cwd/sessionId/dirs。
+ * 组合查询（AGENT_Command 207 query）结果：model/effort/sandbox/plan/cwd/sessionId。
+ * 注意：新插件已把 dirs 移出 type=3（改走 207 op=dirs → 209 按需应答，见
+ * INTERACTION_DESIGN.md §10）；老插件仍可能内联 dirs。
  * Returns null when unset/invalid.
  */
 export async function getAgentPanelData(conversation) {
@@ -126,19 +154,6 @@ export async function getAgentPanelData(conversation) {
 
 
 // ===================== 多机器人（多 agent）支持 =====================
-/** 归一化 scope=31 设置表为 [key,value] 数组。 */
-function getAllSettingPairs() {
-    try {
-        const all = wfc.getUserSettings(UserSettingScope.Conversation_User_Setting);
-        if (!all) return [];
-        if (all instanceof Map) return [...all.entries()];
-        if (Array.isArray(all)) return all.map(e => [e && e.key !== undefined ? e.key : (e && e[0]), e && e.value !== undefined ? e.value : (e && e[1])]);
-        return Object.entries(all);
-    } catch (e) {
-        return [];
-    }
-}
-
 function parseSettingValue(raw) {
     if (!raw) return null;
     try {
@@ -156,7 +171,7 @@ export function listAgentRobotUids(conversation) {
     if (!conversation || !conversation.target) return [];
     const prefix = agentSlotPrefix(conversation, AGENT_STATE_TYPE);
     const uids = new Set();
-    for (const [key] of getAllSettingPairs()) {
+    for (const [key] of settingPairsByPrefix(prefix)) {
         if (key && key.indexOf(prefix) === 0) {
             const uid = key.slice(prefix.length);
             if (uid) uids.add(uid);
@@ -191,10 +206,12 @@ export function getAgentRobotStates(conversation) {
     const keys = new Set();
     const p1 = agentSlotPrefix(conversation, AGENT_STATE_TYPE);
     const p2 = agentSlotPrefix(conversation, AGENT_METRICS_TYPE);
-    for (const [key, value] of getAllSettingPairs()) {
-        if (!key) continue;
-        if (key.indexOf(p1) === 0) { const u = key.slice(p1.length); if (u) { keys.add(u); stateBy.set(u, parseSettingValue(value)); } }
-        else if (key.indexOf(p2) === 0) { const u = key.slice(p2.length); if (u) { keys.add(u); metricsBy.set(u, parseSettingValue(value)); } }
+    // type=1 状态 / type=2 计量分别按前缀查询（native 已过滤，避免拉全量再筛选）
+    for (const [key, value] of settingPairsByPrefix(p1)) {
+        if (key && key.indexOf(p1) === 0) { const u = key.slice(p1.length); if (u) { keys.add(u); stateBy.set(u, parseSettingValue(value)); } }
+    }
+    for (const [key, value] of settingPairsByPrefix(p2)) {
+        if (key && key.indexOf(p2) === 0) { const u = key.slice(p2.length); if (u) { keys.add(u); metricsBy.set(u, parseSettingValue(value)); } }
     }
     const out = [];
     for (const uid of keys) {
@@ -212,10 +229,20 @@ export function getAgentPanelDataFor(conversation, robotUid) {
     if (!conversation || !conversation.target) return null;
     const prefix = agentSlotPrefix(conversation, AGENT_PANEL_TYPE);
     if (robotUid) {
-        for (const [key, value] of getAllSettingPairs()) {
-            if (key && key === prefix + robotUid) return parseSettingValue(value);
+        const key = prefix + robotUid;
+        try {
+            // 精确匹配：先用前缀查询（与其它端一致，native 按 key 前缀过滤），命中后要求 key 完全相等
+            for (const [k, v] of settingPairsByPrefix(key)) {
+                if (k === key) return parseSettingValue(v);
+            }
+            // 兜底：单键查询（个别平台前缀接口不可用时）
+            const raw = wfc.getUserSetting(UserSettingScope.Conversation_User_Setting, key);
+            agentDebugLog(`panel.exact fallback single key=${key} rawType=${typeof raw} raw=${raw === undefined ? 'undefined' : JSON.stringify(String(raw)).slice(0, 160)}`);
+            return parseSettingValue(raw);
+        } catch (e) {
+            agentDebugLog(`panel.exact error key=${key} ${e && e.message}`);
+            return null;
         }
-        return null;
     }
     try {
         const raw = findSettingByPrefix(prefix);
@@ -224,6 +251,20 @@ export function getAgentPanelDataFor(conversation, robotUid) {
         return null;
     }
 }
+
+/**
+ * 读取 type=3 面板数据里内联的目录列表（老插件兼容路径）。
+ * 新插件已把 dirs 移出 type=3：目录列表走 207 op=dirs → 209 按需应答（§10），
+ * 这里只在「209 无应答」时作为回退数据源。返回 {dirs, root}，无数据时 dirs=[]。
+ */
+export function getAgentPanelDirsFor(conversation, robotUid) {
+    const data = getAgentPanelDataFor(conversation, robotUid);
+    const dirs = data && Array.isArray(data.dirs)
+        ? data.dirs.filter(d => typeof d === 'string' && d)
+        : [];
+    return {dirs, root: (data && data.root) || ''};
+}
+
 /** Human label for the state (i18n keys resolved by the caller). */
 export function agentStateLabel(state) {
     const map = {

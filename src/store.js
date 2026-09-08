@@ -739,6 +739,10 @@ let store = {
         if (message.messageContent.type === MessageContentType.AGENT_COMMAND) {
             return false;
         }
+        // AGENT_Command_Result (209) 是 207 的透明应答（目录列表按需获取），同样不显示
+        if (message.messageContent.type === MessageContentType.AGENT_COMMAND_RESULT) {
+            return false;
+        }
         return message.messageId !== 0
             || message.messageContent.type === MessageContentType.Streaming_Text_Generating
             || message.messageContent.type === MessageContentType.Transcription;
