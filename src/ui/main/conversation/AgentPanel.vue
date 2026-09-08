@@ -8,7 +8,7 @@
 <template>
     <div class="agent-agent-panel" @click.stop>
         <header class="agent-agent-header">
-            <span class="agent-agent-title">🤖 AI 会话设置<template v-if="robotShort"> · {{ robotShort }}</template></span>
+            <span class="agent-agent-title">🤖 AI 设置<template v-if="robotShort"> · {{ robotShort }}</template></span>
             <button class="agent-agent-close" title="关闭" @click="$emit('close')">×</button>
         </header>
 

@@ -396,6 +396,6 @@
     },
     "stop": "停止",
     "stop_tip": "中断当前 Agent 任务",
-    "agent_panel_tip": "AI 会话设置"
+    "agent_panel_tip": "AI 设置"
   }
 }

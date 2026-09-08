@@ -382,6 +382,6 @@
     },
     "stop": "Stop",
     "stop_tip": "Stop the current agent run",
-    "agent_panel_tip": "AI session settings"
+    "agent_panel_tip": "AI settings"
   }
 }
