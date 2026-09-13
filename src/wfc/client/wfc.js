@@ -164,6 +164,22 @@ export class WfcManager {
     }
 
     /**
+     * 设置使用websocket作为长链接，在connect之前调用
+     * @param {boolean} enable 
+     */
+    setUseWebsocket(enable) {
+        impl.setUseWebsocket(enable);
+    }
+
+    /**
+     * 设置使用websocket作为长链接
+     * @param {boolean} enable 
+     */
+    isUseWebsocket() {
+        return impl.isUseWebsocket();
+    }
+
+    /**
      * 设置使用TLS，需要专业版IM服务，且开启TLS功能
      *
      * @param {boolean} skipVerifyCert 是否跳过本地验证，一般自签名要跳过。
