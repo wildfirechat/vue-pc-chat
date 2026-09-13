@@ -164,6 +164,10 @@ module.exports = {
                     {
                         from: './build/icons',
                         to: 'extraResources/icons'
+                    },
+                    {
+                        from: './build/certs',
+                        to: 'extraResources/certs'
                     }
                 ],
                 extraFiles: [

@@ -147,6 +147,90 @@ npm run cross-package-linux-arm64
 
 默认附带免费版本音视频，关于野火音视频可以参考[野火音视频使用说明](https://docs.wildfirechat.cn/webrtc/)和[野火音视频简介](https://docs.wildfirechat.cn/blogs/野火音视频简介.html)。如果使用音视频高级版，请参考[音视频高级版切换方法](./src/wfc/av/internal/README.MD)。
 
+## 自签名证书
+
+私有化部署时，IM 服务、应用服务、媒体服务等可能使用自签名证书。Electron 里有**三条相互独立的网络通道**，需要分别处理，本项目已内置全部三条的处理：
+
+| 通道 | 网络栈 | 处理方式 |
+| --- | --- | --- |
+| IM 长连接、协议栈内的媒体上传下载 | mars 原生（主进程） | `src/main.js` 里的 `wfc.UseTls(false, certPaths)` |
+| 渲染进程的 axios 请求（应用服务、投票、接龙等）、头像/图片/视频 | Chromium | `src/background.js` 里的 `session.defaultSession.setCertificateVerifyProc` |
+| 主进程 Node 的 HTTPS（`electron-updater` 检查更新等） | Node TLS | `process.env.NODE_EXTRA_CA_CERTS` |
+
+### 1. 放证书
+
+证书按**目录**组织，客户端会扫描目录下的所有证书文件（`.crt`、`.pem`、`.cer`、`.der`），所以可以同时放多个域名/IP 各自的自签证书，也支持一个 `.pem` 文件里放多张证书（重复的会自动去重）：
+
+1. 开发模式：`build/certs/` 目录
+2. 打包之后：`resources/extraResources/certs/` 目录（`vue.config.js` 里的 `extraResources` 已经把整个 `build/certs` 目录拷贝过去）
+
+证书格式支持 PEM 和 DER，客户端会统一转换成 PEM 再交给 mars 原生层（mars 需要的是 PEM 文件路径）。目录和扩展名的定义在 `src/selfSignedCert.js`，`src/main.js`（IM 长连接）和 `src/background.js`（渲染进程、主进程）共用这一份扫描逻辑。
+
+### 2. 证书里的地址必须和实际拨号的地址一致
+
+客户端会校验证书的 SAN（Subject Alternative Name），所以：
+
+1. 证书 SAN 里必须包含客户端实际连接的 IP 或域名
+2. 用 IP 直连就要有 **IP SAN**，用域名连接就要有 **DNS SAN**（或 `*.example.com` 通配）
+3. SAN 不匹配时连接会被拒绝，控制台会打印 `[cert] 证书 SAN 与 xxx 不匹配，交回默认校验`
+
+项目里默认带的 `build/certs/ip.crt`，SAN 是 `IP:101.35.103.221, IP:10.0.16.12`，所以只能用这两个地址直连，`src/config.js` 里的 `APP_BACKUP_SERVER` 也要与之对应。如果证书是给域名签发的、客户端却用 IP 连接，会报 `ERR_TLS_CERT_ALTNAME_INVALID`，需要重新签发包含该 IP 的证书，或者额外放一张覆盖该 IP 的证书。
+
+### 3. 各通道的生效方式
+
+**IM 长连接**：由 `src/main.js` 在 `wfc.init()` 之前把**目录下所有证书**的文件路径传给 mars 原生（mars 使用自己的信任库）：
+
+```js
+const {files: selfSignedCertFiles} = loadSelfSignedCertificates()
+wfc.UseTls(false, selfSignedCertFiles)
+```
+
+**渲染进程**：`src/background.js` 的 `app.on('ready')` 里已经安装了证书校验回调（必须在窗口发起请求之前）：
+
+```js
+installSelfSignedCertificateSupport();
+```
+
+规则是：**证书内容和目录下任意一张证书完全一致、该证书的 SAN 匹配当前 host、并且 Chromium 的校验错误仅限于「信任锚不受信任」（`net::ERR_CERT_AUTHORITY_INVALID`，错误码 -202）** 时才放行（回调返回 `0`）；其它情况一律通过 `-3` 交回 Chromium 的校验结果。因此公签证书不受影响，签名无效、过期、吊销等其它证书错误也不会被吞掉，不会因为放行自签证书而降低其它域名的安全性。
+
+> 注意 `setCertificateVerifyProc` 的回调值容易记错：`0` 是信任，**`-2` 是拒绝**，`-3` 才是"使用 Chromium 的校验结果"。
+
+**主进程 Node**：`src/background.js` 会设置 `process.env.NODE_EXTRA_CA_CERTS`，让 `electron-updater` 等主进程请求也信任这些证书（必须在任何 https 请求之前设置，所以放在模块加载期）。该变量名是 Node 内置的，无法自定义，且只接受单个文件，所以客户端会把目录下所有证书拼成一个 bundle 文件再指过去；如果环境里已经配置了 `NODE_EXTRA_CA_CERTS`，会把其内容合并进 bundle，不会覆盖已有配置。Node 仍然会做主机名校验。
+
+### 4. 排障
+
+启动时控制台会打印加载到的证书：
+
+```
+[cert] 已加载 2 张自签证书: /path/to/build/certs
+[cert]   ip.crt SAN=[IP Address:101.35.103.221, IP Address:10.0.16.12] 有效期至 Aug 18 23:29:29 2125 GMT
+[cert]   dns.crt SAN=[DNS:a.example.com, DNS:*.example.com] 有效期至 Dec 11 05:53:38 2028 GMT
+```
+
+没有找到证书文件时打印：
+
+```
+[cert] 未在 /path/to/build/certs 找到自签证书，使用系统默认证书校验
+```
+
+常见错误：
+
+| 报错 | 原因 |
+| --- | --- |
+| `net::ERR_CERT_AUTHORITY_INVALID` | 渲染进程没有信任该证书：证书没放进 `certs` 目录、扩展名不在支持列表里，或者服务端证书和目录里的证书内容不一致 |
+| `ERR_TLS_CERT_ALTNAME_INVALID` | 证书 SAN 与实际连接的地址不一致 |
+| `DEPTH_ZERO_SELF_SIGNED_CERT`（主进程） | `NODE_EXTRA_CA_CERTS` 未生效，检查证书路径 |
+
+### 5. 兜底方案（不推荐）
+
+临时调试时，可以在 `src/background.js` 中取消下面这行的注释，让 Chromium 忽略所有证书错误：
+
+```js
+//app.commandLine.appendSwitch('ignore-certificate-errors')
+```
+
+它必须在 `app.on('ready')` 之前调用，会放过**所有**证书错误（包括中间人攻击），不要在生产环境使用；它也不影响主进程 Node 的请求。
+
 ## 常见开发问题
 
 1. 如何调试？PC使用了Electron，内嵌Chrome浏览器，跟在浏览器上开发调试是一样的。快捷键Ctrl
@@ -233,13 +317,12 @@ npm run cross-package-linux-arm64
      
     如果还有问题，可参考：https://github.com/AppImage/AppImageKit/issues/1092
      
-25. 使用自签证书报错
+25. 使用自签名证书报错
 
-    ```angular2html
-    // backbound.js 里面取消下面的注释
+    请参考上面的 [自签名证书](#自签名证书) 章节，本项目已内置 IM 长连接、渲染进程（Chromium）、主进程 Node 三条通道的证书处理。临时调试也可以在 `background.js` 里面取消下面这行的注释（会忽略所有证书错误，不推荐生产使用）：
+    ```
     //app.commandLine.appendSwitch('ignore-certificate-errors')
     ```
-    
 
 ## 截图
 

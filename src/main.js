@@ -18,6 +18,7 @@ import './assets/fonts/icomoon/style.css'
 import store from "./store";
 import visibility from './vendor/vue-visibility-change';
 import {isElectron} from "./platform";
+import {loadSelfSignedCertificates} from "./selfSignedCert";
 import {getItem} from "./ui/util/storageHelper";
 import {createI18n} from 'vue-i18n'
 import Notifications from '@kyvg/vue3-notification'
@@ -46,13 +47,21 @@ app.use(CoolLightBox)
         let path = href.substring(href.indexOf('#') + 1)
         console.log('init', href, path)
         if (path === '/'/*login*/ || path.startsWith('/home') || href.indexOf('#') === -1) {
+            // 全WSS模式设置，必须在wfc.init/connect之前调用
+            // 使用websocket长连接，只有2026.9.11之后的服务才可以支持
+            // wfc.setUseWebsocket(true)
+            // // 使用TLS。域名连接走系统信任链校验公签证书；IP直连使用自签名证书。
+            // // 扫描证书目录（开发：build/certs，打包：resources/extraResources/certs）下所有
+            // // .crt/.pem/.cer/.der，支持多个域名/IP 各自的自签证书，支持一个文件里放多张证书。
+            // // 注意传给原生层的是证书【文件路径】不是证书内容，mars 原生层在主进程运行，路径要主进程可见。
+            // const {files: selfSignedCertFiles} = loadSelfSignedCertificates()
+            // wfc.UseTls(false, selfSignedCertFiles)
+            // // 双网：备选网络地址。策略0为自动选择，主网络不可用时切换到备选网络
+            // wfc.setBackupAddress('101.35.103.221', 443)
+            // wfc.setBackupAddressStrategy(0)
+
             wfc.init()
             CustomMessageConfig.registerCustomMessages()
-            // 双网环境配置
-            //// 设置网络策略
-            //wfc.setBackupAddressStrategy(0)
-            //// 设置备选网络
-            //wfc.setBackupAddress('192.168.10.11', 80)
             store.init(true);
         } else {
             wfc.attach()
