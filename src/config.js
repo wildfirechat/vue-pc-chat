@@ -22,10 +22,10 @@ export default class Config {
     // 默认的app server使用端口是8888，注意端口号别忘记了。
     // 上线建议使用https，使用https更安全。
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
-    static APP_SERVER = 'https://lt.wildfirechat.net/app';
+    static APP_SERVER = 'https://app.wildfirechat.net';
 
     // APP SERVER 备选地址，双网环境下使用
-    static APP_BACKUP_SERVER = 'https://101.35.103.221/app';
+    static APP_BACKUP_SERVER = null;
 
     // 接龙服务地址
     static COLLECTION_SERVER = 'https://jielong.wildfirechat.net';
@@ -228,9 +228,10 @@ export default class Config {
         if (!url) {
             return url;
         }
-        // 双网环境时，将媒体文件地址切到备选网络（域名 -> IP直连）
+        // 示例代码
+        // 双网环境时，将媒体文件地址切到备选网络
         if (Config.isUseBackupAddress()) {
-            url = url.replace('https://lt.wildfirechat.net', 'https://101.35.103.221');
+            url = url.replace('oss.xxxx.com', '192.168.2.19');
         }
         return url;
     }
@@ -240,9 +241,9 @@ export default class Config {
      * @return {boolean}
      */
     static isUseBackupAddress() {
-        // 双网环境：IP直连（101.35.103.221）为备选网络
+        //示例代码
         let host = wfc.getHost();
-        if (host === '101.35.103.221'/* backupHost */) {
+        if (host === '192.168.2.169'/* backupHost */) {
             return true;
         }
         return false;
