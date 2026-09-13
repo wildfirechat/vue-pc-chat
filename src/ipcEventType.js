@@ -28,6 +28,7 @@ const IpcEventType = {
     OPEN_MAIN_DEV_TOOLS: 'open-main-dev-tools',
     CHECK_FOR_UPDATES: 'check-for-updates',
     RESTART_APP: 'restart-app',
+    GET_SELF_SIGNED_CERT_FILES: 'get-self-signed-cert-files',
 }
 
 module.exports = IpcEventType

@@ -149,61 +149,62 @@ npm run cross-package-linux-arm64
 
 ## 自签名证书
 
-私有化部署时，IM 服务、应用服务、媒体服务等可能使用自签名证书。Electron 里有**三条相互独立的网络通道**，需要分别处理，本项目已内置全部三条的处理：
+私有化部署时，IM 服务、应用服务、媒体服务等可能使用自签名证书。客户端同时支持公签证书和自签名证书：公签证书始终走默认校验，不需要任何配置；自签名证书放进证书目录即可。
+
+Electron 里有**三条相互独立的网络通道**，本项目都已处理，规则和实现在 `src/selfSignedCert.js`：
 
 | 通道 | 网络栈 | 处理方式 |
 | --- | --- | --- |
-| IM 长连接、协议栈内的媒体上传下载 | mars 原生（主进程） | `src/main.js` 里的 `wfc.UseTls(false, certPaths)` |
-| 渲染进程的 axios 请求（应用服务、投票、接龙等）、头像/图片/视频 | Chromium | `src/background.js` 里的 `session.defaultSession.setCertificateVerifyProc` |
-| 主进程 Node 的 HTTPS（`electron-updater` 检查更新等） | Node TLS | `process.env.NODE_EXTRA_CA_CERTS` |
+| IM 长连接、协议栈内的媒体上传下载 | mars 原生（主进程） | `src/main.js` 里的 `wfc.UseTls(false, certPaths)`，证书文件路径由主进程通过 IPC 提供 |
+| 渲染进程的 axios 请求（应用服务、投票、接龙等）、头像/图片/视频，`electron-updater` 检查更新 | Chromium | `src/background.js` 对 `defaultSession` 和 `electron-updater` 分区调用 `setCertificateVerifyProc` |
+| 主进程 Node 的 https 请求（密聊媒体解密服务） | Node TLS | `createHttpsAgent` 生成的 `https.Agent` |
 
 ### 1. 放证书
 
-证书按**目录**组织，客户端会扫描目录下的所有证书文件（`.crt`、`.pem`、`.cer`、`.der`），所以可以同时放多个域名/IP 各自的自签证书，也支持一个 `.pem` 文件里放多张证书（重复的会自动去重）：
+放的是**服务端证书本身**（TLS 握手时服务端发出的那张证书），不是给它签发的 CA。客户端会扫描目录下所有 `.crt`、`.pem`、`.cer`、`.der` 文件，可以同时放多个域名/IP 各自的证书，一个 `.pem` 文件里也可以放多张（重复的会自动去重）：
 
 1. 开发模式：`build/certs/` 目录
 2. 打包之后：`resources/extraResources/certs/` 目录（`vue.config.js` 里的 `extraResources` 已经把整个 `build/certs` 目录拷贝过去）
 
-证书格式支持 PEM 和 DER，客户端会统一转换成 PEM 再交给 mars 原生层（mars 需要的是 PEM 文件路径）。目录和扩展名的定义在 `src/selfSignedCert.js`，`src/main.js`（IM 长连接）和 `src/background.js`（渲染进程、主进程）共用这一份扫描逻辑。
+证书格式支持 PEM 和 DER。主进程启动时扫描一次，把证书统一写成 PEM 文件放到 `userData/self-signed-certs/` 下（mars 需要的是 PEM 文件路径）。
 
-### 2. 证书里的地址必须和实际拨号的地址一致
+### 2. 信任规则
 
-客户端会校验证书的 SAN（Subject Alternative Name），所以：
+自签名证书要**同时满足**下面三条才会被信任，否则按默认规则校验：
 
-1. 证书 SAN 里必须包含客户端实际连接的 IP 或域名
-2. 用 IP 直连就要有 **IP SAN**，用域名连接就要有 **DNS SAN**（或 `*.example.com` 通配）
-3. SAN 不匹配时连接会被拒绝，控制台会打印 `[cert] 证书 SAN 与 xxx 不匹配，交回默认校验`
+1. 服务端发来的证书和目录里的某张证书**完全一致**（按 SHA-256 指纹比对）。目录里的证书不会被当作 CA，由它签发的其它证书不会被信任
+2. 在有效期内
+3. 证书 SAN 包含客户端实际连接的地址：IP 直连要有 **IP SAN**，域名连接要有 **DNS SAN**（支持 `*.example.com` 通配）。不看 CN，没有 SAN 的证书不会被信任
 
-项目里默认带的 `build/certs/ip.crt`，SAN 是 `IP:101.35.103.221, IP:10.0.16.12`，所以只能用这两个地址直连，`src/config.js` 里的 `APP_BACKUP_SERVER` 也要与之对应。如果证书是给域名签发的、客户端却用 IP 连接，会报 `ERR_TLS_CERT_ALTNAME_INVALID`，需要重新签发包含该 IP 的证书，或者额外放一张覆盖该 IP 的证书。
-
-### 3. 各通道的生效方式
-
-**IM 长连接**：由 `src/main.js` 在 `wfc.init()` 之前把**目录下所有证书**的文件路径传给 mars 原生（mars 使用自己的信任库）：
-
-```js
-const {files: selfSignedCertFiles} = loadSelfSignedCertificates()
-wfc.UseTls(false, selfSignedCertFiles)
-```
-
-**渲染进程**：`src/background.js` 的 `app.on('ready')` 里已经安装了证书校验回调（必须在窗口发起请求之前）：
-
-```js
-installSelfSignedCertificateSupport();
-```
-
-规则是：**证书内容和目录下任意一张证书完全一致、该证书的 SAN 匹配当前 host、并且 Chromium 的校验错误仅限于「信任锚不受信任」（`net::ERR_CERT_AUTHORITY_INVALID`，错误码 -202）** 时才放行（回调返回 `0`）；其它情况一律通过 `-3` 交回 Chromium 的校验结果。因此公签证书不受影响，签名无效、过期、吊销等其它证书错误也不会被吞掉，不会因为放行自签证书而降低其它域名的安全性。
+Chromium 通道只在错误属于「证书不受信任」时才接管：`net::ERR_CERT_AUTHORITY_INVALID`，以及 macOS 对缺少 `extendedKeyUsage=serverAuth` 等不满足其策略的证书报的 `net::ERR_CERT_INVALID`。吊销、弱密钥等其它错误仍然按 Chromium 的校验结果处理。
 
 > 注意 `setCertificateVerifyProc` 的回调值容易记错：`0` 是信任，**`-2` 是拒绝**，`-3` 才是"使用 Chromium 的校验结果"。
 
-**主进程 Node**：`src/background.js` 会设置 `process.env.NODE_EXTRA_CA_CERTS`，让 `electron-updater` 等主进程请求也信任这些证书（必须在任何 https 请求之前设置，所以放在模块加载期）。该变量名是 Node 内置的，无法自定义，且只接受单个文件，所以客户端会把目录下所有证书拼成一个 bundle 文件再指过去；如果环境里已经配置了 `NODE_EXTRA_CA_CERTS`，会把其内容合并进 bundle，不会覆盖已有配置。Node 仍然会做主机名校验。
+项目里默认带的 `build/certs/ip.crt`，SAN 是 `IP:101.35.103.221, IP:10.0.16.12`，所以只能用这两个 IP 直连，`src/config.js` 里的 `APP_BACKUP_SERVER` 也要与之对应。
+
+### 3. 签发证书
+
+建议用下面的命令签发（OpenSSL 1.1.1 及以上），`subjectAltName` 换成客户端实际连接的地址：
+
+```bash
+openssl req -x509 -newkey rsa:2048 -nodes -days 3650 \
+  -keyout server.key -out server.crt -subj "/CN=101.35.103.221" \
+  -addext "subjectAltName=IP:101.35.103.221,DNS:im.example.com" \
+  -addext "basicConstraints=critical,CA:FALSE" \
+  -addext "extendedKeyUsage=serverAuth"
+```
+
+- `server.key` 和 `server.crt` 配置到服务端，`server.crt` 放进证书目录
+- `CA:FALSE`：避免这张证书在 mars 原生层等使用标准信任库的地方被当成 CA，用来给其它地址签发证书
+- `extendedKeyUsage=serverAuth`：标准的 TLS 服务端证书用途，macOS 的 TLS 策略要求有这一项
 
 ### 4. 排障
 
-启动时控制台会打印加载到的证书：
+启动时主进程控制台会打印加载到的证书，不会被信任或不建议的配置会在括号里提示：
 
 ```
 [cert] 已加载 2 张自签证书: /path/to/build/certs
-[cert]   ip.crt SAN=[IP Address:101.35.103.221, IP Address:10.0.16.12] 有效期至 Aug 18 23:29:29 2125 GMT
+[cert]   ip.crt SAN=[IP Address:101.35.103.221, IP Address:10.0.16.12] 有效期至 Aug 18 23:29:29 2125 GMT（CA:TRUE，建议重新签发为 CA:FALSE）
 [cert]   dns.crt SAN=[DNS:a.example.com, DNS:*.example.com] 有效期至 Dec 11 05:53:38 2028 GMT
 ```
 
@@ -213,13 +214,13 @@ installSelfSignedCertificateSupport();
 [cert] 未在 /path/to/build/certs 找到自签证书，使用系统默认证书校验
 ```
 
-常见错误：
+Chromium 通道里证书校验失败、又没有被内置证书接管时，每个地址会打印一次原因，例如：
 
-| 报错 | 原因 |
-| --- | --- |
-| `net::ERR_CERT_AUTHORITY_INVALID` | 渲染进程没有信任该证书：证书没放进 `certs` 目录、扩展名不在支持列表里，或者服务端证书和目录里的证书内容不一致 |
-| `ERR_TLS_CERT_ALTNAME_INVALID` | 证书 SAN 与实际连接的地址不一致 |
-| `DEPTH_ZERO_SELF_SIGNED_CERT`（主进程） | `NODE_EXTRA_CA_CERTS` 未生效，检查证书路径 |
+```
+[cert] 101.35.103.221: 服务端证书 SAN=[IP Address:101.35.103.221] 不在内置证书中，使用 Chromium 校验结果 net::ERR_CERT_AUTHORITY_INVALID
+```
+
+常见原因：证书没放进证书目录或扩展名不对；服务端实际使用的证书和目录里的不是同一张（例如服务端换过证书）；证书不在有效期内；证书 SAN 不包含实际连接的地址（例如证书是给域名签发的，客户端却用 IP 连接）。
 
 ### 5. 兜底方案（不推荐）
 
@@ -319,7 +320,7 @@ installSelfSignedCertificateSupport();
      
 25. 使用自签名证书报错
 
-    请参考上面的 [自签名证书](#自签名证书) 章节，本项目已内置 IM 长连接、渲染进程（Chromium）、主进程 Node 三条通道的证书处理。临时调试也可以在 `background.js` 里面取消下面这行的注释（会忽略所有证书错误，不推荐生产使用）：
+    请参考上面的 [自签名证书](#自签名证书) 章节，本项目已内置 IM 长连接（mars）、Chromium（渲染进程、electron-updater）、主进程 Node 三条通道的证书处理。临时调试也可以在 `background.js` 里面取消下面这行的注释（会忽略所有证书错误，不推荐生产使用）：
     ```
     //app.commandLine.appendSwitch('ignore-certificate-errors')
     ```

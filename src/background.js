@@ -29,7 +29,7 @@ import proto from '../marswrapper.node';
 import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
-import { loadSelfSignedCertificates, normalizePem, certHostMatch, subjectAltNameOf } from './selfSignedCert'
+import { loadSelfSignedCertificates, logSelfSignedCertificates, createCertificateVerifyProc, createHttpsAgent } from './selfSignedCert'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
 import createProtocol from "./createProtocol";
 import { autoUpdater } from 'electron-updater';
@@ -59,87 +59,28 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 
 // ===================== 自签名证书支持 =====================
-// 渲染进程里的 axios 请求（应用服务、投票、接龙等）、头像/图片/视频等资源都走 Chromium 网络栈，
-// Chromium 默认不信任自签名证书，会报 net::ERR_CERT_AUTHORITY_INVALID。
-// 这里把内置的自签证书作为信任锚：只有内容完全匹配的证书才放行，其它一律交回 Chromium 默认校验，
-// 公签证书不受影响。证书按目录组织，详见 src/selfSignedCert.js。
-// IM 长连接走 mars 原生，不在这里处理，见 src/main.js 的 wfc.UseTls。
-const selfSignedCerts = loadSelfSignedCertificates();
-// 规范化 PEM -> 证书信息，用于按内容匹配并打印命中的是哪张证书
-const pinnedCertMap = new Map(selfSignedCerts.certificates.map(cert => [normalizePem(cert.pem), cert]));
+// 信任规则和涉及的网络通道见 src/selfSignedCert.js，公签证书不受影响。
+// mars 原生层需要 PEM 文件路径，写到 userData 下（只有当前用户可写）
+const selfSignedCerts = loadSelfSignedCertificates(nodePath.join(app.getPath('userData'), 'self-signed-certs'));
+// 主进程 Node 的 https 请求使用；没有内置证书时为 undefined，即 Node 默认行为
+const selfSignedHttpsAgent = createHttpsAgent(selfSignedCerts.certificates);
 
-// 主进程 Node 的 HTTPS（例如 electron-updater 检查更新）不走 Chromium，
-// 需要把证书加入 Node 的信任库，必须在任何 https 请求之前设置。
-// NODE_EXTRA_CA_CERTS 是 Node 内置的变量名（无法改名）且只接受单个文件，
-// 所以用所有证书拼成的 bundle；若环境里已有该变量，其内容已在 writeBundle 里合并，不会覆盖。
-// Node 仍会做主机名校验，只有在 SAN 匹配时才会通过。
-if (selfSignedCerts.bundleFile) {
-    process.env.NODE_EXTRA_CA_CERTS = selfSignedCerts.bundleFile;
-}
+// 渲染进程调用 wfc.UseTls 之前，同步取回 PEM 文件路径
+ipcMain.on(IPCEventType.GET_SELF_SIGNED_CERT_FILES, (event) => {
+    event.returnValue = selfSignedCerts.files;
+});
 
-function logSelfSignedCertificates() {
-    if (!selfSignedCerts.certificates.length) {
-        console.log(`[cert] 未在 ${selfSignedCerts.dir} 找到自签证书，使用系统默认证书校验`);
-        return;
-    }
-    console.log(`[cert] 已加载 ${selfSignedCerts.certificates.length} 张自签证书: ${selfSignedCerts.dir}`);
-    for (const cert of selfSignedCerts.certificates) {
-        console.log(`[cert]   ${nodePath.basename(cert.sourcePath)} SAN=[${cert.subjectAltName}] 有效期至 ${cert.notAfter}${cert.expired ? '（已过期）' : ''}`);
-    }
-}
-
-// 给渲染进程安装证书验证回调，必须在窗口发起请求之前调用
-const certLoggedHosts = new Set();
-
-// 在证书链里查找内置证书：
-//   - 自签证书：叶子证书自己就在内置集合里
-//   - 私有 CA：叶子由 CA 签发，命中链上的签发者（此时 SAN 仍然按叶子证书校验）
-function findPinnedCertInChain(certificate) {
-    let current = certificate;
-    let depth = 0;
-    while (current && depth < 10) {
-        const pinned = current.data ? pinnedCertMap.get(normalizePem(current.data)) : null;
-        if (pinned) {
-            return pinned;
-        }
-        current = current.issuerCert;
-        depth++;
-    }
-    return null;
-}
-
+// 给 Chromium 网络栈安装证书校验回调，必须在窗口发起请求之前调用
 function installSelfSignedCertificateSupport() {
-    logSelfSignedCertificates();
-    if (!pinnedCertMap.size) {
+    logSelfSignedCertificates(selfSignedCerts);
+    if (!selfSignedCerts.certificates.length) {
         return;
     }
-    session.defaultSession.setCertificateVerifyProc((request, callback) => {
-        // 回调返回值是 Electron 定义的特殊值：
-        //   0  = 信任
-        //   -2 = 拒绝
-        //   -3 = 使用 Chromium 的校验结果（即交回默认校验）
-        const certificate = request.certificate;
-        const pinnedCert = certificate ? findPinnedCertInChain(certificate) : null;
-        // 只允许覆盖「信任锚不受信任」这一种错误（net::ERR_CERT_AUTHORITY_INVALID = -202）。
-        // 签名无效、过期、吊销等其它错误即使命中内置证书也交回 Chromium 的校验结果，
-        // 避免 callback(0) 把真正的证书问题一起吞掉
-        if (!pinnedCert || request.errorCode !== -202) {
-            // 只在校验失败且未接管时打日志（每个 host 一次），便于排查自签证书没命中的情况；
-            // 校验成功的公签证书不打
-            if (request.errorCode !== 0 && !certLoggedHosts.has(request.hostname)) {
-                certLoggedHosts.add(request.hostname);
-                console.log(`[cert] ${request.hostname} 未命中内置证书或错误不限于信任锚（服务端证书主体: ${certificate ? certificate.subjectName : '未知'}，Chromium 校验结果: ${request.verificationResult}，错误码: ${request.errorCode}），交回默认校验`);
-            }
-            return callback(-3);
-        }
-        // 主机名始终按【叶子证书】的 SAN 校验
-        const hostMatch = certHostMatch(certificate.data, request.hostname);
-        if (hostMatch === false) {
-            console.warn(`[cert] ${request.hostname} 命中内置证书但叶子证书 SAN 不匹配 SAN=[${subjectAltNameOf(certificate.data)}]，交回默认校验`);
-            return callback(-3);
-        }
-        callback(0);
-    });
+    const verifyProc = createCertificateVerifyProc(selfSignedCerts.certificates);
+    // 渲染进程的 axios、头像/图片/视频等
+    session.defaultSession.setCertificateVerifyProc(verifyProc);
+    // electron-updater 用自己的分区 session 发请求，分区名和参数与 electron-updater 内部保持一致
+    session.fromPartition('electron-updater', {cache: false}).setCertificateVerifyProc(verifyProc);
 }
 // =================== 自签名证书支持结束 ===================
 
@@ -1690,8 +1631,10 @@ function startSecretDecodeServer(port) {
         }
 
         let protocol = mediaUrl.startsWith("https") ? https : http
+        // https 使用支持内置自签证书的 agent
+        let options = protocol === https ? {agent: selfSignedHttpsAgent} : {}
 
-        protocol.get(mediaUrl, res => {
+        protocol.get(mediaUrl, options, res => {
             let data = [];
             res.on('data', function (chunk) {
                 data.push(chunk);

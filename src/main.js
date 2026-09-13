@@ -17,8 +17,8 @@ import './style/wfc.css'
 import './assets/fonts/icomoon/style.css'
 import store from "./store";
 import visibility from './vendor/vue-visibility-change';
-import {isElectron} from "./platform";
-import {loadSelfSignedCertificates} from "./selfSignedCert";
+import {ipcRenderer, isElectron} from "./platform";
+import IPCEventType from "./ipcEventType";
 import {getItem} from "./ui/util/storageHelper";
 import {createI18n} from 'vue-i18n'
 import Notifications from '@kyvg/vue3-notification'
