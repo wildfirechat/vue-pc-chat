@@ -1707,6 +1707,74 @@ function toBuffer(ab) {
     return buf;
 }
 
+// ===================== 实时语音识别 =====================
+// 渲染进程的 AsrWebSocketClient 通过 IPC 在主进程建立 WebSocket 连接：浏览器的 WebSocket 不能设置 authCode header，
+// 也不会使用内置的自签名证书，主进程的 ws 两者都可以
+// key 是 `${webContents.id}-${连接 ID}`
+const asrStreamSockets = new Map();
+
+ipcMain.on(IPCEventType.ASR_STREAM_CONNECT, (event, {id, url, authCode}) => {
+    const WebSocket = require('ws');
+    const sender = event.sender;
+    const key = `${sender.id}-${id}`;
+    const notify = (args) => {
+        if (!sender.isDestroyed()) {
+            sender.send(IPCEventType.ASR_STREAM_EVENT, {id, ...args});
+        }
+    };
+
+    let ws;
+    try {
+        ws = new WebSocket(url, {
+            // asr-api 从这个 HTTP header 中取认证码
+            headers: authCode ? {authCode} : {},
+            handshakeTimeout: 5000,
+            agent: url.startsWith('wss:') ? selfSignedHttpsAgent : undefined,
+        });
+    } catch (e) {
+        // 地址格式错误等
+        notify({type: 'error', message: e.message});
+        return;
+    }
+    // 窗口关闭时断开连接
+    const onSenderDestroyed = () => ws.terminate();
+    sender.once('destroyed', onSenderDestroyed);
+    asrStreamSockets.set(key, ws);
+
+    ws.on('open', () => notify({type: 'open'}));
+    ws.on('message', (data, isBinary) => {
+        if (!isBinary) {
+            notify({type: 'message', text: data.toString()});
+        }
+    });
+    ws.on('error', (error) => notify({type: 'error', message: error.message}));
+    ws.on('close', (code, reason) => {
+        sender.removeListener('destroyed', onSenderDestroyed);
+        if (asrStreamSockets.get(key) === ws) {
+            asrStreamSockets.delete(key);
+        }
+        notify({type: 'close', code, reason: reason.toString()});
+    });
+});
+
+ipcMain.on(IPCEventType.ASR_STREAM_SEND, (event, {id, data}) => {
+    const ws = asrStreamSockets.get(`${event.sender.id}-${id}`);
+    if (ws && ws.readyState === ws.OPEN) {
+        // 字符串是文本消息，Uint8Array 是二进制消息
+        ws.send(data);
+    }
+});
+
+ipcMain.on(IPCEventType.ASR_STREAM_CLOSE, (event, {id}) => {
+    const key = `${event.sender.id}-${id}`;
+    const ws = asrStreamSockets.get(key);
+    if (ws) {
+        asrStreamSockets.delete(key);
+        ws.close(1000);
+    }
+});
+// =================== 实时语音识别结束 ===================
+
 // Add VOIP window management handlers
 ipcMain.handle('create-voip-window', async (event, windowOptions) => {
     try {

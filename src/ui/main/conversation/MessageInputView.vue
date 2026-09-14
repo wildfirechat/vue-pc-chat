@@ -95,6 +95,23 @@
                                class="icon-ion-android-microphone record-icon"/>
                         </div>
                     </li>
+                    <li v-if="!inputOptions['disableAsrInput'] && enableAsrInput">
+                        <!-- 实时语音输入：识别结果写入输入框，发送或手动编辑时结束。mousedown 阻止默认行为，保留输入框的焦点和光标 -->
+                        <div class="i-button-wrapper i-button-small" @mousedown.prevent @click="toggleAsrInput">
+                            <!-- 图标库里没有语音转文字图标，用 SVG 画麦克风加文本行，和发送语音的麦克风区分开 -->
+                            <i id="asrInput" :class="{recording: asrInputState === 'recording', finishing: asrInputState === 'finishing'}"
+                               :title="$t('conversation.action_tip_asr_input')"
+                               class="asr-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <rect x="3" y="2" width="7" height="12" rx="3.5"/>
+                                    <path d="M1.25 10.5a5.25 5.25 0 0 0 10.5 0M6.5 15.75V20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                    <rect x="14" y="5" width="9" height="2.2" rx="1.1"/>
+                                    <rect x="14" y="10.4" width="9" height="2.2" rx="1.1"/>
+                                    <rect x="14" y="15.8" width="6" height="2.2" rx="1.1"/>
+                                </svg>
+                            </i>
+                        </div>
+                    </li>
                     <li v-if="!inputOptions['disableCollecton'] && isCollectionEnable && conversationInfo.conversation.type === 1" @click="openCollectionWindow">
                         <div class="i-button-wrapper i-button-small">
                             <i class="icon-ion-android-list" :title="$t('conversation.action_tip_collection')"/>
@@ -237,6 +254,8 @@ import avenginekit from "../../../wfc/av/internal/engine.min";
 import { buildCollectionUrl, buildPollUrl } from '../../../platformHelper'
 import { openInAppSubWindow } from '../../util/subWindowNavigator'
 import searchServerApi from "../../../api/searchServerApi";
+import AsrManager from "../../../asr/AsrManager";
+import {markRaw} from "vue";
 
 export default {
     name: "MessageInputView",
@@ -310,7 +329,13 @@ export default {
             hasInputContent: false,
 
             isCollectionEnable: !!Config.getCollectionServer(),
-            isPollEnable: !!Config.getPollServer()
+            isPollEnable: !!Config.getPollServer(),
+
+            // 实时语音输入，WebSocket 连接在主进程建立，只支持 Electron
+            enableAsrInput: isElectron() && !!Config.getAsrStreamServer(),
+            asrManager: null,
+            // idle：空闲；recording：录音中；finishing：已停止录音，等待剩余识别结果
+            asrInputState: 'idle',
         }
     },
     methods: {
@@ -346,6 +371,8 @@ export default {
         },
 
         onInput(e) {
+            // 语音输入过程中，用户编辑文本时结束语音输入。写入识别结果不会触发 input 事件
+            this.cancelAsrInput();
             this.notifyTyping(TypingMessageContent.TYPING_TEXT);
             this.updateStickerSuggestions();
             this.updateInputState();
@@ -657,6 +684,7 @@ export default {
         },
 
         cut() {
+            this.cancelAsrInput();
             let input = this.$refs['input'];
             let selection = window.getSelection();
             if (input && selection && selection.rangeCount > 0 && !selection.isCollapsed) {
@@ -705,6 +733,9 @@ export default {
                 || !this.canisend()
                 || !message
             ) return;
+
+            // 发送消息或者 Ctrl+Enter 换行时结束语音输入，避免之后返回的识别结果写入输入框
+            this.cancelAsrInput();
 
             if (e.ctrlKey) {
                 // e.preventDefault();
@@ -856,6 +887,7 @@ export default {
                 return;
             }
 
+            this.cancelAsrInput();
             this.insertHTML(emojiParse(emoji.data));
             this.focusInput();
             this.updateInputState();
@@ -926,6 +958,8 @@ export default {
 
         toggleChannelMenu(toggle = true) {
             if (toggle) {
+                // 显示频道菜单时输入框被隐藏
+                this.cancelAsrInput();
                 this.$parent.$refs['conversationMessageList'].style.flexGrow = 1;
                 this.storeDraft(this.lastConversationInfo);
             } else {
@@ -1401,6 +1435,112 @@ export default {
             });
         },
 
+        toggleAsrInput() {
+            if (this.asrInputState === 'idle') {
+                this.startAsrInput();
+            } else if (this.asrInputState === 'recording') {
+                this.stopAsrInput();
+            }
+            // finishing：已停止录音，正在等待剩余识别结果，忽略点击
+        },
+
+        /**
+         * 开始实时语音输入。识别结果写入开始时的光标处，有选中的文本时替换选中的文本；光标不在输入框里时，写到末尾
+         */
+        startAsrInput() {
+            let input = this.$refs.input;
+            let selection = window.getSelection();
+            let range;
+            if (selection.rangeCount > 0 && input.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+                range = selection.getRangeAt(0).cloneRange();
+            } else {
+                range = document.createRange();
+                range.selectNodeContents(input);
+                range.collapse(false);
+            }
+            if (document.activeElement !== input) {
+                input.focus();
+            }
+            selection.removeAllRanges();
+            selection.addRange(range.cloneRange());
+
+            // 识别文本写入的位置：写入第一段识别文本之前是 range，之后是 node
+            let asrText = {range, node: null};
+            if (!this.asrManager) {
+                this.asrManager = markRaw(new AsrManager());
+            }
+            this.asrInputState = 'recording';
+            this.asrManager.startRecognition({
+                onPartialResult: text => {
+                    this.updateAsrText(asrText, text);
+                },
+                onFinalResult: text => {
+                    // 没有识别出文字时，保留原来选中的文本
+                    if (text) {
+                        this.updateAsrText(asrText, text);
+                    }
+                    this.asrInputState = 'idle';
+                },
+                onError: message => {
+                    this.$notify({
+                        text: '语音识别错误: ' + message,
+                        type: 'error'
+                    });
+                    this.asrInputState = 'idle';
+                },
+            });
+        },
+
+        /**
+         * 用识别文本替换输入框中语音识别的文本，光标原本在识别文本末尾时，移到新的识别文本末尾。
+         * 直接修改 DOM 不会触发 input 事件，不会被当成用户编辑
+         */
+        updateAsrText(asrText, text) {
+            let selection = window.getSelection();
+            let node = asrText.node;
+            let caretFollows;
+            if (!node) {
+                if (!text) {
+                    return;
+                }
+                let current = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+                caretFollows = !!current
+                    && current.startContainer === asrText.range.startContainer && current.startOffset === asrText.range.startOffset
+                    && current.endContainer === asrText.range.endContainer && current.endOffset === asrText.range.endOffset;
+                node = document.createTextNode(text);
+                asrText.range.deleteContents();
+                asrText.range.insertNode(node);
+                asrText.node = node;
+            } else {
+                // 替换文本节点的内容后，节点内的光标会回到节点开头，所以先判断
+                caretFollows = selection.rangeCount > 0 && selection.isCollapsed
+                    && selection.focusNode === node && selection.focusOffset === node.length;
+                node.data = text;
+            }
+            if (caretFollows) {
+                selection.collapse(node, node.length);
+            }
+            this.updateInputState();
+        },
+
+        /**
+         * 停止录音，剩余识别结果返回后结束语音输入
+         */
+        stopAsrInput() {
+            this.asrInputState = 'finishing';
+            this.asrManager.stopRecognition();
+        },
+
+        /**
+         * 结束语音输入，丢弃还没返回的识别结果，已写入输入框的文本保持不变
+         */
+        cancelAsrInput() {
+            if (this.asrInputState !== 'idle') {
+                this.asrManager.cancelRecognition();
+                this.asrInputState = 'idle';
+            }
+        },
+
         setupConversationInput() {
             this.$refs.input.innerHTML = '';
             this.restoreDraft();
@@ -1438,6 +1578,7 @@ export default {
     },
 
     deactivated() {
+        this.cancelAsrInput();
         if (!this.sharedConversationState.showChannelMenu) {
             this.storeDraft(this.lastConversationInfo);
             // this.$refs['input'].innerHTML = '';
@@ -1480,6 +1621,7 @@ export default {
     },
 
     unmounted() {
+        this.cancelAsrInput();
         if (isElectron()) {
             ipcRenderer.removeAllListeners('screenshots-ok');
         }
@@ -1492,6 +1634,8 @@ export default {
     watch: {
         conversationInfo() {
             if (this.lastConversationInfo && !this.conversationInfo.conversation.equal(this.lastConversationInfo.conversation)) {
+                // 切换会话时结束语音输入，已写入输入框的文本会保存到之前会话的草稿中
+                this.cancelAsrInput();
                 this.$nextTick(() => {
                     if (this.sharedConversationState.showChannelMenu) {
                         this.$parent.$refs['conversationMessageList'].style.flexGrow = 1;
@@ -1524,6 +1668,8 @@ export default {
                         this.setupConversationInput();
                     })
                 } else {
+                    // 禁言时输入框被隐藏
+                    this.cancelAsrInput();
                     this.$parent.$refs['conversationMessageList'].style.flexGrow = 1;
                 }
             }
@@ -1826,6 +1972,22 @@ export default {
 .record-icon.active {
     color: var(--text-danger);
     animation: glow 2s infinite;
+}
+
+/* 实时语音输入：SVG 图标和字体图标一样大，颜色跟随文字颜色；录音中闪烁，等待剩余识别结果时保持主色调 */
+.asr-icon svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+}
+
+.asr-icon.recording {
+    color: var(--accent-color);
+    animation: glow 1.2s ease-in-out infinite;
+}
+
+.asr-icon.finishing {
+    color: var(--accent-color);
 }
 
 /* 录音动画样式 */

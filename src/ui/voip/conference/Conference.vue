@@ -265,7 +265,7 @@
                                       style="height: 100%"
                                       :title="conferenceManager.conferenceInfo ? conferenceManager.conferenceInfo.conferenceTitle : 'Title'"
                                       :store-instance="conferenceConversationStore"
-                                      :input-options="{disableScreenShot:true, disableHistory:true, disableVoip:true, disableChannelMenu:true, disablePtt:true, disableAudio:true}"/>
+                                      :input-options="{disableScreenShot:true, disableHistory:true, disableVoip:true, disableChannelMenu:true, disablePtt:true, disableAudio:true, disableAsrInput:true}"/>
                 </div>
             </div>
         </div>

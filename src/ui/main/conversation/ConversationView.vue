@@ -209,6 +209,7 @@ import ChannelConversationInfoView from "./ChannelConversationInfoView";
 import FriendRequestView from "../contact/FriendRequestView";
 import {currentWindow, ipcRenderer} from "../../../platform";
 import appServerApi from "../../../api/appServerApi";
+import asrServerApi from "../../../api/asrServerApi";
 import Config from "../../../config";
 import IPCEventType from "../../../ipcEventType";
 import {imageThumbnail} from "../../util/imageUtil";
@@ -801,50 +802,17 @@ export default {
             audioMessage._speechToTextInProgress = true;
             this.scrollToMessageItemView(message)
             try {
-                const res = await fetch(Config.getAsrServer(), {
-                    method: "POST",
-                    body: JSON.stringify({
-                        url: audioMessage.remotePath,
-                        noReuse: false,
-                        noLlm: false,
-                    }),
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "*/*",
-                    },
+                await asrServerApi.recognize(audioMessage.remotePath, text => {
+                    audioMessage._speechText = text;
+                    this.$nextTick(() => {
+                        this.scrollToMessageItemView(message)
+                    })
                 });
-
-                if (!res.ok) {
-                    console.error('语音转文字失败:', res.ok);
-                    audioMessage._speechText = '转换失败';
-                    audioMessage._speechToTextInProgress = false;
-                }
-
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let result = "";
-
-                while (true) {
-                    const {value, done} = await reader.read();
-                    if (done) break;
-
-                    let text = decoder.decode(value, {stream: true});
-                    text = text.replace(/\r\n|\n|\r/g, '');
-                    if (text) {
-                        result += text.replaceAll('data:', '')
-                        console.log('speech2text', text, text.replaceAll('data:', ''));
-                        audioMessage._speechText = result;
-                        this.$nextTick(() => {
-                            this.scrollToMessageItemView(message)
-                        })
-                    }
-                }
-                audioMessage._speechToTextInProgress = false;
             } catch (error) {
                 console.error('语音转文字失败:', error);
                 audioMessage._speechText = '转换失败';
-                audioMessage._speechToTextInProgress = false;
             }
+            audioMessage._speechToTextInProgress = false;
         },
 
         scrollToMessageItemView(message) {

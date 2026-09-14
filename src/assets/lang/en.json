@@ -86,6 +86,7 @@
         "action_tip_history": "Chat History",
         "action_tip_ptt": "Push to Talk",
         "action_tip_voice": "Send Voice",
+        "action_tip_asr_input": "Voice Input",
         "action_tip_collection": "Group Solitaire",
         "action_tip_audio_call": "Voice Call",
         "action_tip_video_call": "Video Call",

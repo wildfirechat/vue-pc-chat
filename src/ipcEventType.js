@@ -29,6 +29,11 @@ const IpcEventType = {
     CHECK_FOR_UPDATES: 'check-for-updates',
     RESTART_APP: 'restart-app',
     GET_SELF_SIGNED_CERT_FILES: 'get-self-signed-cert-files',
+    // 实时语音识别 WebSocket，连接在主进程建立，见 src/asr/AsrWebSocketClient.js
+    ASR_STREAM_CONNECT: 'asr-stream-connect',
+    ASR_STREAM_SEND: 'asr-stream-send',
+    ASR_STREAM_CLOSE: 'asr-stream-close',
+    ASR_STREAM_EVENT: 'asr-stream-event',
 }
 
 module.exports = IpcEventType

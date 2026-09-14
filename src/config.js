@@ -46,10 +46,23 @@ export default class Config {
     static SEARCH_BACKUP_SERVER = null;
 
     // 语音转文字服务地址，如果没有部署语音转文字服务，或者不需要语音转文字的话，可置为 null
+    // 语音转文字服务项目：https://gitee.com/wfchat/asr-api ，请求时会在 HTTP header authCode 中带上从 IM 服务获取的认证码，由 asr-api 校验
     static ASR_SERVER = 'https://app.wildfirechat.net/asr/api/recognize';
 
     // 语音转文字服务备选地址，双网环境下使用
     static ASR_BACKUP_SERVER = null;
+
+    // 实时语音输入服务地址，配置之后，发送语音按钮后面会显示语音输入按钮，点击后边说边把识别结果写入输入框。不需要的话，可置为 null
+    // 请配置为 asr-api 的实时语音识别地址，例如 wss://example.com/asr/api/stream，连接时会在 HTTP header authCode 中带上从 IM 服务获取的认证码
+    // 内网测试时也可以直连 wf-voice 的 WebSocket 地址（默认端口 12436），例如 ws://192.168.1.100:12436。wf-voice 本身没有鉴权，也不支持 wss，请勿直接暴露到公网
+    static ASR_STREAM_SERVER = 'wss://app.wildfirechat.net/asr/api/stream';
+
+    // 实时语音输入服务备选地址，双网环境下使用
+    static ASR_STREAM_BACKUP_SERVER = null;
+
+    // 实时语音输入是否边说边出字。开启时说话过程中实时显示正在说的这句话，说完后修正为这句的最终结果；关闭时每说完一句才显示这句话
+    // 开启后 wf-voice 会在说话过程中反复识别正在说的这句话，服务端 CPU 占用更高。旧版本 wf-voice 不支持，开启后效果和关闭一样
+    static ENABLE_ASR_PARTIAL_RESULT = true;
 
     // 组织结构服务地址，如果没有部署组织结构服务，或者不需要组织结构的话，可置为 null
     // 组织结构项目：https://github.com/wildfirechat/organization-platform 或 https://gitee.com/wfchat/organization-platform
@@ -178,6 +191,10 @@ export default class Config {
     }
     static getAsrServer() {
         return Config._selectServer(Config.ASR_SERVER, Config.ASR_BACKUP_SERVER);
+    }
+
+    static getAsrStreamServer() {
+        return Config._selectServer(Config.ASR_STREAM_SERVER, Config.ASR_STREAM_BACKUP_SERVER);
     }
 
     static getOrganizationServer() {
