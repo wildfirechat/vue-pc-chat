@@ -13,7 +13,7 @@
                             <div class="search-result-item contact" @click.stop="chatToContact(user)">
                                 <img :src="user.portrait">
                                 <span class="single-line">{{ user.displayName }}</span>
-                                <button @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
+                                <button v-if="!isFriend(user.uid)" @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
                             </div>
                         </li>
                     </ul>
@@ -184,6 +184,7 @@ export default {
     },
 
     beforeUnmount() {
+        clearTimeout(this._searchTimer)
         this.unbindFloatingEvents()
         store.setSearchQuery('')
     },
@@ -206,7 +207,10 @@ export default {
         // or
         query() {
             console.log('searchView query changed:', this.query)
-            this.search(this.query)
+            clearTimeout(this._searchTimer)
+            this._searchTimer = setTimeout(() => {
+                this.search(this.query)
+            }, 1000)
             this.$nextTick(() => {
                 this.updateFloatingPosition()
             })

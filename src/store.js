@@ -2166,11 +2166,9 @@ let store = {
         return searchServerApi.getMessageContext(conversation, anchorMid, options);
     },
     searchUser(query, domainId = '') {
-        console.log('search user', query)
         wfc.searchUserEx(domainId, query, SearchType.General, 0, ((keyword, userInfos) => {
-            console.log('search user result', query, userInfos)
             if (this.state.search.query === keyword) {
-                this.state.search.userSearchResult = userInfos.filter(u => !wfc.isMyFriend(u.uid));
+                this.state.search.userSearchResult = userInfos;
             }
         }), (err) => {
             console.log('search user error', query, err)
@@ -2199,7 +2197,7 @@ let store = {
     // TODO 到底是什么匹配了
     filterContact(query) {
         let result = this.state.contact.friendList.filter(u => {
-            return u.displayName.indexOf(query) > -1 || u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query.toLowerCase()) > -1 || u._pinyin.indexOf(query.toLowerCase()) > -1
+            return u.displayName.indexOf(query) > -1 || u._displayName.indexOf(query) > -1 || u._firstLetters.indexOf(query.toLowerCase()) > -1 || u._pinyin.indexOf(query.toLowerCase()) > -1 || (u.mobile && u.mobile.indexOf(query) > -1)
         });
 
         console.log('friend searchResult', result)
