@@ -90,6 +90,9 @@ function convertPinyinCached(name) {
 // 用序号丢弃过期响应，避免先发后到的旧结果覆盖新结果
 let conversationSearchSeq = 0;
 
+// 会话名称搜索用的名称缓存：key 为 raw conversation 对象，见 store._getConversationDisplayNamesForSearch
+const conversationNameCache = new WeakMap();
+
 /**
  * 判断是否为同一条消息。
  * 优先比较 messageUid（服务端唯一 id，本地库消息与远程消息都有），
@@ -2249,14 +2252,69 @@ let store = {
 
     filterConversation(query) {
         let lowerQuery = query.toLowerCase();
-        return this.state.conversation.conversationInfoList.filter(info => {
-            let target = this.ensureConversationTarget(info.conversation);
-            if (!target || !target._displayName) return false;
-            let targetPinyin = convertPinyinCached(target._displayName);
-            return target._displayName.indexOf(query) > -1 
-                || targetPinyin.pinyin.indexOf(lowerQuery) > -1 
-                || targetPinyin.firstLetters.indexOf(lowerQuery) > -1;
+        let conversationInfoList = this.state.conversation.conversationInfoList;
+        let names = this._getConversationDisplayNamesForSearch(toRaw(conversationInfoList));
+        return conversationInfoList.filter((info, index) => {
+            let name = names[index];
+            if (!name) return false;
+            let namePinyin = convertPinyinCached(name);
+            return name.indexOf(query) > -1
+                || namePinyin.pinyin.indexOf(lowerQuery) > -1
+                || namePinyin.firstLetters.indexOf(lowerQuery) > -1;
         });
+    },
+
+    // 搜索要匹配全部会话的名称，但不能对每个会话调用 ensureConversationTarget：那会逐个走 getUserInfo/getGroupInfo/isFavGroup
+    // 同步 IPC，没有头像的群还要生成默认头像（再多 getGroupMemberIds/getUserInfos 两次同步 IPC），会话上千时直接卡死。
+    // 这里只取名称：已解析过 target 的直接用；单聊、群聊按类型各批量查询一次；结果按 conversation 对象缓存，
+    // 会话重新加载时 conversation 是新对象，缓存随之失效（与 conversation._target 的生命周期一致）。
+    // 头像等完整 target 仍由搜索结果展示时按需 ensureConversationTarget。
+    _getConversationDisplayNamesForSearch(rawConversationInfoList) {
+        let names = new Array(rawConversationInfoList.length);
+        let pendingSingles = [];
+        let pendingGroups = [];
+        rawConversationInfoList.forEach((info, index) => {
+            let conversation = toRaw(info.conversation);
+            if (conversation._target) {
+                names[index] = conversation._target._displayName;
+                return;
+            }
+            let cachedName = conversationNameCache.get(conversation);
+            if (cachedName !== undefined) {
+                names[index] = cachedName;
+                return;
+            }
+            if (conversation.type === ConversationType.Single) {
+                pendingSingles.push(index);
+            } else if (conversation.type === ConversationType.Group) {
+                pendingGroups.push(index);
+            } else {
+                // 频道、密聊等会话数量很少，沿用逐个解析
+                let target = this.ensureConversationTarget(info.conversation);
+                names[index] = target ? target._displayName : undefined;
+            }
+        });
+
+        let fillNames = (pendingIndexes, infos, idOf, nameOf) => {
+            if (pendingIndexes.length === 0) {
+                return;
+            }
+            let ids = [...new Set(pendingIndexes.map(index => rawConversationInfoList[index].conversation.target))];
+            let nameMap = new Map();
+            infos(ids).forEach(i => nameMap.set(idOf(i), nameOf(i)));
+            pendingIndexes.forEach(index => {
+                let conversation = toRaw(rawConversationInfoList[index].conversation);
+                let name = nameMap.get(conversation.target);
+                // 查不到名称的不缓存，下次搜索重新查
+                if (name) {
+                    conversationNameCache.set(conversation, name);
+                    names[index] = name;
+                }
+            });
+        };
+        fillNames(pendingSingles, ids => wfc.getUserInfos(ids, ''), u => u.uid, u => wfc.getUserDisplayNameEx(u));
+        fillNames(pendingGroups, ids => wfc.getGroupInfos(ids, false), g => g.target, g => g.remark ? g.remark : g.name);
+        return names;
     },
 
     filterGroupConversation(query) {
