@@ -554,13 +554,23 @@ export default {
             console.warn('-----configInfo end---------\n')
 
             let result = '';
-            let appServerResponse = await axios.get(Config.getAppServer(), {
-                transformResponse: [data => data],
-            })
-            if (appServerResponse.data === 'Ok') {
-                result += 'APP-Server 正常\n';
-            } else {
-                result += 'APP-Server 异常: ' + appServerResponse.status + '\n';
+            // 连接失败时，还不知道连的是主网络还是备选网络，主备地址都检测
+            for (const appServer of [Config.APP_SERVER, Config.APP_BACKUP_SERVER]) {
+                if (!appServer) {
+                    continue;
+                }
+                try {
+                    let appServerResponse = await axios.get(appServer, {
+                        transformResponse: [data => data],
+                    })
+                    if (appServerResponse.data === 'Ok') {
+                        result += `APP-Server ${appServer} 正常\n`;
+                    } else {
+                        result += `APP-Server ${appServer} 异常: ${appServerResponse.status}\n`;
+                    }
+                } catch (e) {
+                    result += `APP-Server ${appServer} 异常：${e}\n`;
+                }
             }
             if (this.routeHost) {
                 let url = `http://${this.routeHost}:${this.routePort}/api/version`

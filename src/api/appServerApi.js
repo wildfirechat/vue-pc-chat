@@ -16,35 +16,45 @@ export class AppServerApi {
             return Config.APP_SERVER;
         }
         // IM 已连接时，直接用 wfc 的网络状态判断
-        if (wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected) {
-            return wfc.connectedToMainNetwork() ? Config.APP_SERVER : Config.APP_BACKUP_SERVER;
+        let status = wfc.getConnectionStatus();
+        if (status === ConnectionStatus.ConnectionStatusConnected || status === ConnectionStatus.ConnectionStatusReceiveing) {
+            return Config.getAppServer();
         }
 
-        // IM 未连接时（登录前），实时探测，不缓存
-        const probe = async (url) => {
-            let response = await axios.get(url, {
-                transformResponse: [data => data],
-                timeout: 5000,
+        // IM 未连接时（登录前），探测可用地址。主备网络是隔离的，一般只有一个地址可达
+        // 探测结果会缓存，避免每次请求都探测；请求出现网络错误时清除缓存，下次请求重新探测
+        if (!this._probeAppServerPromise) {
+            const probe = async (url) => {
+                let response = await axios.get(url, {
+                    transformResponse: [data => data],
+                    timeout: 5000,
+                });
+                if (typeof response.data === 'string' && response.data.trim() === 'Ok') {
+                    return url;
+                }
+                throw new Error('app server probe invalid response: ' + response.data);
+            };
+
+            this._probeAppServerPromise = Promise.any([
+                probe(Config.APP_SERVER),
+                probe(Config.APP_BACKUP_SERVER)
+            ]).catch((e) => {
+                console.log('all app server probes failed', e);
+                this._probeAppServerPromise = null;
+                // 都探测失败时，回退到主地址，让后续请求正常报错
+                return Config.APP_SERVER;
             });
-            if (response.data === 'Ok') {
-                return url;
-            }
-            throw new Error('app server probe invalid response: ' + response.data);
-        };
-
-        let reachableUrl = await Promise.any([
-            probe(Config.APP_SERVER),
-            probe(Config.APP_BACKUP_SERVER)
-        ]).catch((e) => {
-            console.log('all app server probes failed', e);
-            return null;
-        });
-
-        if (!reachableUrl) {
-            // 都探测失败时，回退到主地址，让后续请求正常报错
-            reachableUrl = Config.APP_SERVER;
         }
-        return reachableUrl;
+        return this._probeAppServerPromise;
+    }
+
+    // 主备地址对应的是同一个 app-server，token 通用，主备地址都保存，切换网络后不用重新登录
+    _saveAuthToken(authToken) {
+        [Config.APP_SERVER, Config.APP_BACKUP_SERVER].forEach(server => {
+            if (server) {
+                setItem('authToken-' + new URL(server).host, authToken);
+            }
+        });
     }
 
     requestAuthCode(mobile, slideVerifyToken = null) {
@@ -109,7 +119,7 @@ export class AppServerApi {
                         }
 
                         if (appAuthToken) {
-                            setItem('authToken-' + new URL(response.config.url).host, appAuthToken);
+                            this._saveAuthToken(appAuthToken);
                         }
                         resolve(response.data);
                     } else if ([9, 18].indexOf(response.data.code) > -1) {
@@ -211,7 +221,7 @@ export class AppServerApi {
                     }
 
                     if (appAuthToken) {
-                        setItem('authToken-' + new URL(response.config.url).host, appAuthToken);
+                        this._saveAuthToken(appAuthToken);
                     }
                     resolve(response.data.result);
                 } else {
@@ -235,13 +245,21 @@ export class AppServerApi {
     async _post(path, data = {}, rawResponse = false, rawResponseData = false) {
         let response;
         path = await this._getAppServer() + path;
-        response = await axios.post(path, data, {
-            transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse,
-            headers: {
-                'authToken': getItem('authToken-' + new URL(path).host),
-            },
-            withCredentials: false,
-        })
+        try {
+            response = await axios.post(path, data, {
+                transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse,
+                headers: {
+                    'authToken': getItem('authToken-' + new URL(path).host),
+                },
+                withCredentials: false,
+            })
+        } catch (e) {
+            if (!e.response) {
+                // 网络错误，可能是网络环境变了，清除探测结果
+                this._probeAppServerPromise = null;
+            }
+            throw e;
+        }
         if (rawResponse) {
             return response;
         }

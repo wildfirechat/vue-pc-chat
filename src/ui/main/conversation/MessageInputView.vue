@@ -490,8 +490,10 @@ export default {
             }
         },
         openCollectionWindow() {
-            if ((Config.APP_SERVER.indexOf('wildfirechat.net') >= 0 && Config.COLLECTION_SERVER.indexOf('wildfirechat.net') >= 0)
-                || (Config.APP_SERVER.indexOf('wildfirechat.net') === -1 && Config.COLLECTION_SERVER.indexOf('wildfirechat.net') === -1)) {
+            let appServer = Config.getAppServer();
+            let collectionServer = Config.getCollectionServer();
+            if (collectionServer && ((appServer.indexOf('wildfirechat.net') >= 0 && collectionServer.indexOf('wildfirechat.net') >= 0)
+                || (appServer.indexOf('wildfirechat.net') === -1 && collectionServer.indexOf('wildfirechat.net') === -1))) {
                 if (!this.sharedMiscState.isElectron) {
                     openInAppSubWindow(this, '/collection/create', {
                         groupId: this.conversationInfo.conversation.target
@@ -514,8 +516,10 @@ export default {
             }
         },
         openPollWindow() {
-            if ((Config.APP_SERVER.indexOf('wildfirechat.net') >= 0 && Config.POLL_SERVER.indexOf('wildfirechat.net') >= 0)
-                || (Config.APP_SERVER.indexOf('wildfirechat.net') === -1 && Config.POLL_SERVER.indexOf('wildfirechat.net') === -1)) {
+            let appServer = Config.getAppServer();
+            let pollServer = Config.getPollServer();
+            if (pollServer && ((appServer.indexOf('wildfirechat.net') >= 0 && pollServer.indexOf('wildfirechat.net') >= 0)
+                || (appServer.indexOf('wildfirechat.net') === -1 && pollServer.indexOf('wildfirechat.net') === -1))) {
                 if (!this.sharedMiscState.isElectron) {
                     openInAppSubWindow(this, '/poll', {
                         groupId: this.conversationInfo.conversation.target

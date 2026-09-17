@@ -18,8 +18,7 @@ export class OrganizationServerApi {
             //        int ApplicationType_Robot = 0;
 //        int ApplicationType_Channel = 1;
 //        int ApplicationType_Admin = 2;
-            let organizationServer = Config.getOrganizationServer();
-            if (!organizationServer) {
+            if (!Config.getOrganizationServer()) {
                 this.isServiceAvailable = false;
                 reject(this.serviceUnavailbelError)
                 return
@@ -37,7 +36,12 @@ export class OrganizationServerApi {
                             }
 
                             if (appAuthToken) {
-                                setItem('authToken-' + new URL(response.config.url).host, appAuthToken);
+                                // 主备地址对应的是同一个组织结构服务，token 通用，主备地址都保存，切换网络后不用重新登录
+                                [Config.ORGANIZATION_SERVER, Config.ORGANIZATION_BACKUP_SERVER].forEach(server => {
+                                    if (server) {
+                                        setItem('authToken-' + new URL(server).host, appAuthToken);
+                                    }
+                                });
                             }
                             this.isServiceAvailable = true;
                             resolve(response.data.result);

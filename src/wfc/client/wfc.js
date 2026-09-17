@@ -3019,10 +3019,24 @@ export class WfcManager {
      * @returns {string}
      */
     redirectUrl(url) {
+        url = this._switchDefaultPortraitNetwork(url);
         if (!url || !Config.urlRedirect) {
             return url;
         }
         return Config.urlRedirect(url);
+    }
+
+    // 默认头像地址是按生成时连接的网络生成的，并且会缓存在用户/群组信息里面，双网切换后，需要切到当前网络对应的 app-server 地址
+    _switchDefaultPortraitNetwork(url) {
+        if (!url || !Config.APP_BACKUP_SERVER) {
+            return url;
+        }
+        let appServer = Config.getAppServer();
+        let otherAppServer = appServer === Config.APP_SERVER ? Config.APP_BACKUP_SERVER : Config.APP_SERVER;
+        if (url.startsWith(otherAppServer + '/avatar')) {
+            return appServer + url.substring(otherAppServer.length);
+        }
+        return url;
     }
 
     defaultUserPortrait(userInfo) {
@@ -3043,7 +3057,7 @@ export class WfcManager {
         }
         let pending = false;
         for (const m of members) {
-            if (m.portrait && !m.portrait.startsWith(`${Config.getAppServer()}`)) {
+            if (m.portrait && !m.portrait.startsWith(`${Config.APP_SERVER}`) && !(Config.APP_BACKUP_SERVER && m.portrait.startsWith(`${Config.APP_BACKUP_SERVER}`))) {
                 req.members.push({
                     avatarUrl: m.portrait
                 })
