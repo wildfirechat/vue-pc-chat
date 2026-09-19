@@ -11,7 +11,8 @@
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import {isElectron, shell} from "../../../../../platform";
+import {ipcRenderer, isElectron} from "../../../../../platform";
+import IpcEventType from "../../../../../ipcEventType";
 import Config from "../../../../../config";
 
 export default {
@@ -43,7 +44,18 @@ export default {
                 && meetingId) {
                 let url = `${Config.getMinutesUrl()}?conferenceId=${encodeURIComponent(meetingId)}`;
                 if (isElectron()) {
-                    shell.openExternal(url);
+                    // Electron 环境：在应用内置工作台窗口中打开
+                    let hash = window.location.hash;
+                    let workspaceUrl = window.location.origin;
+                    if (hash) {
+                        workspaceUrl = window.location.href.replace(hash, '#/workspace');
+                    } else {
+                        workspaceUrl += "/workspace"
+                    }
+
+                    workspaceUrl += '?url=' + encodeURIComponent(url);
+
+                    ipcRenderer.send(IpcEventType.OPEN_H5_APP_WINDOW, {hostUrl: location.href, url: encodeURI(workspaceUrl)})
                 } else {
                     this.$router.push({
                         path: '/home/h-wp',
