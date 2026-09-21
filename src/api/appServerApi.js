@@ -52,9 +52,14 @@ export class AppServerApi {
     _saveAuthToken(authToken) {
         [Config.APP_SERVER, Config.APP_BACKUP_SERVER].forEach(server => {
             if (server) {
-                setItem('authToken-' + new URL(server).host, authToken);
+                setItem(this._authTokenKey(server), authToken);
             }
         });
+    }
+
+    // 加上服务前缀，与其他服务（如组织结构服务）区分开，host 相同时 token 不会互相覆盖
+    _authTokenKey(url) {
+        return 'appAuthToken-' + new URL(url).host;
     }
 
     requestAuthCode(mobile, slideVerifyToken = null) {
@@ -249,7 +254,7 @@ export class AppServerApi {
             response = await axios.post(path, data, {
                 transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse,
                 headers: {
-                    'authToken': getItem('authToken-' + new URL(path).host),
+                    'authToken': getItem(this._authTokenKey(path)),
                 },
                 withCredentials: false,
             })

@@ -39,7 +39,7 @@ export class OrganizationServerApi {
                                 // 主备地址对应的是同一个组织结构服务，token 通用，主备地址都保存，切换网络后不用重新登录
                                 [Config.ORGANIZATION_SERVER, Config.ORGANIZATION_BACKUP_SERVER].forEach(server => {
                                     if (server) {
-                                        setItem('authToken-' + new URL(server).host, appAuthToken);
+                                        setItem(this._authTokenKey(server), appAuthToken);
                                     }
                                 });
                             }
@@ -137,6 +137,11 @@ export class OrganizationServerApi {
         return employee.portrait ? employee.portrait : Config.getAppServer() + '/avatar?name=' + encodeURIComponent(employee.name);
     }
 
+    // 加上服务前缀，与其他服务（如 app-server）区分开，host 相同时 token 不会互相覆盖
+    _authTokenKey(url) {
+        return 'orgAuthToken-' + new URL(url).host;
+    }
+
     async _getOrganizationSync(orgId) {
         let orgs = await this.getOrganizations([orgId])
         return orgs && orgs.length > 0 ? orgs[0] : null;
@@ -160,7 +165,7 @@ export class OrganizationServerApi {
         path = Config.getOrganizationServer() + path;
         response = await axios.post(path, data, {
             transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse, headers: {
-                'authToken': getItem('authToken-' + new URL(path).host),
+                'authToken': getItem(this._authTokenKey(path)),
             },
             withCredentials: false,
         })
