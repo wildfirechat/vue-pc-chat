@@ -290,13 +290,9 @@ export default class Config {
      */
     static emojiBaseUrl() {
         // 表情的 baseUrl，一定要求以 / 结尾
-        let emojiBaseUrl = 'https://static.wildfirechat.net/twemoji/assets/';
-        // 实例代码
-        // 双网环境时，将表情地址切换到备选网络
-        // if (Config.isUseBackupAddress()) {
-        //     emojiBaseUrl = 'https://192.168.2.169/twemoji/assets/';
-        // }
-        return emojiBaseUrl;
+        // 表情图片已内置在 public/twemoji/assets/ 下，随安装包分发，不依赖网络
+        // 如需改为从服务器加载，可改为类似 'https://static.wildfirechat.net/twemoji/assets/' 的地址
+        return './twemoji/assets/';
     }
 
     /**
