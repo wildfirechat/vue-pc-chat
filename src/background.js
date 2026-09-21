@@ -999,7 +999,9 @@ const createMainWindow = async () => {
     ipcMain.on(IPCEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, async (event, args) => {
         console.log('on show-multimedia-preview-window', multimediaPreviewWindow, args)
         if (!multimediaPreviewWindow) {
-            let win = createWindow(args.url, args.size ? args.size.width : 960, args.size ? args.size.height : 600, 640, 520, true, false, true, false, false);
+            // 窗口固定为默认大小，不随图片/视频尺寸变化；标题栏由预览页面的工具栏自绘
+            let win = createWindow(args.url, 960, 680, 640, 480, true, true, false, false, false,
+                isOsx ? {titleBarStyle: 'hidden', trafficLightPosition: {x: 14, y: 16}} : {frame: false});
 
             // win.webContents.openDevTools();
             win.on('close', () => {
@@ -1319,7 +1321,7 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
-function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false, minimizable = true) {
+function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false, minimizable = true, extraOptions = {}) {
     let win = new BrowserWindow(
         {
             width: w,
@@ -1340,6 +1342,7 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
                 webSecurity: webSecurity,
             },
             // frame:false
+            ...extraOptions,
         }
     );
     win.removeMenu();

@@ -213,6 +213,21 @@
         "send_to_friend": "Send to Friend...",
         "share_to_friend": "Share to Friend..."
     },
+    "mmpreview": {
+        "prev": "Previous",
+        "next": "Next",
+        "zoom_in": "Zoom In",
+        "zoom_out": "Zoom Out",
+        "actual_size": "Actual Size",
+        "fit_window": "Fit to Window",
+        "rotate": "Rotate",
+        "pin": "Pin on Top",
+        "unpin": "Unpin",
+        "maximize": "Maximize",
+        "restore": "Restore",
+        "close": "Close",
+        "load_failed": "Failed to load"
+    },
     "poll": {
         "poll": "Poll",
         "my_polls": "My Polls",

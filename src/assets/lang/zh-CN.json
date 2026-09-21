@@ -227,6 +227,21 @@
         "send_to_friend": "发送给朋友...",
         "share_to_friend": "分享给朋友..."
     },
+    "mmpreview": {
+        "prev": "上一张",
+        "next": "下一张",
+        "zoom_in": "放大",
+        "zoom_out": "缩小",
+        "actual_size": "原始尺寸",
+        "fit_window": "适应窗口",
+        "rotate": "旋转",
+        "pin": "置顶",
+        "unpin": "取消置顶",
+        "maximize": "最大化",
+        "restore": "还原",
+        "close": "关闭",
+        "load_failed": "加载失败"
+    },
     "collection": {
         "collection": "接龙",
         "create_collection": "创建接龙",

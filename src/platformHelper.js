@@ -1,11 +1,9 @@
 import { ipcRenderer, isElectron } from './platform';
-import { remote, screen } from './platform';
+import { remote } from './platform';
 import IPCEventType from './ipcEventType';
 import IpcEventType from './ipcEventType';
 import store from './store';
 import Config from './config';
-import ImageMessageContent from './wfc/messages/imageMessageContent';
-import { scaleDown } from './ui/util/imageUtil';
 
 /**
  * 获取基础 URL（开发环境或生产环境）
@@ -151,20 +149,9 @@ export function previewMM(message, mixMultiMediaItemIndex = 0, continuous = true
         }
 
         url += `?messageUid=${stringValue(message.messageUid)}&mmmIndex=${mixMultiMediaItemIndex}&continuous=${continuous}`;
-        let size;
-        if (message.messageContent instanceof ImageMessageContent) {
-            let display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-            let imgMsg = message.messageContent;
-            if (imgMsg.imageWidth && imgMsg.imageHeight) {
-                let workAreaWith = display.workAreaSize.width;
-                let workAreaHeight = display.workAreaSize.height;
-                size = scaleDown(imgMsg.imageWidth, imgMsg.imageHeight, workAreaWith, workAreaHeight);
-            }
-        }
         ipcRenderer.send(IpcEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, {
             url: url,
             messageUid: stringValue(message.messageUid),
-            size
         });
         console.log('show-multimedia-preview-window', url);
     } else {

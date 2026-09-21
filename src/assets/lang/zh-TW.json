@@ -215,6 +215,21 @@
     "send_to_friend": "發送給朋友...",
     "share_to_friend": "分享給朋友..."
   },
+  "mmpreview": {
+    "prev": "上一張",
+    "next": "下一張",
+    "zoom_in": "放大",
+    "zoom_out": "縮小",
+    "actual_size": "原始尺寸",
+    "fit_window": "適應視窗",
+    "rotate": "旋轉",
+    "pin": "置頂",
+    "unpin": "取消置頂",
+    "maximize": "最大化",
+    "restore": "還原",
+    "close": "關閉",
+    "load_failed": "載入失敗"
+  },
   "poll": {
     "poll": "投票",
     "my_polls": "我的投票",
