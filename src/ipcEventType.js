@@ -27,6 +27,8 @@ const IpcEventType = {
     SHOW_POLL_WINDOW: 'show-poll-window',
     OPEN_MAIN_DEV_TOOLS: 'open-main-dev-tools',
     CHECK_FOR_UPDATES: 'check-for-updates',
+    // 主进程发起的检查更新（菜单、托盘、启动时），交给主窗口按双网选好更新地址后，再发 CHECK_FOR_UPDATES
+    REQUEST_CHECK_FOR_UPDATES: 'request-check-for-updates',
     RESTART_APP: 'restart-app',
     GET_SELF_SIGNED_CERT_FILES: 'get-self-signed-cert-files',
     // 实时语音识别 WebSocket，连接在主进程建立，见 src/asr/AsrWebSocketClient.js

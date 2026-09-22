@@ -71,6 +71,14 @@ export default class Config {
     // 组织结构服务备选地址，双网环境下使用
     static ORGANIZATION_BACKUP_SERVER = null;
 
+    // 自动更新服务地址，和 vue.config.js 里 publish.url 保持一致。
+    // publish 必须配置：打包时据此生成 app-update.yml 和 latest.yml 等更新文件，electron-updater 下载更新时也要读 app-update.yml。
+    // 为 null 时直接使用 publish.url，不做双网切换
+    static UPDATE_SERVER = null;
+
+    // 自动更新服务备选地址，双网环境下使用，配置时 UPDATE_SERVER 也必须配置。主备地址下要放同一套更新文件
+    static UPDATE_BACKUP_SERVER = null;
+
     // 野火二维码 scheme，不要修改，如果需要修改的话，所有端都需要一起修改
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
 
@@ -199,6 +207,10 @@ export default class Config {
 
     static getOrganizationServer() {
         return Config._selectServer(Config.ORGANIZATION_SERVER, Config.ORGANIZATION_BACKUP_SERVER);
+    }
+
+    static getUpdateServer() {
+        return Config._selectServer(Config.UPDATE_SERVER, Config.UPDATE_BACKUP_SERVER);
     }
 
     static getOpenPlatformWorkSpaceUrl() {

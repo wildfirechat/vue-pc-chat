@@ -190,6 +190,7 @@ module.exports = {
                     shortcutName: '${productName}',
                 },
                 // 如需启用自动更新，请取消下面注释并配置实际的服务器地址
+                // 双网环境下，还需要配置 src/config.js 里的 UPDATE_SERVER（和这里的 url 一致）和 UPDATE_BACKUP_SERVER
                 // publish: {
                 //     provider: 'generic',
                 //     url: 'https://your-update-server.com/releases'

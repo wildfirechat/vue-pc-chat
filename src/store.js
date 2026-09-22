@@ -24,6 +24,7 @@ import {currentWindow, ipcRenderer, isElectron} from "./platform";
 import SearchType from "./wfc/model/searchType";
 import Config from "./config";
 import searchServerApi from "./api/searchServerApi";
+import updateServerApi from "./api/updateServerApi";
 import {getItem, setItem} from "./ui/util/storageHelper";
 import watermark from "./ui/util/waterMark";
 import CompositeMessageContent from "./wfc/messages/compositeMessageContent";
@@ -548,6 +549,11 @@ let store = {
                         this.setCurrentConversation(conversation);
                     }
                 })
+
+                // 主进程发起的检查更新，按当前网络选好更新地址后交回主进程
+                ipcRenderer.on(IPCEventType.REQUEST_CHECK_FOR_UPDATES, (event, manual) => {
+                    updateServerApi.checkForUpdates(manual);
+                });
 
                 ipcRenderer.on('floating-conversation-window-closed', (event, args) => {
                     let type = args.type;

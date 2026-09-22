@@ -325,6 +325,7 @@ import { shell, app } from '../../../platform';
 import IpcEventType from '../../../ipcEventType';
 import avenginekit from '../../../wfc/av/internal/engine.min';
 import Config from '../../../config';
+import updateServerApi from '../../../api/updateServerApi';
 import ResizeBar from '../../common/ResizeBar.vue';
 
 export default {
@@ -402,7 +403,7 @@ export default {
         },
         checkForUpdates() {
             if (isElectron()) {
-                ipcRenderer.send(IpcEventType.CHECK_FOR_UPDATES);
+                updateServerApi.checkForUpdates(true);
             }
         },
         showChangePasswordContextMenu(event) {

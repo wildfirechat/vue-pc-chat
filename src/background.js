@@ -112,8 +112,20 @@ function isAutoUpdaterSupported() {
     return true;
 }
 
+// electron-updater 没有 feedUrl 属性，不能用它判断是否配置了更新服务器；
+// vue.config.js 中配置了 publish 时，打包会生成 resources/app-update.yml。
+// 即使用 setFeedURL 指定了地址，electron-updater 下载更新时也要读 app-update.yml，所以 publish 必须配置
+function isUpdaterConfigured() {
+    return fs.existsSync(nodePath.join(process.resourcesPath, 'app-update.yml'));
+}
+
+// 双网环境下，更新地址由主窗口按当前网络选择（Config.getUpdateServer()），这里只发请求
+function requestCheckForUpdates(manual) {
+    mainWindow.webContents.send(IPCEventType.REQUEST_CHECK_FOR_UPDATES, manual);
+}
+
 function shouldShowUpdateMenu() {
-    return isAutoUpdaterSupported() && !!autoUpdater.feedUrl;
+    return isAutoUpdaterSupported() && isUpdaterConfigured();
 }
 
 function filterMenuTemplate(template) {
@@ -196,7 +208,7 @@ let mainMenu = [
                 label: Locales.__('Main').Check,
                 accelerator: 'Cmd+U',
                 click() {
-                    checkForUpdates(true);
+                    requestCheckForUpdates(true);
                 }
             },
             {
@@ -350,7 +362,7 @@ let trayMenu = [
         id: 'menu-check-update',
         label: Locales.__('Main').Check,
         click() {
-            checkForUpdates(true);
+            requestCheckForUpdates(true);
         }
     },
     {
@@ -390,7 +402,7 @@ let trayMenu = [
 ];
 let blink = null
 
-function checkForUpdates(manual = false) {
+function checkForUpdates(manual = false, feedUrl = null) {
     manualUpdateCheck = manual;
     if (!isAutoUpdaterSupported()) {
         if (manual) {
@@ -416,13 +428,7 @@ function checkForUpdates(manual = false) {
         return;
     }
 
-    // 如需自定义更新服务器，请取消下面注释并配置 URL
-    // autoUpdater.setFeedURL({
-    //     provider: 'generic',
-    //     url: 'https://your-update-server.com/releases'
-    // });
-
-    if (!autoUpdater.feedUrl) {
+    if (!isUpdaterConfigured()) {
         if (manual) {
             dialog.showMessageBox({
                 type: 'info',
@@ -433,6 +439,15 @@ function checkForUpdates(manual = false) {
             });
         }
         return;
+    }
+
+    // 双网环境下切到当前网络的更新地址；为空时使用 app-update.yml 里的 publish.url
+    // latest.yml 里的安装包路径是相对路径，下载也会走这个地址
+    if (feedUrl) {
+        autoUpdater.setFeedURL({
+            provider: 'generic',
+            url: feedUrl
+        });
     }
 
     autoUpdater.checkForUpdates().catch(err => {
@@ -1524,12 +1539,12 @@ app.on('ready', () => {
         // 如需启动后自动检查更新，请取消下面注释
         // if (isAutoUpdaterSupported()) {
         //     setTimeout(() => {
-        //         checkForUpdates(false);
+        //         requestCheckForUpdates(false);
         //     }, 60 * 1000); // 启动1分钟后检查
         // }
 
-        ipcMain.on(IPCEventType.CHECK_FOR_UPDATES, () => {
-            checkForUpdates(true);
+        ipcMain.on(IPCEventType.CHECK_FOR_UPDATES, (event, args = {}) => {
+            checkForUpdates(args.manual !== false, args.feedUrl);
         });
 
         ipcMain.handle('is-updater-configured', () => {
