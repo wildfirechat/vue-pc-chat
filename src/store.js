@@ -1460,6 +1460,23 @@ let store = {
         });
     },
 
+    /**
+     * 获取会话中某个用户发送的消息
+     * @param {Conversation} conversation 会话
+     * @param {string} userId 发送者
+     * @param {number} fromIndex messageId，0 表示从最新的消息开始
+     * @param {boolean} before true，获取更旧的消息；false，获取更新的消息
+     * @param {function (Message[]) } callback 消息列表会回调
+     */
+    getUserMessages(conversation, userId, fromIndex = 0, before = true, callback) {
+        wfc.getUserMessagesV2(userId, conversation, fromIndex, before, 20, msgs => {
+            callback && callback(msgs.map(m => this._patchMessage(m, 0)));
+        }, err => {
+            console.error('getUserMessagesV2 error', err);
+            callback && callback([]);
+        });
+    },
+
     getMessageInTypes(conversation, contentTypes, timestamp, before = true, withUser = '', callback) {
         wfc.getMessagesByTimestampV2(conversation, contentTypes, timestamp, before, 20, withUser, msgs => {
             msgs = msgs.map(m => this._patchMessage(m, 0));
@@ -2337,6 +2354,11 @@ let store = {
 
     searchMessageInTypes(conversation, contentTypes, query, offset) {
         let msgs = wfc.searchMessageByTypes(conversation, query, contentTypes, true, 20, offset)
+        return msgs.map(m => this._patchMessage(m, 0));
+    },
+
+    searchMessageInTypesAndTimes(conversation, contentTypes, query, startTime, endTime, offset) {
+        let msgs = wfc.searchMessageByTypesAndTimes(conversation, query, contentTypes, startTime, endTime, true, 20, offset)
         return msgs.map(m => this._patchMessage(m, 0));
     },
 

@@ -129,6 +129,19 @@
         "search_message_history": "Search chat history...",
         "result_empty": "No search result"
     },
+    "message_history": {
+        "title_single": "Chat history with \"{0}\"",
+        "title_group": "Chat history of \"{0}\"",
+        "file": "Files",
+        "media": "Photos & Videos",
+        "link": "Links",
+        "date": "Date",
+        "member": "Members",
+        "view_context": "View in context",
+        "back": "Back",
+        "empty": "No messages",
+        "this_month": "This month"
+    },
     "file_record": {
         "no_more": "No more files",
         "all_file_load": "All files have been loaded :("

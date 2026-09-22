@@ -142,6 +142,19 @@
         "search_message_history": "搜索聊天记录...",
         "result_empty": "没有搜索结果"
     },
+    "message_history": {
+        "title_single": "与\"{0}\"的聊天记录",
+        "title_group": "\"{0}\"的聊天记录",
+        "file": "文件",
+        "media": "图片与视频",
+        "link": "链接",
+        "date": "日期",
+        "member": "群成员",
+        "view_context": "查看上下文",
+        "back": "返回",
+        "empty": "暂无聊天记录",
+        "this_month": "本月"
+    },
     "file_record": {
         "no_more": "没有更多文件",
         "all_file_load": "已加载全部文件 :("

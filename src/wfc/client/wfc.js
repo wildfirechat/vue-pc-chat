@@ -2041,7 +2041,8 @@ export class WfcManager {
      * @param failCB
      */
     getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB) {
-        impl.getUserMessagesV2(userId, conversation, fromIndex, before, count, successCB, failCB);
+        // proto 的第 6 个参数是 contentTypes，不传的话 successCB 会被当成 contentTypes，回调永远不会被调用
+        impl.getUserMessagesV2(userId, conversation, fromIndex, before, count, [], successCB, failCB);
     }
 
     /**

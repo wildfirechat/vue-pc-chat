@@ -1087,7 +1087,10 @@ const createMainWindow = async () => {
         console.log(`on ${IPCEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
         if (!conversationMessageHistoryMessageWindow) {
             let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
-            conversationMessageHistoryMessageWindow = createWindow(url, 960, 600, 640, 400, false, false, false, false);
+            // 参考微信聊天记录窗口：窄长、可调整大小，高度不超过当前屏幕可用区域
+            let workArea = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
+            let height = Math.min(720, workArea.height - 40);
+            conversationMessageHistoryMessageWindow = createWindow(url, 570, height, 480, Math.min(520, height), true, false, false, false);
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
