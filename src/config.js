@@ -246,9 +246,12 @@ export default class Config {
             return url;
         }
         // 示例代码
-        // 双网环境时，将媒体文件地址切到备选网络
+        // 双网环境时，将媒体文件地址切到当前连接的网络
+        // 主备网络是隔离的，从备选网络切回主网络时，也需要把备选网络地址切回主网络
         if (Config.isUseBackupAddress()) {
             url = url.replace('oss.xxxx.com', '192.168.2.19');
+        } else {
+            url = url.replace('192.168.2.19', 'oss.xxxx.com');
         }
         return url;
     }

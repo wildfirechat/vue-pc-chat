@@ -110,6 +110,7 @@ import InfiniteLoading from "@imndx/vue-infinite-loading";
 import {ipcRenderer, isElectron, currentWindow} from "../../platform";
 import UserListView from "../main/user/UserListView.vue";
 import IpcEventType from "../../ipcEventType";
+import Config from "../../config";
 import { markRaw } from 'vue';
 import ConversationItemLiteView from '../main/conversationList/ConversationItemLiteView.vue';
 
@@ -268,7 +269,8 @@ export default {
                 ipcRenderer.send(IpcEventType.DOWNLOAD_FILE, {
                     // TODO -1时，不通知进度
                     messageId: -1,
-                    remotePath: fileRecord.url,
+                    // 双网环境时，按当前网络转换下载地址
+                    remotePath: Config.urlRedirect(fileRecord.url),
                     fileName: fileRecord.name,
                     source: 'file',
                     windowId: currentWindow.getMediaSourceId(),

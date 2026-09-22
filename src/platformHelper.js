@@ -108,6 +108,9 @@ export function downloadFile2(url, name, messageUid) {
         return;
     }
 
+    // 消息里的地址是消息加载时按当时的网络转换的，双网切换后可能已经不可达，下载时按当前网络重新转换
+    url = Config.urlRedirect(url);
+
     if (isElectron()) {
         ipcRenderer.send(IPCEventType.DOWNLOAD_FILE, {
             messageUid: stringValue(messageUid),
