@@ -257,16 +257,18 @@ export default class Config {
     }
 
     /**
-     * 双网环境时，判断是否是备选网络
+     * 双网环境时，判断当前是否使用备选网络
+     *
+     * 和 _selectServer 一样以 wfc.connectedToMainNetwork() 为准，保证服务地址选择和媒体地址转换选的是同一个网络：
+     * 设置了固定的备选网络策略（1 主网络 / 2 备选网络）时，以策略为准；
+     * 否则以 IM 连接的网络为准，断线重连等未连接状态时沿用最近一次连接的网络，还没有连接过时按主网络处理。
+     *
+     * 不要直接用 wfc.getConnectedNetworkType()：它不考虑固定策略，且每次都是同步 IPC 调用，
+     * 而本方法会被 urlRedirect 在解析每条媒体消息时调用。
      * @return {boolean}
      */
     static isUseBackupAddress() {
-        //示例代码
-        let host = wfc.getHost();
-        if (host === '192.168.2.169'/* backupHost */) {
-            return true;
-        }
-        return false;
+        return !wfc.connectedToMainNetwork();
     }
 
     /**
