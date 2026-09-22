@@ -50,6 +50,9 @@ import Config from "../../../config";
 import organizationServerApi from "../../../api/organizationServerApi";
 import store from "../../../store";
 
+// 存在多个根组织时，面包屑最前面的虚拟节点，点击返回根组织列表
+const ALL_ROOT_ORGANIZATIONS_NODE_ID = '__all_root_organizations__';
+
 export default {
     name: "CheckableOrganizationTreeView",
     props: {
@@ -61,6 +64,7 @@ export default {
     components: {},
     data() {
         return {
+            rootOrganizations: [],
             subOrganizations: [],
             employees: [],
             currentOrganizationPathList: [],
@@ -91,9 +95,11 @@ export default {
         // this.loadAndShowOrganization(this.sharedContactState.currentOrganization);
         organizationServerApi.getRootOrganization()
             .then(orgs => {
-                if (orgs.length > 0) {
-                    this.currentOrgId = orgs[0].id;
+                this.rootOrganizations = orgs;
+                if (orgs.length === 1) {
                     this.loadAndShowOrganization(orgs[0])
+                } else if (orgs.length > 1) {
+                    this.showRootOrganizations();
                 }
             })
             .catch(error => {
@@ -105,25 +111,47 @@ export default {
     },
     methods: {
         loadAndShowOrganization(org) {
+            if (org.id === ALL_ROOT_ORGANIZATIONS_NODE_ID) {
+                this.showRootOrganizations();
+                return;
+            }
             this.loadAndShowOrganizationById(org.id);
+        },
+        showRootOrganizations() {
+            this.currentOrgId = null;
+            this.subOrganizations = this.rootOrganizations;
+            this.employees = [];
+            this.currentOrganizationPathList = [];
+            this.$emit('organization-path-update', this.currentOrganizationPathList);
         },
         loadAndShowOrganizationById(orgId) {
             this.currentOrgId = orgId;
             organizationServerApi.getOrganizationEx(orgId)
                 .then(res => {
+                    if (this.currentOrgId !== orgId) return;
                     this.subOrganizations = res.subOrganizations;
                     this.employees = res.employees;
                 });
             organizationServerApi.getOrganizationPath(orgId)
                 .then(orgs => {
-                    this.currentOrganizationPathList = orgs.reverse();
+                    if (this.currentOrgId !== orgId) return;
+                    orgs.reverse();
+                    if (this.rootOrganizations.length > 1) {
+                        orgs.unshift({id: ALL_ROOT_ORGANIZATIONS_NODE_ID, name: '全部'});
+                    }
+                    this.currentOrganizationPathList = orgs;
                     this.$emit('organization-path-update', this.currentOrganizationPathList);
                 })
         },
         async search(keyword) {
-            if (!this.currentOrgId) return;
+            // 在根组织列表时，搜索所有根组织
+            let orgIds = this.currentOrgId ? [this.currentOrgId] : this.rootOrganizations.map(o => o.id);
+            if (orgIds.length === 0) return;
             try {
-                this.searchResults = await organizationServerApi.searchEmployee(this.currentOrgId, keyword);
+                let resultList = await Promise.all(orgIds.map(orgId => organizationServerApi.searchEmployee(orgId, keyword)));
+                let employeeMap = new Map();
+                resultList.flat().forEach(e => employeeMap.set(e.employeeId, e));
+                this.searchResults = [...employeeMap.values()];
                 this.searchMode = true;
             } catch (e) {
                 console.error('search employee error', e);
