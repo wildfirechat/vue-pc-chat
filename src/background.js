@@ -112,11 +112,21 @@ function isAutoUpdaterSupported() {
     return true;
 }
 
+const APP_UPDATE_CONFIG_PATH = nodePath.join(process.resourcesPath, 'app-update.yml');
+
 // electron-updater 没有 feedUrl 属性，不能用它判断是否配置了更新服务器；
 // vue.config.js 中配置了 publish 时，打包会生成 resources/app-update.yml。
 // 即使用 setFeedURL 指定了地址，electron-updater 下载更新时也要读 app-update.yml，所以 publish 必须配置
 function isUpdaterConfigured() {
-    return fs.existsSync(nodePath.join(process.resourcesPath, 'app-update.yml'));
+    return fs.existsSync(APP_UPDATE_CONFIG_PATH);
+}
+
+// 当前平台的更新目录，即 app-update.yml 里 publish.url 的最后一级目录，如 mac-universal、win-x64。
+// 从打包结果里取，${arch} 已经展开，也不用在代码里再维护一份 mac 打的是 universal 包之类的规则
+function getUpdatePlatformDir() {
+    let content = fs.readFileSync(APP_UPDATE_CONFIG_PATH, 'utf-8');
+    let url = /^url:\s*['"]?([^'"\s]+)/m.exec(content)[1];
+    return url.replace(/\/+$/, '').split('/').pop();
 }
 
 // 双网环境下，更新地址由主窗口按当前网络选择（Config.getUpdateServer()），这里只发请求
@@ -402,7 +412,8 @@ let trayMenu = [
 ];
 let blink = null
 
-function checkForUpdates(manual = false, feedUrl = null) {
+// server：主窗口按当前网络选好的 Config.UPDATE_SERVER 或 UPDATE_BACKUP_SERVER
+function checkForUpdates(manual = false, server = null) {
     manualUpdateCheck = manual;
     if (!isAutoUpdaterSupported()) {
         if (manual) {
@@ -443,10 +454,10 @@ function checkForUpdates(manual = false, feedUrl = null) {
 
     // 双网环境下切到当前网络的更新地址；为空时使用 app-update.yml 里的 publish.url
     // latest.yml 里的安装包路径是相对路径，下载也会走这个地址
-    if (feedUrl) {
+    if (server) {
         autoUpdater.setFeedURL({
             provider: 'generic',
-            url: feedUrl
+            url: `${server}/${getUpdatePlatformDir()}`
         });
     }
 
@@ -1544,7 +1555,7 @@ app.on('ready', () => {
         // }
 
         ipcMain.on(IPCEventType.CHECK_FOR_UPDATES, (event, args = {}) => {
-            checkForUpdates(args.manual !== false, args.feedUrl);
+            checkForUpdates(args.manual !== false, args.server);
         });
 
         ipcMain.handle('is-updater-configured', () => {

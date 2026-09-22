@@ -17,12 +17,12 @@ export class UpdateServerApi {
      * @param {boolean} manual 是否是用户手动检查，手动检查时，无更新、出错等情况会弹窗提示
      */
     async checkForUpdates(manual) {
-        let feedUrl = await this._getUpdateServer();
-        ipcRenderer.send(IPCEventType.CHECK_FOR_UPDATES, {manual, feedUrl});
+        let server = await this._getUpdateServer();
+        ipcRenderer.send(IPCEventType.CHECK_FOR_UPDATES, {manual, server});
     }
 
     /**
-     * @return {Promise<string|null>} 为 null 时，主进程使用 app-update.yml 里的 publish.url
+     * @return {Promise<string|null>} 各平台更新目录的上一级目录，主进程会拼上平台目录；为 null 时，主进程使用 app-update.yml 里的 publish.url
      * @private
      */
     async _getUpdateServer() {

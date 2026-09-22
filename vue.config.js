@@ -147,7 +147,14 @@ module.exports = {
                             ]
 
                         }
-                    ]
+                    ],
+                    // 如需启用自动更新，请取消下面注释并配置实际的服务器地址
+                    // 自动更新地址。不能用 ${arch}：universal 包是先分别打 x64、arm64 再合并的，
+                    // 两边写入的 app-update.yml 不一样（mac-x64 / mac-arm64），合并时会报 non-binary files 的 SHA 不一致
+                    // publish: {
+                    //     provider: 'generic',
+                    //     url: 'https://your-update-server.com/releases/mac-universal'
+                    // }
                 },
                 linux: {
                     category: "Chat",
@@ -155,7 +162,13 @@ module.exports = {
                     target: [
                         'deb',
                         'AppImage'
-                    ]
+                    ],
+                    // 如需启用自动更新，请取消下面注释并配置实际的服务器地址
+                    // 自动更新地址，${arch} 展开为 x64、arm64。只有 AppImage 支持自动更新
+                    // publish: {
+                    //     provider: 'generic',
+                    //     url: 'https://your-update-server.com/releases/linux-${arch}'
+                    // }
                 },
                 deb: {
                     afterInstall: 'entries/install.sh'
@@ -178,7 +191,13 @@ module.exports = {
                 ],
                 win: {
                     target: "nsis",
-                    requestedExecutionLevel: "asInvoker"
+                    requestedExecutionLevel: "asInvoker",
+                    // 如需启用自动更新，请取消下面注释并配置实际的服务器地址
+                    // 自动更新地址，${arch} 展开为 x64、ia32。x64 和 ia32 的 latest.yml 同名，要放不同目录
+                    // publish: {
+                    //     provider: 'generic',
+                    //     url: 'https://your-update-server.com/releases/win-${arch}'
+                    // }
                 },
                 nsis: {
                     oneClick: false,
@@ -189,12 +208,8 @@ module.exports = {
                     createDesktopShortcut: true,
                     shortcutName: '${productName}',
                 },
-                // 如需启用自动更新，请取消下面注释并配置实际的服务器地址
-                // 双网环境下，还需要配置 src/config.js 里的 UPDATE_SERVER（和这里的 url 一致）和 UPDATE_BACKUP_SERVER
-                // publish: {
-                //     provider: 'generic',
-                //     url: 'https://your-update-server.com/releases'
-                // }
+                // 自动更新地址配置在上面的 mac、linux、win 里，各平台一个目录，目录名是 url 的最后一级。
+                // 双网环境下，src/config.js 里的 UPDATE_SERVER 要配置成这些目录的上一级，UPDATE_BACKUP_SERVER 是备选网络对应的地址
             }
         }
     },

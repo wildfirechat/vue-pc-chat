@@ -71,7 +71,8 @@ export default class Config {
     // 组织结构服务备选地址，双网环境下使用
     static ORGANIZATION_BACKUP_SERVER = null;
 
-    // 自动更新服务地址，和 vue.config.js 里 publish.url 保持一致。
+    // 自动更新服务地址。各平台的更新文件放在它下面的子目录（mac-universal、win-x64、linux-x64、linux-arm64），
+    // 即 vue.config.js 里 mac、win、linux 各自 publish.url 的上一级目录；检查更新时会拼上 publish.url 的最后一级目录。
     // publish 必须配置：打包时据此生成 app-update.yml 和 latest.yml 等更新文件，electron-updater 下载更新时也要读 app-update.yml。
     // 为 null 时直接使用 publish.url，不做双网切换
     static UPDATE_SERVER = null;
