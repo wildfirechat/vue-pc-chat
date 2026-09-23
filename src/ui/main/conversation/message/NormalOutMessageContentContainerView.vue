@@ -19,7 +19,7 @@
                                                      v-bind:class="{highlight:highLight}"
                                                      @contextmenu.prevent.native="openMessageContextMenu($event, message)"/>
                         <QuoteMessageView v-if="quotedMessage"
-                                          style="padding: 4px 0; max-width: 80%"
+                                          style="padding: 4px 0; max-width: 400px"
                                           :message="message"
                                           :quoted-message="quotedMessage"
                                           :enable-message-preview="true"

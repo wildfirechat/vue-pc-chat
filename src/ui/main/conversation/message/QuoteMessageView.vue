@@ -182,6 +182,7 @@ export default {
 
 .quoted-message {
     display: flex;
+    min-width: 0;
     background-color: var(--background-message-quoted);
     border-radius: var(--radius-md);
     padding: 4px 8px;
@@ -216,20 +217,22 @@ export default {
 
 .media-content {
     max-width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: row;
+    align-items: flex-start;
 }
 
+/* 名字按内容宽度显示，图片紧跟其后；名字过长时截断，图片不被挤压 */
 .media-content p {
-    width: 100px;
-    max-height: 50px;
-    max-width: 100px;
+    min-width: 0;
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
 }
 
 .quoted-message img {
+    flex-shrink: 0;
     margin-left: 8px;
     border-radius: var(--radius-sm);
     max-width: 100px;
