@@ -3,7 +3,7 @@
         <div class="forward-message">
             <div v-if="forwardType === 0">
                 <img v-if="[3, 6].indexOf(messages[0].messageContent.type) >= 0"
-                     :src="'data:video/jpeg;base64,' + messages[0].messageContent.thumbnail" alt="">
+                     :src="firstMediaThumbnailSrc" alt="">
                 <p v-else>
                     {{ this.forwardMessageStr }}
                 </p>
@@ -24,6 +24,7 @@
 import MessageContentType from "../../../../../wfc/messages/messageContentType";
 import ForwardType from "./ForwardType";
 import ConversationType from "../../../../../wfc/model/conversationType";
+import {imageThumbnailSrc} from "../../../../util/imageThumbUtil";
 
 export default {
     name: "ForwardMessageView",
@@ -45,6 +46,14 @@ export default {
     },
     methods: {},
     computed: {
+        firstMediaThumbnailSrc() {
+            let firstMsg = this.messages[0];
+            let content = firstMsg.messageContent;
+            if (content.type === MessageContentType.Image) {
+                return imageThumbnailSrc(firstMsg) || content.remotePath;
+            }
+            return 'data:video/jpeg;base64,' + content.thumbnail;
+        },
         forwardMessageStr() {
             let str;
             let firstMsg = this.messages[0];

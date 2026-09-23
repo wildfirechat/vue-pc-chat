@@ -171,12 +171,15 @@ let store = {
         this.state.misc.connectionStatus = wfc.getConnectionStatus();
         // 初始化时检查锁定状态
         this.state.misc.isLocked = wfc.isLocked();
+        // 子窗口在连接成功后才打开，收不到连接成功事件，初始化时先读取一次
+        this._loadImageThumbPara();
         this._addWfcListener(EventType.ConnectionStatusChanged, (status) => {
             console.log('store ConnectionStatusChanged', status, ConnectionStatus.desc(status));
             this.state.contact.isEnableMesh = wfc.isEnableMesh();
             this.state.misc.connectionStatus = status;
             this.state.misc.isCommercialServer = wfc.isCommercialServer();
             this.state.misc.isDisableSyncDraft = wfc.isDisableSyncDraft();
+            this._loadImageThumbPara();
             try {
                 if (status === ConnectionStatus.ConnectionStatusConnected) {
                     // 连接成功后检查锁定状态
@@ -614,6 +617,15 @@ let store = {
         }
         this.state.misc.isMainWindow = isMainWindow;
         window.__cw = currentWindow;
+    },
+
+    _loadImageThumbPara() {
+        try {
+            this.state.misc.imageThumbPara = wfc.getImageThumbPara() || '';
+        } catch (e) {
+            // 协议栈不支持时按不支持处理，显示占位图
+            this.state.misc.imageThumbPara = '';
+        }
     },
 
     _loadDefaultData() {

@@ -38,7 +38,7 @@
                         <p class="media-group-title">{{ group.title }}</p>
                         <ul class="media-grid">
                             <li v-for="message in group.messages" :key="message.messageId"
-                                :style="{backgroundImage: message.messageContent.thumbnail ? `url(data:image/jpeg;base64,${message.messageContent.thumbnail})` : ''}"
+                                :style="{backgroundImage: mediaThumbnailBackground(message)}"
                                 @click="previewMedia(message)">
                                 <img v-if="message.messageContent.type === MessageContentType.Image && message.messageContent.remotePath"
                                      :src="message.messageContent.remotePath" loading="lazy" draggable="false" alt=""
@@ -103,6 +103,7 @@ import NotificationMessageContent from "../../wfc/messages/notification/notifica
 import {numberValue} from "../../wfc/util/longUtil";
 import {reactive} from "vue";
 import {previewMM} from "../../platformHelper";
+import {imageThumbnailSrc} from "../util/imageThumbUtil";
 
 const FILTER_ICONS = {
     file: 'icon-ion-document',
@@ -194,6 +195,14 @@ export default {
     },
 
     methods: {
+        mediaThumbnailBackground(message) {
+            let content = message.messageContent;
+            let src = content.type === MessageContentType.Image
+                ? imageThumbnailSrc(message)
+                : (content.thumbnail ? 'data:image/jpeg;base64,' + content.thumbnail : '');
+            return src ? `url("${src}")` : '';
+        },
+
         resetList() {
             this.context = null;
             let conversation = this.conversationInfo.conversation;

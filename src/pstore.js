@@ -218,6 +218,8 @@ export const pstore = (id) => defineStore(id, () => {
         linuxUpdateTitleInterval: 0,
         isCommercialServer: false,
         isDisableSyncDraft: false,
+        // 图片缩略图参数，为 .thumb 时图片消息不带缩略图，缩略图地址为 remotePath + .thumb
+        imageThumbPara: '',
         isVoipOngoing: false,
         config: Config,
         userOnlineStateMap: new Map(),

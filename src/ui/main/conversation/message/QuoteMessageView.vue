@@ -44,6 +44,7 @@ import Message from "../../../../wfc/messages/message";
 import PreviewQuotedMessageView from "./PreviewQuotedMessageView.vue";
 import {fs, isElectron, shell} from "../../../../platform";
 import {downloadFile, previewMM} from "../../../../platformHelper";
+import {imageThumbnailSrc} from "../../../util/imageThumbUtil";
 
 export default {
     name: "QuoteMessageView",
@@ -157,6 +158,9 @@ export default {
         mediaSrc() {
             let src;
             let msgCnt = this.quotedMessage.messageContent;
+            if (msgCnt.type === MessageContentType.Image) {
+                return imageThumbnailSrc(this.quotedMessage) || msgCnt.remotePath;
+            }
             src = msgCnt.thumbnail ? 'data:video/jpeg;base64,' + msgCnt.thumbnail : msgCnt.remotePath;
             return src;
         }

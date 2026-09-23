@@ -63,7 +63,8 @@
                          :style="placeholderStyle"
                          :src="currentMedia.thumbnailSrc"
                          draggable="false"
-                         alt="">
+                         alt=""
+                         @error="$event.target.style.display = 'none'">
                     <img :key="mediaKey"
                          ref="img"
                          class="media"
@@ -125,6 +126,7 @@ import ImageMessageContent from '../../wfc/messages/imageMessageContent';
 import Message from '../../wfc/messages/message';
 import VideoMessageContent from '../../wfc/messages/videoMessageContent';
 import { stringValue } from '../../wfc/util/longUtil';
+import { imageThumbnailSrc } from '../util/imageThumbUtil';
 
 const ZOOM_STEP = 1.25;
 const MIN_SCALE = 0.1;
@@ -595,7 +597,7 @@ export default {
             if (this.message.messageContent.type === MessageContentType.Image) {
                 cm = {
                     url: this.message.messageContent.remotePath,
-                    thumbnailSrc: 'data:video/jpeg;base64,' + this.message.messageContent.thumbnail,
+                    thumbnailSrc: imageThumbnailSrc(this.message),
                     type: 'image',
                     width: this.message.messageContent.imageWidth,
                     height: this.message.messageContent.imageHeight,

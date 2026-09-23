@@ -2554,6 +2554,14 @@ export class WfcManager {
     }
 
     /**
+     * 获取图片缩略图参数。返回 .thumb 时，发送图片消息不再携带缩略图，由服务端（minio）上传图片时自动生成，缩略图地址为 remotePath + .thumb
+     * @return {string}
+     */
+    getImageThumbPara() {
+        return impl.getImageThumbPara();
+    }
+
+    /**
      * 获取上传链接。一般用户大文件上传。
      * @param {string} fileName
      * @param {number} mediaType 媒体类型，可选值参考{@link MessageContentMediaType}

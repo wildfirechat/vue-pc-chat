@@ -1,7 +1,9 @@
 <template>
     <div class="image-content-container">
-        <img ref="thumbnail" v-show="imageLoaded === false" @click="preview(message)"
-             v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
+        <img ref="thumbnail" class="thumbnail" v-show="imageLoaded === false" @click="preview(message)"
+             :class="{placeholder: !thumbnailSrc}"
+             v-bind:src="thumbnailSrc || placeholderSrc"
+             @error="thumbnailError = true">
         <img ref="img" v-show="imageLoaded" @click="preview(message)" @load="onImageLoaded"
              draggable="true"
              v-bind:src="message.messageContent.remotePath">
@@ -12,6 +14,10 @@
 import Message from "../../../../../wfc/messages/message";
 import {previewMM} from "../../../../../platformHelper";
 import {scaleDown} from "../../../../util/imageUtil";
+import {imageThumbnailSrc} from "../../../../util/imageThumbUtil";
+
+// 透明占位图，配合 .placeholder 背景色显示
+const PLACEHOLDER_SRC = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 export default {
     name: "ImageMessageContentView",
@@ -29,7 +35,15 @@ export default {
     data() {
         return {
             imageLoaded: false,
+            // 缩略图加载失败（如服务端未生成 .thumb）时显示占位
+            thumbnailError: false,
+            placeholderSrc: PLACEHOLDER_SRC,
         }
+    },
+    computed: {
+        thumbnailSrc() {
+            return this.thumbnailError ? '' : imageThumbnailSrc(this.message);
+        },
     },
     mounted() {
         let iw = this.message.messageContent.imageWidth;
@@ -74,6 +88,21 @@ export default {
     border-radius: var(--radius-md);
     overflow: hidden;
     object-fit: scale-down;
+}
+
+/*
+ * 缩略图分辨率低于显示区域，scale-down 不会放大，只占一小块。
+ * 显示区域已按原图宽高设置，用 contain 放大铺满；宽高比与缩略图不一致时（如 EXIF 旋转）留边而不裁剪
+ */
+.image-content-container img.thumbnail {
+    object-fit: contain;
+}
+
+/* 没有缩略图时的占位；已知图片尺寸时 mounted 里设置的行内宽高会覆盖这里 */
+.image-content-container img.placeholder {
+    width: 150px;
+    height: 150px;
+    background-color: var(--background-item-placeholder);
 }
 
 .right-arrow:before {
