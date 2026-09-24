@@ -4,7 +4,10 @@
 
             <div class="media-content" v-if="[3, 6, 7].indexOf(this.quotedMessage.messageContent.type) >= 0">
                 <p> {{ this.quotedMessage._from._displayName + ':' }} </p>
-                <img :src="mediaSrc" alt=""
+                <!-- 贴纸可能是 Telegram 动态贴纸（Lottie），不能用 img 显示 -->
+                <StickerView v-if="this.quotedMessage.messageContent.type === 7" class="quoted-sticker"
+                             :src="this.quotedMessage.messageContent.remotePath" :width="60" :height="60"/>
+                <img v-else :src="mediaSrc" alt=""
                      @click="onMessageClick">
             </div>
             <div v-else-if="enableMessagePreview && this.quotedMessage.messageContent.type === 1" class="other-content">
@@ -45,6 +48,7 @@ import PreviewQuotedMessageView from "./PreviewQuotedMessageView.vue";
 import {fs, isElectron, shell} from "../../../../platform";
 import {downloadFile, previewMM} from "../../../../platformHelper";
 import {imageThumbnailSrc} from "../../../util/imageThumbUtil";
+import StickerView from "../sticker/StickerView.vue";
 
 export default {
     name: "QuoteMessageView",
@@ -167,6 +171,7 @@ export default {
     },
     components: {
         PreviewQuotedMessageView,
+        StickerView,
     }
 }
 
@@ -229,6 +234,11 @@ export default {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+}
+
+.quoted-sticker {
+    flex-shrink: 0;
+    margin-left: 8px;
 }
 
 .quoted-message img {

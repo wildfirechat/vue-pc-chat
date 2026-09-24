@@ -1,0 +1,10 @@
+Noto Animated Emoji
+Copyright Google LLC
+Source: https://googlefonts.github.io/noto-emoji-animation/
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/
+
+Changes: the original Lottie JSON files were converted to TGS (gzip-compressed
+Lottie). In the "office_phrases" pack each emoji is scaled and composited with
+animated Chinese text rendered from Noto Sans SC (SIL Open Font License 1.1,
+https://openfontlicense.org).

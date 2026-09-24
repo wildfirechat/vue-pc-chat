@@ -81,6 +81,8 @@
     "mark_as_unread": "標記為未讀",
     "mark_as_read": "標記為已讀",
     "action_tip_emoji": "發送表情",
+    "emoji_tab": "表情",
+    "sticker_send_failed": "表情發送失敗",
     "action_tip_file": "發送文件",
     "action_tip_screenshot": "截圖",
     "action_tip_screenshot_hide": "隱藏當前視窗截圖",

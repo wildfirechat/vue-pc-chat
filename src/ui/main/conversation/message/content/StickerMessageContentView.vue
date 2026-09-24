@@ -1,15 +1,16 @@
 <template>
     <div class="sticker-content-container">
-        <img ref="thumbnail" v-show="imageLoaded === false" @click="preview(message)"
-             v-bind:src="'data:video/jpeg;base64,' + message.messageContent.thumbnail">
-        <img ref="img" v-show="imageLoaded" @click="preview(message)" @load="onImageLoaded"
-             v-bind:src="message.messageContent.remotePath">
+        <StickerView :src="message.messageContent.remotePath" :width="size.width" :height="size.height"/>
     </div>
 </template>
 
 <script>
 import Message from "../../../../../wfc/messages/message";
 import {scaleDown} from "../../../../util/imageUtil";
+import StickerView from "../../sticker/StickerView.vue";
+
+// 贴纸显示区域边长上限
+const MAX_SIDE = 200;
 
 export default {
     name: "StickerMessageContentView",
@@ -19,33 +20,20 @@ export default {
             required: true,
         }
     },
-    data() {
-        return {
-            imageLoaded: false,
-        }
-    },
-    mounted() {
-        let iw = this.message.messageContent.width;
-        let ih = this.message.messageContent.height;
-        if (iw && ih) {
-            let size = scaleDown(iw, ih, 200, 200);
-            if (size) {
-                this.$refs.img.style.height = size.height + 'px';
-                this.$refs.img.style.width = size.width + 'px';
-                this.$refs.thumbnail.style.height = size.height + 'px';
-                this.$refs.thumbnail.style.width = size.width + 'px';
+    computed: {
+        // 宽高已知时先占好位，加载完成前后列表不跳动
+        size() {
+            let iw = this.message.messageContent.width;
+            let ih = this.message.messageContent.height;
+            if (iw > 0 && ih > 0) {
+                return scaleDown(iw, ih, MAX_SIDE, MAX_SIDE);
             }
-        }
-    },
-    methods: {
-        preview(message) {
-            // TODO
-            console.log('TODO, preview sticker collection');
+            return {width: MAX_SIDE, height: MAX_SIDE};
         },
-        onImageLoaded() {
-            this.imageLoaded = true
-        }
-    }
+    },
+    components: {
+        StickerView,
+    },
 }
 </script>
 
@@ -53,26 +41,6 @@ export default {
 .sticker-content-container {
     margin: 0 8px;
     position: relative;
-    //border: 1px solid var(--border-tertiary);
     border-radius: var(--radius-md);
 }
-
-.sticker-content-container img {
-    max-height: 200px;
-    max-width: 200px;
-    width: 200px;
-    height: 200px;
-    border-radius: var(--radius-md);
-    object-fit: scale-down;
-    overflow: hidden;
-}
-
-.right-arrow:before {
-    border-left-color: var(--text-on-accent);
-}
-
-.left-arrow:before {
-    border-left-color: var(--text-on-accent);
-}
-
 </style>

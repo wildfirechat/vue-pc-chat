@@ -51,7 +51,8 @@ crashReporter.start({
 
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([
-    {scheme: 'app', privileges: {secure: true, standard: true, bypassCSP: true}}
+    // supportFetchAPI：内置贴纸包（public/stickers/）通过 fetch 读取
+    {scheme: 'app', privileges: {secure: true, standard: true, bypassCSP: true, supportFetchAPI: true}}
 ])
 
 const isDevelopment = process.env.NODE_ENV !== 'production'

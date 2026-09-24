@@ -80,6 +80,8 @@
         "mark_as_unread": "Mark as unread",
         "mark_as_read": "Mark as read",
         "action_tip_emoji": "Send Emoji",
+        "emoji_tab": "Emoji",
+        "sticker_send_failed": "Failed to send sticker",
         "action_tip_file": "Send File",
         "action_tip_screenshot": "Screenshot",
         "action_tip_screenshot_hide": "Hide current window when screenshot",

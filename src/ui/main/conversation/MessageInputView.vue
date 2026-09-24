@@ -13,14 +13,12 @@
                         :style="emojiPickerStyle"
                         v-v-on-click-outside="hideEmojiView"
                     >
-                        <VEmojiPicker
-                            id="emoji"
-                            ref="emojiPicker"
-                            labelSearch="Search"
-                            lang="pt-BR"
-                            :customEmojis="emojis"
-                            :customCategories="emojiCategories"
-                            @select="onSelectEmoji"
+                        <EmojiStickerPanel
+                            :emojis="emojis"
+                            :emojiCategories="emojiCategories"
+                            :showStickers="enableSticker"
+                            @selectEmoji="onSelectEmoji"
+                            @selectSticker="onSelectSticker"
                         />
                         <div class="emoji-arrow" :style="{ left: emojiPickerPos.arrowOffset + 'px' }"></div>
                     </div>
@@ -159,12 +157,13 @@
                     <div class="sticker-suggestion-list" ref="stickerList">
                         <div
                             v-for="(sticker, idx) in stickerSuggestions"
-                            :key="idx"
+                            :key="sticker.url"
                             class="sticker-suggestion-item"
                             :class="{ active: idx === selectedStickerIdx }"
+                            :title="sticker.keywords[0]"
                             @click="sendStickerSuggestion(sticker)"
                         >
-                            <img :src="sticker.data" :alt="sticker.aliases && sticker.aliases[0]"/>
+                            <StickerView :src="sticker.url" :width="52" :height="52"/>
                         </div>
                     </div>
                 </div>
@@ -219,7 +218,7 @@
 import wfc from "../../../wfc/client/wfc";
 import TextMessageContent from "../../../wfc/messages/textMessageContent";
 import store from "../../../store";
-import {categoriesDefault, emojisDefault, VEmojiPicker} from "@imndx/v-emoji-picker-vue3"
+import {categoriesDefault, emojisDefault} from "@imndx/v-emoji-picker-vue3"
 import '@imndx/v-emoji-picker-vue3/lib/v-emoji-picker.esm.css'
 import Tribute from "tributejs";
 import '../../../style/tribute.css'
@@ -235,6 +234,10 @@ import QuoteMessageView from "../../main/conversation/message/QuoteMessageView";
 import {fileFromDataUri} from "../../util/imageUtil";
 import StickerMessageContent from "../../../wfc/messages/stickerMessageContent";
 import {config as emojiConfig} from "../../main/conversation/EmojiAndStickerConfig";
+import EmojiStickerPanel from "./sticker/EmojiStickerPanel.vue";
+import StickerView from "./sticker/StickerView.vue";
+import {loadedStickerPacks, loadStickerPacks, matchStickers} from "./sticker/stickerPacks";
+import {sendSticker} from "./sticker/stickerOutbox";
 import {ipcRenderer, isElectron} from "../../../platform";
 import {copyText} from "../../util/clipboard";
 import EventType from "../../../wfc/client/wfcEvent";
@@ -297,14 +300,19 @@ export default {
             stickerSuggestions: [],
             selectedStickerIdx: -1,
             stickerBarPos: { left: 0, bottom: 0, width: 0 },
-            allStickers: (() => {
+            // EmojiAndStickerConfig 里自定义的远端贴纸，也参与输入联想
+            customStickers: (() => {
                 try {
                     const conf = emojiConfig();
-                    return (conf.emojis || []).filter(e => e.category && e.category.startsWith('Sticker-'));
+                    return (conf.emojis || [])
+                        .filter(e => e.category && e.category.startsWith('Sticker-'))
+                        .map(e => ({url: e.data, keywords: e.aliases || [], builtin: false}));
                 } catch (e) {
                     return [];
                 }
             })(),
+            // 密聊不支持贴纸
+            enableSticker: true,
             tribute: null,
             recordingTime: '00:00',
             recordingTimer: null,
@@ -380,13 +388,14 @@ export default {
 
         updateStickerSuggestions() {
             const text = (this.$refs.input?.textContent || '').trim();
-            if (!text) {
+            if (!text || !this.enableSticker) {
                 this.stickerSuggestions = [];
                 return;
             }
-            const matched = this.allStickers.filter(s =>
-                s.aliases && s.aliases.some(alias => alias === text)
-            );
+            const candidates = [];
+            loadedStickerPacks().forEach(pack => candidates.push(...pack.stickers));
+            candidates.push(...this.customStickers);
+            const matched = matchStickers(text, candidates);
             this.stickerSuggestions = matched;
             this.selectedStickerIdx = -1;
             if (matched.length) {
@@ -470,8 +479,7 @@ export default {
 
         sendStickerSuggestion(sticker) {
             if (!sticker) return;
-            const stk = new StickerMessageContent('', sticker.data, 200, 200);
-            wfc.sendConversationMessage(this.conversationInfo.conversation, stk);
+            this.sendSticker(sticker);
             this.$refs.input.innerHTML = '';
             this.updateInputState();
             this.stickerSuggestions = [];
@@ -897,6 +905,22 @@ export default {
             this.updateInputState();
         },
 
+        onSelectSticker(sticker) {
+            this.showEmojiDialog = false;
+            this.sendSticker(sticker);
+            this.focusInput();
+        },
+
+        sendSticker(sticker) {
+            sendSticker(this.conversationInfo.conversation, sticker).catch(e => {
+                console.error('send sticker failed', e);
+                this.$notify({
+                    text: this.$t('conversation.sticker_send_failed'),
+                    type: 'warn'
+                });
+            });
+        },
+
         createElementFromHTML(htmlString) {
             let div = document.createElement('div');
             div.innerHTML = this.$xss(htmlString.trim());
@@ -1029,7 +1053,8 @@ export default {
         initEmojiPicker() {
             window.__twemoji_base_url__ = Config.emojiBaseUrl();
             let config = emojiConfig();
-            if (this.conversationInfo.conversation.type === ConversationType.SecretChat) {
+            this.enableSticker = this.conversationInfo.conversation.type !== ConversationType.SecretChat;
+            if (!this.enableSticker) {
                 this.emojiCategories = config.emojiCategories.filter(c => !c.name.startsWith('Sticker'));
                 this.emojis = config.emojis.filter(c => !c.category.startsWith('Sticker'));
             } else {
@@ -1547,6 +1572,7 @@ export default {
 
         setupConversationInput() {
             this.$refs.input.innerHTML = '';
+            this.hideStickerSuggestions();
             this.restoreDraft();
             this.initMention(this.conversationInfo.conversation)
             this.focusInput();
@@ -1622,6 +1648,8 @@ export default {
 
     created() {
         wfc.eventEmitter.on(EventType.GroupMembersUpdate, this.onGroupMembersUpdate)
+        // 提前加载贴纸包，输入联想要用
+        loadStickerPacks();
     },
 
     unmounted() {
@@ -1730,7 +1758,8 @@ export default {
     components: {
         ChannelMenuView,
         QuoteMessageView,
-        VEmojiPicker
+        EmojiStickerPanel,
+        StickerView,
     },
     directives: {
         vOnClickOutside,
@@ -1755,11 +1784,6 @@ export default {
 .message-input-container.resized .message-input-section {
     flex: 1 1 auto;
     min-height: 150px;
-}
-
-/*pls refer to https://vue-loader.vuejs.org/guide/scoped-css.html#child-component-root-elements*/
-#emoji >>> .container-emoji {
-    height: 280px;
 }
 
 .emoji-popup {
@@ -1839,12 +1863,6 @@ export default {
     transition: border-color 0.12s, background-color 0.12s;
     background-color: var(--background-item-placeholder);
     overflow: hidden;
-}
-
-.sticker-suggestion-item img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
 }
 
 .sticker-suggestion-item:hover {
