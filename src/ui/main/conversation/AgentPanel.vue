@@ -325,6 +325,11 @@ export default {
             try {
                 const data = await getAgentPanelDataFor(this.conversation, this.robotUid);
                 if (data) this.panelData = data;
+                // 会话模式（interrupt/queue）回显：插件在 type=3 的 mode.current 下发，
+                // 面板据此同步本地状态（此前只依赖本地默认值，切换后重开面板会显示回默认）。
+                if (data && data.mode && data.mode.current) {
+                    this.convMode = data.mode.current;
+                }
                 // 兼容老插件：type=3 仍内联 dirs 时直接作为候选（新插件不含 dirs，走 207 op=dirs）
                 if (data && Array.isArray(data.dirs) && data.dirs.length && !this.cwdDirs.length) {
                     this.applyDirs(data.dirs, data.root, true);
