@@ -1,7 +1,7 @@
 <!--
   AgentPanel.vue — AI 会话设置面板（第一层 Agent 可改属性，UI 选择式交互）
   静默通道：打开面板发 AGENT_Command(207) query（组合查询）→ 插件聚合面板数据写
-  scope=31 type=3 → 本组件读 type=3 渲染（模型/effort/沙箱/计划/cwd）。
+  scope=31 type=3 → 本组件读 type=3 渲染（模型/effort/沙箱/计划/cwd/preset/approval）。
   所有操作发 AGENT_Command(207) set（cmd=命令文本），插件执行后写 type=1 lastChange
   （变更可见）+ 刷新 type=3；本组件监听设置更新事件重读。207 为透明消息不显示。
   目录列表（工作目录选择）不再随 type=3 下发：打开弹窗时发 207 op=dirs（带 seq/robotId）
@@ -72,6 +72,35 @@
                             <span>{{ s.label }}</span>
                         </label>
                     </div>
+                </div>
+
+                <!-- Agent 模式（preset）：options 为空=部署未提供 preset 服务 → 禁用但仍显示 current，不隐藏整行 -->
+                <div class="agent-agent-row">
+                    <label class="agent-agent-label">Agent 模式</label>
+                    <select
+                        class="agent-agent-select"
+                        :value="currentPreset"
+                        :disabled="applying || !presetOptions.length"
+                        @change="selectPreset($event.target.value)"
+                    >
+                        <!-- current 不在 options 中（含 options 为空 / 字段整体缺失）：补 fallback 项保证当前值可见 -->
+                        <option v-if="presetFallback" :value="currentPreset" disabled>{{ currentPreset }}</option>
+                        <option v-for="p in presetOptions" :key="p.value" :value="p.value">{{ p.label }}</option>
+                    </select>
+                </div>
+
+                <!-- 工具审批（approval）：同上，options 为空时禁用；字段缺失时控件为空且禁用 -->
+                <div class="agent-agent-row">
+                    <label class="agent-agent-label">工具审批</label>
+                    <select
+                        class="agent-agent-select"
+                        :value="currentApproval"
+                        :disabled="applying || !approvalOptions.length"
+                        @change="selectApproval($event.target.value)"
+                    >
+                        <option v-if="approvalFallback" :value="currentApproval" disabled>{{ currentApproval }}</option>
+                        <option v-for="a in approvalOptions" :key="a.value" :value="a.value">{{ a.label }}</option>
+                    </select>
                 </div>
 
                 <!-- 计划模式 -->
@@ -232,6 +261,27 @@ export default {
         planOn() {
             return !!(this.panelData && this.panelData.plan && this.panelData.plan.on);
         },
+        // preset（Agent 模式）/ approval（工具审批）：与 model.options 同构的 {value,label} 数组；
+        // 字段整体缺失（旧插件）→ current=''、options=[]，控件禁用且不发请求。
+        currentPreset() {
+            return (this.panelData && this.panelData.preset && this.panelData.preset.current) || '';
+        },
+        presetOptions() {
+            return this.panelOptions(this.panelData && this.panelData.preset && this.panelData.preset.options);
+        },
+        /** 非空表示 current 未出现在 options 中：用于补一条 fallback <option> 显示当前值。 */
+        presetFallback() {
+            return this.optionFallback(this.currentPreset, this.presetOptions);
+        },
+        currentApproval() {
+            return (this.panelData && this.panelData.approval && this.panelData.approval.current) || '';
+        },
+        approvalOptions() {
+            return this.panelOptions(this.panelData && this.panelData.approval && this.panelData.approval.options);
+        },
+        approvalFallback() {
+            return this.optionFallback(this.currentApproval, this.approvalOptions);
+        },
         cwdCandidates() {
             // 新插件：207 op=dirs → 209 应答（缓存 TTL 60s）；老插件：type=3 内联 dirs 回退
             return this.cwdDirs || [];
@@ -302,6 +352,18 @@ export default {
         },
         selectSandbox(v) {
             this.sendCommand("set", `/sandbox ${v}`);
+            this.flash();
+        },
+        /** Agent 模式：preset 服务未提供（options 为空）时选择器已禁用，此处再兜一层防空值。 */
+        selectPreset(v) {
+            if (!v) return;
+            this.sendCommand("set", `/preset ${v}`);
+            this.flash();
+        },
+        /** 工具审批策略：ask（需批准的操作弹卡片）/ never（自动拒绝，无人值守）。 */
+        selectApproval(v) {
+            if (!v) return;
+            this.sendCommand("set", `/approval ${v}`);
             this.flash();
         },
         togglePlan(on) {
@@ -500,6 +562,23 @@ export default {
                 && conv.line === this.conversation.line
                 && conv.target === this.conversation.target;
         },
+        /** 面板选项归一化：协议为 [{value,label}]（兼容字符串数组），丢弃非法项；非数组/缺失→[]。 */
+        panelOptions(opts) {
+            if (!Array.isArray(opts)) return [];
+            const out = [];
+            for (const o of opts) {
+                const value = (o && typeof o === 'object') ? o.value : o;
+                if (value === undefined || value === null || value === '') continue;
+                const label = (o && typeof o === 'object' && o.label) ? o.label : value;
+                out.push({value, label});
+            }
+            return out;
+        },
+        /** current 未出现在 options 中时返回 current（供 fallback <option> 显示）；已包含或为空则返回 ''。 */
+        optionFallback(current, options) {
+            if (!current) return '';
+            return options.some(o => o.value === current) ? '' : current;
+        },
         flash() {
             this.applying = true;
             clearTimeout(this._flashTimer);
@@ -571,7 +650,9 @@ export default {
 
 .agent-agent-label {
     flex: 0 0 auto;
-    width: 64px;
+    /* min-width 取代固定宽度：「Agent 模式」等较长标签不换行；原有短标签仍为 64px，布局不变 */
+    min-width: 64px;
+    white-space: nowrap;
     color: var(--text-secondary, #666);
 }
 

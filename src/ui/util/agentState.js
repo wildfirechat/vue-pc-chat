@@ -135,7 +135,7 @@ export async function getAgentMetrics(conversation) {
 
 /**
  * Read the AI 面板数据 of a conversation (scope=31, type=3).
- * 组合查询（AGENT_Command 207 query）结果：model/effort/sandbox/plan/cwd/sessionId。
+ * 组合查询（AGENT_Command 207 query）结果：model/effort/sandbox/plan/cwd/sessionId/preset/approval。
  * 注意：新插件已把 dirs 移出 type=3（改走 207 op=dirs → 209 按需应答，见
  * INTERACTION_DESIGN.md §10）；老插件仍可能内联 dirs。
  * Returns null when unset/invalid.
