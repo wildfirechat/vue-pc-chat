@@ -121,6 +121,8 @@ module.exports = {
                 // 修改appId是，需要同时修改backgroud.js里面设置的appUserModelId，设置见：app.setAppUserModelId(xxx)
                 appId: pkg.appId,
                 compression: 'normal',
+                // macOS 下给主程序和 Helper 换专属的 Mach-O UUID，否则「本地网络」权限会和其他同版本 Electron App 混淆，原因见脚本注释
+                afterPack: './scripts/mac-unique-uuid.js',
                 artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
                 files: [
                     "**/*",
@@ -133,7 +135,9 @@ module.exports = {
                 mac: {
                     extendInfo: {
                         NSCameraUsageDescription: "This app requires camera access to record video.",
-                        NSMicrophoneUsageDescription: "This app requires microphone access to record audio."
+                        NSMicrophoneUsageDescription: "This app requires microphone access to record audio.",
+                        // macOS 15 起访问局域网地址（如 192.168.x.x）要用户授权「本地网络」权限，未授权时请求报 net::ERR_ADDRESS_UNREACHABLE
+                        NSLocalNetworkUsageDescription: "This app requires local network access to connect to the IM server on your network."
                     },
                     hardenedRuntime: true,
                     gatekeeperAssess: false,
