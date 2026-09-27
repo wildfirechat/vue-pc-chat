@@ -137,8 +137,20 @@ module.exports = {
                         NSCameraUsageDescription: "This app requires camera access to record video.",
                         NSMicrophoneUsageDescription: "This app requires microphone access to record audio.",
                         // macOS 15 起访问局域网地址（如 192.168.x.x）要用户授权「本地网络」权限，未授权时请求报 net::ERR_ADDRESS_UNREACHABLE
-                        NSLocalNetworkUsageDescription: "This app requires local network access to connect to the IM server on your network."
+                        NSLocalNetworkUsageDescription: "This app requires local network access to connect to the server for messaging and audio/video calls. If not allowed, you may be unable to sign in or send and receive messages."
                     },
+                    // 上面权限描述的中文翻译，放到 Contents/Resources/<语言>.lproj/InfoPlist.strings，系统按用户的系统语言选用，其他语言显示上面的英文。
+                    // 目录名要和 Electron 自带的 zh_CN.lproj、zh_TW.lproj 一致，修改上面的描述时要同步修改这里的翻译
+                    extraResources: [
+                        {
+                            from: './build/mac/zh_CN.lproj',
+                            to: 'zh_CN.lproj'
+                        },
+                        {
+                            from: './build/mac/zh_TW.lproj',
+                            to: 'zh_TW.lproj'
+                        }
+                    ],
                     hardenedRuntime: true,
                     gatekeeperAssess: false,
                     entitlements: "build/mac/entitlements.mac.plist",

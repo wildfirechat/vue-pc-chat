@@ -1,0 +1,7 @@
+/* 權限申請彈窗裡的描述，英文原文見 vue.config.js 裡 mac.extendInfo */
+NSCameraUsageDescription = "本應用程式需要存取相機以錄製影片。";
+NSMicrophoneUsageDescription = "本應用程式需要存取麥克風以錄製音訊。";
+NSLocalNetworkUsageDescription = "本應用程式需要存取區域網路來連線至伺服器，用於收發訊息及音視訊通話。如不允許，可能無法登入或收發訊息。";
+/* electron-builder 預設加入的藍牙權限描述 */
+NSBluetoothAlwaysUsageDescription = "本應用程式需要存取藍牙。";
+NSBluetoothPeripheralUsageDescription = "本應用程式需要存取藍牙。";

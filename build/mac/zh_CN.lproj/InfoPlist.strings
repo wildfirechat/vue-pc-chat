@@ -1,0 +1,7 @@
+/* 权限申请弹窗里的描述，英文原文见 vue.config.js 里 mac.extendInfo */
+NSCameraUsageDescription = "本应用需要访问摄像头以录制视频。";
+NSMicrophoneUsageDescription = "本应用需要访问麦克风以录制音频。";
+NSLocalNetworkUsageDescription = "本应用需要访问本地网络来连接服务器，用于收发消息和音视频通话。如不允许，可能无法登录或收发消息。";
+/* electron-builder 默认添加的蓝牙权限描述 */
+NSBluetoothAlwaysUsageDescription = "本应用需要访问蓝牙。";
+NSBluetoothPeripheralUsageDescription = "本应用需要访问蓝牙。";
