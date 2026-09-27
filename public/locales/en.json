@@ -15,6 +15,8 @@
 		"Downloaded": "Update ready",
 		"DownloadedDetail": "Update downloaded. The application will restart to apply the update.",
 		"Error": "Update error",
+		"InstallError": "Failed to install update",
+		"InstallErrorDetail": "The update was downloaded but could not be prepared for installation. Please download and install the latest version manually.",
 		"Unsupported": "Auto update not supported",
 		"UnsupportedDetail": "Auto update is not supported for this installation type. Please download the latest version manually.",
 		"NotConfigured": "Update server not configured",

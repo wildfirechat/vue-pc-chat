@@ -15,6 +15,8 @@
 		"Downloaded": "更新已就绪",
 		"DownloadedDetail": "更新已下载完成，应用将重启以安装更新。",
 		"Error": "检查更新失败",
+		"InstallError": "安装更新失败",
+		"InstallErrorDetail": "更新已下载，但安装准备失败，请手动下载安装最新版本。",
 		"Unsupported": "不支持自动更新",
 		"UnsupportedDetail": "当前安装方式不支持自动更新，请手动下载最新版本。",
 		"NotConfigured": "未配置更新服务器",

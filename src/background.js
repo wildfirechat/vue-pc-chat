@@ -18,7 +18,8 @@ import {
     Tray,
     desktopCapturer,
     webContents,
-    systemPreferences
+    systemPreferences,
+    autoUpdater as nativeAutoUpdater
 } from 'electron';
 import Screenshots from "electron-screenshots";
 import windowStateKeeper from 'electron-window-state';
@@ -105,6 +106,42 @@ process.on('uncaughtException', (error) => {
 let forceQuit = false;
 let downloading = false;
 let manualUpdateCheck = false;
+// 更新包已下载完、交给安装程序了。之后的 error 是安装阶段的错误，
+// 如 macOS 上 Squirrel.Mac 解压、校验签名、准备安装失败，这时用户已经看到"更新已就绪"，必须提示
+let updateDownloaded = false;
+
+// 更新日志写到文件，打包版看不到 console 输出，排查更新失败要靠它。
+// 位置：macOS ~/Library/Logs/<应用名>/updater.log，Windows %APPDATA%\<应用名>\logs\updater.log
+const UPDATER_LOG_MAX_SIZE = 1024 * 1024;
+let updaterLogFile = null;
+
+function writeUpdaterLog(level, args) {
+    let text = args.map(a => a instanceof Error ? (a.stack || a.message) : (typeof a === 'string' ? a : JSON.stringify(a))).join(' ');
+    let line = `[${new Date().toISOString()}] [${level}] ${text}`;
+    level === 'error' ? console.error(line) : console.log(line);
+    try {
+        if (!updaterLogFile) {
+            let dir = app.getPath('logs');
+            fs.mkdirSync(dir, {recursive: true});
+            updaterLogFile = nodePath.join(dir, 'updater.log');
+            // 超过大小时换成 .old，只保留一份旧日志
+            if (fs.existsSync(updaterLogFile) && fs.statSync(updaterLogFile).size > UPDATER_LOG_MAX_SIZE) {
+                fs.renameSync(updaterLogFile, updaterLogFile + '.old');
+            }
+        }
+        fs.appendFileSync(updaterLogFile, line + '\n');
+    } catch (e) {
+        console.error('write updater log error', e);
+    }
+}
+
+const updaterLogger = {
+    info: (...args) => writeUpdaterLog('info', args),
+    warn: (...args) => writeUpdaterLog('warn', args),
+    error: (...args) => writeUpdaterLog('error', args),
+    debug: (...args) => writeUpdaterLog('debug', args),
+};
+autoUpdater.logger = updaterLogger;
 
 function isAutoUpdaterSupported() {
     if (isDevelopment) return false;
@@ -462,8 +499,11 @@ function checkForUpdates(manual = false, server = null) {
         });
     }
 
+    updaterLogger.info('checkForUpdates', {manual, server, version: app.getVersion(), execPath: process.execPath});
+    // 新一轮检查开始，之前的"已下载"状态作废；更新仍在缓存里的话，会再次触发 update-downloaded
+    updateDownloaded = false;
     autoUpdater.checkForUpdates().catch(err => {
-        console.error('checkForUpdates error', err);
+        updaterLogger.error('checkForUpdates error', err);
         downloading = false;
         if (manualUpdateCheck) {
             dialog.showMessageBox({
@@ -479,16 +519,16 @@ function checkForUpdates(manual = false, server = null) {
 }
 
 autoUpdater.on('checking-for-update', () => {
-    console.log('Checking for update...');
+    updaterLogger.info('Checking for update...');
 });
 
 autoUpdater.on('update-available', (info) => {
-    console.log('Update available.', info);
+    updaterLogger.info('Update available.', info);
     downloading = true;
 });
 
 autoUpdater.on('update-not-available', (info) => {
-    console.log('Update not available.', info);
+    updaterLogger.info('Update not available.', info);
     if (manualUpdateCheck) {
         dialog.showMessageBox({
             type: 'info',
@@ -508,9 +548,12 @@ autoUpdater.on('download-progress', (progressObj) => {
     console.log(logMessage);
 });
 
+// macOS 上 electron-updater 下载完就会发 update-downloaded，之后 Squirrel.Mac 才开始解压、校验签名、准备安装，
+// 所以弹出"更新已就绪"时安装不一定能成功，失败会走下面的 error
 autoUpdater.on('update-downloaded', (info) => {
-    console.log('Update downloaded.', info);
+    updaterLogger.info('Update downloaded.', info);
     downloading = false;
+    updateDownloaded = true;
     dialog.showMessageBox({
         type: 'info',
         buttons: [Locales.__('Update').Restart, Locales.__('Update').Later],
@@ -518,27 +561,42 @@ autoUpdater.on('update-downloaded', (info) => {
         message: Locales.__('Update').Downloaded,
         detail: Locales.__('Update').DownloadedDetail
     }).then(({ response }) => {
-        if (response === 0) {
+        // 安装阶段已经出错的话，用户已经看到错误提示，不再重启
+        if (response === 0 && updateDownloaded) {
+            updaterLogger.info('quitAndInstall');
             autoUpdater.quitAndInstall();
         }
     });
     manualUpdateCheck = false;
 });
 
+// Squirrel.Mac 出错时，electron-updater 会发两次 error（转发原生 error 一次，下载流程 reject 再发一次），
+// 靠弹框后清掉 manualUpdateCheck、updateDownloaded 避免重复弹框
 autoUpdater.on('error', (err) => {
-    console.error('Auto updater error', err);
+    updaterLogger.error('Auto updater error', err);
     downloading = false;
-    if (manualUpdateCheck) {
+    if (manualUpdateCheck || updateDownloaded) {
         dialog.showMessageBox({
             type: 'error',
             buttons: ['OK'],
             title: pkg.name,
-            message: Locales.__('Update').Error,
-            detail: err.message
+            message: updateDownloaded ? Locales.__('Update').InstallError : Locales.__('Update').Error,
+            detail: updateDownloaded ? `${Locales.__('Update').InstallErrorDetail}\n\n${err.message}` : err.message
         });
     }
     manualUpdateCheck = false;
+    updateDownloaded = false;
 });
+
+// macOS 的 quitAndInstall 会先关闭所有窗口，全部关闭后才退出并安装，而 before-quit 要等窗口都关闭后才发出。
+// 这里提前置 forceQuit，否则主窗口的 close 会被拦截（隐藏到托盘），应用不退出，更新也装不上。
+// electron-updater 的 autoUpdater 不转发这个事件，要监听 Electron 原生的 autoUpdater
+if (isOsx) {
+    nativeAutoUpdater.on('before-quit-for-update', () => {
+        updaterLogger.info('before-quit-for-update');
+        forceQuit = true;
+    });
+}
 
 function updateTray(unread = 0) {
     settings.showOnTray = true;
