@@ -228,7 +228,7 @@ let mainMenu = [
         label: pkg.name,
         submenu: [
             {
-                label: `About ${pkg.name}`,
+                label: Locales.__('Main').About,
                 selector: 'orderFrontStandardAboutPanel:',
             },
             {
@@ -1383,7 +1383,7 @@ const createMainWindow = async () => {
 
     if (isOsx) {
         app.setAboutPanelOptions({
-            applicationName: pkg.name,
+            applicationName: pkg.productName,
             applicationVersion: pkg.version,
             copyright: 'Made with 💖 by wildfiechat. \n https://github.com/wildfirechat/vue-pc-chat',
             version: pkg.version

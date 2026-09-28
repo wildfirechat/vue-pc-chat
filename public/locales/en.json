@@ -1,9 +1,10 @@
 {	
 	"Main": {
-		"Title": "Preferences...",
+		"About": "About WildfireChat",
+		"Preferences": "Preferences...",
 		"Check": "Check for updates",
 		"ToggleMainWindow": "Toggle Main Window",
-		"Quit": "Quit wildfireChat"
+		"Quit": "Quit WildfireChat"
 	},
 	"Update": {
 		"Available": "Update available",
