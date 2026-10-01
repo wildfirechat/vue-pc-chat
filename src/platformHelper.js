@@ -93,6 +93,41 @@ export function buildCollectionUrl({ mode = 'create', collectionId, groupId } = 
     return url;
 }
 
+/**
+ * 构建在线文档独立窗口的 URL（#/pan-doc?fileId= 或 ?url=）
+ * @param {Object} params
+ * @param {string} [params.url] - 按链接只读打开的文档地址
+ * @param {string|number} [params.fileId] - 网盘文件 id
+ * @param {string} [params.name] - 文件名（按链接打开时给服务端用）
+ * @param {string} [params.title] - 窗口标题
+ * @param {string} [params.href] - 直接放进页面的地址（静态页）
+ * @returns {string}
+ */
+export function buildPanDocUrl({url, fileId, name, title, href} = {}) {
+    const baseUrl = getAppBaseUrl();
+    let appUrl = baseUrl + '#/pan-doc';
+    const queryParams = [];
+    if (fileId) {
+        queryParams.push(`fileId=${encodeURIComponent(fileId)}`);
+    }
+    if (url) {
+        queryParams.push(`url=${encodeURIComponent(url)}`);
+    }
+    if (href) {
+        queryParams.push(`href=${encodeURIComponent(href)}`);
+    }
+    if (name) {
+        queryParams.push(`name=${encodeURIComponent(name)}`);
+    }
+    if (title) {
+        queryParams.push(`title=${encodeURIComponent(title)}`);
+    }
+    if (queryParams.length > 0) {
+        appUrl += `?${queryParams.join('&')}`;
+    }
+    return appUrl;
+}
+
 export function downloadFile(message) {
     let file = message.messageContent;
     downloadFile2(file.remotePath, file.name, message.messageUid);

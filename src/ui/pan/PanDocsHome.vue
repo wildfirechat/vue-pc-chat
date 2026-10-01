@@ -91,6 +91,7 @@
 <script>
 import wfc from "../../wfc/client/wfc";
 import panApi from "../../api/panApi";
+import {openPanDoc} from "./panDocWindow";
 import {normalizeRecentDoc, normalizeSharedFile, formatPanTime, panFailMessage} from "./panUtil";
 import PanShareDialog from "./PanShareDialog.vue";
 
@@ -180,20 +181,20 @@ export default {
             this.shareEntry = entry;
         },
         open(entry) {
-            this.$eventBus.$emit('pan-doc-open', {
+            openPanDoc({
                 url: panApi.docOpenUrl(entry.file.fileId),
                 title: entry.file.name,
-            });
+            }, this.$eventBus);
             // 文档页自己会记录「最近打开」，稍后刷新列表
             if (this.tab === 'recent') {
                 setTimeout(() => this.load('recent'), 1500);
             }
         },
         openLicenses() {
-            this.$eventBus.$emit('pan-doc-open', {
+            openPanDoc({
                 url: panApi.docLicensesUrl(),
                 title: '开源许可',
-            });
+            }, this.$eventBus);
         },
         showCreateMenu() {
             this.createMenuVisible = !this.createMenuVisible;
@@ -217,7 +218,7 @@ export default {
                 const file = await panApi.createDoc(type, (value || '').trim());
                 if (file) {
                     const f = {fileId: file.fileId !== undefined ? file.fileId : file.id, name: file.name};
-                    this.$eventBus.$emit('pan-doc-open', {url: panApi.docOpenUrl(f.fileId), title: f.name});
+                    openPanDoc({url: panApi.docOpenUrl(f.fileId), title: f.name}, this.$eventBus);
                     setTimeout(() => this.load('recent'), 1500);
                 }
             } catch (e) {

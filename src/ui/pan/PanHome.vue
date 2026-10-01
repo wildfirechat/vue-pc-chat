@@ -156,6 +156,7 @@
 import wfc from "../../wfc/client/wfc";
 import Config from "../../config";
 import panApi from "../../api/panApi";
+import {openPanDoc} from "./panDocWindow";
 import {isElectron, shell} from "../../platform";
 import MessageContentMediaType from "../../wfc/messages/messageContentMediaType";
 import {
@@ -323,10 +324,10 @@ export default {
         },
 
         openOnline(file) {
-            this.$eventBus.$emit('pan-doc-open', {
+            openPanDoc({
                 url: panApi.docOpenUrl(file.fileId),
                 title: file.name,
-            });
+            }, this.$eventBus);
         },
 
         async download(file) {

@@ -29,6 +29,7 @@ import PollDetail from "./ui/poll/PollDetail.vue";
 import Config from "./config";
 import PanHome from "./ui/pan/PanHome.vue";
 import PanDocsHome from "./ui/pan/PanDocsHome.vue";
+import PanDocWindow from "./ui/pan/PanDocWindow.vue";
 
 // 未配置网盘服务时，网盘 / 在线文档不注册任何路由
 const panEnabled = Config.isPanEnabled();
@@ -190,6 +191,14 @@ const routers = [
         name: 'poll-detail',
         path: '/poll/detail',
         component: PollDetail,
-    }
+    },
+    // 在线文档独立窗口（主窗口通过 SHOW_PAN_DOC_WINDOW 打开，一个文档一个窗口）
+    ...(panEnabled ? [
+        {
+            name: 'pan-doc-window',
+            path: '/pan-doc',
+            component: PanDocWindow,
+        },
+    ] : [])
 ]
 export default routers

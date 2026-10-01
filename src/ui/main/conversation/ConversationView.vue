@@ -227,6 +227,7 @@ import {vOnClickOutside} from '@vueuse/components'
 import WfcUtil from "../../../wfc/util/wfcUtil";
 import CallStartMessageContent from "../../../wfc/av/messages/callStartMessageContent";
 import panApi from "../../../api/panApi";
+import {openPanDoc} from "../../pan/panDocWindow";
 import {
     canPreviewFileMessageOnline,
     canSaveFileMessageToPan,
@@ -686,7 +687,7 @@ export default {
         },
         previewOnline(message) {
             const {url, title} = previewFileMessageOnline(message);
-            this.$eventBus.$emit('pan-doc-open', {url, title});
+            openPanDoc({url, title}, this.$eventBus);
         },
         saveToPan(message) {
             this._saveMessageToPan(message, false);
@@ -702,10 +703,10 @@ export default {
                     return;
                 }
                 if (panFileCanOpenOnline(file)) {
-                    this.$eventBus.$emit('pan-doc-open', {
+                    openPanDoc({
                         url: panApi.docOpenUrl(file.fileId),
                         title: file.name,
-                    });
+                    }, this.$eventBus);
                     return;
                 }
                 const res = await panApi.getDownloadUrl(file.fileId);

@@ -140,6 +140,8 @@ let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
 let collectionWindow;
 let pollWindow;
+// 在线文档：一个文档一个独立窗口，key 用文档地址（同一文档再次打开时聚焦已有窗口）
+let panDocWindows = new Map();
 let conversationWindowMap = new Map();
 let screenshots;
 let tray;
@@ -1115,6 +1117,29 @@ const createMainWindow = async () => {
             messageHistoryMessageWindow.show();
             messageHistoryMessageWindow.focus();
         }
+    });
+
+    ipcMain.on(IPCEventType.SHOW_PAN_DOC_WINDOW, async (event, args) => {
+        console.log(`on ${IPCEventType.SHOW_PAN_DOC_WINDOW}`, args)
+        // URL 由渲染进程拼好（#/pan-doc?...），key 用于区分不同文档
+        let url = args.url;
+        if (!url) {
+            console.error('SHOW_PAN_DOC_WINDOW: url is required');
+            return;
+        }
+        let key = args.key || url;
+        let win = panDocWindows.get(key);
+        if (win && !win.isDestroyed()) {
+            win.show();
+            win.focus();
+            return;
+        }
+        win = createWindow(url, 1200, 800, 800, 600, true, true);
+        panDocWindows.set(key, win);
+        win.on('close', () => {
+            panDocWindows.delete(key);
+        });
+        win.show();
     });
 
     ipcMain.on(IPCEventType.SHOW_COLLECTION_WINDOW, async (event, args) => {

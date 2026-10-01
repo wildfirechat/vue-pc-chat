@@ -79,6 +79,10 @@ app.use(CoolLightBox)
                 subWindowLoadDataOptions.loadFriendList = true
                 subWindowLoadDataOptions.loadDefaultConversationList = true
             }
+            if (path.startsWith('/pan-doc')) {
+                // 在线文档窗口要能「分享给联系人」，所以需要好友列表
+                subWindowLoadDataOptions.loadFriendList = true
+            }
             if ( path.startsWith('/workspace')) {
                 subWindowLoadDataOptions.loadFriendList = true
             }

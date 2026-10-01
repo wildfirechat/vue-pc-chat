@@ -30,7 +30,7 @@
             :slideshow="false"
             @close="sharedConversationState.previewMediaIndex = null">
         </CoolLightBox>
-        <notifications v-if="sharedMiscState.isMainWindow"/>
+        <notifications v-if="showNotifications"/>
         <IpcMain v-if="sharedMiscState.isMainWindow && sharedMiscState.isElectron"/>
         <router-view id="main-content-container" class="main-content-container"></router-view>
     </div>
@@ -58,6 +58,13 @@ export default {
             sharedMiscState: store.state.misc,
             sharedConversationState: store.state.conversation,
         }
+    },
+    computed: {
+        // 主窗口和在线文档独立窗口都要能显示页内提示（toast 桥）
+        showNotifications() {
+            return this.sharedMiscState.isMainWindow
+                || (window.location.hash || '').indexOf('#/pan-doc') === 0;
+        },
     },
     methods: {
         syncLinuxWindowBorderState() {

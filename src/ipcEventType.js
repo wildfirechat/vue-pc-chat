@@ -25,6 +25,7 @@ const IpcEventType = {
     GET_SOURCE: 'get-source',
     SHOW_COLLECTION_WINDOW: 'show-collection-window',
     SHOW_POLL_WINDOW: 'show-poll-window',
+    SHOW_PAN_DOC_WINDOW: 'show-pan-doc-window',
     OPEN_MAIN_DEV_TOOLS: 'open-main-dev-tools',
     CHECK_FOR_UPDATES: 'check-for-updates',
     RESTART_APP: 'restart-app',

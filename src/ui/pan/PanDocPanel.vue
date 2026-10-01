@@ -1,8 +1,8 @@
 <template>
-    <div v-if="visible" class="pan-doc-panel">
+    <div v-if="visible" class="pan-doc-panel" :class="{'window-mode': windowMode}">
         <div class="pan-doc-frame">
             <div class="pan-doc-titlebar">
-                <div class="pan-doc-tabs">
+                <div class="pan-doc-tabs" v-if="!windowMode">
                     <div v-for="tab in tabs" :key="tab.id"
                          class="pan-doc-tab"
                          :class="{active: tab.id === activeId}"
@@ -79,6 +79,13 @@ const MAX_TABS = 8;
 
 export default {
     name: "PanDocPanel",
+    props: {
+        // 独立窗口模式：占满整个窗口，不显示标签页，关闭按钮直接关窗口
+        windowMode: {
+            type: Boolean,
+            default: false,
+        },
+    },
     data() {
         return {
             visible: false,
@@ -121,6 +128,11 @@ export default {
             }
             const title = payload.title;
             const key = this._docKey(url);
+            if (this.windowMode) {
+                // 独立窗口：一个窗口只放一个文档
+                this.tabs = [];
+                this.activeId = null;
+            }
             const existing = this.tabs.find(t => this._docKey(t.url) === key);
             if (existing) {
                 if (title) {
@@ -180,6 +192,11 @@ export default {
             }
         },
         close() {
+            if (this.windowMode) {
+                // 独立窗口：关掉整个窗口
+                window.close();
+                return;
+            }
             this.visible = false;
             this.tabs = [];
             this.activeId = null;
@@ -411,6 +428,19 @@ export default {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+
+/* 独立窗口模式：铺满整个窗口，去掉遮罩和圆角 */
+.pan-doc-panel.window-mode {
+    position: static;
+    background: var(--background-primary);
+}
+
+.pan-doc-panel.window-mode .pan-doc-frame {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    box-shadow: none;
 }
 
 .pan-doc-titlebar {
