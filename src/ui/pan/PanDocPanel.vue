@@ -29,7 +29,7 @@
                     <webview v-if="isElectron"
                              v-show="tab.id === activeId"
                              :ref="'webview-' + tab.id"
-                             :src="tab.url"
+                             :src="tab.src"
                              :preload="webviewPreload"
                              :allowpopups="true"
                              :nodeintegration="true"
@@ -148,28 +148,79 @@ export default {
             }
             const tab = {
                 id: 'pan-doc-' + (this.seq++),
-                url,
-                src: this.isElectron ? url : null,
+                url: this._stripAuthCode(url).cleanUrl,
+                src: null,
                 title: title || '',
                 subtitle: '',
                 actions: [],
                 headerStub: null,
                 authed: false,
+                // 主窗口打开独立窗口时会先把 authCode 拼在地址上带过来
+                prefetchedAuthCode: this._stripAuthCode(url).authCode,
             };
             this.tabs.push(tab);
             this.activeId = tab.id;
             this.visible = true;
-            if (!this.isElectron) {
-                // 网页版：先取 authCode，再通过 URL fragment 传给文档页（不进服务端日志）
-                panApi.getAuthCode().then(code => {
-                    tab.authCode = code;
+            // Electron 和网页版都先取 authCode：放进 URL 的 #panAuthCode= 片段里（页面读完即抹掉，不进服务端日志），
+            // 这样文档页不依赖 webview 里的 dsbridge 桥也能登录。取不到时退回桥认证（src 直接用原地址）。
+            this.loadAuthCodeInto(tab, url);
+        },
+        /** 拆出地址里的 #panAuthCode=（主窗口预取时拼上的），返回干净地址和认证码 */
+        _stripAuthCode(url) {
+            const marker = '#panAuthCode=';
+            const index = (url || '').indexOf(marker);
+            if (index < 0) {
+                return {cleanUrl: url, authCode: null};
+            }
+            let code = url.substring(index + marker.length);
+            try {
+                code = decodeURIComponent(code);
+            } catch (e) {
+                // 保持原样
+            }
+            return {cleanUrl: url.substring(0, index), authCode: code};
+        },
+        /**
+         * 加载文档地址：取认证码 → 拼在 fragment 上 → 交给 webview/iframe。
+         * @param {Object} tab
+         * @param {string} [preferredUrl] 主窗口带过来的带认证码的地址，优先直接用
+         */
+        loadAuthCodeInto(tab, preferredUrl) {
+            const url = tab.url;
+            tab.authCode = null;
+            tab.authed = false;
+            // 先指到空白：换文档/刷新时地址可能只差 authCode 片段，直接设置不会真正重新加载
+            tab.src = null;
+            if (preferredUrl && preferredUrl.indexOf('#panAuthCode=') >= 0) {
+                tab.authCode = tab.prefetchedAuthCode;
+                tab.authed = true;
+                this.$nextTick(() => {
+                    tab.src = preferredUrl;
+                });
+                return Promise.resolve();
+            }
+            return panApi.getAuthCode().then(code => {
+                tab.authCode = code;
+                tab.authed = true;
+                this.$nextTick(() => {
                     tab.src = this._webDocSrc(url, code);
+                });
+            }).catch(e => {
+                console.error('pan doc getAuthCode failed', e);
+                // 新窗口里桥不通时，退回主窗口预取的认证码
+                const fallback = tab.prefetchedAuthCode;
+                if (fallback) {
+                    tab.authCode = fallback;
                     tab.authed = true;
-                }).catch(e => {
-                    console.error('pan doc getAuthCode failed', e);
+                    this.$nextTick(() => {
+                        tab.src = this._webDocSrc(url, fallback);
+                    });
+                    return;
+                }
+                this.$nextTick(() => {
                     tab.src = url;
                 });
-            }
+            });
         },
         _webDocSrc(url, code) {
             return url + (url.indexOf('#') >= 0 ? '&' : '#') + 'panAuthCode=' + encodeURIComponent(code);
@@ -206,17 +257,8 @@ export default {
             if (!tab) {
                 return;
             }
-            if (this.isElectron) {
-                const el = this.$refs['webview-' + tab.id];
-                const view = Array.isArray(el) ? el[0] : el;
-                view && view.reload && view.reload();
-            } else {
-                const src = tab.authCode ? this._webDocSrc(tab.url, tab.authCode) : tab.url;
-                tab.src = null;
-                this.$nextTick(() => {
-                    tab.src = src;
-                });
-            }
+            // 重新取认证码再加载：片段里的 authCode 已经被页面抹掉，直接 reload 会丢登录态
+            this.loadAuthCodeInto(tab);
         },
         _docKey(url) {
             try {
@@ -432,7 +474,10 @@ export default {
 
 /* 独立窗口模式：铺满整个窗口，去掉遮罩和圆角 */
 .pan-doc-panel.window-mode {
+    /* 父容器是 flex + align-items/justify-content: center，不给尺寸的话会被压成内容大小（webview 就没了） */
     position: static;
+    width: 100%;
+    height: 100%;
     background: var(--background-primary);
 }
 
