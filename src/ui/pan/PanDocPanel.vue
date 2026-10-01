@@ -70,6 +70,7 @@
 </template>
 
 <script>
+import {reactive} from "vue";
 import Config from "../../config";
 import wfc from "../../wfc/client/wfc";
 import panApi from "../../api/panApi";
@@ -146,9 +147,12 @@ export default {
                 const victim = this.tabs.find(t => t.id !== this.activeId) || this.tabs[0];
                 this.tabs = this.tabs.filter(t => t !== victim);
             }
-            const tab = {
+            const authParts = this._stripAuthCode(url);
+            // 注意：外层 tabs 是响应式数组，这里必须用 reactive 包装：
+            // 直接改原始对象（tab.src = xxx）不会触发重新渲染，webview 就永远拿不到 src。
+            const tab = reactive({
                 id: 'pan-doc-' + (this.seq++),
-                url: this._stripAuthCode(url).cleanUrl,
+                url: authParts.cleanUrl,
                 src: null,
                 title: title || '',
                 subtitle: '',
@@ -156,8 +160,8 @@ export default {
                 headerStub: null,
                 authed: false,
                 // 主窗口打开独立窗口时会先把 authCode 拼在地址上带过来
-                prefetchedAuthCode: this._stripAuthCode(url).authCode,
-            };
+                prefetchedAuthCode: authParts.authCode,
+            });
             this.tabs.push(tab);
             this.activeId = tab.id;
             this.visible = true;
