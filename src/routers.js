@@ -26,6 +26,12 @@ import PollHome from "./ui/poll/PollHome.vue";
 import PollCreate from "./ui/poll/PollCreate.vue";
 import PollList from "./ui/poll/PollList.vue";
 import PollDetail from "./ui/poll/PollDetail.vue";
+import Config from "./config";
+import PanHome from "./ui/pan/PanHome.vue";
+import PanDocsHome from "./ui/pan/PanDocsHome.vue";
+
+// 未配置网盘服务时，网盘 / 在线文档不注册任何路由
+const panEnabled = Config.isPanEnabled();
 
 const routers = [
     {
@@ -70,7 +76,19 @@ const routers = [
                 path: 'ai',
                 name: 'AI',
                 component: AI,
-            }
+            },
+            ...(panEnabled ? [
+                {
+                    path: 'pan',
+                    name: 'pan',
+                    component: PanHome,
+                },
+                {
+                    path: 'pan-docs',
+                    name: 'pan-docs',
+                    component: PanDocsHome,
+                },
+            ] : [])
         ]
     },
     {

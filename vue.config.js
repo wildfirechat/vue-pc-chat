@@ -36,7 +36,11 @@ module.exports = {
             config.module.rules.delete('eslint');
         },
         electronBuilder: {
-            preload: 'src/ui/workspace/bridgeClientImpl.js',
+            // preload.js: 工作台 webview 的开放平台桥；panDocBridge.js: 在线文档 webview 的 dsbridge 桥
+            preload: {
+                preload: 'src/ui/workspace/bridgeClientImpl.js',
+                panDocBridge: 'src/ui/pan/panDocBridge.js',
+            },
             externals: ['electron-screenshots'],
             chainWebpackMainProcess: (config) => {
                 // Chain webpack config for electron main process only

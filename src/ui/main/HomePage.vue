@@ -56,6 +56,18 @@
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"></i>
                             </div>
                         </li>
+                        <li v-if="panEnabled">
+                            <div class="i-button-wrapper" @click="go2Pan" title="网盘">
+                                <i class="icon-ion-ios-cloud"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/pan'}"></i>
+                            </div>
+                        </li>
+                        <li v-if="panEnabled">
+                            <div class="i-button-wrapper" @click="go2PanDocs" title="在线文档">
+                                <i class="icon-ion-document-text"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/pan-docs'}"></i>
+                            </div>
+                        </li>
                         <li v-if="sharedMiscState.isElectron && sharedMiscState.isCommercialServer">
                             <div class="i-button-wrapper" @click="go2Files">
                                 <i class="icon-ion-ios-folder"
@@ -98,8 +110,7 @@
                 <AI v-show="route.path === '/home/ai'"/>
             </router-view>
             <div v-if="sharedMiscState.connectionStatus === -1" class="unconnected">网络连接断开</div>
-            <div v-show="this.$router.currentRoute.value.path !== '/home/h-wp'" class="drag-area" :style="dragAreaLeft"></div>
-
+            <div v-show="this.$router.currentRoute.value.path !== '/home/h-wp' && !isPanPage" class="drag-area" :style="dragAreaLeft"></div>
             <!-- 备份进度窗口 -->
             <BackupView v-if="sharedMiscState.isElectron" class="backup-progress-modal"  />
             <UseDraggable v-if="!sharedMiscState.isElectron && sharedMiscState.isVoipOngoing"
@@ -136,6 +147,7 @@
                 <span class="voip-pip-label">{{ voipProxy.type === 'conference' ? '会议中' : '通话中' }}</span>
             </div>
             <SubWindowHost v-if="!sharedMiscState.isElectron"/>
+            <PanDocPanel v-if="panEnabled"/>
         </div>
     </div>
 </template>
@@ -162,6 +174,7 @@ import AI from "./AI.vue";
 import Config from "../../config";
 import BackupView from '../../backup/BackupView.vue'
 import SubWindowHost from "./SubWindowHost.vue";
+import PanDocPanel from "../pan/PanDocPanel.vue";
 
 var avenginkitSetuped = false;
 export default {
@@ -298,6 +311,20 @@ export default {
             }
             this.isSetting = false;
         },
+        go2Pan() {
+            if (this.$router.currentRoute.value.path === '/home/pan') {
+                return;
+            }
+            this.$router.replace({path: '/home/pan'});
+            this.isSetting = false;
+        },
+        go2PanDocs() {
+            if (this.$router.currentRoute.value.path === '/home/pan-docs') {
+                return;
+            }
+            this.$router.replace({path: '/home/pan-docs'});
+            this.isSetting = false;
+        },
         go2Setting() {
             if (this.$router.currentRoute.path === '/home/setting') {
                 return;
@@ -353,6 +380,13 @@ export default {
     computed: {
         aiPortalUrl() {
             return Config.AI_PORTAL_URL
+        },
+        panEnabled() {
+            return Config.isPanEnabled();
+        },
+        isPanPage() {
+            const path = this.$router.currentRoute.value.path;
+            return path === '/home/pan' || path === '/home/pan-docs';
         },
         unread() {
             let count = 0;
@@ -458,6 +492,7 @@ export default {
     components: {
         BackupView,
         SubWindowHost,
+        PanDocPanel,
         AI,
         Conference,
         Multi,

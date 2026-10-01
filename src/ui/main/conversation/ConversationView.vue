@@ -125,6 +125,15 @@
                     <li v-if="isDownloadable(message)">
                         <a @click.prevent="download(message)">{{ $t('common.save') }}</a>
                     </li>
+                    <li v-if="canPreviewOnline(message)">
+                        <a @click.prevent="previewOnline(message)">在线预览</a>
+                    </li>
+                    <li v-if="canSaveToPan(message)">
+                        <a @click.prevent="saveToPan(message)">存到网盘</a>
+                    </li>
+                    <li v-if="canSaveToPan(message)">
+                        <a @click.prevent="saveToPanAndOpen(message)">存到网盘并打开</a>
+                    </li>
                     <li v-if="isForwardable(message)">
                         <a @click.prevent="_forward(message)">{{ $t('common.forward') }}</a>
                     </li>
@@ -217,6 +226,14 @@ import GroupInfo from "../../../wfc/model/groupInfo";
 import {vOnClickOutside} from '@vueuse/components'
 import WfcUtil from "../../../wfc/util/wfcUtil";
 import CallStartMessageContent from "../../../wfc/av/messages/callStartMessageContent";
+import panApi from "../../../api/panApi";
+import {
+    canPreviewFileMessageOnline,
+    canSaveFileMessageToPan,
+    previewFileMessageOnline,
+    saveFileMessageToMyPan,
+} from "../../pan/panMessageActions";
+import {panFileCanOpenOnline, panFailMessage} from "../../pan/panUtil";
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
 import MessageItemView from "./MessageItemView.vue";
 import {markRaw} from "vue";
@@ -658,6 +675,51 @@ export default {
             return message && (message.messageContent instanceof ImageMessageContent
                 || message.messageContent instanceof FileMessageContent
                 || message.messageContent instanceof VideoMessageContent);
+        },
+
+        // 网盘/在线文档相关（未配置网盘服务时全部为 false，菜单不出现）
+        canPreviewOnline(message) {
+            return canPreviewFileMessageOnline(message);
+        },
+        canSaveToPan(message) {
+            return canSaveFileMessageToPan(message);
+        },
+        previewOnline(message) {
+            const {url, title} = previewFileMessageOnline(message);
+            this.$eventBus.$emit('pan-doc-open', {url, title});
+        },
+        saveToPan(message) {
+            this._saveMessageToPan(message, false);
+        },
+        saveToPanAndOpen(message) {
+            this._saveMessageToPan(message, true);
+        },
+        async _saveMessageToPan(message, openAfter) {
+            try {
+                const file = await saveFileMessageToMyPan(message, {openAfter});
+                this.$notify({title: '提示', text: '已保存到网盘', type: 'success'});
+                if (!openAfter || !file) {
+                    return;
+                }
+                if (panFileCanOpenOnline(file)) {
+                    this.$eventBus.$emit('pan-doc-open', {
+                        url: panApi.docOpenUrl(file.fileId),
+                        title: file.name,
+                    });
+                    return;
+                }
+                const res = await panApi.getDownloadUrl(file.fileId);
+                if (res && res.storageUrl) {
+                    if (isElectron()) {
+                        shell.openExternal(res.storageUrl);
+                    } else {
+                        window.open(res.storageUrl, '_blank');
+                    }
+                }
+            } catch (e) {
+                console.error('save file message to pan error', e);
+                this.$notify({title: '提示', text: panFailMessage('保存到网盘失败', e), type: 'warn'});
+            }
         },
 
         isForwardable(message) {
