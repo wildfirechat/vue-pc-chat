@@ -13,6 +13,9 @@
                     </div>
                 </div>
                 <div class="pan-doc-header">
+                    <!-- 独立窗口里没有标签页，标题要单独显示，免得只看到一条工具条 -->
+                    <span v-if="windowMode && activeTab" class="pan-doc-title">{{ activeTab.title || '在线文档' }}</span>
+                    <span v-if="activeTab && activeTab.loading" class="pan-doc-loading-text">正在加载…</span>
                     <span v-if="activeTab && activeTab.subtitle" class="pan-doc-subtitle">{{ activeTab.subtitle }}</span>
                     <button v-for="action in (activeTab ? activeTab.actions : [])" :key="action.id"
                             class="pan-doc-action"
@@ -36,6 +39,9 @@
                              webpreferences="nodeIntegration=true, contextIsolation=false"
                              class="pan-doc-webview"
                              @ipc-message="onIpcMessage($event, tab)"
+                             @dom-ready="onWebviewReady(tab)"
+                             @console-message="onWebviewConsole($event, tab)"
+                             @did-fail-load="onWebviewFail($event, tab)"
                              @page-title-updated="onPageTitleUpdated($event, tab)">
                     </webview>
                     <iframe v-else-if="tab.src"
@@ -43,8 +49,15 @@
                             :ref="'iframe-' + tab.id"
                             :src="tab.src"
                             class="pan-doc-webview"
-                            allow="clipboard-read; clipboard-write">
+                            allow="clipboard-read; clipboard-write"
+                            @load="onWebviewReady(tab)">
                     </iframe>
+                    <!-- 加载失败时给个明确提示（内容本来就是空的，遮住没关系）；加载中只在标题栏显示小字 -->
+                    <div v-if="tab.id === activeId && tab.loadError" class="pan-doc-hint error">
+                        <i class="icon-ion-alert-circled"></i>
+                        <span>{{ tab.loadError }}</span>
+                        <button class="pan-doc-retry" @click="retryTab(tab)">重试</button>
+                    </div>
                 </template>
             </div>
         </div>
@@ -159,6 +172,9 @@ export default {
                 actions: [],
                 headerStub: null,
                 authed: false,
+                loading: true,
+                loadError: '',
+                loadTimer: null,
                 // 主窗口打开独立窗口时会先把 authCode 拼在地址上带过来
                 prefetchedAuthCode: authParts.authCode,
             });
@@ -193,6 +209,17 @@ export default {
             const url = tab.url;
             tab.authCode = null;
             tab.authed = false;
+            tab.loadError = '';
+            tab.loading = true;
+            // 15 秒还没 dom-ready 就提示一下（网络差时编辑器初始化确实慢）
+            clearTimeout(tab.loadTimer);
+            tab.loadTimer = setTimeout(() => {
+                if (tab.loading) {
+                    tab.loading = false;
+                    tab.loadError = '文档加载超时，请检查网络后重试';
+                    this.logDoc('load timeout ' + (tab.url || ''));
+                }
+            }, 15000);
             // 先指到空白：换文档/刷新时地址可能只差 authCode 片段，直接设置不会真正重新加载
             tab.src = null;
             if (preferredUrl && preferredUrl.indexOf('#panAuthCode=') >= 0) {
@@ -225,6 +252,52 @@ export default {
                     tab.src = url;
                 });
             });
+        },
+        /** 把网页里的日志/错误落到 pan-doc.log，出问题时可以直接看现场 */
+        logDoc(line) {
+            console.log('[pan-doc]', line);
+            if (this.isElectron) {
+                try {
+                    ipcRenderer.send('pan-doc-log', line);
+                } catch (e) {
+                    // 记不上就算了，不影响使用
+                }
+            }
+        },
+        onWebviewConsole(event, tab) {
+            const level = event && event.level;
+            const message = (event && event.message) || '';
+            if (!message) {
+                return;
+            }
+            // 只记警告/错误和关键日志，避免刷屏
+            if (level >= 2 || /error|fail|exception/i.test(message)) {
+                this.logDoc('console[' + level + '] ' + message.slice(0, 400) + ' url=' + ((event && event.sourceId) || ''));
+            }
+        },
+        /** webview 的文档结构就绪（编辑器随后还要加载资源，但至少页面出来了） */
+        onWebviewReady(tab) {
+            tab.loading = false;
+            tab.loadError = '';
+            clearTimeout(tab.loadTimer);
+            this.logDoc('dom-ready ' + (tab.url || ''));
+        },
+        /** 主框架加载失败：把错误码显示出来，别只留一个空白窗口 */
+        onWebviewFail(event, tab) {
+            const code = event && event.errorCode;
+            // -3 是主动中断（换地址/关闭），不用报错
+            if (code === -3) {
+                return;
+            }
+            tab.loading = false;
+            clearTimeout(tab.loadTimer);
+            const desc = (event && event.errorDescription) || '未知错误';
+            tab.loadError = '文档加载失败（' + code + ': ' + desc + '）';
+            this.logDoc('did-fail-load ' + code + ' ' + desc + ' ' + ((event && event.validatedURL) || ''));
+        },
+        retryTab(tab) {
+            tab.loadError = '';
+            this.loadAuthCodeInto(tab);
         },
         _webDocSrc(url, code) {
             return url + (url.indexOf('#') >= 0 ? '&' : '#') + 'panAuthCode=' + encodeURIComponent(code);
@@ -544,6 +617,23 @@ export default {
     opacity: 1;
 }
 
+.pan-doc-loading-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-hint);
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.pan-doc-title {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .pan-doc-header {
     display: flex;
     align-items: center;
@@ -602,6 +692,37 @@ export default {
     width: 100%;
     height: 100%;
     border: none;
+}
+
+.pan-doc-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 40px;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--background-primary);
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    z-index: 5;
+}
+
+.pan-doc-hint.error {
+    color: var(--text-danger);
+}
+
+.pan-doc-retry {
+    height: 30px;
+    padding: 0 16px;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-primary);
+    cursor: pointer;
 }
 
 .pan-pick-mask {

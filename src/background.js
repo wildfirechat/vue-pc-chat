@@ -1119,6 +1119,18 @@ const createMainWindow = async () => {
         }
     });
 
+    // 在线文档窗口的现场日志：窗口/网页里的异常、失败都落到文件里，出问题好排查
+    ipcMain.on('pan-doc-log', (event, line) => {
+        try {
+            const fs = require('fs');
+            const path = require('path');
+            const file = path.join(app.getPath('userData'), 'pan-doc.log');
+            fs.appendFileSync(file, `[${new Date().toISOString()}] ${line}\n`);
+        } catch (e) {
+            console.log('pan-doc-log failed', e && e.message);
+        }
+    });
+
     ipcMain.on(IPCEventType.SHOW_PAN_DOC_WINDOW, async (event, args) => {
         console.log(`on ${IPCEventType.SHOW_PAN_DOC_WINDOW}`, args)
         // URL 由渲染进程拼好（#/pan-doc?...），key 用于区分不同文档
@@ -1135,10 +1147,18 @@ const createMainWindow = async () => {
             return;
         }
         win = createWindow(url, 1200, 800, 800, 600, true, true);
+        // 排查用：Cmd/Ctrl+Alt+I 打开这个窗口的开发者工具
+        win.webContents.on('before-input-event', (e, input) => {
+            if (input.type === 'keyDown' && input.alt && (input.meta || input.control) && input.key.toLowerCase() === 'i') {
+                win.webContents.openDevTools({mode: 'detach'});
+            }
+        });
         panDocWindows.set(key, win);
         win.on('close', () => {
             panDocWindows.delete(key);
         });
+        // 新窗口摆到主窗口附近并保证完整可见（多屏/主窗口靠边时，cascade 出去的位置可能在屏幕外）
+        clampToScreen(win, mainWindow);
         // 一定要浮到最前面：否则窗口可能开在主窗口后面，用户以为没打开
         win.show();
         win.focus();
@@ -1349,6 +1369,36 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
+// 把新窗口放到参考窗口附近，并保证整窗落在某个显示器的工作区里
+function clampToScreen(win, refWin) {
+    try {
+        const {screen} = require('electron');
+        const bounds = win.getBounds();
+        let display = null;
+        if (refWin && !refWin.isDestroyed()) {
+            display = screen.getDisplayMatching(refWin.getBounds());
+        }
+        if (!display) {
+            display = screen.getPrimaryDisplay();
+        }
+        const area = display.workArea;
+        const x = refWin && !refWin.isDestroyed()
+            ? Math.round(refWin.getBounds().x + 40)
+            : Math.round(area.x + (area.width - bounds.width) / 2);
+        const y = refWin && !refWin.isDestroyed()
+            ? Math.round(refWin.getBounds().y + 40)
+            : Math.round(area.y + (area.height - bounds.height) / 2);
+        win.setBounds({
+            x: Math.max(area.x, Math.min(x, area.x + area.width - bounds.width)),
+            y: Math.max(area.y, Math.min(y, area.y + area.height - bounds.height)),
+            width: Math.min(bounds.width, area.width),
+            height: Math.min(bounds.height, area.height),
+        });
+    } catch (e) {
+        console.warn('clampToScreen failed', e && e.message);
+    }
+}
+
 function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false, minimizable = true) {
     let win = new BrowserWindow(
         {
