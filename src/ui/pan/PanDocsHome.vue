@@ -51,7 +51,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="entry in entries" :key="entry.file.fileId" @dblclick="open(entry)">
+                    <tr v-for="entry in entries" :key="entry.file.fileId" @click="open(entry)">
                         <td>
                             <i class="icon-ion-document-text pan-file-icon"></i>
                             <span class="pan-file-name">{{ entry.file.name }}</span>

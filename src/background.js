@@ -1139,7 +1139,12 @@ const createMainWindow = async () => {
         win.on('close', () => {
             panDocWindows.delete(key);
         });
+        // 一定要浮到最前面：否则窗口可能开在主窗口后面，用户以为没打开
         win.show();
+        win.focus();
+        if (win.moveTop) {
+            win.moveTop();
+        }
     });
 
     ipcMain.on(IPCEventType.SHOW_COLLECTION_WINDOW, async (event, args) => {

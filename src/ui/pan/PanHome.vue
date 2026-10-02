@@ -86,7 +86,7 @@
                     <tbody>
                     <tr v-for="file in files" :key="file.fileId"
                         :class="{'menu-open': menu.visible && menu.file && menu.file.fileId === file.fileId}"
-                        @dblclick="openEntry(file)"
+                        @click="openEntry(file)"
                         @contextmenu.prevent="showMenu($event, file)">
                         <td class="col-name">
                             <i class="pan-file-icon" :class="[panFileIconClass(file), {folder: file.isFolder}]"></i>
