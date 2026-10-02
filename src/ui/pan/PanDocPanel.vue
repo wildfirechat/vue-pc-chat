@@ -16,6 +16,7 @@
                     <!-- 独立窗口里没有标签页，标题要单独显示，免得只看到一条工具条 -->
                     <span v-if="windowMode && activeTab" class="pan-doc-title">{{ activeTab.title || '在线文档' }}</span>
                     <span v-if="activeTab && activeTab.loading" class="pan-doc-loading-text">正在加载…</span>
+                    <span v-else-if="activeTab && activeTab.loadError" class="pan-doc-loading-text">{{ activeTab.loadError }}</span>
                     <span v-if="activeTab && activeTab.subtitle" class="pan-doc-subtitle">{{ activeTab.subtitle }}</span>
                     <button v-for="action in (activeTab ? activeTab.actions : [])" :key="action.id"
                             class="pan-doc-action"
@@ -52,8 +53,8 @@
                             allow="clipboard-read; clipboard-write"
                             @load="onWebviewReady(tab)">
                     </iframe>
-                    <!-- 加载失败时给个明确提示（内容本来就是空的，遮住没关系）；加载中只在标题栏显示小字 -->
-                    <div v-if="tab.id === activeId && tab.loadError" class="pan-doc-hint error">
+                    <!-- 只有主框架真的加载失败才用遮罩；慢（编辑器初始化要十几秒）不挡内容 -->
+                    <div v-if="tab.id === activeId && tab.fatalError" class="pan-doc-hint error">
                         <i class="icon-ion-alert-circled"></i>
                         <span>{{ tab.loadError }}</span>
                         <button class="pan-doc-retry" @click="retryTab(tab)">重试</button>
@@ -174,6 +175,7 @@ export default {
                 authed: false,
                 loading: true,
                 loadError: '',
+                fatalError: false,
                 loadTimer: null,
                 // 主窗口打开独立窗口时会先把 authCode 拼在地址上带过来
                 prefetchedAuthCode: authParts.authCode,
@@ -205,23 +207,35 @@ export default {
          * @param {Object} tab
          * @param {string} [preferredUrl] 主窗口带过来的带认证码的地址，优先直接用
          */
-        loadAuthCodeInto(tab, preferredUrl) {
+        loadAuthCodeInto(tab, preferredUrl, opts) {
             const url = tab.url;
+            const options = opts || {};
             tab.authCode = null;
             tab.authed = false;
             tab.loadError = '';
+            tab.fatalError = false;
             tab.loading = true;
-            // 15 秒还没 dom-ready 就提示一下（网络差时编辑器初始化确实慢）
+            // 编辑器本身要十几秒才能画出来（sdkjs + 字体引擎在本地解析），所以超时给足 60 秒，
+            // 而且超时只提示、不遮内容——避免"编辑器已经出来了却被错误提示盖住"。
             clearTimeout(tab.loadTimer);
             tab.loadTimer = setTimeout(() => {
                 if (tab.loading) {
                     tab.loading = false;
-                    tab.loadError = '文档加载超时，请检查网络后重试';
-                    this.logDoc('load timeout ' + (tab.url || ''));
+                    tab.loadError = '编辑器初始化较慢，请稍候';
+                    this.logDoc('load slow ' + (tab.url || ''));
                 }
-            }, 15000);
+            }, 60000);
             // 先指到空白：换文档/刷新时地址可能只差 authCode 片段，直接设置不会真正重新加载
             tab.src = null;
+            // 刷新时优先复用打开文档时主窗口带过来的 authCode，省掉一次异步取码
+            if (options.preferPrefetched && tab.prefetchedAuthCode) {
+                tab.authCode = tab.prefetchedAuthCode;
+                tab.authed = true;
+                this.$nextTick(() => {
+                    tab.src = this._webDocSrc(url, tab.prefetchedAuthCode);
+                });
+                return Promise.resolve();
+            }
             if (preferredUrl && preferredUrl.indexOf('#panAuthCode=') >= 0) {
                 tab.authCode = tab.prefetchedAuthCode;
                 tab.authed = true;
@@ -278,7 +292,9 @@ export default {
         /** webview 的文档结构就绪（编辑器随后还要加载资源，但至少页面出来了） */
         onWebviewReady(tab) {
             tab.loading = false;
-            tab.loadError = '';
+            if (!tab.fatalError) {
+                tab.loadError = '';
+            }
             clearTimeout(tab.loadTimer);
             this.logDoc('dom-ready ' + (tab.url || ''));
         },
@@ -293,11 +309,13 @@ export default {
             clearTimeout(tab.loadTimer);
             const desc = (event && event.errorDescription) || '未知错误';
             tab.loadError = '文档加载失败（' + code + ': ' + desc + '）';
+            tab.fatalError = true;
             this.logDoc('did-fail-load ' + code + ' ' + desc + ' ' + ((event && event.validatedURL) || ''));
         },
         retryTab(tab) {
             tab.loadError = '';
-            this.loadAuthCodeInto(tab);
+            tab.fatalError = false;
+            this.loadAuthCodeInto(tab, null, {preferPrefetched: true});
         },
         _webDocSrc(url, code) {
             return url + (url.indexOf('#') >= 0 ? '&' : '#') + 'panAuthCode=' + encodeURIComponent(code);
@@ -334,8 +352,28 @@ export default {
             if (!tab) {
                 return;
             }
-            // 重新取认证码再加载：片段里的 authCode 已经被页面抹掉，直接 reload 会丢登录态
-            this.loadAuthCodeInto(tab);
+            if (this.isElectron) {
+                // 直接让 webview reload 最可靠（改 src 时同地址不一定触发导航）；
+                // 页面自己会用会话 Cookie，必要时再通过桥取新的 authCode。
+                const el = this.$refs['webview-' + tab.id];
+                const view = Array.isArray(el) ? el[0] : el;
+                if (view && view.reload) {
+                    tab.loading = true;
+                    tab.loadError = '';
+                    tab.fatalError = false;
+                    clearTimeout(tab.loadTimer);
+                    tab.loadTimer = setTimeout(() => {
+                        if (tab.loading) {
+                            tab.loading = false;
+                            tab.loadError = '编辑器初始化较慢，请稍候';
+                        }
+                    }, 60000);
+                    this.logDoc('reload ' + (tab.url || ''));
+                    view.reload();
+                    return;
+                }
+            }
+            this.loadAuthCodeInto(tab, null, {preferPrefetched: true});
         },
         _docKey(url) {
             try {
@@ -481,6 +519,15 @@ export default {
                 }
                 case 'toast': {
                     this.$notify({title: '提示', text: String(data || ''), type: 'info'});
+                    break;
+                }
+                case 'docReady': {
+                    // 编辑器把文档渲染出来了：收掉「正在加载」
+                    tab.loading = false;
+                    tab.loadError = '';
+                    tab.fatalError = false;
+                    clearTimeout(tab.loadTimer);
+                    this.logDoc('document-ready ' + (tab.url || ''));
                     break;
                 }
                 case 'close': {
