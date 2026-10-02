@@ -25,12 +25,14 @@
                         {{ action.text }}
                     </button>
                     <i class="icon-ion-android-refresh pan-doc-tool" title="刷新" @click="reloadActive"></i>
+                    <i v-if="windowMode && isElectron" class="icon-ion-android-open-in-browser pan-doc-tool"
+                       title="用浏览器打开" @click="openInBrowser"></i>
                     <i class="icon-ion-ios-close pan-doc-tool" title="关闭" @click="close"></i>
                 </div>
             </div>
             <div class="pan-doc-body">
                 <template v-for="tab in tabs" :key="tab.id">
-                    <webview v-if="isElectron"
+                    <webview v-if="useWebview"
                              v-show="tab.id === activeId"
                              :ref="'webview-' + tab.id"
                              :src="tab.src"
@@ -120,6 +122,15 @@ export default {
         },
         webviewPreload() {
             return this._preloadPath('panDocBridge.js');
+        },
+        /**
+         * 是否用 Electron 的 <webview> 承载文档页。
+         * 现在统一用 <iframe>：macOS 上新版系统 + Electron 22 的 <webview>（OOPIF）出现"页面加载正常、
+         * 编辑器也渲染了（画布有内容），但窗口里始终一片白"的合成问题；改用 iframe + postMessage 桥
+         * 后内容能正常显示（网页端本来就是这套）。留这个开关方便回退。
+         */
+        useWebview() {
+            return false;
         },
     },
     methods: {
@@ -311,6 +322,13 @@ export default {
             tab.loadError = '文档加载失败（' + code + ': ' + desc + '）';
             tab.fatalError = true;
             this.logDoc('did-fail-load ' + code + ' ' + desc + ' ' + ((event && event.validatedURL) || ''));
+        },
+        /** 兜底：按同样的地址用系统默认浏览器打开（网页里编辑器渲染正常） */
+        openInBrowser() {
+            const tab = this.activeTab;
+            if (tab && tab.src) {
+                shell.openExternal(tab.src);
+            }
         },
         retryTab(tab) {
             tab.loadError = '';
@@ -522,12 +540,12 @@ export default {
                     break;
                 }
                 case 'docReady': {
-                    // 编辑器把文档渲染出来了：收掉「正在加载」
+                    // 编辑器把文档渲染出来了：收掉「正在加载」（data 里带页面侧的渲染自检结果，供排查）
                     tab.loading = false;
                     tab.loadError = '';
                     tab.fatalError = false;
                     clearTimeout(tab.loadTimer);
-                    this.logDoc('document-ready ' + (tab.url || ''));
+                    this.logDoc('document-ready ' + (tab.url || '') + ' render=' + JSON.stringify(data || {}));
                     break;
                 }
                 case 'close': {
