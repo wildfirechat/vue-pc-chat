@@ -52,12 +52,21 @@ export class PanApi {
         return `${this.docBase}licenses.html`;
     }
 
-    /** 是不是在线文档页面地址：这类页面靠客户端桥取 authCode，必须用内置网页打开 */
+    /**
+     * 是不是在线文档页面地址：这类页面靠客户端桥取 authCode，必须用内置网页打开。
+     * 只认网盘服务（主备两个地址）下的 /doc/：打开时会给它带上 authCode，不能放过别的站点。
+     */
     isDocUrl(url) {
         if (!url) {
             return false;
         }
-        return url.startsWith(this.docBase) || url.indexOf('/doc/open') >= 0;
+        return [Config.PAN_SERVER, Config.PAN_BACKUP_SERVER].some(base => {
+            if (!base) {
+                return false;
+            }
+            const b = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+            return url.startsWith(`${b}/doc/`);
+        });
     }
 
     /** 在线文档能打开的格式，与服务端 DocsService 的 WORD/CELL/SLIDE/PDF 四组一致 */

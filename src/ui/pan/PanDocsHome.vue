@@ -62,9 +62,9 @@
                             <span class="pan-perm" :class="{edit: entry.canEdit}">{{ entry.canEdit ? '可编辑' : '可查看' }}</span>
                         </td>
                         <td class="col-op">
-                            <button class="pan-op" @click="open(entry)">打开</button>
-                            <button v-if="canShare(entry)" class="pan-op" @click="share(entry)">分享</button>
-                            <button v-if="tab === 'recent'" class="pan-op danger" @click="removeRecent(entry)">移除</button>
+                            <button class="pan-op" @click.stop="open(entry)">打开</button>
+                            <button v-if="canShare(entry)" class="pan-op" @click.stop="share(entry)">分享</button>
+                            <button v-if="tab === 'recent'" class="pan-op danger" @click.stop="removeRecent(entry)">移除</button>
                         </td>
                     </tr>
                     </tbody>
@@ -124,6 +124,8 @@ export default {
                 return;
             }
             this.tab = tab;
+            // 先清掉上一个页签的列表：加载失败时不能把它留在新页签下
+            this.entries = [];
             this.load(tab);
         },
         async load(tab = this.tab) {

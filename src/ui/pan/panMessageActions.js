@@ -2,6 +2,7 @@ import Config from "../../config";
 import panApi from "../../api/panApi";
 import wfc from "../../wfc/client/wfc";
 import FileMessageContent from "../../wfc/messages/fileMessageContent";
+import ConversationType from "../../wfc/model/conversationType";
 import {normalizeSpace, normalizeFile, panFailMessage, panMimeType, panFileExtension} from "./panUtil";
 
 /**
@@ -19,12 +20,21 @@ function remoteUrl(message) {
     return (content && (content.remotePath || content.remoteUrl)) || '';
 }
 
+/**
+ * 密聊文件不进网盘、不给服务端预览：端到端加密的文件不该落到服务端，
+ * 而且 store 已把它的地址改成本机解密代理（localhost），服务端也取不到。
+ */
+function isSecretChat(message) {
+    return !!message.conversation && message.conversation.type === ConversationType.SecretChat;
+}
+
 export function canPreviewFileMessageOnline(message) {
-    return Config.isPanEnabled() && isFileMessage(message) && panApi.isOnlineDocName(message.messageContent.name);
+    return Config.isPanEnabled() && isFileMessage(message) && !isSecretChat(message)
+        && !!remoteUrl(message) && panApi.isOnlineDocName(message.messageContent.name);
 }
 
 export function canSaveFileMessageToPan(message) {
-    return Config.isPanEnabled() && isFileMessage(message) && !!remoteUrl(message);
+    return Config.isPanEnabled() && isFileMessage(message) && !isSecretChat(message) && !!remoteUrl(message);
 }
 
 /** 在线预览：只读打开聊天文件（文件不在网盘里） */

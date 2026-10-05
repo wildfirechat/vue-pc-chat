@@ -47,11 +47,13 @@
                              @did-fail-load="onWebviewFail($event, tab)"
                              @page-title-updated="onPageTitleUpdated($event, tab)">
                     </webview>
+                    <!-- sandbox 不给 allow-top-navigation：宿主窗口开着 nodeIntegration，不能让页面把整个窗口导走 -->
                     <iframe v-else-if="tab.src"
                             v-show="tab.id === activeId"
                             :ref="'iframe-' + tab.id"
                             :src="tab.src"
                             class="pan-doc-webview"
+                            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads"
                             allow="clipboard-read; clipboard-write"
                             @load="onWebviewReady(tab)">
                     </iframe>
@@ -218,9 +220,8 @@ export default {
          * @param {Object} tab
          * @param {string} [preferredUrl] 主窗口带过来的带认证码的地址，优先直接用
          */
-        loadAuthCodeInto(tab, preferredUrl, opts) {
+        loadAuthCodeInto(tab, preferredUrl) {
             const url = tab.url;
-            const options = opts || {};
             tab.authCode = null;
             tab.authed = false;
             tab.loadError = '';
@@ -238,15 +239,8 @@ export default {
             }, 60000);
             // 先指到空白：换文档/刷新时地址可能只差 authCode 片段，直接设置不会真正重新加载
             tab.src = null;
-            // 刷新时优先复用打开文档时主窗口带过来的 authCode，省掉一次异步取码
-            if (options.preferPrefetched && tab.prefetchedAuthCode) {
-                tab.authCode = tab.prefetchedAuthCode;
-                tab.authed = true;
-                this.$nextTick(() => {
-                    tab.src = this._webDocSrc(url, tab.prefetchedAuthCode);
-                });
-                return Promise.resolve();
-            }
+            // 只有首次打开才直接用主窗口带过来的 authCode；刷新/重试要重新取：
+            // 认证码几分钟就过期，而文档页拿到 URL 里的码后不会再向宿主要新的。
             if (preferredUrl && preferredUrl.indexOf('#panAuthCode=') >= 0) {
                 tab.authCode = tab.prefetchedAuthCode;
                 tab.authed = true;
@@ -333,7 +327,7 @@ export default {
         retryTab(tab) {
             tab.loadError = '';
             tab.fatalError = false;
-            this.loadAuthCodeInto(tab, null, {preferPrefetched: true});
+            this.loadAuthCodeInto(tab);
         },
         _webDocSrc(url, code) {
             return url + (url.indexOf('#') >= 0 ? '&' : '#') + 'panAuthCode=' + encodeURIComponent(code);
@@ -391,7 +385,7 @@ export default {
                     return;
                 }
             }
-            this.loadAuthCodeInto(tab, null, {preferPrefetched: true});
+            this.loadAuthCodeInto(tab);
         },
         _docKey(url) {
             try {
@@ -444,6 +438,11 @@ export default {
             if (!tab) {
                 return;
             }
+            // iframe 里的页面可能已经跳到别的站点：只认文档页自己的源，回复也只发给这个源（桥里有 getAuthCode）
+            const origin = this._origin(tab.url);
+            if (!origin || event.origin !== origin) {
+                return;
+            }
             if (message.type === 'reply' || message.type === 'notify') {
                 return;
             }
@@ -457,9 +456,16 @@ export default {
                         id: message.id,
                         code: result.code,
                         data: result.data,
-                    }, '*');
+                    }, origin);
                 }
             });
+        },
+        _origin(url) {
+            try {
+                return new URL(url).origin;
+            } catch (e) {
+                return null;
+            }
         },
         _iframeWindow(tab) {
             const el = this.$refs['iframe-' + tab.id];

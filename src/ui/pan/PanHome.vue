@@ -185,6 +185,9 @@ export default {
             space: null,
             path: [],
             files: [],
+            // 当前 files 属于哪个目录（spaceId/parentId），以及最近一次加载的序号
+            filesKey: '',
+            loadSeq: 0,
             loading: false,
             loadingSpaces: false,
             loadFailed: false,
@@ -196,7 +199,8 @@ export default {
             versionsFile: null,
             dragOver: false,
             uploadTask: null,
-            uploadCanceled: false,
+            // 取消上传时加一，入队时记下当时的值
+            uploadGen: 0,
             uploadQueue: [],
             uploadSeq: 0,
         };
@@ -271,23 +275,37 @@ export default {
             if (!this.space) {
                 return;
             }
+            // 快速进出目录时，先发出的请求可能后回来：只认最后一次
+            const seq = ++this.loadSeq;
             this.loading = true;
             this.loadFailed = false;
             const spaceId = this.space.spaceId;
             const parentId = this.currentFolderId;
+            const key = spaceId + '/' + parentId;
             try {
                 const list = await panApi.getSpaceFiles(spaceId, parentId);
-                if (!this.space || this.space.spaceId !== spaceId) {
+                if (seq !== this.loadSeq) {
                     return;
                 }
                 const files = (list || []).map(normalizeFile);
                 // 文件夹在前，其余保持服务端顺序
                 this.files = files.filter(f => f.isFolder).concat(files.filter(f => !f.isFolder));
+                this.filesKey = key;
             } catch (e) {
+                if (seq !== this.loadSeq) {
+                    return;
+                }
+                // 刷新同一目录失败时保留原列表；换了目录就不能把上一个目录的文件留在新路径下
+                if (this.filesKey !== key) {
+                    this.files = [];
+                    this.filesKey = key;
+                }
                 this.loadFailed = this.files.length === 0;
                 console.error('load pan files error', e);
             } finally {
-                this.loading = false;
+                if (seq === this.loadSeq) {
+                    this.loading = false;
+                }
             }
         },
 
@@ -302,8 +320,8 @@ export default {
             }
         },
         onBreadcrumb(index) {
-            // index 0 是空间根
-            this.path = this.path.slice(0, Math.max(0, index - 1));
+            // index 0 是空间根，index i 对应 path[i - 1]：保留到被点的那一级
+            this.path = this.path.slice(0, index);
             this.loadFiles();
         },
         enterFolder(file) {
@@ -504,44 +522,56 @@ export default {
             this.enqueueUpload(files);
         },
         enqueueUpload(files) {
-            if (!files.length) {
+            if (!files.length || !this.space) {
                 return;
             }
-            this.uploadCanceled = false;
-            this.uploadQueue.push(...files);
+            // 目标目录在入队时就定下来：上传途中切换目录，剩下的文件仍传到原来的目录
+            const spaceId = this.space.spaceId;
+            const parentId = this.currentFolderId;
+            const gen = this.uploadGen;
+            this.uploadQueue.push(...files.map(file => ({file, spaceId, parentId, gen})));
             if (!this.uploadTask) {
                 this.processUploadQueue();
             }
         },
         async processUploadQueue() {
-            const total = this.uploadQueue.length;
+            let succeeded = 0;
             let failed = 0;
-            while (this.uploadQueue.length && !this.uploadCanceled) {
-                const file = this.uploadQueue.shift();
-                this.uploadTask = {name: file.name, progress: 0};
+            let canceled = false;
+            while (this.uploadQueue.length) {
+                const item = this.uploadQueue.shift();
+                this.uploadTask = {name: item.file.name, progress: 0};
                 try {
-                    await this.uploadOne(file);
+                    if (await this.uploadOne(item)) {
+                        succeeded++;
+                    } else {
+                        canceled = true;
+                    }
                 } catch (e) {
                     console.error('upload file error', e);
                     failed++;
                 }
             }
             this.uploadTask = null;
-            if (this.uploadCanceled) {
+            if (failed > 0) {
+                this.$notify({title: '提示', text: `${succeeded} 个文件上传成功，${failed} 个失败`, type: 'warn'});
+            } else if (canceled) {
                 this.$notify({title: '提示', text: '已取消上传', type: 'info'});
-            } else if (failed > 0) {
-                this.$notify({title: '提示', text: `${total - failed} 个文件上传成功，${failed} 个失败`, type: 'warn'});
             } else {
                 this.$notify({title: '提示', text: '上传成功', type: 'success'});
             }
             await this.loadFiles();
         },
-        uploadOne(file) {
+        /** 上传一个文件并在网盘里建出来；上传期间被取消则不建，返回 false */
+        uploadOne({file, spaceId, parentId, gen}) {
             return new Promise((resolve, reject) => {
-                const spaceId = this.space.spaceId;
-                const parentId = this.currentFolderId;
                 wfc.uploadMedia(file.name, file, MessageContentMediaType.PAN,
                     async (storageUrl) => {
+                        // 传输本身中断不了，只能在传完后不再建文件
+                        if (gen !== this.uploadGen) {
+                            resolve(false);
+                            return;
+                        }
                         try {
                             await panApi.createFile({
                                 spaceId,
@@ -552,7 +582,7 @@ export default {
                                 storageUrl,
                                 copy: false,
                             });
-                            resolve();
+                            resolve(true);
                         } catch (e) {
                             reject(e);
                         }
@@ -566,7 +596,8 @@ export default {
             });
         },
         cancelUpload() {
-            this.uploadCanceled = true;
+            // 换一代：已排队的清掉，正在传的那个传完后也不再建文件
+            this.uploadGen++;
             this.uploadQueue = [];
         },
     },

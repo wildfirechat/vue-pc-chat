@@ -733,19 +733,6 @@ const createMainWindow = async () => {
         }
     });
 
-    const isInternalUrl = (url) => {
-        if (!url || url === 'about:blank') {
-            return true;
-        }
-        if (process.env.WEBPACK_DEV_SERVER_URL && url.startsWith(process.env.WEBPACK_DEV_SERVER_URL)) {
-            return true;
-        }
-        if (url.startsWith('app://')) {
-            return true;
-        }
-        return false;
-    }
-
     // open url in default browser, electron 22-
     mainWindow.webContents.on('will-navigate', (event, url) => {
         event.preventDefault(); // 必须拦截，防止应用刷新/跳转
@@ -1147,6 +1134,13 @@ const createMainWindow = async () => {
             return;
         }
         win = createWindow(url, 1200, 800, 800, 600, true, true);
+        // 窗口开着 nodeIntegration，里面又承载远程文档页：不允许把整个窗口导到别处，外部地址交给系统浏览器
+        win.webContents.on('will-navigate', (e, navUrl) => {
+            e.preventDefault();
+            if (!isInternalUrl(navUrl)) {
+                shell.openExternal(navUrl);
+            }
+        });
         // 排查用：Cmd/Ctrl+Alt+I 打开这个窗口的开发者工具
         win.webContents.on('before-input-event', (e, input) => {
             if (input.type === 'keyDown' && input.alt && (input.meta || input.control) && input.key.toLowerCase() === 'i') {
@@ -1397,6 +1391,20 @@ function clampToScreen(win, refWin) {
     } catch (e) {
         console.warn('clampToScreen failed', e && e.message);
     }
+}
+
+// 放在模块级：主窗口和 createWindow 创建的子窗口都要用
+function isInternalUrl(url) {
+    if (!url || url === 'about:blank') {
+        return true;
+    }
+    if (process.env.WEBPACK_DEV_SERVER_URL && url.startsWith(process.env.WEBPACK_DEV_SERVER_URL)) {
+        return true;
+    }
+    if (url.startsWith('app://')) {
+        return true;
+    }
+    return false;
 }
 
 function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false, minimizable = true) {
