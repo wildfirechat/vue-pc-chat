@@ -43,7 +43,7 @@ export default class Config {
     // 接口在 `{PAN_SERVER}/api/v1` 下，在线文档 H5 页面在 `{PAN_SERVER}/doc/` 下；鉴权用 IM 的 authCode。
     // 未部署网盘时保持为空字符串（或 null）：客户端不显示网盘与在线文档的任何入口、路由与菜单。
     //static PAN_SERVER = 'https://pan.wildfirechat.net';
-    static PAN_SERVER = null;
+    static PAN_SERVER = 'https://pan.wildfirechat.net';
 
     // 网盘服务备选地址，双网环境下使用
     static PAN_BACKUP_SERVER = null;
