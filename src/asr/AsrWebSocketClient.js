@@ -60,18 +60,18 @@ export default class AsrWebSocketClient {
 
     /**
      * 连接语音识别服务
-     * @param {string} url WebSocket 地址，asr-api 或 wf-voice
+     * @param {string} url WebSocket 地址，合并服务的 /api/asr/stream 或直连 wf-voice
      * @param {string} clientId 客户端 ID，wf-voice 要求每个连接唯一
      * @param {boolean} partialResult 是否边说边出字
-     * @param {string|null} authCode 连接 asr-api 时需要的认证码，直连 wf-voice 时传 null
+     * @param {string|null} authToken 连接合并服务时需要的 authToken，直连 wf-voice 时传 null
      */
-    connect(url, clientId, partialResult, authCode) {
+    connect(url, clientId, partialResult, authToken) {
         console.log('正在连接语音识别服务:', url);
         this.clientId = clientId;
         this.partialResult = partialResult;
         this.connectRequested = true;
         ipcRenderer.on(IpcEventType.ASR_STREAM_EVENT, this.onStreamEvent);
-        ipcRenderer.send(IpcEventType.ASR_STREAM_CONNECT, {id: this.id, url, authCode});
+        ipcRenderer.send(IpcEventType.ASR_STREAM_CONNECT, {id: this.id, url, authToken});
     }
 
     /**

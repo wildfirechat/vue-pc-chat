@@ -1,5 +1,6 @@
 import axios from "axios";
-import {getItem, setItem} from "../ui/util/storageHelper";
+import {setItem} from "../ui/util/storageHelper";
+import {CODE_NOT_LOGIN, getAuthToken, refreshAuthToken, saveAuthToken, saveAuthTokenFromResponse} from "./appServiceAuth";
 import Config from "../config";
 import FavItem from "../wfc/model/favItem";
 import {stringValue} from "../wfc/util/longUtil";
@@ -7,7 +8,34 @@ import AppServerError from "./appServerError";
 import wfc from "../wfc/client/wfc";
 import ConnectionStatus from "../wfc/client/connectionStatus";
 
+/**
+ * 应用服务连通性探测：GET {APP_SERVER}/ping（匿名），固定返回 {"code":0,"message":"ok"}。
+ * 不能只看 200：网关、代理、强制门户也会回 200，所以要求应答内容正好是约定的
+ * @param {string} appServer Config.APP_SERVER 或 Config.APP_BACKUP_SERVER
+ * @return {Promise<boolean>}
+ */
+export async function isAppServerReachable(appServer, timeout = 5000) {
+    try {
+        let response = await axios.get(appServer + '/ping', {timeout});
+        return response.status === 200 && response.data && response.data.code === 0 && response.data.message === 'ok';
+    } catch (e) {
+        return false;
+    }
+}
+
 export class AppServerApi {
+    // 服务端错误码（见 wf-app-server docs/API.md）
+    // 账号密码登录：账号或密码错误
+    static CODE_CREDENTIAL_INCORRECT = 1001;
+    // PC 扫码：会话不存在或已过期
+    static CODE_PC_SESSION_EXPIRED = 1101;
+    // PC 扫码：还没有扫码
+    static CODE_PC_SESSION_NOT_SCANNED = 1102;
+    // PC 扫码：已扫码，等待手机确认（result 里带扫码用户的昵称头像）
+    static CODE_PC_SESSION_SCANNED = 1103;
+    // PC 扫码：已取消
+    static CODE_PC_SESSION_CANCELED = 1104;
+
     constructor() {
     }
 
@@ -25,14 +53,10 @@ export class AppServerApi {
         // 探测结果会缓存，避免每次请求都探测；请求出现网络错误时清除缓存，下次请求重新探测
         if (!this._probeAppServerPromise) {
             const probe = async (url) => {
-                let response = await axios.get(url, {
-                    transformResponse: [data => data],
-                    timeout: 5000,
-                });
-                if (typeof response.data === 'string' && response.data.trim() === 'Ok') {
+                if (await isAppServerReachable(url)) {
                     return url;
                 }
-                throw new Error('app server probe invalid response: ' + response.data);
+                throw new Error('app server probe failed: ' + url);
             };
 
             this._probeAppServerPromise = Promise.any([
@@ -48,21 +72,16 @@ export class AppServerApi {
         return this._probeAppServerPromise;
     }
 
-    // 主备地址对应的是同一个 app-server，token 通用，主备地址都保存，切换网络后不用重新登录
+    // 主备地址对应的是同一个应用服务，token 通用，主备地址都保存，切换网络后不用重新登录
     _saveAuthToken(authToken) {
-        [Config.APP_SERVER, Config.APP_BACKUP_SERVER].forEach(server => {
-            if (server) {
-                setItem('authToken-' + new URL(server).host, authToken);
-            }
-        });
+        saveAuthToken(Config.APP_SERVER, authToken);
     }
 
-    requestAuthCode(mobile, slideVerifyToken = null) {
-        let params = {mobile};
-        if (slideVerifyToken) {
-            params.slideVerifyToken = slideVerifyToken;
+    // 登录成功时应用服务会下发水印开关（服务端 watermark.enable），存下来沿用到下次登录；旧版服务不下发
+    _saveWatermark(result) {
+        if (result && typeof result.watermark === 'boolean') {
+            setItem('watermark', result.watermark ? '1' : '0');
         }
-        return this._post('/send_code', params)
     }
 
     loinWithPassword(mobile, password, slideVerifyToken = null) {
@@ -77,22 +96,6 @@ export class AppServerApi {
                 params.slideVerifyToken = slideVerifyToken;
             }
             let responsePromise = this._post('/login_pwd', params, true)
-            this._interceptLoginResponse(responsePromise, resolve, reject)
-        })
-    }
-
-    loginWithAuthCode(mobile, authCode, slideVerifyToken = null) {
-        return new Promise((resolve, reject) => {
-            let params = {
-                mobile,
-                code: authCode,
-                platform: Config.getWFCPlatform(),
-                clientId: wfc.getClientId()
-            };
-            if (slideVerifyToken) {
-                params.slideVerifyToken = slideVerifyToken;
-            }
-            let responsePromise = this._post('/login', params, true);
             this._interceptLoginResponse(responsePromise, resolve, reject)
         })
     }
@@ -121,8 +124,9 @@ export class AppServerApi {
                         if (appAuthToken) {
                             this._saveAuthToken(appAuthToken);
                         }
+                        this._saveWatermark(response.data.result);
                         resolve(response.data);
-                    } else if ([9, 18].indexOf(response.data.code) > -1) {
+                    } else if ([AppServerApi.CODE_PC_SESSION_SCANNED, AppServerApi.CODE_PC_SESSION_CANCELED].indexOf(response.data.code) > -1) {
                         resolve(response.data);
                     } else {
                         reject(new AppServerError(response.data.code, response.data.message));
@@ -148,17 +152,6 @@ export class AppServerApi {
             params.slideVerifyToken = slideVerifyToken;
         }
         return this._post('/change_pwd', params)
-    }
-
-    requestResetPasswordAuthCode() {
-        return this._post('/send_reset_code')
-    }
-
-    resetPassword(resetPasswordAuthCode, newPassword) {
-        return this._post('/reset_pwd', {
-            resetCode: resetPasswordAuthCode,
-            newPassword: newPassword,
-        })
     }
 
     getGroupAnnouncement(groupId) {
@@ -223,7 +216,11 @@ export class AppServerApi {
                     if (appAuthToken) {
                         this._saveAuthToken(appAuthToken);
                     }
+                    this._saveWatermark(response.data.result);
                     resolve(response.data.result);
+                } else if (response.data.code === AppServerApi.CODE_CREDENTIAL_INCORRECT) {
+                    // 密码登录链路上没有验证码，服务端文案「账号或密码错误」统一成「密码错误」，免得以为还要填验证码
+                    reject(new AppServerError(response.data.code, '密码错误'));
                 } else {
                     reject(new AppServerError(response.data.code, response.data.message));
                 }
@@ -243,22 +240,31 @@ export class AppServerApi {
      * @private
      */
     async _post(path, data = {}, rawResponse = false, rawResponseData = false) {
-        let response;
-        path = await this._getAppServer() + path;
-        try {
-            response = await axios.post(path, data, {
-                transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse,
-                headers: {
-                    'authToken': getItem('authToken-' + new URL(path).host),
-                },
-                withCredentials: false,
-            })
-        } catch (e) {
-            if (!e.response) {
-                // 网络错误，可能是网络环境变了，清除探测结果
-                this._probeAppServerPromise = null;
+        let url = await this._getAppServer() + path;
+        let send = async () => {
+            try {
+                let response = await axios.post(url, data, {
+                    transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse,
+                    headers: {
+                        'authToken': getAuthToken(url),
+                    },
+                    withCredentials: false,
+                });
+                saveAuthTokenFromResponse(url, response);
+                return response;
+            } catch (e) {
+                if (!e.response) {
+                    // 网络错误，可能是网络环境变了，清除探测结果
+                    this._probeAppServerPromise = null;
+                }
+                throw e;
             }
-            throw e;
+        };
+        let response = await send();
+        // 已经连上 IM 时会话失效（13）：用 authCode 重新换一个 authToken 再试一次。登录相关接口本身不需要 token，不会走到这里
+        if (!rawResponseData && response.data && response.data.code === CODE_NOT_LOGIN && this._isImConnected()) {
+            await refreshAuthToken(url);
+            response = await send();
         }
         if (rawResponse) {
             return response;
@@ -276,6 +282,12 @@ export class AppServerApi {
             throw new Error('request error, status code: ' + response.status)
         }
     }
+
+    _isImConnected() {
+        let status = wfc.getConnectionStatus();
+        return status === ConnectionStatus.ConnectionStatusConnected || status === ConnectionStatus.ConnectionStatusReceiveing;
+    }
+
 }
 
 const appServerApi = new AppServerApi();

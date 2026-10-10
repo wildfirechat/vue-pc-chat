@@ -30,6 +30,7 @@ import pkg from '../package.json';
 import IPCEventType from "./ipcEventType";
 import nodePath from 'path'
 import { loadSelfSignedCertificates, logSelfSignedCertificates, createCertificateVerifyProc, createHttpsAgent } from './selfSignedCert'
+import { installServiceConfigSupport } from './serviceConfig/serviceConfigMain'
 import {init as initProtoMain} from "./wfc/proto/proto_main";
 import createProtocol from "./createProtocol";
 import { autoUpdater } from 'electron-updater';
@@ -83,6 +84,9 @@ function installSelfSignedCertificateSupport() {
     session.fromPartition('electron-updater', {cache: false}).setCertificateVerifyProc(verifyProc);
 }
 // =================== 自签名证书支持结束 ===================
+
+// 登录页「服务配置」：读取已保存的配置串，渲染进程启动时同步取回
+installServiceConfigSupport();
 
 
 let Locales = {};
@@ -1796,12 +1800,12 @@ function toBuffer(ab) {
 }
 
 // ===================== 实时语音识别 =====================
-// 渲染进程的 AsrWebSocketClient 通过 IPC 在主进程建立 WebSocket 连接：浏览器的 WebSocket 不能设置 authCode header，
+// 渲染进程的 AsrWebSocketClient 通过 IPC 在主进程建立 WebSocket 连接：浏览器的 WebSocket 不能设置 authToken header，
 // 也不会使用内置的自签名证书，主进程的 ws 两者都可以
 // key 是 `${webContents.id}-${连接 ID}`
 const asrStreamSockets = new Map();
 
-ipcMain.on(IPCEventType.ASR_STREAM_CONNECT, (event, {id, url, authCode}) => {
+ipcMain.on(IPCEventType.ASR_STREAM_CONNECT, (event, {id, url, authToken}) => {
     const WebSocket = require('ws');
     const sender = event.sender;
     const key = `${sender.id}-${id}`;
@@ -1814,8 +1818,8 @@ ipcMain.on(IPCEventType.ASR_STREAM_CONNECT, (event, {id, url, authCode}) => {
     let ws;
     try {
         ws = new WebSocket(url, {
-            // asr-api 从这个 HTTP header 中取认证码
-            headers: authCode ? {authCode} : {},
+            // 合并服务在握手时从这个 HTTP header 中取 authToken（直连 wf-voice 时不带）
+            headers: authToken ? {authToken} : {},
             handshakeTimeout: 5000,
             agent: url.startsWith('wss:') ? selfSignedHttpsAgent : undefined,
         });

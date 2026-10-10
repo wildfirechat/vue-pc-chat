@@ -30,6 +30,7 @@ import Config from "./config";
 import PanHome from "./ui/pan/PanHome.vue";
 import PanDocsHome from "./ui/pan/PanDocsHome.vue";
 import PanDocWindow from "./ui/pan/PanDocWindow.vue";
+import TodoPage from "./ui/todo/TodoPage.vue";
 
 // 未配置网盘服务时，网盘 / 在线文档不注册任何路由
 const panEnabled = Config.isPanEnabled();
@@ -77,6 +78,12 @@ const routers = [
                 path: 'ai',
                 name: 'AI',
                 component: AI,
+            },
+            {
+                // 待办；服务端关了待办时侧栏不出入口（见 todoStore.probe）
+                path: 'todo',
+                name: 'todo',
+                component: TodoPage,
             },
             ...(panEnabled ? [
                 {

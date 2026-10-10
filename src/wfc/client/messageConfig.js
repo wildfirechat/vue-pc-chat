@@ -84,6 +84,9 @@ import RestoreResponseNotificationContent from "../messages/backup/restoreRespon
 import CollectionMessageContent from "../messages/collectionMessageContent";
 import PollMessageContent from "../messages/pollMessageContent";
 import PollResultMessageContent from "../messages/pollResultMessageContent";
+import TodoMessageContent from "../messages/todoMessageContent";
+import TodoActivityMessageContent from "../messages/todoActivityMessageContent";
+import TodoNotifyMessageContent from "../messages/todoNotifyMessageContent";
 import MeetingMinutesMessageContent from "../messages/meetingMinutesMessageContent";
 import TranscriptionMessageContent from "../messages/transcriptionMessageContent";
 
@@ -601,6 +604,25 @@ export default class MessageConfig {
             flag: PersistFlag.Persist_And_Count,
             type: MessageContentType.Poll_Result,
             contentClazz: PollResultMessageContent,
+        },
+        {
+            name: 'todo',
+            flag: PersistFlag.Persist_And_Count,
+            type: MessageContentType.Todo,
+            contentClazz: TodoMessageContent,
+        },
+        {
+            name: 'todoNotify',
+            flag: PersistFlag.Persist_And_Count,
+            type: MessageContentType.Todo_Notify,
+            contentClazz: TodoNotifyMessageContent,
+        },
+        {
+            // 只存储、不算未读
+            name: 'todoActivity',
+            flag: PersistFlag.Persist,
+            type: MessageContentType.Todo_Activity,
+            contentClazz: TodoActivityMessageContent,
         },
         {
             name: 'meetingMinutes',

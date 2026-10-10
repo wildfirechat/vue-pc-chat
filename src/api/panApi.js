@@ -1,17 +1,17 @@
-import axios from "axios";
 import Config from "../config";
 import wfc from "../wfc/client/wfc";
 import AppServerError from "./appServerError";
+import {getWithAuthToken, postWithAuthToken} from "./appServiceAuth";
 
 /**
  * 网盘 / 在线文档客户端接口。
  *
- * 对接独立的 wf-pan-server（不是合并后的 wf-app-server）：
- * 接口在 `{PAN_SERVER}/api/v1/**` 下，在线文档 H5 页面在 `{PAN_SERVER}/doc/` 下。
- * 鉴权与接龙/投票一致 —— 用 IM 的 authCode 放在请求头 `authCode`（服务端 ClientAuthFilter）。
- * 响应信封为 `{code, message, data}`。
+ * 网盘已并入合并服务 wf-app-server（app-pan 模块）：接口在 `{应用服务}/api/pan/**` 下，
+ * 在线文档 H5 页面在应用服务根地址的 `/doc/` 下。
+ * 鉴权与接龙 / 投票 / 组织通讯录一致：整个应用服务共用一个 authToken（见 appServiceAuth），响应体取 result。
+ * 文档页自己通过桥取 authCode，再调 /doc/session 换 authToken。
  *
- * 未配置 `Config.PAN_SERVER` 时，所有入口都不应展示（见 Config.isPanEnabled）。
+ * 关闭网盘（Config.ENABLE_PAN = false）时，所有入口都不应展示（见 Config.isPanEnabled）。
  */
 export class PanApi {
 
@@ -29,9 +29,9 @@ export class PanApi {
         return base.endsWith('/') ? base.substring(0, base.length - 1) : base;
     }
 
-    /** 在线文档 H5 页面根地址（服务端自带），带 /doc/ 尾斜杠 */
+    /** 在线文档 H5 页面根地址（服务端自带，挂在应用服务根地址下，不在 /api/pan 前缀下），带 /doc/ 尾斜杠 */
     get docBase() {
-        return `${this.baseUrl}/doc/`;
+        return `${Config.getAppServiceAddress()}/doc/`;
     }
 
     /** 打开网盘文件（编辑/只读由服务端按权限与平台决定） */
@@ -54,13 +54,13 @@ export class PanApi {
 
     /**
      * 是不是在线文档页面地址：这类页面靠客户端桥取 authCode，必须用内置网页打开。
-     * 只认网盘服务（主备两个地址）下的 /doc/：打开时会给它带上 authCode，不能放过别的站点。
+     * 只认应用服务（主备两个地址）下的 /doc/：打开时会给它带上 authCode，不能放过别的站点。
      */
     isDocUrl(url) {
-        if (!url) {
+        if (!url || !this.enabled) {
             return false;
         }
-        return [Config.PAN_SERVER, Config.PAN_BACKUP_SERVER].some(base => {
+        return [Config.APP_SERVICE_ADDRESS, Config.APP_SERVICE_BACKUP_ADDRESS].some(base => {
             if (!base) {
                 return false;
             }
@@ -92,8 +92,9 @@ export class PanApi {
         return PanApi.ONLINE_DOC_EXTENSIONS.has(name.substring(idx + 1).toLowerCase());
     }
 
+    /** 文档页所在的主机（应用服务的 host[:port]），文档页的 authCode 按它取 */
     _host() {
-        return this.baseUrl.replace(/^https?:\/\//, '').split('/')[0];
+        return new URL(Config.getAppServiceAddress()).host;
     }
 
     _authCode() {
@@ -110,34 +111,12 @@ export class PanApi {
         return this._authCode();
     }
 
-    async _post(path, data = {}) {
-        const base = this.baseUrl;
-        const authCode = await this._authCode();
-        const response = await axios.post(base + '/api/v1' + path, data, {
-            headers: {'authCode': authCode},
-            withCredentials: false,
-        });
-        return this._unwrap(response);
+    _post(path, data = {}) {
+        return postWithAuthToken(this.baseUrl + path, data);
     }
 
-    async _get(path) {
-        const base = this.baseUrl;
-        const authCode = await this._authCode();
-        const response = await axios.get(base + '/api/v1' + path, {
-            headers: {'authCode': authCode},
-            withCredentials: false,
-        });
-        return this._unwrap(response);
-    }
-
-    _unwrap(response) {
-        if (response.data) {
-            if (response.data.code === 0) {
-                return response.data.data;
-            }
-            throw new AppServerError(response.data.code, response.data.message);
-        }
-        throw new Error('request error, status code: ' + response.status);
+    _get(path) {
+        return getWithAuthToken(this.baseUrl + path);
     }
 
     // ---------------------------------------------------------------- 空间

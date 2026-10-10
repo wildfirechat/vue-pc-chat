@@ -14,6 +14,8 @@
 import Message from "../../../../../wfc/messages/message";
 import {isElectron, shell} from "../../../../../platform";
 import Config from "../../../../../config";
+import panApi from "../../../../../api/panApi";
+import {openPanDoc} from "../../../../pan/panDocWindow";
 
 export default {
     name: "LinkMessageContentView",
@@ -27,6 +29,12 @@ export default {
     methods: {
         clickLink() {
             let url = this.message.messageContent.url;
+            // 在线文档（云盘文件卡片）要靠客户端的桥取认证码，系统浏览器打不开，用内置的文档窗口打开。
+            // 卡片地址是对方按他当时所在网络发的，换成当前网络的地址
+            if (panApi.isDocUrl(url)) {
+                openPanDoc({url: Config.urlRedirect(url), title: this.message.messageContent.title}, this.$eventBus);
+                return;
+            }
             if (Config.OPEN_LINK_POLICY === 2) {
                 this.$notify({
                     title: '提示',

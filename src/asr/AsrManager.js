@@ -91,21 +91,21 @@ export default class AsrManager {
             },
         });
         this.wsClient = client;
-        // 获取认证码、连接识别服务可能要一两秒，用户点完就开始说话。先开始录音，音频由 wsClient 缓存到连接成功后发送
+        // 取 authToken（必要时用 authCode 换）、连接识别服务可能要一两秒，用户点完就开始说话。先开始录音，音频由 wsClient 缓存到连接成功后发送
         this._startAudioRecording();
 
-        // wf-voice 要求每个连接的 clientId 唯一，并会用作服务端录音文件名。连接 asr-api 时由 asr-api 重新生成
+        // wf-voice 要求每个连接的 clientId 唯一，并会用作服务端录音文件名。连接合并服务时由服务端重新生成
         let clientId = wfc.getUserId() + '-' + randomId();
         if (!asrServerApi.isAsrApiUrl(url)) {
             // 直连 wf-voice，不需要鉴权
             client.connect(url, clientId, Config.ENABLE_ASR_PARTIAL_RESULT, null);
             return;
         }
-        asrServerApi.getAuthCode()
-            .then(authCode => {
-                // 获取认证码期间，识别可能已经停止或取消
+        asrServerApi.getAuthToken(url)
+            .then(authToken => {
+                // 换 authToken 期间，识别可能已经停止或取消
                 if (this.wsClient === client) {
-                    client.connect(url, clientId, Config.ENABLE_ASR_PARTIAL_RESULT, authCode);
+                    client.connect(url, clientId, Config.ENABLE_ASR_PARTIAL_RESULT, authToken);
                 }
             })
             .catch(error => {

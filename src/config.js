@@ -1,5 +1,24 @@
-import {isElectron} from './platform'
+import {ipcRenderer, isElectron} from './platform'
 import wfc from "./wfc/client/wfc";
+import IpcEventType from "./ipcEventType";
+
+// 出厂配置（内置默认值）。登录页「服务配置」可以覆盖，「恢复默认配置」回到这里
+const BUILTIN = {
+    // 主机名（IM 与应用服务共用），不能带 scheme 和端口
+    mainHost: 'qixin.wildfirechat.net',
+    imPort: 443,
+    // 应用服务端口，默认与 IM 端口相同（同入口部署）
+    appPort: 443,
+    backupStrategy: 0,
+    // 备网主机名，null 表示不配备网
+    backupHost: '124.223.173.97',
+    backupImPort: 443,
+    backupAppPort: 443,
+    useWebsocket: true,
+    useTls: true,
+    turnUser: 'wfturn',
+    turnPassword: 'CNSplD6LEVvm9h7N',
+};
 
 export default class Config {
     // 调试用
@@ -18,80 +37,246 @@ export default class Config {
     // 默认缩略图，200 x200，#d3d3d3
     static DEFAULT_THUMBNAIL_URL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAAAXNSR0IArs4c6QAABSlJREFUeF7t1bERwzAMBEGx//JYkN2A5eDSX+UIsOCNzr338/gIEPgpcATiZRB4FxCI10Hgj4BAPA8CAvEGCDQBf5DmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IiCQkUNbswkIpLmZGhEQyMihrdkEBNLcTI0ICGTk0NZsAgJpbqZGBAQycmhrNgGBNDdTIwICGTm0NZuAQJqbqREBgYwc2ppNQCDNzdSIgEBGDm3NJiCQ5mZqREAgI4e2ZhMQSHMzNSIgkJFDW7MJCKS5mRoREMjIoa3ZBATS3EyNCAhk5NDWbAICaW6mRgQEMnJoazYBgTQ3UyMCAhk5tDWbgECam6kRAYGMHNqaTUAgzc3UiIBARg5tzSYgkOZmakRAICOHtmYTEEhzMzUiIJCRQ1uzCQikuZkaERDIyKGt2QQE0txMjQgIZOTQ1mwCAmlupkYEBDJyaGs2AYE0N1MjAgIZObQ1m4BAmpupEQGBjBzamk1AIM3N1IiAQEYObc0mIJDmZmpEQCAjh7ZmExBIczM1IvAFWDC2pw/rRZEAAAAASUVORK5CYII='
 
-    // APP SERVER的地址，不能省略http(s)前缀。
-    // 默认的app server使用端口是8888，注意端口号别忘记了。
-    // 上线建议使用https，使用https更安全。
-    //static APP_SERVER = 'http://app.wildfirechat.net:8888';
-    static APP_SERVER = 'https://app.wildfirechat.net';
+    // ==================== 服务地址 ====================
+    //
+    // ⚠️ 下面的主机 / 端口 / 协议 / TURN 都是**运行时可覆盖**的：登录页「服务配置」用加密配置串改写它们
+    //    （见 src/serviceConfig/ 与 applyServiceConfiguration），各功能地址都写成 getter 由它们派生，
+    //    不要改成静态初始化，否则覆盖后派生值仍是旧值。「恢复默认配置」会回到 BUILTIN 里的出厂值。
+    //
+    // 地址模型（与 wf-enterprise-chat 一致）：**主机通用**，端口按用途分开
+    //   MAIN_HOST + IM_PORT   → IM 服务。PC 端连接 IM 的地址来自 token，这里只用于双网媒体地址转换
+    //   MAIN_HOST + APP_PORT  → 应用服务 wf-app-server（合并服务）：/api/app（原 app-server）、/api/org（组织通讯录）、
+    //                           /api/collection（接龙）、/api/poll（投票）、/api/asr（语音转文字）、/api/pan（网盘）、
+    //                           /api/todo（待办）；在线文档页面在 /doc/
+    //   BACKUP_HOST + BACKUP_IM_PORT / BACKUP_APP_PORT → 备网上的同一对服务；BACKUP_HOST 为 null 表示不配备网
+    // 常见部署（一个 Nginx 后面挂 IM + 应用服务）两个端口相同；开发联调分开跑时只改 APP_PORT。
+    // 合并服务的接口都在 /api/ 下，Nginx 只需把 /api/ 和 /doc/ 反代到合并服务。
 
-    // APP SERVER 备选地址，双网环境下使用
-    static APP_BACKUP_SERVER = null;
+    // 主机名（IM 与应用服务共用），不能带 scheme 和端口
+    static MAIN_HOST = BUILTIN.mainHost;
+    // IM 服务端口
+    static IM_PORT = BUILTIN.imPort;
+    // 应用服务端口，默认与 IM 端口相同
+    static APP_PORT = BUILTIN.appPort;
+    // 备网策略：0 自动选择 / 1 主网络 / 2 备用网络
+    static BACKUP_STRATEGY = BUILTIN.backupStrategy;
+    // 备网主机名，null 表示不配备网
+    static BACKUP_HOST = BUILTIN.backupHost;
+    // 备网 IM 服务端口
+    static BACKUP_IM_PORT = BUILTIN.backupImPort;
+    // 备网应用服务端口，默认与备网 IM 端口相同
+    static BACKUP_APP_PORT = BUILTIN.backupAppPort;
+    // IM 长连接是否使用 websocket，需要 2026.9.11 之后的 IM 服务
+    static IM_USE_WEBSOCKET = BUILTIN.useWebsocket;
+    // 是否使用 TLS（https / wss，以及 IM 长连接加密）。自签名证书放到 build/certs，见 src/selfSignedCert.js
+    static IM_USE_TLS = BUILTIN.useTls;
 
-    // 接龙服务地址
-    static COLLECTION_SERVER = 'https://jielong.wildfirechat.net';
+    // 各功能开关：关掉的功能对应地址为 null，客户端不显示入口
+    static ENABLE_ORGANIZATION = true;
+    static ENABLE_COLLECTION = true;
+    static ENABLE_POLL = true;
+    // 语音消息转文字
+    static ENABLE_ASR = true;
+    // 实时语音输入：输入框显示语音输入按钮，边说边把识别结果写入输入框
+    static ENABLE_ASR_STREAM = true;
+    // 网盘与在线文档
+    static ENABLE_PAN = true;
+    // 待办。服务端可用 app.feature.todo=false 关掉，客户端探测到后自动隐藏入口（见 src/ui/todo/todoStore.js），这里不用跟着改
+    static ENABLE_TODO = true;
 
-    // 接龙服务备选地址，双网环境下使用
-    static COLLECTION_BACKUP_SERVER = null;
-
-    // 投票服务地址
-    static POLL_SERVER = 'https://poll.wildfirechat.net';
-
-    // 投票服务备选地址，双网环境下使用
-    static POLL_BACKUP_SERVER = null;
-
-    // 网盘 / 在线文档服务地址（独立的 wf-pan-server 客户端端口）。
-    // 接口在 `{PAN_SERVER}/api/v1` 下，在线文档 H5 页面在 `{PAN_SERVER}/doc/` 下；鉴权用 IM 的 authCode。
-    // 未部署网盘时保持为空字符串（或 null）：客户端不显示网盘与在线文档的任何入口、路由与菜单。
-    //static PAN_SERVER = 'https://pan.wildfirechat.net';
-    static PAN_SERVER = 'https://pan.wildfirechat.net';
-
-    // 网盘服务备选地址，双网环境下使用
-    static PAN_BACKUP_SERVER = null;
-
-    // 服务器搜索服务地址（会话内消息搜索），对应 wf-search-server 项目（https://gitee.com/wfchat/search_server）
+    // 服务器搜索服务地址（会话内消息搜索），对应 wf-search-server 项目（https://gitee.com/wfchat/search_server），不在合并服务里
     static SEARCH_SERVER = null;
 
     // 服务器搜索服务备选地址，双网环境下使用
     static SEARCH_BACKUP_SERVER = null;
 
-    // 语音转文字服务地址，如果没有部署语音转文字服务，或者不需要语音转文字的话，可置为 null
-    // 语音转文字服务项目：https://gitee.com/wfchat/asr-api ，请求时会在 HTTP header authCode 中带上从 IM 服务获取的认证码，由 asr-api 校验
-    static ASR_SERVER = 'https://app.wildfirechat.net/asr/api/recognize';
-
-    // 语音转文字服务备选地址，双网环境下使用
-    static ASR_BACKUP_SERVER = null;
-
-    // 实时语音输入服务地址，配置之后，发送语音按钮后面会显示语音输入按钮，点击后边说边把识别结果写入输入框。不需要的话，可置为 null
-    // 请配置为 asr-api 的实时语音识别地址，例如 wss://example.com/asr/api/stream，连接时会在 HTTP header authCode 中带上从 IM 服务获取的认证码
-    // 内网测试时也可以直连 wf-voice 的 WebSocket 地址（默认端口 12436），例如 ws://192.168.1.100:12436。wf-voice 本身没有鉴权，也不支持 wss，请勿直接暴露到公网
-    static ASR_STREAM_SERVER = 'wss://app.wildfirechat.net/asr/api/stream';
-
-    // 实时语音输入服务备选地址，双网环境下使用
-    static ASR_STREAM_BACKUP_SERVER = null;
-
     // 实时语音输入是否边说边出字。开启时说话过程中实时显示正在说的这句话，说完后修正为这句的最终结果；关闭时每说完一句才显示这句话
     // 开启后 wf-voice 会在说话过程中反复识别正在说的这句话，服务端 CPU 占用更高。旧版本 wf-voice 不支持，开启后效果和关闭一样
     static ENABLE_ASR_PARTIAL_RESULT = true;
 
-    // 组织结构服务地址，如果没有部署组织结构服务，或者不需要组织结构的话，可置为 null
-    // 组织结构项目：https://github.com/wildfirechat/organization-platform 或 https://gitee.com/wfchat/organization-platform
-    static ORGANIZATION_SERVER = 'https://org.wildfirechat.net';
+    // 拼 scheme://host[:port]，TLS 下 443、明文下 80 时省略端口
+    static _origin(scheme, host, port) {
+        let defaultPort = Config.IM_USE_TLS ? 443 : 80;
+        return `${scheme}://${host}${port === defaultPort ? '' : ':' + port}`;
+    }
 
-    // 组织结构服务备选地址，双网环境下使用
-    static ORGANIZATION_BACKUP_SERVER = null;
+    static _httpScheme() {
+        return Config.IM_USE_TLS ? 'https' : 'http';
+    }
+
+    // IM 服务的 HTTP 基址（媒体地址等）
+    static get IM_BASE_ADDRESS() {
+        return Config._origin(Config._httpScheme(), Config.MAIN_HOST, Config.IM_PORT);
+    }
+
+    // 备网 IM 服务的 HTTP 基址，未配备网时为 null
+    static get IM_BACKUP_BASE_ADDRESS() {
+        return Config.BACKUP_HOST ? Config._origin(Config._httpScheme(), Config.BACKUP_HOST, Config.BACKUP_IM_PORT) : null;
+    }
+
+    // 应用服务（合并服务）的根地址，/api/**、/doc/** 都挂在它下面
+    static get APP_SERVICE_ADDRESS() {
+        return Config._origin(Config._httpScheme(), Config.MAIN_HOST, Config.APP_PORT);
+    }
+
+    // 备网上的应用服务根地址，未配备网时为 null
+    static get APP_SERVICE_BACKUP_ADDRESS() {
+        return Config.BACKUP_HOST ? Config._origin(Config._httpScheme(), Config.BACKUP_HOST, Config.BACKUP_APP_PORT) : null;
+    }
+
+    static _api(category, enabled = true) {
+        return enabled ? `${Config.APP_SERVICE_ADDRESS}/api/${category}` : null;
+    }
+
+    static _backupApi(category, enabled = true) {
+        let backup = Config.APP_SERVICE_BACKUP_ADDRESS;
+        return enabled && backup ? `${backup}/api/${category}` : null;
+    }
+
+    // 应用服务（原 app-server）的接口前缀：登录、PC 扫码、收藏、群公告、会议、头像等
+    static get APP_SERVER() {
+        return Config._api('app');
+    }
+
+    // 应用服务备选地址，双网环境下使用
+    static get APP_BACKUP_SERVER() {
+        return Config._backupApi('app');
+    }
+
+    // 接龙
+    static get COLLECTION_SERVER() {
+        return Config._api('collection', Config.ENABLE_COLLECTION);
+    }
+
+    static get COLLECTION_BACKUP_SERVER() {
+        return Config._backupApi('collection', Config.ENABLE_COLLECTION);
+    }
+
+    // 投票
+    static get POLL_SERVER() {
+        return Config._api('poll', Config.ENABLE_POLL);
+    }
+
+    static get POLL_BACKUP_SERVER() {
+        return Config._backupApi('poll', Config.ENABLE_POLL);
+    }
+
+    // 网盘客户端接口；在线文档 H5 页面不在这个前缀下，在应用服务根地址的 /doc/（见 panApi.docBase）
+    static get PAN_SERVER() {
+        return Config._api('pan', Config.ENABLE_PAN);
+    }
+
+    static get PAN_BACKUP_SERVER() {
+        return Config._backupApi('pan', Config.ENABLE_PAN);
+    }
+
+    // 待办
+    static get TODO_SERVER() {
+        return Config._api('todo', Config.ENABLE_TODO);
+    }
+
+    static get TODO_BACKUP_SERVER() {
+        return Config._backupApi('todo', Config.ENABLE_TODO);
+    }
+
+    // 组织通讯录
+    static get ORGANIZATION_SERVER() {
+        return Config._api('org', Config.ENABLE_ORGANIZATION);
+    }
+
+    static get ORGANIZATION_BACKUP_SERVER() {
+        return Config._backupApi('org', Config.ENABLE_ORGANIZATION);
+    }
+
+    // 语音消息转文字，完整的接口地址
+    static get ASR_SERVER() {
+        let api = Config._api('asr', Config.ENABLE_ASR);
+        return api ? api + '/recognize' : null;
+    }
+
+    static get ASR_BACKUP_SERVER() {
+        let api = Config._backupApi('asr', Config.ENABLE_ASR);
+        return api ? api + '/recognize' : null;
+    }
+
+    // 实时语音输入的 WebSocket 地址：连合并服务，由它转发给 wf-voice。
+    // 内网测试时也可以直连 wf-voice（默认端口 12436），把这里改成例如 ws://192.168.1.100:12436 即可：
+    // 地址路径里没有 /api/ 时不带鉴权头（wf-voice 本身没有鉴权，也不支持 wss，请勿直接暴露到公网）
+    static get ASR_STREAM_SERVER() {
+        let api = Config._api('asr', Config.ENABLE_ASR_STREAM);
+        return api ? Config._wsBase(api) + '/stream' : null;
+    }
+
+    static get ASR_STREAM_BACKUP_SERVER() {
+        let api = Config._backupApi('asr', Config.ENABLE_ASR_STREAM);
+        return api ? Config._wsBase(api) + '/stream' : null;
+    }
+
+    static _wsBase(httpBase) {
+        return httpBase.replace(/^https:\/\//, 'wss://').replace(/^http:\/\//, 'ws://');
+    }
 
     // 野火二维码 scheme，不要修改，如果需要修改的话，所有端都需要一起修改
     static QR_CODE_PREFIX_PC_SESSION = "wildfirechat://pcsession/";
 
-    // 如果使用的是高级版音视频 SDK，则不需要配置 ICE_SERVER，否则需要配置。<br>
-    // 请参考 src/wfc/av/internal/README.MD 切换音视频 SDK <br>
-    // turn server 配置，可以添加多个<br>
-    // 格式: [uri, 用户名, 密码]，可以添加多个<br>
-    // Turn服务配置，用户音视频通话功能，详情参考 https://docs.wildfirechat.net/webrtc/ <br>
-    // 我们提供的服务能力有限，总体带宽仅3Mbps，只能用于用户测试和体验，为了保证测试可用，我们会不定期的更改密码。<br>
-    // 上线时请一定要切换成你们自己的服务。可以购买腾讯云或者阿里云的轻量服务器，价格很便宜，可以避免影响到您的用户体验。<br>
-    // ICE_SERVERS 是数组数据，可以同时配置多个主备 turn 地址，不需要按双网动态选择
-    static ICE_SERVERS = [['turn:turn.wildfirechat.net:3478', 'wfchat', 'wfchatpwd']];
+    // ==================== TURN（音视频通话） ====================
+    // 详情参考 https://docs.wildfirechat.net/webrtc/ ；如果使用的是高级版音视频 SDK，不需要配置
+    // 下面四项都可以被登录页「服务配置」的配置串覆盖
+
+    // TURN 服务器地址，null = 跟随 MAIN_HOST（配置了备网时同时加上 BACKUP_HOST）
+    static TURN_HOST = null;
+    static TURN_PORT = 3478;
+    static TURN_USER = BUILTIN.turnUser;
+    static TURN_PASSWORD = BUILTIN.turnPassword;
+
+    // 格式: [[uri, 用户名, 密码], ...]，主备 turn 地址都放进去，不需要按双网动态选择
+    static get ICE_SERVERS() {
+        let server = (host) => [`turn:${host}:${Config.TURN_PORT}`, Config.TURN_USER, Config.TURN_PASSWORD];
+        if (Config.TURN_HOST) {
+            return [server(Config.TURN_HOST)];
+        }
+        let servers = [server(Config.MAIN_HOST)];
+        if (Config.BACKUP_HOST) {
+            servers.push(server(Config.BACKUP_HOST));
+        }
+        return servers;
+    }
+
+    // 服务配置串里带的单位名称（登录页显示），没有配置时为空
+    static TENANT_NAME = '';
+
+    /**
+     * 用登录页「服务配置」解析出的配置覆盖地址 / 协议 / TURN。
+     * 渲染进程启动时（任何 Config 读取之前）由本文件末尾调用，配置来自主进程，见 src/serviceConfig/serviceConfigMain.js
+     * @param {Object} config 解析结果，结构见 src/serviceConfig/serviceConfigCodec.js
+     */
+    static applyServiceConfiguration(config) {
+        Config.MAIN_HOST = config.im.host;
+        Config.IM_PORT = config.im.port;
+        Config.APP_PORT = config.im.appPort;
+        Config.IM_USE_TLS = config.im.tls;
+        Config.IM_USE_WEBSOCKET = config.im.websocket;
+        if (config.backup) {
+            Config.BACKUP_HOST = config.backup.host;
+            Config.BACKUP_IM_PORT = config.backup.port;
+            Config.BACKUP_APP_PORT = config.backup.appPort;
+            Config.BACKUP_STRATEGY = config.backup.strategy;
+        } else {
+            Config.BACKUP_HOST = null;
+            // 协议栈会持久化之前设置过的备选地址，没有备网时把策略钉成只走主网络
+            Config.BACKUP_STRATEGY = 1;
+        }
+        // 配置串没带 TURN：跟随 IM 地址，用户名密码回到内置默认值，避免沿用上一份配置的
+        Config.TURN_HOST = config.turn ? config.turn.host : null;
+        Config.TURN_PORT = config.turn ? config.turn.port : 3478;
+        Config.TURN_USER = config.turn ? config.turn.user : BUILTIN.turnUser;
+        Config.TURN_PASSWORD = config.turn ? config.turn.password : BUILTIN.turnPassword;
+        Config.TENANT_NAME = config.tenant || '';
+        Config.hasServiceConfiguration = true;
+    }
+
+    // 是否应用了登录页「服务配置」里的配置串
+    static hasServiceConfiguration = false;
 
     static LANGUAGE = 'zh_CN';
 
@@ -141,7 +326,7 @@ export default class Config {
     // 发送日志命令，当发送此文本消息时，会把协议栈日志发送到当前会话中，为空时关闭此功能。
     static SEND_LOG_COMMAND = '*#marslog#';
 
-    // 是否支持水印
+    // 是否支持水印。应用服务登录时会下发水印开关（服务端 watermark.enable），下发了就以下发的为准，见 waterMark.isEnabled
     static ENABLE_WATER_MARK = true
 
     // 单人音视频通话页面是否显示音视频 SDK 相关提示
@@ -199,6 +384,15 @@ export default class Config {
         return Config._selectServer(Config.PAN_SERVER, Config.PAN_BACKUP_SERVER);
     }
 
+    // 应用服务（合并服务）当前网络下的根地址
+    static getAppServiceAddress() {
+        return Config._selectServer(Config.APP_SERVICE_ADDRESS, Config.APP_SERVICE_BACKUP_ADDRESS);
+    }
+
+    static getTodoServer() {
+        return Config._selectServer(Config.TODO_SERVER, Config.TODO_BACKUP_SERVER);
+    }
+
     // 是否配置了网盘服务：未配置时隐藏网盘与在线文档的全部入口
     static isPanEnabled() {
         return !!Config.getPanServer();
@@ -247,6 +441,11 @@ export default class Config {
 
     static config(options) {
         Object.keys(options).forEach(key => {
+            let desc = Object.getOwnPropertyDescriptor(Config, key);
+            if (desc && desc.get && !desc.set) {
+                console.warn(`Config.${key} 由 MAIN_HOST / APP_PORT 等派生，不能直接设置`);
+                return;
+            }
             Config[key] = options[key];
         });
     }
@@ -254,19 +453,27 @@ export default class Config {
     /**
      * 网络地址重定向
      *
-     * 仅当双网环境时，需要特殊处理，默认原样返回
+     * 双网环境下，媒体文件、生成头像等地址是按发出时所在的网络生成的，换到另一个网络后要换成当前网络可访问的地址：
+     * IM 服务与应用服务的主备基址互换。未配置备网时原样返回
      *
      * @param {string} url
      * @return {string} newUrl
      */
     static urlRedirect(url) {
-        if (!url) {
+        if (!url || !Config.BACKUP_HOST) {
             return url;
         }
-        // 示例代码
-        // 双网环境时，将媒体文件地址切到备选网络
-        if (Config.isUseBackupAddress()) {
-            url = url.replace('oss.xxxx.com', '192.168.2.19');
+        let backup = Config.isUseBackupAddress();
+        let pairs = [
+            [Config.IM_BASE_ADDRESS, Config.IM_BACKUP_BASE_ADDRESS],
+            [Config.APP_SERVICE_ADDRESS, Config.APP_SERVICE_BACKUP_ADDRESS],
+        ];
+        for (const [main, other] of pairs) {
+            let from = backup ? main : other;
+            let to = backup ? other : main;
+            if (from && to && from !== to && (url === from || url.startsWith(from + '/'))) {
+                return to + url.substring(from.length);
+            }
         }
         return url;
     }
@@ -276,12 +483,7 @@ export default class Config {
      * @return {boolean}
      */
     static isUseBackupAddress() {
-        //示例代码
-        let host = wfc.getHost();
-        if (host === '192.168.2.169'/* backupHost */) {
-            return true;
-        }
-        return false;
+        return !!Config.BACKUP_HOST && !wfc.connectedToMainNetwork();
     }
 
     /**
@@ -312,5 +514,18 @@ export default class Config {
         //     stickerBaseUrl = 'https://192.168.2.169/sticker/';
         // }
         return stickerBaseUrl;
+    }
+}
+
+// 渲染进程启动时应用登录页「服务配置」里保存的配置串（主进程已解析好），必须早于任何 Config 地址读取。
+// 每个窗口都会执行到这里，所以改了配置要重启客户端，所有窗口才一致
+if (isElectron() && ipcRenderer) {
+    try {
+        let serviceConfig = ipcRenderer.sendSync(IpcEventType.GET_SERVICE_CONFIG);
+        if (serviceConfig) {
+            Config.applyServiceConfiguration(serviceConfig);
+        }
+    } catch (e) {
+        console.error('apply service config error', e);
     }
 }

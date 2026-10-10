@@ -14,6 +14,7 @@ import ConnectionStatus from "./connectionStatus";
 import EventType from "./wfcEvent";
 import NullUserInfo from "../model/nullUserInfo";
 import UserSettingScope from "./userSettingScope";
+import {generatedAvatarUrl, generatedGroupAvatarUrl, isGeneratedAvatarUrl, TODO_ASSISTANT_ID, TODO_ASSISTANT_PORTRAIT} from "../util/generatedAvatar";
 
 
 export class WfcManager {
@@ -3040,11 +3041,13 @@ export class WfcManager {
     }
 
     defaultUserPortrait(userInfo) {
+        if (userInfo.uid === TODO_ASSISTANT_ID) {
+            return TODO_ASSISTANT_PORTRAIT;
+        }
         if (!userInfo.updateDt) {
             return Config.DEFAULT_PORTRAIT_URL
         }
-        return `${Config.getAppServer()}/avatar?name=${encodeURIComponent(userInfo.displayName)}`
-        // return `http://localhost:8888/avatar?name=${encodeURIComponent(userInfo.displayName)}`
+        return generatedAvatarUrl(userInfo.displayName)
     }
 
     defaultGroupPortrait(groupInfo) {
@@ -3057,7 +3060,8 @@ export class WfcManager {
         }
         let pending = false;
         for (const m of members) {
-            if (m.portrait && !m.portrait.startsWith(`${Config.APP_SERVER}`) && !(Config.APP_BACKUP_SERVER && m.portrait.startsWith(`${Config.APP_BACKUP_SERVER}`))) {
+            // 生成的名字头像、随包头像（待办助手）服务端取不到或没必要取，按名字画
+            if (m.portrait && /^https?:\/\//.test(m.portrait) && !isGeneratedAvatarUrl(m.portrait)) {
                 req.members.push({
                     avatarUrl: m.portrait
                 })
@@ -3077,8 +3081,7 @@ export class WfcManager {
 
         req = JSON.stringify(req, null, '');
 
-        return `${Config.getAppServer()}/avatar/group?request=${encodeURIComponent(req)}`
-        //return `http://localhost:8888/avatar/group?request=${encodeURIComponent(req)}`
+        return generatedGroupAvatarUrl(req)
     }
 
     /**

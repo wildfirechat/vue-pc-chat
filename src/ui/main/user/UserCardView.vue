@@ -70,6 +70,8 @@ import ModifyMyInfoEntry from '../../../wfc/model/modifyMyInfoEntry';
 import ModifyMyInfoType from '../../../wfc/model/modifyMyInfoType';
 import IpcSub from '../../../ipc/ipcSub';
 import WfcUtil from '../../../wfc/util/wfcUtil';
+import Config from '../../../config';
+import organizationServerApi from '../../../api/organizationServerApi';
 
 export default {
     name: 'UserCardView',
@@ -169,6 +171,15 @@ export default {
             let file = event.target.files[0];
 
             wfc.uploadMedia(file.name, file, MessageContentMediaType.Portrait, (url) => {
+                if (Config.getOrganizationServer()) {
+                    // 头像由组织通讯录统一维护，服务端同步到 IM 后会触发 userInfosUpdate 通知
+                    organizationServerApi.updateMyPortrait(url)
+                        .catch(err => {
+                            console.log('update portrait error', err);
+                            this.$notify({text: '修改头像失败：' + err.message, type: 'error'});
+                        });
+                    return;
+                }
                 let entry = new ModifyMyInfoEntry();
                 entry.type = ModifyMyInfoType.Modify_Portrait;
                 entry.value = url;

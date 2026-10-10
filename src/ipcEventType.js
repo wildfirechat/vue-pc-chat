@@ -30,6 +30,11 @@ const IpcEventType = {
     CHECK_FOR_UPDATES: 'check-for-updates',
     RESTART_APP: 'restart-app',
     GET_SELF_SIGNED_CERT_FILES: 'get-self-signed-cert-files',
+    // 登录页「服务配置」，见 src/serviceConfig/serviceConfigMain.js
+    GET_SERVICE_CONFIG: 'get-service-config',
+    SERVICE_CONFIG_VERIFY: 'service-config-verify',
+    SERVICE_CONFIG_APPLY: 'service-config-apply',
+    SERVICE_CONFIG_RESTORE: 'service-config-restore',
     // 实时语音识别 WebSocket，连接在主进程建立，见 src/asr/AsrWebSocketClient.js
     ASR_STREAM_CONNECT: 'asr-stream-connect',
     ASR_STREAM_SEND: 'asr-stream-send',

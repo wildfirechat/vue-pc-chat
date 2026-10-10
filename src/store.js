@@ -26,6 +26,7 @@ import Config from "./config";
 import searchServerApi from "./api/searchServerApi";
 import {getItem, setItem} from "./ui/util/storageHelper";
 import watermark from "./ui/util/waterMark";
+import todoStore, {isTodoMessageType} from "./ui/todo/todoStore";
 import CompositeMessageContent from "./wfc/messages/compositeMessageContent";
 import {stringValue, longValue} from "./wfc/util/longUtil";
 import DismissGroupNotification from "./wfc/messages/notification/dismissGroupNotification";
@@ -181,6 +182,10 @@ let store = {
                     // 连接成功后检查锁定状态
                     this.state.misc.isLocked = wfc.isLocked();
                     this._loadDefaultData();
+                    if (this.state.misc.isMainWindow) {
+                        // 服务端开没开待办，决定入口显不显示；待处理计数也顺便更新
+                        todoStore.probe();
+                    }
 
                     this.updateTray();
                 } else if (status === ConnectionStatus.ConnectionStatusLogout
@@ -189,6 +194,9 @@ let store = {
                     || status === ConnectionStatus.ConnectionStatusKickedOff
                     || status === ConnectionStatus.ConnectionStatusTokenIncorrect) {
                     this._reset();
+                    if (this.state.misc.isMainWindow) {
+                        todoStore.reset();
+                    }
                     this.updateTray();
                 }
             } catch (e) {
@@ -287,6 +295,10 @@ let store = {
         this._addWfcListener(EventType.ReceiveMessage, (msg, hasMore) => {
             if (this.state.misc.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing) {
                 return;
+            }
+            // 群待办卡片、待办助手的通知：说明有待办变了
+            if (isTodoMessageType(msg.messageContent.type)) {
+                todoStore.invalidate();
             }
             this._handleStreamingTextMessage(msg);
             // 取消消息（20）只是删除信号：按 streamId 移除正在生成的

@@ -1,14 +1,32 @@
 import wfc from "../../wfc/client/wfc";
+import Config from "../../config";
 import { getItem } from './storageHelper';
 
 let updateWaterMarkInterval;
 
+/**
+ * 是否显示水印：应用服务登录（密码登录 / 扫码登录）成功时下发了水印开关（服务端 watermark.enable）就以它为准，
+ * 存在本地沿用到下次登录；旧版服务不下发时用 Config.ENABLE_WATER_MARK
+ */
+export function isWaterMarkEnabled() {
+    let value = getItem('watermark');
+    if (value === '1' || value === '0') {
+        return value === '1';
+    }
+    return Config.ENABLE_WATER_MARK;
+}
+
 function updateWaterMark(watermarkStr, re) {
+    const id = 'wf-watermark'
+    const dom = document.getElementById(id)
+    if (!isWaterMarkEnabled()) {
+        // 登录后才知道服务端关了水印：把已经画上的去掉
+        dom && document.body.removeChild(dom)
+        return;
+    }
     if (!watermarkStr) {
         return;
     }
-    const id = 'wf-watermark'
-    const dom = document.getElementById(id)
     let waterMarkDataURL = genWaterMarkDataURL(watermarkStr)
     if (dom !== null) {
         if (!re) {

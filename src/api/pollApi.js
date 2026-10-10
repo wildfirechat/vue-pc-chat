@@ -1,6 +1,5 @@
-import axios from "axios";
 import Config from "../config";
-import wfc from "../wfc/client/wfc";
+import {postWithAuthToken} from "./appServiceAuth";
 
 /**
  * 投票 API 服务
@@ -28,7 +27,7 @@ export class PollApi {
      * @returns {Promise<Object>} 投票对象
      */
     createPoll(groupId, title, description, options, visibility, type, maxSelect, anonymous, endTime, showResult) {
-        return this._post('/api/polls', {
+        return this._post('', {
             groupId,
             title,
             description,
@@ -50,7 +49,7 @@ export class PollApi {
      * @returns {Promise<Object>} 投票详情
      */
     getPoll(pollId, groupId) {
-        return this._post(`/api/polls/${pollId}`, this._groupIdPayload(groupId));
+        return this._post(`/${pollId}`, this._groupIdPayload(groupId));
     }
 
     /**
@@ -62,7 +61,7 @@ export class PollApi {
      * @returns {Promise<void>}
      */
     vote(pollId, groupId, optionIds) {
-        return this._post(`/api/polls/${pollId}/vote`, {
+        return this._post(`/${pollId}/vote`, {
             ...this._groupIdPayload(groupId),
             optionIds
         });
@@ -76,7 +75,7 @@ export class PollApi {
      * @returns {Promise<void>}
      */
     closePoll(pollId, groupId) {
-        return this._post(`/api/polls/${pollId}/close`, this._groupIdPayload(groupId));
+        return this._post(`/${pollId}/close`, this._groupIdPayload(groupId));
     }
 
     /**
@@ -87,7 +86,7 @@ export class PollApi {
      * @returns {Promise<void>}
      */
     deletePoll(pollId, groupId) {
-        return this._post(`/api/polls/${pollId}/delete`, this._groupIdPayload(groupId));
+        return this._post(`/${pollId}/delete`, this._groupIdPayload(groupId));
     }
 
     /**
@@ -98,7 +97,7 @@ export class PollApi {
      * @returns {Promise<Object[]>} 投票人详情列表
      */
     exportPollDetails(pollId, groupId) {
-        return this._post(`/api/polls/${pollId}/export`, this._groupIdPayload(groupId));
+        return this._post(`/${pollId}/export`, this._groupIdPayload(groupId));
     }
 
     /**
@@ -107,42 +106,16 @@ export class PollApi {
      * @returns {Promise<Object[]>} 投票列表
      */
     getMyPolls() {
-        return this._post('/api/polls/my', {});
+        return this._post('/my', {});
     }
 
+    // 合并服务的 /api/poll 下，带 authToken 鉴权（见 appServiceAuth），响应体取 result
     async _post(path, data = {}) {
         let baseUrl = Config.getPollServer();
         if (!baseUrl) {
-            throw new Error('Poll server not configured');
+            throw new Error('未配置投票服务');
         }
-        // extract host for auth code
-        let host = baseUrl.replace(/^https?:\/\//, '').split('/')[0];
-
-        return new Promise((resolve, reject) => {
-            wfc.getAuthCode('poll', 2, host, async (authCode) => {
-                try {
-                    let response = await axios.post(baseUrl + path, data, {
-                        headers: {
-                            'authCode': authCode,
-                        },
-                        withCredentials: false,
-                    });
-                    if (response.data) {
-                        if (response.data.code === 0) {
-                            resolve(response.data.data);
-                        } else {
-                            reject(new Error(response.data.message));
-                        }
-                    } else {
-                        reject(new Error('request error, status code: ' + response.status));
-                    }
-                } catch (e) {
-                    reject(e);
-                }
-            }, (err) => {
-                reject(new Error("Failed to get auth code: " + err));
-            });
-        });
+        return postWithAuthToken(baseUrl + path, data);
     }
 }
 

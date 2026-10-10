@@ -140,6 +140,9 @@
                     <li v-if="isFavable(message)">
                         <a @click.prevent="favMessage(message)">{{ $t('common.fav') }}</a>
                     </li>
+                    <li v-if="canMakeTodo(message)">
+                        <a @click.prevent="makeTodo(message)">设为待办</a>
+                    </li>
                     <li v-if="isQuotable(message)">
                         <a @click.prevent="quoteMessage(message)">{{ $t('common.quote') }}</a>
                     </li>
@@ -240,6 +243,10 @@ import MessageItemView from "./MessageItemView.vue";
 import {markRaw} from "vue";
 import mitt from "mitt";
 import CollectionMessageContent from '../../../wfc/messages/collectionMessageContent'
+import todoStore, {isTodoMessageType} from "../../todo/todoStore";
+import {showTodoEdit} from "../../todo/todoUi";
+import {clipText, TODO_MAX_CONTENT} from "../../todo/todoUtil";
+import {stringValue} from "../../../wfc/util/longUtil";
 
 var amr;
 export default {
@@ -741,6 +748,46 @@ export default {
                 MessageContentType.CONFERENCE_CONTENT_TYPE_INVITE, MessageContentType.Collection].indexOf(message.messageContent.type) <= -1;
         },
 
+        // 单聊、群聊里的普通消息可以「设为待办」；群通知、撤回提示、待办自己的卡片不行；服务端没开待办时不出现
+        canMakeTodo(message) {
+            if (!message || !todoStore.state.available) {
+                return false;
+            }
+            let content = message.messageContent;
+            return [ConversationType.Single, ConversationType.Group].indexOf(message.conversation.type) >= 0
+                && !(content instanceof NotificationMessageContent)
+                && !isTodoMessageType(content.type);
+        },
+
+        // 设为待办：内容预填正文（不是文字的消息预填摘要），带上来源消息；群里可以再选负责人，单聊只能是自己
+        makeTodo(message) {
+            let conversation = message.conversation;
+            let content = message.messageContent;
+            let digest = content.digest(message) || '';
+            let text = content instanceof TextMessageContent ? content.content : digest;
+            showTodoEdit(this, {
+                groupId: conversation.type === ConversationType.Group ? conversation.target : '',
+                initialContent: clipText((text || '').trim(), TODO_MAX_CONTENT),
+                source: {
+                    convType: conversation.type,
+                    target: conversation.target,
+                    line: conversation.line,
+                    messageUid: message.messageUid && stringValue(message.messageUid) !== '0' ? stringValue(message.messageUid) : undefined,
+                    senderId: message.from,
+                    digest: clipText(digest, 200),
+                },
+            });
+        },
+
+        // 待办详情里「跳到原消息」：已经加载了这条消息就滚过去
+        onScrollToMessageRequest(messageId) {
+            let list = this.sharedConversationState.currentConversationMessageList || [];
+            let message = list.find(m => m.messageId === messageId);
+            if (message) {
+                this.scrollToMessageItemView(message);
+            }
+        },
+
         isRecallable(message) {
             if (message) {
                 if (message.conversation.type === ConversationType.Group) {
@@ -1113,6 +1160,7 @@ export default {
         this.localConversationEventBus.$on('reedit-message', this.reedit);
 
         wfc.eventEmitter.on(EventType.ReceiveMessage, this.onReceiveMessage)
+        this.$eventBus.$on('scrollToMessage', this.onScrollToMessageRequest);
     },
 
     beforeUnmount() {
@@ -1124,6 +1172,7 @@ export default {
         this.localConversationEventBus.$off('open-message-sender-context-menu', this.openMessageSenderContextMenu);
         this.localConversationEventBus.$off('reedit-message', this.reedit);
         wfc.eventEmitter.removeListener(EventType.ReceiveMessage, this.onReceiveMessage);
+        this.$eventBus.$off('scrollToMessage', this.onScrollToMessageRequest);
     },
 
     updated() {

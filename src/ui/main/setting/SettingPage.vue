@@ -226,7 +226,7 @@
                     </div>
 
                     <!-- 使用 .stop.prevent 阻止事件冒泡和默认行为，避免 vue-context 因检测到 document 上的 click 事件而立刻关闭 -->
-                    <div class="card-row clickable" @click.stop.prevent="showChangePasswordContextMenu($event)">
+                    <div class="card-row clickable" @click.stop.prevent="showChangePasswordDialog()">
                         <div class="row-info">
                             <span class="row-title">修改密码</span>
                             <span class="row-desc">支持使用旧密码验证或手机短信验证码重置登录密码</span>
@@ -299,15 +299,6 @@
             </div>
         </div>
 
-        <!-- 浮动的二级菜单，放置在最外层以防止任何 overflow: hidden 裁剪，且始终在 DOM 中以保证 $refs 可用 -->
-        <vue-context ref="changePasswordContextMenu" :close-on-scroll="false" v-on:close="onChangePasswordContextMenuClose">
-            <li>
-                <a @click.prevent="showChangePasswordDialog()">密码验证</a>
-            </li>
-            <li>
-                <a @click.prevent="showResetPasswordDialog()">短信验证码验证</a>
-            </li>
-        </vue-context>
     </section>
 </template>
 
@@ -319,7 +310,6 @@ import { clear } from '../../util/storageHelper';
 import { ipcRenderer, isElectron } from '../../../platform';
 import { getItem, setItem } from '../../util/storageHelper';
 import ChangePasswordView from './ChangePasswordView';
-import ResetPasswordView from './ResetPasswordView';
 import BackupRestoreView from '../../../backup/BackupRestoreView.vue';
 import { shell, app } from '../../../platform';
 import IpcEventType from '../../../ipcEventType';
@@ -405,13 +395,6 @@ export default {
                 ipcRenderer.send(IpcEventType.CHECK_FOR_UPDATES);
             }
         },
-        showChangePasswordContextMenu(event) {
-            this.$refs.changePasswordContextMenu.open(event);
-        },
-
-        onChangePasswordContextMenuClose() {
-        },
-
         showChangePasswordDialog() {
             this.$modal.show(
                 ChangePasswordView,
@@ -424,19 +407,6 @@ export default {
                     clickToClose: true,
                 },
                 {
-                    'closed': () => {}
-                })
-        },
-
-        showResetPasswordDialog() {
-            this.$modal.show(
-                ResetPasswordView,
-                {}, null, {
-                    name: 'rest-password-modal',
-                    width: 320,
-                    height: 400,
-                    clickToClose: true,
-                }, {
                     'closed': () => {}
                 })
         },

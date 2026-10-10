@@ -1,6 +1,5 @@
-import axios from "axios";
 import Config from "../config";
-import wfc from "../wfc/client/wfc";
+import {postWithAuthToken} from "./appServiceAuth";
 
 export class CollectionApi {
 
@@ -9,7 +8,7 @@ export class CollectionApi {
     }
 
     createCollection(groupId, title, desc, template, expireType, expireAt, maxParticipants) {
-        return this._post('/api/collections', {
+        return this._post('', {
             groupId,
             title,
             description: desc,
@@ -21,54 +20,31 @@ export class CollectionApi {
     }
 
     getCollection(collectionId, groupId) {
-        return this._post(`/api/collections/${collectionId}/detail`, this._groupIdPayload(groupId))
+        return this._post(`/${collectionId}/detail`, this._groupIdPayload(groupId))
     }
 
     joinCollection(collectionId, groupId, content) {
-        return this._post(`/api/collections/${collectionId}/join`, {
+        return this._post(`/${collectionId}/join`, {
             ...this._groupIdPayload(groupId),
             content
         })
     }
 
     deleteCollectionEntry(collectionId, groupId) {
-        return this._post(`/api/collections/${collectionId}/delete`, this._groupIdPayload(groupId))
+        return this._post(`/${collectionId}/delete`, this._groupIdPayload(groupId))
     }
 
     closeCollection(collectionId, groupId) {
-        return this._post(`/api/collections/${collectionId}/close`, this._groupIdPayload(groupId))
+        return this._post(`/${collectionId}/close`, this._groupIdPayload(groupId))
     }
 
+    // 合并服务的 /api/collection 下，带 authToken 鉴权（见 appServiceAuth），响应体取 result
     async _post(path, data = {}) {
         let baseUrl = Config.getCollectionServer();
-        // extract host for auth code
-        let host = baseUrl.replace(/^https?:\/\//, '').split('/')[0];
-
-        return new Promise((resolve, reject) => {
-            wfc.getAuthCode('collection', 2, host, async (authCode) => {
-                try {
-                    let response = await axios.post(baseUrl + path, data, {
-                        headers: {
-                            'authCode': authCode,
-                        },
-                        withCredentials: false,
-                    });
-                    if (response.data) {
-                        if (response.data.code === 0) {
-                            resolve(response.data.data); // Android returns data in 'data' field
-                        } else {
-                            reject(new Error(response.data.message));
-                        }
-                    } else {
-                        reject(new Error('request error, status code: ' + response.status));
-                    }
-                } catch (e) {
-                    reject(e);
-                }
-            }, (err) => {
-                reject(new Error("Failed to get auth code: " + err));
-            });
-        });
+        if (!baseUrl) {
+            throw new Error('未配置接龙服务');
+        }
+        return postWithAuthToken(baseUrl + path, data);
     }
 }
 

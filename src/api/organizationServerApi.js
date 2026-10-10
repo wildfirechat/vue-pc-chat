@@ -1,8 +1,8 @@
-import axios from "axios";
 import Config from "../config";
-import {getItem, setItem} from "../ui/util/storageHelper";
-import wfc from "../wfc/client/wfc";
 import OrganizationServerError from "./organizationServerError";
+import AppServerError from "./appServerError";
+import {ensureAuthToken, postWithAuthToken} from "./appServiceAuth";
+import {generatedAvatarUrl} from "../wfc/util/generatedAvatar";
 import UserInfo from "../wfc/model/userInfo";
 
 export class OrganizationServerApi {
@@ -13,95 +13,74 @@ export class OrganizationServerApi {
         // do nothing
     }
 
+    /**
+     * 连上 IM 后调用：确保拿到应用服务（合并服务）的 authToken。组织通讯录与应用服务共用一个 authToken，
+     * 账号密码 / 扫码登录时已经下发过的话直接复用，没有就用 IM 的 authCode 换一个（见 appServiceAuth）
+     */
     login() {
-        return new Promise((resolve, reject) => {
-            //        int ApplicationType_Robot = 0;
-//        int ApplicationType_Channel = 1;
-//        int ApplicationType_Admin = 2;
-            if (!Config.getOrganizationServer()) {
-                this.isServiceAvailable = false;
-                reject(this.serviceUnavailbelError)
-                return
-            }
-            wfc.getAuthCode('admin', 2, '', code => {
-                let path = '/api/user_login';
-                this._post(path, {
-                    authCode: code
-                }, true)
-                    .then(response => {
-                        if (response.data.code === 0) {
-                            let appAuthToken = response.headers['authtoken'];
-                            if (!appAuthToken) {
-                                appAuthToken = response.headers['authToken'];
-                            }
-
-                            if (appAuthToken) {
-                                // 主备地址对应的是同一个组织结构服务，token 通用，主备地址都保存，切换网络后不用重新登录
-                                [Config.ORGANIZATION_SERVER, Config.ORGANIZATION_BACKUP_SERVER].forEach(server => {
-                                    if (server) {
-                                        setItem('authToken-' + new URL(server).host, appAuthToken);
-                                    }
-                                });
-                            }
-                            this.isServiceAvailable = true;
-                            resolve(response.data.result);
-                        } else {
-                            reject(new OrganizationServerError(response.data.code, response.data.message));
-                        }
-                    })
-                    .catch(error => {
-                        this.isServiceAvailable = false;
-                        console.error('org login error', error);
-                        reject(error);
-                    })
-
-            }, error => {
-                console.error('getAuthCode error', error);
-                this.isServiceAvailable = false;
-                reject(this.serviceUnavailbelError)
+        let server = Config.getOrganizationServer();
+        if (!server) {
+            this.isServiceAvailable = false;
+            return Promise.reject(this.serviceUnavailbelError);
+        }
+        return ensureAuthToken(server)
+            .then(() => {
+                this.isServiceAvailable = true;
             })
-        })
+            .catch(error => {
+                this.isServiceAvailable = false;
+                console.error('org login error', error);
+                throw error;
+            });
+    }
+
+    /**
+     * 更新当前登录用户的头像：组织通讯录统一维护头像，服务端同步到 IM 后由 UserInfosUpdate 推送刷新界面
+     * @param {string} portraitUrl 上传后的头像地址
+     */
+    updateMyPortrait(portraitUrl) {
+        return this._post('/employee/update_portrait', {portraitUrl});
     }
 
     getRootOrganization() {
-        return this._post('/api/organization/root');
+        return this._post('/organization/root');
     }
 
     getRelationShip(employeeId) {
-        return this._post('/api/relationship/employee', {employeeId});
+        return this._post('/relationship/employee', {employeeId});
     }
 
     getOrganizationEx(orgId) {
-        return this._post('/api/organization/query_ex', {id: orgId});
+        return this._post('/organization/query_ex', {id: orgId});
     }
 
     getOrganizations(orgIds) {
-        return this._post('/api/organization/query_list', {ids: orgIds});
+        return this._post('/organization/query_list', {ids: orgIds});
     }
 
     async getOrganizationEmployees(orgIds) {
-        let employeeIds = await this._post('/api/organization/batch_employees', {ids: orgIds});
+        let employeeIds = await this._post('/organization/batch_employees', {ids: orgIds});
         return this.getEmployeeList(employeeIds);
     }
 
     getOrgEmployees(orgId) {
-        return this._post('/api/organization/employees', {ids: orgId});
+        return this._post('/organization/employees', {ids: orgId});
     }
 
     getEmployee(employeeId) {
-        return this._post('/api/employee/query', {employeeId});
+        return this._post('/employee/query', {employeeId});
     }
 
     getEmployeeEx(employeeId) {
-        return this._post('/api/employee/query_ex', {employeeId});
+        return this._post('/employee/query_ex', {employeeId});
     }
 
     getEmployeeList(employeeIds) {
-        return this._post('/api/employee/query_list', {employeeIds: employeeIds})
+        return this._post('/employee/query_list', {employeeIds: employeeIds})
     }
 
     async searchEmployee(orgId, keyword) {
-        let pageResponse = await this._post('/api/employee/search', {organizationId: orgId, keyword: keyword});
+        let pageResponse = await this._post('/employee/search', {organizationId: orgId, keyword: keyword});
         return pageResponse.contents || [];
     }
 
@@ -134,7 +113,7 @@ export class OrganizationServerApi {
     }
 
     employeePortraitUrl(employee) {
-        return employee.portrait ? employee.portrait : Config.getAppServer() + '/avatar?name=' + encodeURIComponent(employee.name);
+        return employee.portrait ? employee.portrait : generatedAvatarUrl(employee.name);
     }
 
     async _getOrganizationSync(orgId) {
@@ -142,42 +121,18 @@ export class OrganizationServerApi {
         return orgs && orgs.length > 0 ? orgs[0] : null;
     }
 
-    /**
-     *
-     * @param path
-     * @param data
-     * @param rawResponse
-     * @param rawResponseData
-     * @return {Promise<string | AxiosResponse<any>|*|T>}
-     * @private
-     */
-    async _post(path, data = {}, rawResponse = false, rawResponseData = false) {
-        if(!this.isServiceAvailable){
+    // 合并服务的 /api/org 下，带 authToken 鉴权，会话失效时自动重新登录（见 appServiceAuth）
+    async _post(path, data = {}) {
+        if (!this.isServiceAvailable) {
             throw new Error("service not available");
         }
-
-        let response;
-        path = Config.getOrganizationServer() + path;
-        response = await axios.post(path, data, {
-            transformResponse: rawResponseData ? [data => data] : axios.defaults.transformResponse, headers: {
-                'authToken': getItem('authToken-' + new URL(path).host),
-            },
-            withCredentials: false,
-        })
-        if (rawResponse) {
-            return response;
-        }
-        if (response.data) {
-            if (rawResponseData) {
-                return response.data;
+        try {
+            return await postWithAuthToken(Config.getOrganizationServer() + path, data);
+        } catch (e) {
+            if (e instanceof AppServerError) {
+                throw new OrganizationServerError(e.errorCode, e.message);
             }
-            if (response.data.code === 0) {
-                return response.data.result
-            } else {
-                throw new OrganizationServerError(response.data.code, response.data.message)
-            }
-        } else {
-            throw new Error('request error, status code: ' + response.status)
+            throw e;
         }
     }
 }

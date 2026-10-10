@@ -49,43 +49,32 @@
                     <p>数据同步中，可能需要数分钟...</p>
                 </div>
             </div>
-            <div v-else-if="loginType === 1" class="login-form-container">
+            <div v-else class="login-form-container">
                 <!--            密码登录-->
                 <img class="logo" :src="require(`@/assets/images/icon.png`)" alt="">
                 <p class="title">密码登录</p>
                 <div class="item">
-                    <input v-model.trim="mobile" class="text-input" type="number" placeholder="请输入手机号">
+                    <input v-model.trim="mobile" class="text-input" type="text" placeholder="请输入手机号或账号">
                 </div>
                 <div class="item">
                     <input v-model.trim="password" class="text-input" @keydown.enter="loginWithPassword" type="password" placeholder="请输入密码">
                 </div>
                 <div v-if="loginStatus === 0" class="flex-row" style="justify-content: space-between; width: 100%;">
-                    <p class="tip" @click="switchLoginType(2)">使用验证码登录</p>
-                    <p class="tip" @click="register">注册</p>
+                    <p class="tip" @click="contactAdmin">忘记密码</p>
+                    <p class="tip" @click="contactAdmin">注册</p>
                 </div>
                 <button class="login-button" :disabled="mobile === '' || !password || password === ''" ref="loginWithPasswordButton" @click="loginWithPassword">{{ loginStatus === 3 ? '数据同步中，可能需要数分钟...' : '登录' }}</button>
                 <ClipLoader v-if="loginStatus === 3" class="syncing" :color="'var(--accent-color)'" :height="'80px'" :width="'80px'"/>
             </div>
-            <div v-else class="login-form-container">
-                <!--            验证码登录-->
-                <img class="logo" :src="require(`@/assets/images/icon.png`)" alt="">
-                <p class="title">验证码登录</p>
-                <div class="item">
-                    <input v-model.trim="mobile" class="text-input" type="number" placeholder="请输入手机号">
-                </div>
-                <div class="item">
-                    <input v-model.trim="authCode" class="text-input" type="number" placeholder="验证码">
-                    <button :disabled="mobile.toString().length !== 11 || authCodeCountdown > 0" class="request-auth-code-button" @keydown.enter="loginWithAuthCode" @click="requestAuthCode">{{ authCodeCountdown > 0 ? authCodeCountdown + 's后重新获取' : '获取验证码' }}</button>
-                </div>
-                <p v-if="loginStatus === 0" class="tip" @click="switchLoginType(1)">使用密码登录</p>
-                <button class="login-button" :disabled="mobile === '' || authCode === ''" ref="loginWithAuthCodeButton" @click="loginWithAuthCode">{{ loginStatus === 3 ? '数据同步中，可能需要数分钟...' : '登录' }}</button>
-                <ClipLoader v-if="loginStatus === 3" style="margin-top: 8px" class="syncing" :color="'4168e0'" :height="'80px'" :width="'80px'"/>
-            </div>
             <div v-if="loginStatus === 0" class="switch-login-type-container">
-                <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码/验证码登录' : '扫码登录' }}</p>
+                <p class="tip" @click="switchLoginType( loginType === 0 ? 1 : 0)">{{ loginType === 0 ? '使用密码登录' : '扫码登录' }}</p>
             </div>
 
+            <p v-if="tenantName" class="tenant-name">{{ tenantName }}</p>
             <p v-if="isElectronDev" class="diagnose" @click="diagnose">诊断</p>
+            <p v-if="sharedMiscState.isElectron && loginStatus !== 4" class="service-config-entry" @click="showServiceConfig">
+                <i class="icon-ion-android-settings"></i>服务配置
+            </p>
         </div>
 
         <div v-if="showDiagnoseOverlay" class="diagnose-overlay">
@@ -119,7 +108,8 @@ import {ipcRenderer, isElectron} from "../../platform";
 import store from "../../store";
 import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
 import IpcEventType from "../../ipcEventType";
-import appServerApi from "../../api/appServerApi";
+import appServerApi, {AppServerApi, isAppServerReachable} from "../../api/appServerApi";
+import ServiceConfigDialog from "../../serviceConfig/ServiceConfigDialog.vue";
 import organizationServerApi from "../../api/organizationServerApi";
 import WfcScheme from "../../wfcScheme";
 import axios from "axios";
@@ -137,11 +127,11 @@ export default {
             qrCodeTimer: null,
             appToken: '',
             lastAppToken: '',
-            loginType: 0, // 0 扫码登录，1 密码登录，2 验证码登录
+            loginType: 0, // 0 扫码登录，1 密码登录
+            tenantName: Config.TENANT_NAME,
             enableAutoLogin: Config.ENABLE_AUTO_LOGIN,
             mobile: '',
             password: '',
-            authCode: '',
             firstTimeConnect: false,
 
             routeHost: '',
@@ -155,11 +145,8 @@ export default {
             enableLoginSlideVerify: Config.ENABLE_LOGIN_SLIDE_VERIFY,
 
             // 滑动验证相关
-            hasSlideVerifiedForCode: false, // 是否已通过滑动验证（用于验证码登录）
             cachedSlideVerifyToken: null,  // 缓存的验证token
             pendingLoginAction: null,      // 待执行的登录操作
-            authCodeCountdown: 0,          // 获取验证码倒计时
-            authCodeTimer: null,           // 倒计时定时器
 
             isElectronDev: process && process.env.NODE_ENV === 'development'
         }
@@ -193,12 +180,21 @@ export default {
     },
 
     methods: {
-        register() {
+        // 短信验证码登录、注册、找回密码都由单位统一管理，客户端不提供
+        contactAdmin() {
             this.$notify({
-                text: '使用短信验证码登录，将会为您创建账户，请使用短信验证码登录',
+                text: '请联系单位管理员处理',
                 type: 'info'
             });
-            this.switchLoginType(2);
+        },
+        showServiceConfig() {
+            this.$modal.show(ServiceConfigDialog, {}, null, {
+                name: 'service-config-modal',
+                // 登录窗口只有 400 宽
+                width: 360,
+                height: 'auto',
+                clickToClose: false,
+            });
         },
         switchLoginType(type) {
             this.loginType = type;
@@ -210,53 +206,7 @@ export default {
                     this.qrCodeTimer = 0;
                 }
                 // 切换登录模式时，重置验证标志
-                this.hasSlideVerifiedForCode = false;
                 this.cachedSlideVerifyToken = null;
-            }
-        },
-
-        startAuthCodeCountdown() {
-            this.authCodeCountdown = 60;
-            if (this.authCodeTimer) {
-                clearInterval(this.authCodeTimer);
-            }
-            this.authCodeTimer = setInterval(() => {
-                this.authCodeCountdown--;
-                if (this.authCodeCountdown <= 0) {
-                    clearInterval(this.authCodeTimer);
-                    this.authCodeTimer = null;
-                }
-            }, 1000);
-        },
-
-        async requestAuthCode() {
-            this.pendingLoginAction = () => {
-                appServerApi.requestAuthCode(this.mobile, this.cachedSlideVerifyToken)
-                    .then(response => {
-                        this.$notify({
-                            text: '发送验证码成功',
-                            type: 'info'
-                        });
-                        // 标记已通过滑动验证
-                        this.hasSlideVerifiedForCode = true;
-                        this.startAuthCodeCountdown();
-                    })
-                    .catch(err => {
-                        // 发送失败，重置验证标志
-                        this.hasSlideVerifiedForCode = false;
-                        this.cachedSlideVerifyToken = null;
-                        this.$notify({
-                            title: '发送验证码失败',
-                            text: err.message,
-                            type: 'error'
-                        });
-                    })
-            };
-            if (this.enableLoginSlideVerify) {
-                this.$refs.slideVerifyDialog.show();
-            } else {
-                this.pendingLoginAction();
-                this.pendingLoginAction = null;
             }
         },
 
@@ -286,7 +236,6 @@ export default {
                         this.password = '';
                         this.loginStatus = 0;
                         // 登录失败，重置验证标志
-                        this.hasSlideVerifiedForCode = false;
                         this.cachedSlideVerifyToken = null;
                         this.$notify({
                             title: '登录失败',
@@ -301,56 +250,6 @@ export default {
                 this.pendingLoginAction();
                 this.pendingLoginAction = null;
             }
-        },
-
-        async loginWithAuthCode() {
-            if (!this.mobile || !this.authCode) {
-                return;
-            }
-
-            if (!this.enableLoginSlideVerify) {
-                this.cachedSlideVerifyToken = null;
-                this.performAuthCodeLogin();
-                return;
-            }
-
-            // 如果已经通过滑动验证（发送验证码时已验证），直接登录
-            if (this.hasSlideVerifiedForCode && this.cachedSlideVerifyToken) {
-                this.performAuthCodeLogin();
-                return;
-            }
-
-            // 显示滑动验证
-            this.$refs.slideVerifyDialog.show();
-            this.pendingLoginAction = () => {
-                this.performAuthCodeLogin();
-            };
-        },
-
-        performAuthCodeLogin() {
-            this.$refs.loginWithAuthCodeButton.disabled = true;
-            this.loginStatus = 3;
-            appServerApi.loginWithAuthCode(this.mobile, this.authCode, this.cachedSlideVerifyToken)
-                .then(res => {
-                    const {userId, token, portrait} = res;
-                    this.firstTimeConnect = wfc.connect(userId, token);
-                    setItem('userId', userId);
-                    setItem('token', token);
-                    setItem("userPortrait", portrait);
-                })
-                .catch(err => {
-                    this.$refs.loginWithAuthCodeButton.disabled = false;
-                    this.authCode = '';
-                    this.loginStatus = 0;
-                    // 登录失败，重置验证标志
-                    this.hasSlideVerifiedForCode = false;
-                    this.cachedSlideVerifyToken = null;
-                    this.$notify({
-                        title: '登录失败',
-                        text: err.message,
-                        type: 'error'
-                    });
-                })
         },
 
         regenerateQrCode() {
@@ -411,7 +310,7 @@ export default {
                                     setItem('token', imToken);
                                 }
                                 break;
-                            case 9:
+                            case AppServerApi.CODE_PC_SESSION_SCANNED:
                                 if (data.result.portrait) {
                                     this.qrCode = data.result.portrait;
                                 } else {
@@ -427,7 +326,7 @@ export default {
                                 }
                                 this.login();
                                 break;
-                            case 18:
+                            case AppServerApi.CODE_PC_SESSION_CANCELED:
                                 //session is canceled, need clear last time login status
                                 this.cancel();
                                 break;
@@ -458,7 +357,6 @@ export default {
             clear();
 
             // 重置滑动验证状态
-            this.hasSlideVerifiedForCode = false;
             this.cachedSlideVerifyToken = null;
             this.pendingLoginAction = null;
 
@@ -476,7 +374,6 @@ export default {
                 || status === ConnectionStatus.ConnectionStatusUnconnected
                 || status === ConnectionStatus.ConnectionStatusTokenIncorrect) {
                 this.password = '';
-                this.authCode = '';
                 this.loginStatus = 0;
                 if (this.loginType === 0) {
                     this.refreshQrCode();
@@ -495,9 +392,6 @@ export default {
 
             }
             if (status === ConnectionStatus.ConnectionStatusReceiveing) {
-                if (this.$refs.loginWithAuthCodeButton) {
-                    this.$refs.loginWithAuthCodeButton.textContent = '数据同步中，可能需要数分钟...';
-                }
                 if (this.$refs.loginWithPasswordButton) {
                     this.$refs.loginWithPasswordButton.textContent = '数据同步中，可能需要数分钟...';
                 }
@@ -559,17 +453,10 @@ export default {
                 if (!appServer) {
                     continue;
                 }
-                try {
-                    let appServerResponse = await axios.get(appServer, {
-                        transformResponse: [data => data],
-                    })
-                    if (appServerResponse.data === 'Ok') {
-                        result += `APP-Server ${appServer} 正常\n`;
-                    } else {
-                        result += `APP-Server ${appServer} 异常: ${appServerResponse.status}\n`;
-                    }
-                } catch (e) {
-                    result += `APP-Server ${appServer} 异常：${e}\n`;
+                if (await isAppServerReachable(appServer)) {
+                    result += `APP-Server ${appServer} 正常\n`;
+                } else {
+                    result += `APP-Server ${appServer}/ping 异常\n`;
                 }
             }
             if (this.routeHost) {
@@ -866,11 +753,42 @@ input::-webkit-inner-spin-button {
 
 .diagnose {
     position: absolute;
-    right: 10px;
+    left: 10px;
     bottom: 10px;
     align-self: flex-start;
     font-size: var(--font-size-xs);
     color: lightcoral;
+}
+
+/* 登录页「服务配置」入口：右下角 */
+.service-config-entry {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    cursor: pointer;
+}
+
+.service-config-entry:hover {
+    color: var(--text-secondary);
+}
+
+/* 服务配置串里带的单位名称 */
+.tenant-name {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    max-width: 60%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
 }
 
 .diagnose-overlay {

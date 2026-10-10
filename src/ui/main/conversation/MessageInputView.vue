@@ -122,6 +122,18 @@
                             <i class="icon-ion-stats-bars" :title="$t('conversation.action_tip_poll')"/>
                         </div>
                     </li>
+                    <!-- 云盘文件：勾选文件、授权后发文件卡片 -->
+                    <li v-if="!inputOptions['disablePan'] && canSendPanFiles" @click="pickPanFiles">
+                        <div class="i-button-wrapper i-button-small">
+                            <i class="icon-ion-ios-cloud" title="云盘文件"/>
+                        </div>
+                    </li>
+                    <!-- 群待办：服务端开了待办才有 -->
+                    <li v-if="!inputOptions['disableTodo'] && todoState.available && conversationInfo.conversation.type === 1" @click="createGroupTodo">
+                        <div class="i-button-wrapper i-button-small">
+                            <i class="icon-ion-android-checkbox-outline" title="待办"/>
+                        </div>
+                    </li>
                 </ul>
                 <ul class="flex-row" style="padding: 0 8px">
                     <template v-if="!inputOptions['disableVoip']  && [0, 1, 5].indexOf(conversationInfo.conversation.type) >= 0 && sharedContactState.selfUserInfo.uid !== conversationInfo.conversation.target">
@@ -252,6 +264,9 @@ import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import avenginekit from "../../../wfc/av/internal/engine.min";
 import { buildCollectionUrl, buildPollUrl } from '../../../platformHelper'
+import todoStore from "../../todo/todoStore";
+import PanSendPicker, {canSendPanFiles} from "../../pan/PanSendPicker.vue";
+import {showTodoEdit} from "../../todo/todoUi";
 import { openInAppSubWindow } from '../../util/subWindowNavigator'
 import searchServerApi from "../../../api/searchServerApi";
 import AsrManager from "../../../asr/AsrManager";
@@ -330,6 +345,7 @@ export default {
 
             isCollectionEnable: !!Config.getCollectionServer(),
             isPollEnable: !!Config.getPollServer(),
+            todoState: todoStore.state,
 
             // 实时语音输入，WebSocket 连接在主进程建立，只支持 Electron
             enableAsrInput: isElectron() && !!Config.getAsrStreamServer(),
@@ -514,6 +530,19 @@ export default {
                     text: '未部署接龙服务'
                 })
             }
+        },
+        pickPanFiles() {
+            this.$modal.show(PanSendPicker, {conversation: this.conversationInfo.conversation}, null, {
+                name: 'pan-send-modal',
+                width: 560,
+                height: 'auto',
+                clickToClose: false,
+                escToClose: true,
+            });
+        },
+        // 群聊工具栏新建的一定是群待办：发卡片到群里，哪怕只指派给自己
+        createGroupTodo() {
+            showTodoEdit(this, {groupId: this.conversationInfo.conversation.target, groupTodo: true});
         },
         openPollWindow() {
             let appServer = Config.getAppServer();
@@ -1681,6 +1710,9 @@ export default {
     },
 
     computed: {
+        canSendPanFiles() {
+            return canSendPanFiles(this.conversationInfo && this.conversationInfo.conversation);
+        },
         emojiPickerStyle() {
             return {
                 position: 'fixed',

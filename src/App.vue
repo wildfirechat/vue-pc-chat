@@ -45,7 +45,6 @@ import IpcMain from "./ipc/ipcMain";
 import {currentWindow} from "./platform";
 import wfc from "./wfc/client/wfc";
 import waterMark from "./ui/util/waterMark";
-import Config from "./config";
 import LockScreenView from "./ui/common/LockScreenView";
 import {restoreListPanelWidth} from "./ui/common/ResizeBar";
 import ForwardType from "./ui/main/conversation/message/forward/ForwardType";
@@ -183,9 +182,8 @@ export default {
             });
         })
 
-        if(Config.ENABLE_WATER_MARK){
-            waterMark.init()
-        }
+        // 显不显示由 waterMark.isWaterMarkEnabled 决定（登录时应用服务会下发开关）
+        waterMark.init()
 
         this.syncLinuxWindowBorderState();
 
@@ -203,9 +201,7 @@ export default {
         window.removeEventListener('resize', this.syncLinuxWindowBorderState)
         window.removeEventListener('beforeunload', this.onBeforeUnload)
 
-        if(Config.ENABLE_WATER_MARK) {
-            waterMark.remove()
-        }
+        waterMark.remove()
     },
 
     components: {

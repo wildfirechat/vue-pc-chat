@@ -41,6 +41,11 @@ export default class MessageContentType {
     static Poll_Result = 19;    // 投票结果消息
 
     static Meeting_Minutes = 25; // 会议纪要消息
+
+    // 待办（企业版自定义消息，野火规定自定义类型大于 1000），见 wf-app-server docs/API.md「待办」
+    static Todo = 1101;          // 群待办卡片：新建、要 @ 人的动作
+    static Todo_Notify = 1102;   // 待办通知：待办助手发的到点提醒 / 催办
+    static Todo_Activity = 1103; // 群待办卡片（安静版）：完成、修改这类动作的快照，只存储不算未读，格式同 1101
     static Transcription = 26;          // 转录消息（语音转文字）
     static Mark_Unread_Sync = 31;
 

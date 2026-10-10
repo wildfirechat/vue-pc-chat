@@ -10,6 +10,8 @@ import Message from "../../../../../wfc/messages/message";
 import {parser as emojiParse} from "../../../../util/emoji";
 import helper from "../../../../util/helper";
 import Config from "../../../../../config";
+import panApi from "../../../../../api/panApi";
+import {openPanDoc} from "../../../../pan/panDocWindow";
 import {isElectron, shell} from "../../../../../platform";
 //import {marked} from "marked";
 
@@ -54,6 +56,11 @@ export default {
                 if (target.tagName === 'A') {
                     event.preventDefault();
                     let url = target.getAttribute('href');
+                    // 在线文档要靠客户端的桥取认证码，系统浏览器打不开，用内置的文档窗口打开
+                    if (panApi.isDocUrl(url)) {
+                        openPanDoc({url: Config.urlRedirect(url)}, this.$eventBus);
+                        return;
+                    }
                     if (Config.OPEN_LINK_POLICY === 2) {
                         this.$notify({
                             title: '提示',

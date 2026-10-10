@@ -85,6 +85,11 @@
                         <span class="edit-icon">&#9998;</span>
                     </div>
                 </label>
+                <!-- 群待办：服务端开了待办才有 -->
+                <div v-if="todoState.available" class="group-todo-entry" @click="openGroupTodo">
+                    <span>群待办</span>
+                    <i class="icon-ion-ios-arrow-right"></i>
+                </div>
                 <label>
                     {{ $t('group.alias') }}
                     <div class="input-wrapper">
@@ -137,6 +142,8 @@ import MessageContentMediaType from "../../../wfc/messages/messageContentMediaTy
 import MessageContentType from "../../../wfc/messages/messageContentType";
 import {isElectron} from "../../../platform";
 import {showComplainAlert} from "./conversationComplainHelper";
+import todoStore from "../../todo/todoStore";
+import {showGroupTodo} from "../../todo/todoUi";
 
 export default {
     name: "GroupConversationInfoView",
@@ -165,6 +172,7 @@ export default {
             newGroupAlias: '',
             groupAlias: '',
             showAllMembers: false,
+            todoState: todoStore.state,
         }
     },
 
@@ -188,6 +196,10 @@ export default {
 
     components: { UserCardView },
     methods: {
+        openGroupTodo() {
+            showGroupTodo(this, this.conversationInfo.conversation.target);
+        },
+
         onReceiveMessage(msg, hasMore) {
             if (msg.conversation.equal(this.conversationInfo.conversation) && msg.messageContent.type === MessageContentType.RejectJoinGroup) {
                 let content = msg.messageContent;
@@ -765,6 +777,21 @@ export default {
 
 .conversation-action-item:active {
     background: var(--background-item-placeholder);
+}
+
+.group-info-section .group-todo-entry {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.group-info-section .group-todo-entry i {
+    color: var(--text-tertiary);
 }
 
 .group-info-section .switch {

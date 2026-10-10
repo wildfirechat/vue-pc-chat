@@ -31,6 +31,7 @@ import xss from "xss";
 import mitt from 'mitt'
 import {plugin as CoolLightBox} from "./vendor/vue-cool-lightbox";
 import CustomMessageConfig from "./wfc_custom_message/customMessageConfig";
+import Config from "./config";
 
 // Vue.config.productionTip = false
 
@@ -47,18 +48,22 @@ app.use(CoolLightBox)
         let path = href.substring(href.indexOf('#') + 1)
         console.log('init', href, path)
         if (path === '/'/*login*/ || path.startsWith('/home') || href.indexOf('#') === -1) {
-            // 全WSS模式设置，必须在wfc.init/connect之前调用
-            // 使用websocket长连接，只有2026.9.11之后的服务才可以支持
-            // wfc.setUseWebsocket(true)
-            // // 使用TLS。域名连接走系统信任链校验公签证书；IP直连使用自签名证书。
-            // // 扫描证书目录（开发：build/certs，打包：resources/extraResources/certs）下所有
-            // // .crt/.pem/.cer/.der，支持多个域名/IP 各自的自签证书，支持一个文件里放多张证书。
-            // // 注意传给原生层的是证书【文件路径】不是证书内容，mars 原生层在主进程运行，路径要主进程可见。
-            // const {files: selfSignedCertFiles} = loadSelfSignedCertificates()
-            // wfc.UseTls(false, selfSignedCertFiles)
-            // // 双网：备选网络地址。策略0为自动选择，主网络不可用时切换到备选网络
-            // wfc.setBackupAddress('101.35.103.221', 443)
-            // wfc.setBackupAddressStrategy(0)
+            // 长连接协议与双网地址，必须在 wfc.init/connect 之前调用。取值来自 Config，
+            // 可以被登录页「服务配置」的配置串覆盖（见 src/config.js applyServiceConfiguration）
+            if (Config.IM_USE_WEBSOCKET) {
+                // 使用 websocket 长连接，只有 2026.9.11 之后的服务才可以支持
+                wfc.setUseWebsocket(true)
+            }
+            if (Config.IM_USE_TLS) {
+                // 域名连接走系统信任链校验公签证书；IP 直连使用自签名证书。证书目录（开发：build/certs，
+                // 打包：resources/extraResources/certs）下的证书由主进程加载，这里取回 PEM 文件路径传给原生层
+                wfc.UseTls(false, ipcRenderer.sendSync(IPCEventType.GET_SELF_SIGNED_CERT_FILES) || [])
+            }
+            // 双网：备选网络地址。策略 0 为自动选择，主网络不可用时切换到备选网络
+            if (Config.BACKUP_HOST) {
+                wfc.setBackupAddress(Config.BACKUP_HOST, Config.BACKUP_IM_PORT)
+            }
+            wfc.setBackupAddressStrategy(Config.BACKUP_STRATEGY)
 
             wfc.init()
             CustomMessageConfig.registerCustomMessages()

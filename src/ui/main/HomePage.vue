@@ -56,6 +56,13 @@
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"></i>
                             </div>
                         </li>
+                        <li v-if="todoState.available">
+                            <div class="i-button-wrapper" @click="go2Todo" title="待办">
+                                <i class="icon-ion-android-checkbox-outline"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/todo'}"></i>
+                                <em v-show="todoPendingCount > 0" class="badge">{{ todoPendingCount > 99 ? '···' : todoPendingCount }}</em>
+                            </div>
+                        </li>
                         <li v-if="panEnabled">
                             <div class="i-button-wrapper" @click="go2Pan" title="网盘">
                                 <i class="icon-ion-ios-cloud"
@@ -175,6 +182,7 @@ import Config from "../../config";
 import BackupView from '../../backup/BackupView.vue'
 import SubWindowHost from "./SubWindowHost.vue";
 import PanDocPanel from "../pan/PanDocPanel.vue";
+import todoStore from "../todo/todoStore";
 
 var avenginkitSetuped = false;
 export default {
@@ -183,6 +191,7 @@ export default {
             sharedContactState: store.state.contact,
             sharedMiscState: store.state.misc,
             shareConversationState: store.state.conversation,
+            todoState: todoStore.state,
             supportConference: avenginekit.startConference !== undefined,
             isSetting: false,
             fileWindow: null,
@@ -268,6 +277,12 @@ export default {
             }
             this.$router.replace("/home/contact");
             this.isSetting = false;
+        },
+        go2Todo() {
+            if (this.$router.currentRoute.value.path === '/home/todo') {
+                return;
+            }
+            this.$router.replace('/home/todo');
         },
         go2Fav() {
             if (this.$router.currentRoute.path === '/home/fav') {
@@ -383,6 +398,9 @@ export default {
         },
         panEnabled() {
             return Config.isPanEnabled();
+        },
+        todoPendingCount() {
+            return this.todoState.stat ? this.todoState.stat.pending : 0;
         },
         isPanPage() {
             const path = this.$router.currentRoute.value.path;

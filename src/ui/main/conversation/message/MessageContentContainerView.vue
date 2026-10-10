@@ -47,6 +47,10 @@
         <PollResultMessageContentView :message="message"
                                       v-else-if="message.messageContent.type === MessageContentType.Poll_Result"
                                       v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
+        <TodoMessageContentView :message="message"
+                                v-else-if="message.messageContent.type === MessageContentType.Todo || message.messageContent.type === MessageContentType.Todo_Activity"/>
+        <TodoNotifyMessageContentView :message="message"
+                                      v-else-if="message.messageContent.type === MessageContentType.Todo_Notify"/>
         <MeetingMinutesMessageContentView :message="message"
                                           v-else-if="message.messageContent.type === MessageContentType.Meeting_Minutes"
                                           v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
@@ -91,6 +95,8 @@ import MixFileTextMessageContentView from "./content/MixFileTextMessageContentVi
 import CollectionMessageContentView from "./content/CollectionMessageContentView";
 import PollMessageContentView from "./content/PollMessageContentView";
 import PollResultMessageContentView from "./content/PollResultMessageContentView";
+import TodoMessageContentView from "./content/TodoMessageContentView.vue";
+import TodoNotifyMessageContentView from "./content/TodoNotifyMessageContentView.vue";
 import MeetingMinutesMessageContentView from "./content/MeetingMinutesMessageContentView";
 
 export default {
@@ -113,6 +119,8 @@ export default {
         MeetingMinutesMessageContentView,
         PollResultMessageContentView,
         PollMessageContentView,
+        TodoMessageContentView,
+        TodoNotifyMessageContentView,
         CollectionMessageContentView,
         MixFileTextMessageContentView,
         MixMultiMediaTextMessageContentView,

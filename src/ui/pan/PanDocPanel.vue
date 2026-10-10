@@ -89,7 +89,6 @@
 
 <script>
 import {reactive} from "vue";
-import Config from "../../config";
 import wfc from "../../wfc/client/wfc";
 import panApi from "../../api/panApi";
 import {ipcRenderer, isElectron, shell} from "../../platform";
@@ -479,10 +478,9 @@ export default {
             const data = message.data;
             switch (method) {
                 case 'getAuthCode': {
-                    const host = Config.getPanServer().replace(/^https?:\/\//, '').split('/')[0];
-                    wfc.getAuthCode('admin', 2, host,
-                        code => reply({code: 0, data: code}),
-                        err => reply({code: err || -1}));
+                    panApi.getAuthCode()
+                        .then(code => reply({code: 0, data: code}))
+                        .catch(err => reply({code: (err && err.errorCode) || -1}));
                     break;
                 }
                 case 'setPageHeader': {
