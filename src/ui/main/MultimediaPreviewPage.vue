@@ -105,11 +105,17 @@
         </main>
 
         <vue-context ref="menu" v-on:close="()=>{}">
+            <li v-if="canCopyImage">
+                <a @click.prevent="copyImage">{{ $t('common.copy') }}</a>
+            </li>
             <li>
                 <a @click.prevent="download">{{ $t('common.save') }}</a>
             </li>
             <li v-if="!favMode">
                 <a @click.prevent="forward">{{ $t('misc.share_to_friend') }}</a>
+            </li>
+            <li v-if="!favMode">
+                <a @click.prevent="favMessage">{{ $t('common.fav') }}</a>
             </li>
         </vue-context>
     </div>
@@ -127,6 +133,8 @@ import Message from '../../wfc/messages/message';
 import VideoMessageContent from '../../wfc/messages/videoMessageContent';
 import { stringValue } from '../../wfc/util/longUtil';
 import { imageThumbnailSrc } from '../util/imageThumbUtil';
+import { copyImg } from '../util/clipboard';
+import appServerApi from '../../api/appServerApi';
 
 const ZOOM_STEP = 1.25;
 const MIN_SCALE = 0.1;
@@ -574,6 +582,33 @@ export default {
                 forwardType: ForwardType.NORMAL,
                 messages: [message],
             });
+        },
+
+        /** 复制图片到剪贴板（对齐 wf-enterprise-chat bde9746f、e5b448b4：图片支持复制原图） */
+        copyImage() {
+            if (!this.canCopyImage) {
+                return;
+            }
+            copyImg(this.currentMedia.url).then(() => {
+                this.$notify({text: '已复制到剪贴板', type: 'success'});
+            }).catch(() => {
+                this.$notify({text: '复制失败', type: 'error'});
+            });
+        },
+
+        /** 收藏当前图片/视频 */
+        favMessage() {
+            if (this.favMode || !this.message) {
+                return;
+            }
+            appServerApi.favMessage(this.message)
+                .then(() => {
+                    this.$notify({text: '收藏成功', type: 'info'});
+                })
+                .catch(err => {
+                    console.log('fav error', err);
+                    this.$notify({text: '收藏失败', type: 'error'});
+                });
         }
     },
 
@@ -630,6 +665,9 @@ export default {
         },
         isImage() {
             return this.currentMedia.type === 'image';
+        },
+        canCopyImage() {
+            return !this.favMode && this.isImage && !!this.currentMedia.url;
         },
         isVideo() {
             return this.currentMedia.type === 'video';
