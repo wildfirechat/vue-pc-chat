@@ -103,6 +103,25 @@
                         {{ $t('search.view_all') + employeeSearchResult.length }}
                     </div>
                 </li>
+                <li class="category-item" v-if="messageHitResults.length > 0">
+                    <label>聊天记录</label>
+                    <ul>
+                        <li v-for="(r, index) in toShowMessageHitList" :key="'hit-' + index">
+                            <div class="search-result-item hit" @click.stop="onMessageHitClick(r)">
+                                <img :src="conversationPortrait(r)">
+                                <div class="hit-main">
+                                    <span class="single-line hit-name">{{ conversationDisplayName(r) }}</span>
+                                    <span class="single-line hit-sub">{{ messageHitSubtitle(r) }}</span>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div v-if="!shouldShowAllMessageHit && messageHitResults.length > 5"
+                         class="show-all"
+                         @click.stop="showAllMessageHit">
+                        {{ $t('search.view_all') + messageHitResults.length }}
+                    </div>
+                </li>
                 <li class="category-item" v-if="query && query.length && sharedMiscState.isElectron">
                     <label>{{ $t('search.message_history') }}</label>
                     <div class="search-result-item message" @click.stop="showMessageHistoryPage">
@@ -130,6 +149,7 @@ import { ipcRenderer } from '../../../platform';
 import wfc from '../../../wfc/client/wfc';
 import organizationServerApi from '../../../api/organizationServerApi';
 import Config from '../../../config';
+import { openInAppSubWindow } from '../../util/subWindowNavigator';
 
 const FLOATING_PANEL_MIN_WIDTH = 320;
 const FLOATING_PANEL_MIN_HEIGHT = 180;
@@ -153,7 +173,9 @@ export default {
             shouldShowAllGroup: false,
             shouldShowAllConversation: false,
             shouldShowAllOrgEmployee: false,
+            shouldShowAllMessageHit: false,
             employeeSearchResult: [],
+            messageHitResults: [],
             rootOrgId: null,
             floatingStyle: {
                 left: '0px',
@@ -423,7 +445,78 @@ export default {
         search(query) {
             store.setSearchQuery(query);
             this.shouldShowAllOrgEmployee = false;
+            this.shouldShowAllMessageHit = false;
             this.searchEmployee(query);
+            this.searchMessageHits(query);
+        },
+
+        /**
+         * 通用搜索里的「聊天记录」结果：每个会话命中的消息条数。
+         * 命中多条时点击进入该会话的「查找聊天记录」并带入关键词
+         * （对齐 wf-enterprise-chat 98344f6c）。
+         */
+        searchMessageHits(query) {
+            if (!query || !query.length) {
+                this.messageHitResults = [];
+                return;
+            }
+            try {
+                this.messageHitResults = store.searchConversation(query) || [];
+            } catch (e) {
+                console.error('search message hits error', e);
+                this.messageHitResults = [];
+            }
+        },
+
+        showAllMessageHit() {
+            this.shouldShowAllMessageHit = true;
+        },
+
+        messageHitSubtitle(r) {
+            if (r && r.matchMessage && r.matchMessage.messageContent && r.matchMessage.messageContent.digest) {
+                return r.matchMessage.messageContent.digest(r.matchMessage);
+            }
+            return `${(r && r.matchCount) || 0}条相关聊天记录`;
+        },
+
+        onMessageHitClick(r) {
+            if (!r || !r.conversation) {
+                return;
+            }
+            // 只命中一条：直接打开会话；命中多条：进该会话的「查找聊天记录」并带入关键词
+            if ((r.matchCount || 0) > 1) {
+                this.openConversationSearch(r.conversation);
+                return;
+            }
+            this.chatToConversation(r.conversation);
+        },
+
+        openConversationSearch(conversation) {
+            const keyword = (this.query || '').trim();
+            if (this.sharedMiscState.isElectron) {
+                let hash = window.location.hash;
+                let url = window.location.origin;
+                if (hash) {
+                    url = window.location.href.replace(hash, '#/conversation-message-history');
+                } else {
+                    url += '/conversation-message-history';
+                }
+                ipcRenderer.send(IpcEventType.showConversationMessageHistoryPage, {
+                    url,
+                    type: conversation.type,
+                    target: conversation.target,
+                    line: conversation.line,
+                    keyword,
+                });
+            } else {
+                openInAppSubWindow(this, '/conversation-search', {
+                    type: conversation.type,
+                    target: conversation.target,
+                    line: conversation.line,
+                    keyword,
+                });
+            }
+            store.hideSearchView();
         },
 
         async searchEmployee(keyword) {
@@ -473,6 +566,9 @@ export default {
         },
         toShowOrgEmployeeList() {
             return !this.shouldShowAllOrgEmployee && this.employeeSearchResult.length > 5 ? this.employeeSearchResult.slice(0, 4) : this.employeeSearchResult;
+        },
+        toShowMessageHitList() {
+            return !this.shouldShowAllMessageHit && this.messageHitResults.length > 5 ? this.messageHitResults.slice(0, 4) : this.messageHitResults;
         },
         isSearchResultEmpty() {
             return this.sharedSearchState.userSearchResult.length === 0
@@ -579,6 +675,36 @@ export default {
     display: flex;
     align-items: center;
     font-size: var(--font-size-sm);
+}
+
+.search-result-item.hit {
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.search-result-item.hit img {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--default-portrait-border-radius);
+    flex-shrink: 0;
+}
+
+.search-result-item.hit .hit-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    padding-left: 8px;
+}
+
+.search-result-item.hit .hit-name {
+    font-size: var(--font-size-base);
+}
+
+.search-result-item.hit .hit-sub {
+    font-size: var(--font-size-xs);
+    color: var(--text-hint);
 }
 
 .show-all {

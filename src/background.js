@@ -1173,8 +1173,13 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.showConversationMessageHistoryPage, async (event, args) => {
         console.log(`on ${IPCEventType.showConversationMessageHistoryPage}`, conversationMessageHistoryMessageWindow, args)
+        // keyword 用于从通用搜索「命中多条聊天记录」进入时带入关键词
+        let query = `type=${args.type}&target=${args.target}&line=${args.line}`;
+        if (args.keyword) {
+            query += `&keyword=${encodeURIComponent(args.keyword)}`;
+        }
         if (!conversationMessageHistoryMessageWindow) {
-            let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
+            let url = args.url + ('?' + query)
             // 参考微信聊天记录窗口：窄长、可调整大小，高度不超过当前屏幕可用区域
             let workArea = screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).workArea;
             let height = Math.min(720, workArea.height - 40);
@@ -1184,7 +1189,7 @@ const createMainWindow = async () => {
             });
             conversationMessageHistoryMessageWindow.show();
         } else {
-            let url = args.url + (`?type=${args.type}&target=${args.target}&line=${args.line}`)
+            let url = args.url + ('?' + query)
             try {
                 await conversationMessageHistoryMessageWindow.loadURL(url)
             } catch (e) {

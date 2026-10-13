@@ -388,6 +388,10 @@ export default {
         }
         // 搜索是一次性的：每次进入都从干净状态开始，不恢复上次的关键词与结果
         store.resetConversationSearch();
+        // 从通用搜索「命中多条聊天记录」进入时带入关键词，自动搜一次
+        if (query.keyword) {
+            this.query = query.keyword;
+        }
         this.$nextTick(() => {
             if (this.$refs.input) this.$refs.input.focus();
         });

@@ -179,6 +179,11 @@ export default {
         let type = Number(params.get('type'));
         let target = params.get('target');
         let line = Number(params.get('line'));
+        // 从通用搜索「命中多条聊天记录」进入时带入关键词，直接展示该关键词的搜索结果
+        let keyword = params.get('keyword') || '';
+        if (keyword) {
+            this.query = keyword;
+        }
         this.conversationInfo = store.getConversationInfo(new Conversation(type, target, line));
         if (!this.conversationInfo) {
             return;
