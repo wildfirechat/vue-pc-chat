@@ -83,6 +83,7 @@ import Config from '../../../config';
 import organizationServerApi from '../../../api/organizationServerApi';
 import {previewPortrait} from '../../util/portraitPreview';
 import UserMoreInfoDialog from './UserMoreInfoDialog.vue';
+import AvatarCropper from './AvatarCropper.vue';
 
 // 组织关系按人缓存：同组织判断会在每个资料卡打开时用到，避免重复请求
 const relationshipCache = new Map();
@@ -261,9 +262,33 @@ export default {
             previewPortrait(this.userInfo.portrait, this.userInfo.displayName);
         },
         onPickFile(event) {
-            // this.batchProcess(e.target.files[0]);
             let file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            // 选完图先进裁剪页（480×480、JPEG 70），对齐 wf-enterprise-chat ac77e5b6、a64c8faf
+            event.target.value = '';
+            let src = URL.createObjectURL(file);
+            this.$modal.show(AvatarCropper, {
+                src,
+                onConfirm: (blob) => {
+                    this.$modal.hide('avatar-cropper-modal');
+                    URL.revokeObjectURL(src);
+                    this.uploadPortrait(new File([blob], 'avatar.jpg', {type: 'image/jpeg'}));
+                },
+                onCancel: () => {
+                    this.$modal.hide('avatar-cropper-modal');
+                    URL.revokeObjectURL(src);
+                },
+            }, null, {
+                name: 'avatar-cropper-modal',
+                width: 380,
+                height: 'auto',
+                clickToClose: false,
+            });
+        },
 
+        uploadPortrait(file) {
             wfc.uploadMedia(file.name, file, MessageContentMediaType.Portrait, (url) => {
                 let entry = new ModifyMyInfoEntry();
                 entry.type = ModifyMyInfoType.Modify_Portrait;

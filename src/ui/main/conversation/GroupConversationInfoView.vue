@@ -146,6 +146,7 @@ import {showComplainAlert} from "./conversationComplainHelper";
 import QRCodeDialogView from "../../common/QRCodeDialogView.vue";
 import WfcScheme from "../../../wfcScheme";
 import GroupManageDialog from "./GroupManageDialog.vue";
+import AvatarCropper from "../user/AvatarCropper.vue";
 
 export default {
     name: "GroupConversationInfoView",
@@ -392,6 +393,32 @@ export default {
 
         onPickFile(event) {
             let file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            // 群头像也先裁剪再上传（对齐 wf-enterprise-chat ac77e5b6、a64c8faf）
+            event.target.value = '';
+            let src = URL.createObjectURL(file);
+            this.$modal.show(AvatarCropper, {
+                src,
+                onConfirm: (blob) => {
+                    this.$modal.hide('avatar-cropper-modal');
+                    URL.revokeObjectURL(src);
+                    this.uploadGroupPortrait(new File([blob], 'group-avatar.jpg', {type: 'image/jpeg'}));
+                },
+                onCancel: () => {
+                    this.$modal.hide('avatar-cropper-modal');
+                    URL.revokeObjectURL(src);
+                },
+            }, null, {
+                name: 'avatar-cropper-modal',
+                width: 380,
+                height: 'auto',
+                clickToClose: false,
+            });
+        },
+
+        uploadGroupPortrait(file) {
             wfc.uploadMedia(file.name, file, MessageContentMediaType.Portrait, (url) => {
                 wfc.modifyGroupInfo(this.conversationInfo.conversation.target, ModifyGroupInfoType.Modify_Group_Portrait, url, [], null, () => {
                     console.log('modify group portrait success', url);
