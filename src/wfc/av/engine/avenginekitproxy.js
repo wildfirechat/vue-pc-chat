@@ -32,6 +32,10 @@ export class AvEngineKitProxy {
     callId;
     inviteMessageUid;
     participants = [];
+    // 已结束的通话 callId：登录时同步到的 start/end 成对消息，收到 start 后等 200ms 再弹界面，
+    // 期间若已收到 end 就不弹（对齐 wf-enterprise-chat bc93d403）
+    endedCallIds = new Set();
+    pendingIncomingCallTimer = null;
     isSupportVoip = false;
     hasMicrophone = false;
     hasSpeaker = false;
@@ -263,13 +267,25 @@ export class AvEngineKitProxy {
                         if (this.conversation) {
                             msg.participantUserInfos = participantUserInfos;
                             msg.selfUserInfo = selfUserInfo;
-                            this.showCallUI(msg.conversation, false, {
-                                event: 'message',
-                                args: {
-                                    ...msg,
-                                    remoteControl: content.type === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST
-                                },
-                            });
+                            const startCallId = content.callId;
+                            const startConversation = msg.conversation;
+                            const startUiArgs = {
+                                ...msg,
+                                remoteControl: content.type === MessageContentType.VOIP_REMOTE_CONTROL_REQUEST
+                            };
+                            // 等 200ms 再弹接听界面：登录时同步到的 start/end 成对消息不要闪一下
+                            clearTimeout(this.pendingIncomingCallTimer);
+                            this.pendingIncomingCallTimer = setTimeout(() => {
+                                this.pendingIncomingCallTimer = null;
+                                if (this.endedCallIds.has(startCallId) || this.callId !== startCallId || this.callWin) {
+                                    console.log('incoming call ended or superseded, skip ui', startCallId);
+                                    return;
+                                }
+                                this.showCallUI(startConversation, false, {
+                                    event: 'message',
+                                    args: startUiArgs,
+                                });
+                            }, 200);
                         } else {
                             console.log('call ended')
                         }
@@ -303,6 +319,15 @@ export class AvEngineKitProxy {
                 } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_END) {
                     if (content.callId !== this.callId) {
                         return;
+                    }
+                    // 记录已结束的通话，并取消还没弹出来的接听界面
+                    this.endedCallIds.add(content.callId);
+                    if (this.endedCallIds.size > 20) {
+                        this.endedCallIds.delete(this.endedCallIds.values().next().value);
+                    }
+                    if (this.pendingIncomingCallTimer) {
+                        clearTimeout(this.pendingIncomingCallTimer);
+                        this.pendingIncomingCallTimer = null;
                     }
                 }
 
@@ -347,7 +372,8 @@ export class AvEngineKitProxy {
                         // Object has been destroyed
                     }
                 }
-            } else if (this.queueEvents) {
+            } else if (this.queueEvents && this.callWin && !this.callWin.isDestroyed()) {
+                // 只在有通话窗口时才排队：通话结束后的迟到消息不能留到下一通（对齐 wf-enterprise-chat 4b67e0be）
                 this.queueEvents.push({event, args});
             }
         } else {
