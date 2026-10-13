@@ -19,6 +19,9 @@
                                 v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
         <VideoMessageContentView :message="message"
                                  v-else-if="message.messageContent.type === 6"/>
+        <LocationMessageContentView :message="message"
+                                    v-else-if="message.messageContent.type === MessageContentType.Location"
+                                    v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>
         <!--                           v-bind:class="{leftarrow:message.direction === 1, rightarrow: message.direction === 0}"/>-->
         <StickerMessageContentView :message="message"
                                    v-else-if="message.messageContent.type === 7"/>
@@ -82,6 +85,7 @@ import UserCardMessageContentView from "./content/UserCardMessageContentView";
 import ConferenceInviteMessageContentView from "./content/ConferenceInviteMessageContentView";
 import UnknownMessageContentView from "./content/UnknownMessageContentView";
 import LinkMessageContentView from "./content/LinkMessageContentView";
+import LocationMessageContentView from "./content/LocationMessageContentView";
 import StreamingTextMessageContentView from "./content/StreamingTextMessageContentView.vue";
 import CustomMessageContentType from "../../../../wfc_custom_message/customMessageContentType";
 import TestCustomMessageContentView from "./content/TestCustomMessageContentView.vue";
@@ -118,6 +122,7 @@ export default {
         MixMultiMediaTextMessageContentView,
         TestCustomMessageContentView,
         LinkMessageContentView,
+        LocationMessageContentView,
         UnknownMessageContentView,
         ConferenceInviteMessageContentView,
         CompositeMessageContentView,

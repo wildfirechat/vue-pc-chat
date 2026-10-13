@@ -2,7 +2,7 @@
     <section class="forward-message-container">
         <div class="forward-message">
             <div v-if="forwardType === 0">
-                <img v-if="[3, 6].indexOf(messages[0].messageContent.type) >= 0"
+                <img v-if="[3, 6].indexOf(messages[0].messageContent.type) >= 0 || (messages[0].messageContent.type === 4 && firstMediaThumbnailSrc)"
                      :src="firstMediaThumbnailSrc" alt="">
                 <p v-else>
                     {{ this.forwardMessageStr }}
@@ -51,6 +51,10 @@ export default {
             let content = firstMsg.messageContent;
             if (content.type === MessageContentType.Image) {
                 return imageThumbnailSrc(firstMsg) || content.remotePath;
+            }
+            if (content.type === MessageContentType.Location) {
+                // 位置消息的缩略图是不带头部的 base64，与气泡里 LocationMessageContentView 保持一致
+                return content.thumbnail ? 'data:image/jpeg;base64,' + content.thumbnail : '';
             }
             return 'data:video/jpeg;base64,' + content.thumbnail;
         },
