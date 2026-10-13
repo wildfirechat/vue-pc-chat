@@ -57,8 +57,8 @@
             <button ref="favButton" v-else-if="conferenceInfo.startTime * 1000 > new Date().getTime()" :disabled="true">
                 尚未开始
             </button>
-            <button v-else-if="conferenceInfo.endTime * 1000 < new Date().getTime()" :disabled="true">
-                会议已结束
+            <button v-else-if="ended" class="delete-record" @click="deleteRecord">
+                删除记录
             </button>
             <button v-else @click="joinConference">
                 加入会议
@@ -146,6 +146,30 @@ export default {
                 messages: [message]
             });
             this.$modal.hide('conference-info-modal');
+        },
+
+        /** 已结束的会议：删除本地历史记录，已收藏的一并取消收藏（对齐 wf-enterprise-chat de980c9b） */
+        deleteRecord() {
+            this.$alert({
+                showIcon: false,
+                content: '将从历史记录中删除该会议；如果已收藏也会一并取消收藏。是否删除？',
+                confirmText: '删除',
+                cancelText: '取消',
+                confirmCallback: () => {
+                    conferenceApi.unfavConference(this.conferenceInfo.conferenceId)
+                        .catch(err => {
+                            console.log('unfav conference error', err);
+                        })
+                        .finally(() => {
+                            conferenceManager.removeHistory(this.conferenceInfo);
+                            this.$notify({text: '已删除', type: 'success'});
+                            this.$modal.hide('conference-info-modal');
+                        });
+                },
+                cancelCallback: () => {
+                    // do nothing
+                }
+            });
         },
 
         copyConferenceId(){
