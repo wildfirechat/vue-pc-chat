@@ -528,3 +528,11 @@ img.emoji {
 .input-wrapper:has(input:not(:disabled)):hover .edit-icon {
     opacity: 1;
 }
+
+/* 头像加载中的占位色跟随明暗主题（对齐 wf-enterprise-chat 8731b0dd） */
+img.avatar,
+img.portrait,
+img.account-avatar,
+img.group-avatar {
+    background-color: var(--background-item-placeholder);
+}
