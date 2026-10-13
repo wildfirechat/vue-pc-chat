@@ -52,7 +52,7 @@
                 <i class="icon-ion-ios-videocam-outline"></i>
                 视频通话
             </div>
-            <div class="i-button-wrapper i-button-large" v-if="!isFriend" @click.prevent="addFriend">
+            <div class="i-button-wrapper i-button-large" v-if="!isFriend && !isFileHelper && sameOrgChecked && !isSameOrganization" @click.prevent="addFriend">
                 <i class="icon-ion-ios-personadd-outline"></i>
                 添加好友
             </div>
@@ -72,7 +72,18 @@ import ModifyMyInfoType from '../../../wfc/model/modifyMyInfoType';
 import IpcSub from '../../../ipc/ipcSub';
 import WfcUtil from '../../../wfc/util/wfcUtil';
 import Config from '../../../config';
+import organizationServerApi from '../../../api/organizationServerApi';
 import {previewPortrait} from '../../util/portraitPreview';
+
+// 组织关系按人缓存：同组织判断会在每个资料卡打开时用到，避免重复请求
+const relationshipCache = new Map();
+
+function getRelationshipCached(employeeId) {
+    if (!relationshipCache.has(employeeId)) {
+        relationshipCache.set(employeeId, organizationServerApi.getRelationShip(employeeId).catch(() => []));
+    }
+    return relationshipCache.get(employeeId);
+}
 
 export default {
     name: 'UserCardView',
@@ -90,9 +101,36 @@ export default {
         return {
             friendAlias: this.userInfo.uid === wfc.getUserId() ? this.userInfo.displayName : this.userInfo.friendAlias,
             sharedMiscState: store.state.misc,
+            // 是否已判断出与对方同组织；判断出结果前先不放「加好友」，避免闪一下
+            sameOrgChecked: false,
+            isSameOrganization: false,
         }
     },
+    mounted() {
+        this.checkSameOrganization();
+    },
     methods: {
+        /** 取双方组织关系，有共同节点即同组织同事（对齐 wf-enterprise-chat 624d0210） */
+        async checkSameOrganization() {
+            const myId = wfc.getUserId();
+            if (!myId || this.userInfo.uid === myId || this.isFileHelper || !organizationServerApi.isServiceAvailable) {
+                this.sameOrgChecked = true;
+                return;
+            }
+            try {
+                const [mine, theirs] = await Promise.all([
+                    getRelationshipCached(myId),
+                    getRelationshipCached(this.userInfo.uid),
+                ]);
+                const mineOrgs = new Set((mine || []).map(r => r.organizationId));
+                this.isSameOrganization = (theirs || []).some(r => mineOrgs.has(r.organizationId));
+            } catch (e) {
+                // 失败按非同组织处理，退回加好友
+                this.isSameOrganization = false;
+            } finally {
+                this.sameOrgChecked = true;
+            }
+        },
         share() {
             // TODO share
             this.close();
