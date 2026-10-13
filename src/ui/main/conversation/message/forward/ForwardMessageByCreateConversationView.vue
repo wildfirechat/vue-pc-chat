@@ -8,7 +8,45 @@
                 <div class="back" @click="backPickConversation">
                     <p>{{ $t('common.back') }}</p>
                 </div>
-                <CheckableUserListView class="user-list"
+                <!-- 与「发起群聊」（PickUserView）一致：组织服务可用时，可从组织结构选人 / 选部门 -->
+                <div v-if="orgServiceAvailable" class="pick-category-container">
+                    <div @click="expandOrganizationSection = !expandOrganizationSection" class="category-item-container">
+                        <i class="arrow right" v-bind:class="{down: expandOrganizationSection}"></i>
+                        <div class="category-item">
+                            <span class="title">组织结构</span>
+                        </div>
+                    </div>
+                    <div v-show="expandOrganizationSection" class="organization-section">
+                        <div v-if="organizationPathList.length" class="pick-source-nav">
+                            <ul>
+                                <li v-for="org in organizationPathList" :key="org.id">
+                                    <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <CheckableOrganizationTreeView
+                            ref="checkableOrganizationTreeView"
+                            :search-query="query"
+                            @organization-path-update="onOrganizationPathUpdate"/>
+                    </div>
+
+                    <div @click="expandContactSection = !expandContactSection" class="category-item-container">
+                        <i class="arrow right" v-bind:class="{down: expandContactSection}"></i>
+                        <div class="category-item">
+                            <span class="title">联系人</span>
+                            <span class="desc">{{ filteredUsers.length }}</span>
+                        </div>
+                    </div>
+                    <div v-show="expandContactSection">
+                        <CheckableUserListView :enable-pick="true"
+                                               :users="filteredUsers"
+                                               :padding-left="'20px'"
+                                               :virtual-list-style="{ 'max-height': '600px', 'overflow-y': 'auto' }"
+                                               :enable-category-label-sticky="true"/>
+                    </div>
+                </div>
+                <CheckableUserListView v-else
+                                       class="user-list"
                                        :enable-pick="true"
                                        :users="filteredUsers"
                                        :padding-left="'20px'"
@@ -18,8 +56,11 @@
         <section class="checked-user-list-container">
             <header>
                 <h2>{{ $t('conversation.forward_title') }}</h2>
-                <span v-if="sharedPickState.users.length === 0">{{ $t('conversation.picked_contact') }}</span>
-                <span v-else>{{ $t('conversation.picked_contact') + this.sharedPickState.users.length }}</span>
+                <div>
+                    <span v-if="sharedPickState.users.length === 0">{{ $t('conversation.picked_contact') }}</span>
+                    <span v-else>{{ $t('conversation.picked_contact') + this.sharedPickState.users.length }}</span>
+                    <span v-if="sharedPickState.organizations.length">{{ '组织: ' + sharedPickState.organizations.length }}</span>
+                </div>
             </header>
             <div class="content">
                 <div class="picked-user-container" v-for="(user, index) in sharedPickState.users" :key="index">
@@ -29,9 +70,16 @@
                     </div>
                     <span class="name single-line">{{ user.displayName }}</span>
                 </div>
+                <div class="picked-user-container" v-for="org in sharedPickState.organizations" :key="'org-' + org.id">
+                    <div class="picked-user">
+                        <img class="avatar" :src="org.portrait ? org.portrait : defaultOrganizationPortraitUrl" alt="">
+                        <button @click="unpickOrganization(org)" class="unpick-button">x</button>
+                    </div>
+                    <span class="name single-line">{{ org.name }}</span>
+                </div>
             </div>
 
-            <ForwardMessageView ref="forwardMessageView" v-if="sharedPickState.users.length > 0"
+            <ForwardMessageView ref="forwardMessageView" v-if="hasPicked"
                                 :forward-type="forwardType"
                                 :messages="messages"/>
             <footer>
@@ -46,7 +94,10 @@
 import store from "../../../../../store";
 import ForwardMessageView from "./ForwardMessageView.vue";
 import CheckableUserListView from "../../../user/CheckableUserListView.vue";
+import CheckableOrganizationTreeView from "../../../pick/CheckableOrganizationTreeView.vue";
 import Config from "../../../../../config";
+import organizationServerApi from "../../../../../api/organizationServerApi";
+import wfc from "../../../../../wfc/client/wfc";
 
 export default {
     name: "ForwardMessageByCreateConversationView",
@@ -76,6 +127,12 @@ export default {
             activeStore: activeStore,
             sharedPickState: activeStore.state.pick,
             query: '',
+            organizationPathList: [],
+            expandOrganizationSection: false,
+            expandContactSection: true,
+            defaultOrganizationPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
+            orgServiceAvailable: organizationServerApi.isServiceAvailable,
+            confirming: false,
         }
     },
     methods: {
@@ -83,8 +140,25 @@ export default {
             this.activeStore.pickOrUnpickUser(user, false);
         },
 
-        backPickConversation() {
+        unpickOrganization(org) {
+            this.activeStore.pickOrUnpickOrganization(org);
+        },
+
+        onOrganizationPathUpdate(orgPathList) {
+            this.organizationPathList = orgPathList;
+        },
+
+        loadAndShowOrganization(org) {
+            this.$refs.checkableOrganizationTreeView.loadAndShowOrganization(org);
+        },
+
+        clearPicked() {
             this.sharedPickState.users.length = 0
+            this.sharedPickState.organizations.length = 0
+        },
+
+        backPickConversation() {
+            this.clearPicked();
             this.$modal.hide('forward-by-create-conversation-modal',
                 {
                     backPickConversation: true,
@@ -94,25 +168,60 @@ export default {
         },
 
         cancel() {
-            this.sharedPickState.users.length = 0
+            this.clearPicked();
             this.$modal.hide('forward-by-create-conversation-modal', {confirm: false})
         },
 
-        confirm() {
+        async confirm() {
+            if (!this.hasPicked || this.confirming) {
+                return;
+            }
+            let extraMessageText = this.$refs['forwardMessageView'].extraMessageText;
             let pickedUsers = [...this.sharedPickState.users];
-            this.sharedPickState.users.length = 0
+            if (this.sharedPickState.organizations.length) {
+                // 选了部门的话，展开成部门下的全部人员
+                this.confirming = true;
+                try {
+                    let orgIds = this.sharedPickState.organizations.map(o => o.id);
+                    let employeeList = await organizationServerApi.getOrganizationEmployees(orgIds);
+                    employeeList.forEach(e => pickedUsers.push(organizationServerApi.employeeToUserInfo(e)));
+                } catch (e) {
+                    this.$notify({text: '获取组织成员失败', type: 'error'});
+                    return;
+                } finally {
+                    this.confirming = false;
+                }
+            }
+            // 去重，并去掉自己（部门里可能有自己，也可能和单独勾选的人重复）
+            let selfUid = wfc.getUserId();
+            let uidSet = new Set();
+            pickedUsers = pickedUsers.filter(u => {
+                if (u.uid === selfUid || uidSet.has(u.uid)) {
+                    return false;
+                }
+                uidSet.add(u.uid);
+                return true;
+            });
+            if (pickedUsers.length === 0) {
+                this.$notify({text: '没有可选的成员', type: 'warn'});
+                return;
+            }
+            this.clearPicked();
             this.$modal.hide('forward-by-create-conversation-modal',
                 {
                     confirm: true,
                     users: pickedUsers,
                     forwardType: this.forwardType,
                     messages: this.messages,
-                    extraMessageText: this.$refs['forwardMessageView'].extraMessageText,
+                    extraMessageText: extraMessageText,
                 })
         },
     },
 
     computed: {
+        hasPicked() {
+            return this.sharedPickState.users.length > 0 || this.sharedPickState.organizations.length > 0;
+        },
         filteredUsers() {
             let result ;
             if (this.query && this.query.trim()) {
@@ -126,6 +235,7 @@ export default {
 
     components: {
         CheckableUserListView,
+        CheckableOrganizationTreeView,
         ForwardMessageView
     },
 }
@@ -176,13 +286,126 @@ export default {
 }
 
 .user-list-panel .user-list-container {
-    height: 100%;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
+}
+
+.user-list-container > .user-list {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+}
+
+.pick-category-container {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.pick-category-container::-webkit-scrollbar {
+    display: none;
+}
+
+.category-item-container {
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    margin-left: 16px;
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    border-top: 1px solid var(--border-tertiary);
+    background-color: var(--background-secondary);
+    transition: background var(--duration-fast);
+}
+
+.category-item {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-item .title {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.category-item .desc {
+    margin-right: 16px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.arrow {
+    border: solid var(--contact-arrow-border);
+    border-width: 0 1px 1px 0;
+    display: inline-block;
+    padding: 3px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    transition: transform var(--duration-fast);
+}
+
+.right {
+    transform: rotate(-45deg);
+}
+
+.down {
+    transform: rotate(45deg);
+}
+
+.organization-section :deep(.organization-tree-container) {
+    height: auto;
+    max-height: none;
+}
+
+.pick-source-nav {
+    padding: 8px 0 0 20px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.pick-source-nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.pick-source-nav a {
+    text-decoration: none;
+    font-size: var(--font-size-base);
+}
+
+.pick-source-nav li:not(:last-child)::after {
+    display: inline-block;
+    margin: 0 8px;
+    color: var(--text-secondary-strong);
+    content: ">";
+}
+
+.pick-source-nav li:not(:last-child) a {
+    color: var(--accent-color);
+}
+
+.pick-source-nav li:last-child a {
+    color: var(--text-secondary-strong);
+    pointer-events: none;
 }
 
 .user-list-container .back {
     background-color: var(--background-item-normal);
     height: 40px;
+    flex-shrink: 0;
     font-size: var(--font-size-sm);
     padding-left: 16px;
     display: flex;
