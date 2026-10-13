@@ -178,6 +178,17 @@ export default {
         }
     },
     methods: {
+        /** 播放铃声；浏览器自动播放被拒绝时忽略 */
+        playRing(audio) {
+            if (!audio) {
+                return;
+            }
+            let p = audio.play();
+            if (p && p.catch) {
+                p.catch(() => {
+                });
+            }
+        },
         autoPlay() {
             if (isElectron()) {
                 return;
@@ -243,15 +254,16 @@ export default {
                 // 响铃示例代码
                 if (state === CallState.STATUS_OUTGOING) {
                     console.log('start outgoing ring')
+                    this.ringAudio = new Audio(require("@/assets/audios/outgoing_call_ring.mp3"))
+                    this.ringAudio.loop = true;
+                    this.playRing(this.ringAudio);
+                } else if (state === CallState.STATUS_INCOMING) {
+                    // 来电响铃（对齐 wf-enterprise-chat d6e3f7d2）。
+                    // 浏览器可能因自动播放限制拒绝，忽略即可；PC（Electron）正常出声
+                    console.log('start incoming ring')
                     this.ringAudio = new Audio(require("@/assets/audios/incoming_call_ring.mp3"))
                     this.ringAudio.loop = true;
-                    this.ringAudio.play();
-                } else if (state === CallState.STATUS_INCOMING) {
-                    // 由于浏览器的限制，web 端，可能不能自动播放！！!
-                    // 另外，微信收到音视频通话邀请时，也没有声音
-                    // this.ringAudio = new Audio(require("@/assets/audios/incoming_call_ring.mp3"))
-                    // this.ringAudio.loop = true;
-                    // this.ringAudio.play();
+                    this.playRing(this.ringAudio);
                 } else {
                     if (this.ringAudio) {
                         this.ringAudio.pause();
