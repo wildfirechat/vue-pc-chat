@@ -32,6 +32,10 @@
                     <label>{{ $t('common.area') }}</label>
                     <div>{{ $t('misc.beijing') }}</div>
                 </li>
+                <li v-if="departmentOrg">
+                    <label>所属部门</label>
+                    <div class="department-link" @click.stop="openDepartment">{{ departmentOrg.name }}</div>
+                </li>
                 <li>
                     <label>{{ $t('common.label') }}</label>
                     <div>{{ $t('misc.test_user') }}</div>
@@ -104,15 +108,44 @@ export default {
             // 是否已判断出与对方同组织；判断出结果前先不放「加好友」，避免闪一下
             sameOrgChecked: false,
             isSameOrganization: false,
+            departmentOrg: null,
         }
     },
     mounted() {
         this.checkSameOrganization();
+        this.loadDepartment();
     },
     methods: {
+        /** 取对方所属部门，卡片上展示并可跳到联系人页（对齐 wf-enterprise-chat b764b881） */
+        async loadDepartment() {
+            if (this.isFileHelper || !organizationServerApi.isServiceAvailable) {
+                return;
+            }
+            try {
+                const employee = await organizationServerApi.getEmployee(this.userInfo.uid);
+                if (employee && employee.organizationId) {
+                    const path = await organizationServerApi.getOrganizationPath(employee.organizationId);
+                    if (path && path.length) {
+                        // path[0] 是直属部门，最后一个是根组织
+                        this.departmentOrg = path[0];
+                    }
+                }
+            } catch (e) {
+                console.warn('load user department failed', e);
+            }
+        },
+        openDepartment() {
+            if (!this.departmentOrg) {
+                return;
+            }
+            store.setCurrentOrganization(this.departmentOrg);
+            if (this.$router.currentRoute.path !== '/home/contact') {
+                this.$router.replace('/home/contact');
+            }
+            this.close();
+        },
         /** 取双方组织关系，有共同节点即同组织同事（对齐 wf-enterprise-chat 624d0210） */
-        async checkSameOrganization() {
-            const myId = wfc.getUserId();
+        async checkSameOrganization() {            const myId = wfc.getUserId();
             if (!myId || this.userInfo.uid === myId || this.isFileHelper || !organizationServerApi.isServiceAvailable) {
                 this.sameOrgChecked = true;
                 return;
@@ -357,6 +390,11 @@ export default {
 .action div {
     margin: 0 8px;
     color: var(--text-link);
+}
+
+.department-link {
+    color: var(--text-link);
+    cursor: pointer;
 }
 
 </style>
