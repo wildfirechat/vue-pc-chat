@@ -151,9 +151,19 @@
                                     <span class="sender-name single-line">{{ nameOf(item.sender) }}</span>
                                     <span class="item-time">{{ formatTime(item.timestamp) }}</span>
                                 </div>
-                                <p class="item-digest" v-html="renderDigest(item.digest) || '[无摘要]'"></p>
+                                <div v-if="mediaOf(item)" class="item-media">
+                                    <StickerView v-if="mediaOf(item).kind === 'sticker'"
+                                                 :src="mediaOf(item).src"
+                                                 :width="64"
+                                                 :height="64"/>
+                                    <template v-else>
+                                        <img :src="mediaOf(item).src" alt="" @error="onMediaError"/>
+                                        <i v-if="mediaOf(item).kind === 'video'" class="icon-ion-play media-play"></i>
+                                    </template>
+                                </div>
+                                <p v-else class="item-digest" v-html="renderDigest(item.digest) || '[无摘要]'"></p>
                                 <div class="item-footer">
-                                    <span v-if="typeTagOf(item)" class="media-tag">{{ typeTagOf(item) }}</span>
+                                    <span v-if="typeTagOf(item) && !mediaOf(item)" class="media-tag">{{ typeTagOf(item) }}</span>
                                     <span class="locate-hint">查看上下文<i class="icon-ion-ios-arrow-right"></i></span>
                                 </div>
                             </div>
@@ -179,6 +189,9 @@ import ConversationType from "../../../wfc/model/conversationType";
 import searchServerApi from "../../../api/searchServerApi";
 import {renderSearchDigest} from "../../util/searchKeywordHighlight";
 import {pushInAppSubWindow, backInAppSubWindowOrRouter, getSubWindowQuery, isInAppSubWindow} from "../../util/subWindowNavigator";
+import {imageThumbnailSrc} from "../../util/imageThumbUtil";
+import {messageFromOutputMessageData} from "../../util/outputMessageData";
+import StickerView from "../conversation/sticker/StickerView.vue";
 
 // 常见消息类型（多选；取值映射本项目 MessageContentType.js，服务端透传 int）
 const TYPE_OPTIONS = [
@@ -206,6 +219,10 @@ const MEMBER_RENDER_LIMIT = 50;
 
 export default {
     name: "ConversationMessageSearchPage",
+
+    components: {
+        StickerView,
+    },
 
     props: {
         // Web 端子窗口通过 sub-window-query 传入路由参数（Electron 端走 $route.query）
@@ -662,6 +679,61 @@ export default {
 
         renderDigest(digest) {
             return renderSearchDigest(digest);
+        },
+
+        /**
+         * 图片/视频/位置/表情的搜索结果预览。
+         * 服务端返回的是 OutputMessageData，转成本地 Message 后取缩略图，
+         * 不再只显示「[图片]/[视频]/[表情]」摘要（对齐 wf-enterprise-chat 66aaa4b1）。
+         * @returns {{kind:string, src:string}|null}
+         */
+        mediaOf(item) {
+            if (!item || !item.payload) {
+                return null;
+            }
+            if (!this._mediaCache) {
+                this._mediaCache = new Map();
+            }
+            const key = String(item.messageId);
+            if (this._mediaCache.has(key)) {
+                return this._mediaCache.get(key);
+            }
+            let result = null;
+            try {
+                const msg = messageFromOutputMessageData(item);
+                if (msg && msg.messageContent) {
+                    const c = msg.messageContent;
+                    switch (c.type) {
+                        case MessageContentType.Image:
+                            result = {kind: 'image', src: imageThumbnailSrc(msg) || c.remotePath || ''};
+                            break;
+                        case MessageContentType.Video: {
+                            let src = c.thumbnail ? 'data:image/jpeg;base64,' + c.thumbnail : '';
+                            if (!src && c.remotePath && store.state.misc.imageThumbPara === '.thumb') {
+                                src = c.remotePath + '.thumb';
+                            }
+                            result = {kind: 'video', src};
+                            break;
+                        }
+                        case MessageContentType.Location:
+                            result = {kind: 'location', src: c.thumbnail ? 'data:image/jpeg;base64,' + c.thumbnail : ''};
+                            break;
+                        case MessageContentType.Sticker:
+                            result = {kind: 'sticker', src: c.remotePath || ''};
+                            break;
+                        default:
+                            result = null;
+                    }
+                }
+            } catch (e) {
+                result = null;
+            }
+            this._mediaCache.set(key, result);
+            return result;
+        },
+
+        onMediaError(e) {
+            e.target.style.display = 'none';
         },
 
         /** 消息类型来自 payload.type（OutputMessageData 格式） */
@@ -1207,6 +1279,34 @@ export default {
     color: var(--accent-color);
     font-weight: 600;
     padding: 0;
+}
+
+.item-media {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    margin: 4px 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background-color: var(--background-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-media img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    display: block;
+}
+
+.item-media .media-play {
+    position: absolute;
+    color: #fff;
+    font-size: 22px;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
 }
 
 .item-footer {
