@@ -48,6 +48,9 @@
             <button class="destroy" v-if="enableDestroy" @click="destroyConference">
                 销毁会议
             </button>
+            <button class="share" v-if="!ended" @click="shareConference">
+                分享
+            </button>
             <button ref="favButton" v-if="conferenceInfo.startTime * 1000 > new Date().getTime() && conferenceInfo.owner !== selfUserId" @click="favConference">
                 尚未开始，收藏会议
             </button>
@@ -72,6 +75,9 @@ import {copyText} from "../../util/clipboard";
 import conferenceManager from "./conferenceManager";
 import WfcScheme from "../../../wfcScheme";
 import QRCodeDialogView from "../../common/QRCodeDialogView.vue";
+import ConferenceInviteMessageContent from "../../../wfc/av/messages/conferenceInviteMessageContent";
+import Message from "../../../wfc/messages/message";
+import ForwardType from "../../main/conversation/message/forward/ForwardType";
 
 export default {
     name: "ConferenceInfoView",
@@ -116,6 +122,29 @@ export default {
             console.log('joinConference', info);
             let audience = !this.enableVideo && !this.enableAudio
             avenginekitproxy.joinConference(info.conferenceId, false, info.pin, info.owner, info.conferenceTitle, '', audience, info.advance, !this.enableAudio, !this.enableVideo);
+            this.$modal.hide('conference-info-modal');
+        },
+
+        /** 分享会议邀请卡片到会话（对齐 wf-enterprise-chat aa971d1c） */
+        shareConference() {
+            let info = this.conferenceInfo;
+            let content = new ConferenceInviteMessageContent(
+                info.conferenceId,
+                info.owner,
+                info.conferenceTitle,
+                '',
+                info.startTime,
+                false,
+                info.audience,
+                info.advance,
+                info.pin,
+                info.password
+            );
+            let message = new Message(null, content);
+            this.$forwardMessage({
+                forwardType: ForwardType.NORMAL,
+                messages: [message]
+            });
             this.$modal.hide('conference-info-modal');
         },
 
@@ -166,6 +195,9 @@ export default {
         },
         enableDestroy() {
             return this.conferenceInfo.owner === this.selfUserId && this.conferenceInfo.endTime * 1000 > new Date().getTime();
+        },
+        ended() {
+            return this.conferenceInfo.endTime * 1000 < new Date().getTime();
         },
         enableFav() {
             return this.conferenceInfo.owner !== this.selfUserId && new Date().getTime() > this.conferenceInfo.startTime * 1000;
