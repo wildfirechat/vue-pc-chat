@@ -180,13 +180,13 @@
                  title="Enter发送，Ctrl+Enter换行"
                  autofocus
                  @input="onInput"
-                 @contextmenu.prevent="$refs.menu.open($event)"
+                 @contextmenu.prevent="onInputContextMenu($event)"
                  v-on:tribute-replaced="onTributeReplaced"
                  contenteditable="true">
             </div>
             <vue-context ref="menu" :lazy="true">
                 <li>
-                    <a @click.prevent="handlePaste($event, 'menu')">
+                    <a @click.prevent="pasteFromMenu">
                         {{ $t('common.paste') }}
                     </a>
                 </li>
@@ -344,6 +344,8 @@ export default {
             asrManager: null,
             // idle：空闲；recording：录音中；finishing：已停止录音，等待剩余识别结果
             asrInputState: 'idle',
+            // 打开右键菜单时输入框里的光标/选区，点菜单项时输入框已失焦，粘贴前要恢复
+            contextMenuRange: null,
         }
     },
     methods: {
@@ -640,6 +642,41 @@ export default {
                 // Safari 浏览器 execCommand 失效，可以采用下面这种方式处理粘贴
                 // this.$refs.input.innerText += text;
             }
+        },
+
+        onInputContextMenu(e) {
+            let input = this.$refs.input;
+            let selection = window.getSelection();
+            if (selection.rangeCount > 0 && input.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+                this.contextMenuRange = selection.getRangeAt(0).cloneRange();
+            } else {
+                this.contextMenuRange = null;
+            }
+            this.$refs.menu.open(e);
+        },
+
+        /**
+         * 右键菜单「粘贴」。点击事件里没有 clipboardData，navigator.clipboard 也读不到复制的文件（只能拿到文件名），
+         * 所以 Electron 下恢复光标后让主进程执行 webContents.paste()，与 Ctrl/Command + V 一样走 handlePaste
+         */
+        pasteFromMenu(e) {
+            if (!isElectron()) {
+                this.handlePaste(e, 'menu');
+                return;
+            }
+            let input = this.$refs.input;
+            let range = this.contextMenuRange;
+            this.contextMenuRange = null;
+            if (!range || !input.contains(range.commonAncestorContainer)) {
+                range = document.createRange();
+                range.selectNodeContents(input);
+                range.collapse(false);
+            }
+            input.focus();
+            let selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            ipcRenderer.send(IpcEventType.PASTE);
         },
 
         styleImageInEditor() {

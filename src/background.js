@@ -1040,6 +1040,9 @@ const createMainWindow = async () => {
 
         event.returnValue = args;
     });
+    ipcMain.on(IPCEventType.PASTE, (event) => {
+        event.sender.paste();
+    });
     ipcMain.on(IPCEventType.FILE_COPY, (event, args) => {
         if (process.platform !== 'linux') {
             const clipboardEx = require('electron-clipboard-ex')

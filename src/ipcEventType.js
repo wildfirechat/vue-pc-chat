@@ -14,6 +14,8 @@ const IpcEventType = {
     RESIZE_LOGIN_WINDOW: 'resizeLoginWindow',
     FILE_PASTE: 'file-paste',
     FILE_COPY: 'file-copy',
+    // 右键菜单「粘贴」，让主进程执行 webContents.paste()，与 Ctrl/Command + V 一样触发原生 paste 事件（能拿到复制的文件）
+    PASTE: 'paste',
     START_SCREEN_SHOT: "screenshots-start",
     OPEN_H5_APP_WINDOW: 'open-h5-app-window',
     WORKSPACE_NEW_TAB_WEB_CONTENT: 'workspace-new-tab-web-content',
