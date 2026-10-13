@@ -169,7 +169,7 @@
                         <div class="duration-action-container">
                             <!-- 中间：操作按钮 -->
                             <div class="action-container">
-                                <div class="action">
+                                <div class="action" :class="{disabled: !hasAudioInput}">
                                     <img v-if="!session.audience && !session.audioMuted" @click="muteAudio" class="action-img"
                                          src='@/assets/images/av_conference_audio.png'/>
                                     <img v-else @click="muteAudio" class="action-img"
@@ -177,7 +177,8 @@
                                     <p>静音</p>
                                 </div>
                                 <div class="action"
-                                     v-if="!session.screenSharing">
+                                     v-if="!session.screenSharing"
+                                     :class="{disabled: !hasVideoInput}">
                                     <img v-if="!session.audience && !session.videoMuted" @click="muteVideo" class="action-img"
                                          src='@/assets/images/av_conference_video.png'/>
                                     <img v-else @click="muteVideo" class="action-img"
@@ -328,6 +329,9 @@ export default {
             conferenceConversationStore: null,
             sharedMiscState: store.state.misc,
             videoInputDeviceIndex: 0,
+            // 有没有麦克风/摄像头设备：没有时对应按钮置灰不可点（对齐 wf-enterprise-chat bac02821）
+            hasAudioInput: true,
+            hasVideoInput: true,
 
             refreshUserInfoInternal: 0,
 
@@ -768,7 +772,26 @@ export default {
             this.messageText = '';
         },
 
+        /** 枚举音视频输入设备，没有麦克风/摄像头时对应按钮置灰 */
+        async refreshDeviceAvailability() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+                return;
+            }
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                this.hasAudioInput = devices.some(d => d.kind === 'audioinput');
+                this.hasVideoInput = devices.some(d => d.kind === 'videoinput');
+            } catch (e) {
+                // 枚举失败时不置灰，避免误伤
+                this.hasAudioInput = true;
+                this.hasVideoInput = true;
+            }
+        },
+
         muteAudio() {
+            if (!this.hasAudioInput) {
+                return;
+            }
             let enable = this.session.audioMuted ? true : false;
             if (enable && this.session.audience && !conferenceManager.isOwner() && !conferenceManager.conferenceInfo.allowSwitchMode) {
                 this.requestUnmute(true);
@@ -798,6 +821,9 @@ export default {
             }
         },
         muteVideo() {
+            if (!this.hasVideoInput) {
+                return;
+            }
             let enable = this.session.videoMuted ? true : false;
             if (enable && this.session.audience && !conferenceManager.isOwner() && !conferenceManager.conferenceInfo.allowSwitchMode) {
                 this.requestUnmute(false);
@@ -1544,10 +1570,20 @@ export default {
             this.$refs.rootContainer.style.setProperty('--conference-container-margin-top', '0px');
         }
         wfc.eventEmitter.on(EventType.UserInfosUpdate, this.onUserInfosUpdate);
+
+        // 设备插拔时重新判断麦克风/摄像头是否存在
+        this.refreshDeviceAvailability();
+        if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+            this._onDeviceChange = () => this.refreshDeviceAvailability();
+            navigator.mediaDevices.addEventListener('devicechange', this._onDeviceChange);
+        }
     },
 
     unmounted() {
         this.syncScreenShareContainerState(false);
+        if (this._onDeviceChange && navigator.mediaDevices && navigator.mediaDevices.removeEventListener) {
+            navigator.mediaDevices.removeEventListener('devicechange', this._onDeviceChange);
+        }
         // reset
         this.$set(this.selfUserInfo, '_stream', null)
         this.participantUserInfos.forEach(m => this.$set(m, '_stream', null))
@@ -1824,6 +1860,13 @@ i.active {
     font-size: var(--font-size-xs);
     color: var(--text-on-accent);
     padding: 0 25px 0 25px;
+}
+
+/* 没有对应设备（麦克风/摄像头）时置灰不可点 */
+.action-container .action.disabled {
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
 }
 
 .avatar {
