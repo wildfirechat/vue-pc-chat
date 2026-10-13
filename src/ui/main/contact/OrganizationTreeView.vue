@@ -253,10 +253,11 @@ export default {
 
 .search-expand-input {
     width: 0;
-    height: 28px;
-    border: none;
-    border-bottom: 2px solid transparent;
-    background: transparent;
+    height: 25px;
+    /* 与首页搜索框统一：圆角边框、输入框底色、聚焦主题色边（对齐 wf-enterprise-chat 2003ca61） */
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: var(--background-input);
     outline: none;
     font-size: var(--font-size-sm);
     padding: 0;
@@ -267,8 +268,12 @@ export default {
 
 .search-action.active .search-expand-input {
     width: 150px;
-    border-bottom-color: var(--accent-color);
+    border-color: var(--border-primary);
     padding: 0 8px;
+}
+
+.search-action.active .search-expand-input:focus {
+    border-color: var(--border-active);
 }
 
 .search-icon-btn {
