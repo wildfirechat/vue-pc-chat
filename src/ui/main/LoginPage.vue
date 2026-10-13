@@ -54,10 +54,10 @@
                 <img class="logo" :src="require(`@/assets/images/icon.png`)" alt="">
                 <p class="title">密码登录</p>
                 <div class="item">
-                    <input v-model.trim="mobile" class="text-input" type="number" placeholder="请输入手机号">
+                    <input v-model.trim="mobile" class="text-input" type="number" placeholder="请输入手机号" @keydown.enter="focusPassword">
                 </div>
                 <div class="item">
-                    <input v-model.trim="password" class="text-input" @keydown.enter="loginWithPassword" type="password" placeholder="请输入密码">
+                    <input v-model.trim="password" ref="passwordInput" class="text-input" @keydown.enter="loginWithPassword" type="password" placeholder="请输入密码">
                 </div>
                 <div v-if="loginStatus === 0" class="flex-row" style="justify-content: space-between; width: 100%;">
                     <p class="tip" @click="switchLoginType(2)">使用验证码登录</p>
@@ -199,6 +199,12 @@ export default {
                 type: 'info'
             });
             this.switchLoginType(2);
+        },
+        /** 账号/手机号输入框回车跳到密码框（对齐 wf-enterprise-chat 0ed24ef4） */
+        focusPassword() {
+            if (this.$refs.passwordInput) {
+                this.$refs.passwordInput.focus();
+            }
         },
         switchLoginType(type) {
             this.loginType = type;
