@@ -1880,6 +1880,15 @@ let store = {
         return '';
     },
 
+    /** 是否有任一客户端在线（state===0），用于联系人列表的在线绿点 */
+    isUserOnline(userId) {
+        let userOnlineState = this.state.misc.userOnlineStateMap.get(userId);
+        if (!userOnlineState || !userOnlineState.clientStates) {
+            return false;
+        }
+        return userOnlineState.clientStates.some(s => s.state === 0);
+    },
+
     _patchCurrentConversationOnlineStatus() {
         let convInfo = this.state.conversation.currentConversationInfo;
         if (convInfo && convInfo.conversation.type === ConversationType.Single) {

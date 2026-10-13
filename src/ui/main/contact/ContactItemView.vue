@@ -13,6 +13,7 @@
         <div class="contact-item-info">
             <div class="flex-row flex-align-center contact-item-name-row">
                 <p class="single-line contact-item-name">{{ source._displayName }}</p>
+                <span v-if="isOnline" class="online-dot" title="在线"></span>
                 <p v-if="isExternalDomainUser" class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName }}</p>
             </div>
             <p v-if="source._userOnlineStatusDesc" class="single-line user-online-status"> {{ source._userOnlineStatusDesc }}</p>
@@ -53,6 +54,9 @@ export default {
         }
     },
     computed: {
+        isOnline() {
+            return store.isUserOnline(this.source.uid);
+        },
         isExternalDomainUser() {
             let user = this.source;
             return WfcUtil.isExternal(user.uid);
@@ -131,6 +135,15 @@ export default {
 .contact-item-name {
     flex: 1;
     min-width: 0;
+}
+
+.online-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--status-success);
+    flex-shrink: 0;
+    margin-left: 4px;
 }
 
 .user-online-status {
