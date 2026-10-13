@@ -536,3 +536,10 @@ img.account-avatar,
 img.group-avatar {
     background-color: var(--background-item-placeholder);
 }
+
+/* 列表行尾箭头统一样式（对齐 wf-enterprise-chat 49bfbfa9） */
+.row-chevron {
+    flex-shrink: 0;
+    font-size: var(--font-size-lg);
+    color: var(--text-tertiary);
+}

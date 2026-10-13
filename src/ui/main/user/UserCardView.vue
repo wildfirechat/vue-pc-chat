@@ -42,7 +42,7 @@
                 </li>
                 <li v-if="!isSelf && !isFileHelper" class="more-info-row" @click.stop="showMoreInfo">
                     <label>更多信息</label>
-                    <div class="more-info-value">和他(她)的群聊 <i class="icon-ion-ios-arrow-right"></i></div>
+                    <div class="more-info-value">和他(她)的群聊 <i class="row-chevron icon-ion-ios-arrow-right"></i></div>
                 </li>
             </ul>
         </div>

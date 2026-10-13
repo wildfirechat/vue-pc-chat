@@ -87,12 +87,12 @@
                 </label>
                 <div class="group-todo-entry" @click="showGroupQrCode">
                     <span>群二维码</span>
-                    <i class="icon-ion-ios-arrow-right"></i>
+                    <i class="row-chevron icon-ion-ios-arrow-right"></i>
                 </div>
                 <!-- 群主管理权转让、解散群组挪进群管理（对齐 wf-enterprise-chat 2a554bfa） -->
                 <div v-if="enableDismissGroup" class="group-todo-entry" @click="showGroupManage">
                     <span>群管理</span>
-                    <i class="icon-ion-ios-arrow-right"></i>
+                    <i class="row-chevron icon-ion-ios-arrow-right"></i>
                 </div>
                 <label>
                     {{ $t('group.alias') }}
