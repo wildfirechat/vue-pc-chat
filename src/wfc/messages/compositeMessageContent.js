@@ -11,6 +11,13 @@ import {isElectron} from "../../platform";
 import ArticlesMessageContent from "./articlesMessageContent";
 import MessageContentMediaType from "./messageContentMediaType";
 
+/** 消息体里的内联预览只用来显示摘要，去掉图片/视频/位置的缩略图（完整内容文件里有） */
+const THUMBNAIL_ONLY_TYPES = new Set([
+    MessageContentType.Image,
+    MessageContentType.Video,
+    MessageContentType.Location,
+]);
+
 export default class CompositeMessageContent extends MediaMessageContent {
     title = '';
     messages = [];
@@ -48,8 +55,6 @@ export default class CompositeMessageContent extends MediaMessageContent {
         let payload = super.encode();
         payload.content = this.title;
         let arr = [];
-        let binArr;
-        let size = 0;
         this.messages.forEach(msg => {
             let msgPayload = msg.messageContent.encode();
             let o = {
@@ -83,19 +88,37 @@ export default class CompositeMessageContent extends MediaMessageContent {
                 o.mru = msg.messageContent.remotePath;
             }
 
-            if (!binArr) {
-                size += JSON.stringify(o).length;
-                if (size > 20480 && arr.length > 0) {
-                    binArr = arr.map((value) => value);
-                }
-            }
-
             arr.push(o);
-
         });
 
+        // 消息体里只内联前几条（累计不超过 20K）。第一条就超时一条都不放，
+        // 否则消息体可能超过协议栈 64K 上限、本地直接拒发（对齐 wf-enterprise-chat ac442ff3）
+        let inlineCount = 0;
+        let size = 0;
+        for (let i = 0; i < arr.length; i++) {
+            size += JSON.stringify(arr[i]).length;
+            if (size > 20480) {
+                break;
+            }
+            inlineCount++;
+        }
+        const overflow = inlineCount < arr.length;
+        let binArr = null;
+        if (overflow) {
+            // 内联预览只用来在气泡上显示「[图片]」之类摘要，去掉图片/视频/位置缩略图：
+            // 老图片缩略图 base64 后单张能到 80K，完整内容文件里有缩略图
+            binArr = arr.slice(0, inlineCount).map(o => {
+                if (THUMBNAIL_ONLY_TYPES.has(o.ctype)) {
+                    let copy = Object.assign({}, o);
+                    delete copy.cbc;
+                    return copy;
+                }
+                return o;
+            });
+        }
+
         let obj;
-        if (binArr && !this.file) {
+        if (overflow && !this.file) {
             obj = {
                 ms: arr,
             }
@@ -122,14 +145,8 @@ export default class CompositeMessageContent extends MediaMessageContent {
                 ms: binArr,
             }
         } else {
-            if (binArr) {
-                obj = {
-                    ms: binArr,
-                }
-            } else {
-                obj = {
-                    ms: arr,
-                }
+            obj = {
+                ms: binArr ? binArr : arr,
             }
         }
 
