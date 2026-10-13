@@ -40,6 +40,10 @@
                     <label>{{ $t('common.label') }}</label>
                     <div>{{ $t('misc.test_user') }}</div>
                 </li>
+                <li v-if="!isSelf && !isFileHelper" class="more-info-row" @click.stop="showMoreInfo">
+                    <label>更多信息</label>
+                    <div class="more-info-value">和他(她)的群聊 <i class="icon-ion-ios-arrow-right"></i></div>
+                </li>
             </ul>
         </div>
         <div class="action">
@@ -78,6 +82,7 @@ import WfcUtil from '../../../wfc/util/wfcUtil';
 import Config from '../../../config';
 import organizationServerApi from '../../../api/organizationServerApi';
 import {previewPortrait} from '../../util/portraitPreview';
+import UserMoreInfoDialog from './UserMoreInfoDialog.vue';
 
 // 组织关系按人缓存：同组织判断会在每个资料卡打开时用到，避免重复请求
 const relationshipCache = new Map();
@@ -143,6 +148,15 @@ export default {
                 this.$router.replace('/home/contact');
             }
             this.close();
+        },
+        /** 「更多信息」：和他(她)的群聊（对齐 wf-enterprise-chat d2a8e82e、990ac36d） */
+        showMoreInfo() {
+            this.$modal.show(UserMoreInfoDialog, {userId: this.userInfo.uid}, null, {
+                name: 'user-more-info-modal',
+                width: 380,
+                height: 'auto',
+                clickToClose: true,
+            });
         },
         /** 取双方组织关系，有共同节点即同组织同事（对齐 wf-enterprise-chat 624d0210） */
         async checkSameOrganization() {            const myId = wfc.getUserId();
@@ -395,6 +409,14 @@ export default {
 .department-link {
     color: var(--text-link);
     cursor: pointer;
+}
+
+.more-info-row {
+    cursor: pointer;
+}
+
+.more-info-value {
+    color: var(--text-link);
 }
 
 </style>
