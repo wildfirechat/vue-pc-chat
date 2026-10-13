@@ -102,7 +102,8 @@ export default {
             this._createConference()
                 .then(info => {
                     console.log('createAndJoin conference', info);
-                    avenginekitproxy.startConference(info.conferenceId, false, info.pin, info.owner, info.conferenceTitle, this.desc, info.audience, info.advance);
+                    // 发起会议默认关麦关摄像头（对齐 wf-enterprise-chat 01fb4d35）
+                    avenginekitproxy.startConference(info.conferenceId, false, info.pin, info.owner, info.conferenceTitle, this.desc, info.audience, info.advance, false, undefined, undefined, true, true);
                 })
                 .catch(err => {
                     this.$notify({
