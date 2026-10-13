@@ -1,6 +1,7 @@
 <template>
     <section>
-        <ul>
+        <div v-if="sharedContactState.friendRequestList.length === 0" class="contact-empty">暂无新的好友申请</div>
+        <ul v-else>
             <li v-for="(friendRequest,index) in sharedContactState.friendRequestList" :key="index"
                 @click="showFriendRequest(friendRequest)">
                 <div class="new-friend-item"
@@ -179,6 +180,13 @@ export default {
 .new-friend-item .info .reason {
     font-size: var(--font-size-xs);
     color: var(--text-hint);
+}
+
+.contact-empty {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-hint);
+    font-size: var(--font-size-sm);
 }
 
 

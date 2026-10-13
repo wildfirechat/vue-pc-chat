@@ -1,6 +1,7 @@
 <template>
     <section>
-        <ul>
+        <div v-if="sharedContactState.favGroupList.length === 0" class="contact-empty">暂无收藏的群组</div>
+        <ul v-else>
             <li v-for="(group, index) in sharedContactState.favGroupList" :key="index" @click="showGroup(group)">
                 <div class="group-item"
                      v-bind:class="{active: sharedContactState.currentGroup && sharedContactState.currentGroup.target === group.target}"
@@ -39,6 +40,13 @@ export default {
 </script>
 
 <style scoped>
+.contact-empty {
+    padding: 24px 16px;
+    text-align: center;
+    color: var(--text-hint);
+    font-size: var(--font-size-sm);
+}
+
 .avatar {
     width: var(--size-avatar-contact);
     height: var(--size-avatar-contact);
