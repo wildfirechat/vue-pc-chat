@@ -98,7 +98,34 @@ const helper = {
     },
 
     linkify: (text) => {
-        return text.replace(/(https?:\/\/[^\s<>"']+)/g, '<a href="$1">$1</a>');
+        // 一次扫描识别 http(s) 网址、www. 网址、邮箱、国内手机号（对齐 wf-enterprise-chat 119c7534）。
+        // 必须单次替换：分多次 replace 会把刚生成的 <a> 里的内容再次包一层
+        const pattern = /(https?:\/\/[^\s<>"']+)|(www\.[^\s<>"']+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(1[3-9]\d{9})/g;
+        let result = '';
+        let lastIndex = 0;
+        let m;
+        while ((m = pattern.exec(text)) !== null) {
+            result += text.slice(lastIndex, m.index);
+            if (m[1]) {
+                result += `<a href="${m[1]}">${m[1]}</a>`;
+            } else if (m[2]) {
+                result += `<a href="https://${m[2]}">${m[2]}</a>`;
+            } else if (m[3]) {
+                result += `<a href="mailto:${m[3]}">${m[3]}</a>`;
+            } else if (m[4]) {
+                // 手机号前后不能再是数字，避免把长数字串的一截当成手机号
+                let before = text[m.index - 1];
+                let after = text[m.index + m[4].length];
+                if ((before === undefined || !/\d/.test(before)) && (after === undefined || !/\d/.test(after))) {
+                    result += `<a href="tel:${m[4]}">${m[4]}</a>`;
+                } else {
+                    result += m[4];
+                }
+            }
+            lastIndex = m.index + m[0].length;
+        }
+        result += text.slice(lastIndex);
+        return result;
     },
 
     isImage: (ext) => {
