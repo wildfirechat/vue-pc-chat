@@ -183,12 +183,18 @@ export default {
             } else {
                 this.myEntryContent = '';
                 this.originalEntryContent = '';
-                // Auto fill name
+                // Auto fill name：未参与时预填「昵称 - 」并聚焦到输入框（对齐 wf-enterprise-chat 00708a21）
                 let userInfo = wfc.getUserInfo(this.selfUid, false);
                 let name = userInfo.displayName || userInfo.name;
                 if (name) {
-                    this.myEntryContent = name + ' ';
-                    this.$nextTick(() => this.autoResize({target: this.$refs.editInput?.[0] || this.$refs.editInput}));
+                    this.myEntryContent = name + ' - ';
+                    this.$nextTick(() => {
+                        let input = this.$refs.editInput?.[0] || this.$refs.editInput;
+                        this.autoResize({target: input});
+                        if (input && input.focus) {
+                            input.focus();
+                        }
+                    });
                 }
             }
         },
