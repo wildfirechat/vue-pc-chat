@@ -89,6 +89,11 @@
                     <span>群二维码</span>
                     <i class="icon-ion-ios-arrow-right"></i>
                 </div>
+                <!-- 群主管理权转让、解散群组挪进群管理（对齐 wf-enterprise-chat 2a554bfa） -->
+                <div v-if="enableDismissGroup" class="group-todo-entry" @click="showGroupManage">
+                    <span>群管理</span>
+                    <i class="icon-ion-ios-arrow-right"></i>
+                </div>
                 <label>
                     {{ $t('group.alias') }}
                     <div class="input-wrapper">
@@ -120,9 +125,6 @@
             <div v-if="enableQuitGroup" @click="quitGroup" class="conversation-action-item">
                 {{ $t('conversation.quit_group') }}
             </div>
-            <div v-if="enableDismissGroup" @click="dismissGroup" class="conversation-action-item">
-                {{ $t('conversation.dismiss_group') }}
-            </div>
         </div>
     </div>
 </template>
@@ -143,6 +145,7 @@ import {isElectron} from "../../../platform";
 import {showComplainAlert} from "./conversationComplainHelper";
 import QRCodeDialogView from "../../common/QRCodeDialogView.vue";
 import WfcScheme from "../../../wfcScheme";
+import GroupManageDialog from "./GroupManageDialog.vue";
 
 export default {
     name: "GroupConversationInfoView",
@@ -204,6 +207,37 @@ export default {
                 name: 'group-qrcode-modal',
                 width: 360,
                 height: 460,
+                clickToClose: true,
+            });
+        },
+
+        /** 群管理：转让群主、解散群组（对齐 wf-enterprise-chat 2a554bfa） */
+        showGroupManage() {
+            this.$modal.show(GroupManageDialog, {
+                groupId: this.conversationInfo.conversation.target,
+                selfUserId: wfc.getUserId(),
+                members: this.groupMemberUserInfos,
+                isOwner: true,
+                onDismiss: () => {
+                    this.$alert({
+                        title: '解散群组',
+                        content: '确定解散群组？',
+                        confirmText: '确定',
+                        confirmButtonType: 'danger',
+                        cancelText: '取消',
+                        confirmCallback: () => {
+                            this.$modal.hide('group-manage-modal');
+                            this.activeStore.dismissGroup(this.conversationInfo.conversation.target);
+                        },
+                        cancelCallback: () => {
+                            // do nothing
+                        }
+                    });
+                },
+            }, null, {
+                name: 'group-manage-modal',
+                width: 380,
+                height: 'auto',
                 clickToClose: true,
             });
         },
