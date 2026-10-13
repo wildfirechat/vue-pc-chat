@@ -194,7 +194,8 @@ function filterMenuTemplate(template) {
 let mainWindow;
 let fileWindow;
 let multimediaPreviewWindow;
-let compositeMessageWindows = new Map();
+// 聊天记录(合并消息)窗口：全局单窗口，再点别的记录换内容并置顶（对齐 wf-enterprise-chat e511f73a）
+let compositeMessageWindow = null;
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
@@ -1110,30 +1111,26 @@ const createMainWindow = async () => {
     ipcMain.on(IPCEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, async (event, args) => {
         console.log('on show-composite-message-window', args)
         let messageUid = args.messageUid;
-        let compositeMessageWin = compositeMessageWindows.get(messageUid);
-        if (!compositeMessageWin) {
-            let url;
-            if (messageUid) {
-                url = args.url + ('?messageUid=' + messageUid)
-            } else {
-                url = args.url;
+        let url = messageUid ? (args.url + ('?messageUid=' + messageUid)) : args.url;
+        if (compositeMessageWindow && !compositeMessageWindow.isDestroyed()) {
+            // 全局单窗口复用：换内容并置顶
+            try {
+                await compositeMessageWindow.loadURL(url);
+            } catch (e) {
+                compositeMessageWindow.reload();
             }
-            let win = createWindow(url, 960, 600, 640, 400, false, false);
-            if (messageUid) {
-                compositeMessageWindows.set(messageUid, win)
+            compositeMessageWindow.show();
+            compositeMessageWindow.focus();
+            if (compositeMessageWindow.moveTop) {
+                compositeMessageWindow.moveTop();
             }
-
-            // win.webContents.openDevTools();
-            win.on('close', () => {
-                if (messageUid) {
-                    compositeMessageWindows.delete(messageUid);
-                }
-            });
-            win.show();
-        } else {
-            compositeMessageWin.show();
-            compositeMessageWin.focus();
+            return;
         }
+        compositeMessageWindow = createWindow(url, 960, 600, 640, 400, false, false);
+        compositeMessageWindow.on('close', () => {
+            compositeMessageWindow = null;
+        });
+        compositeMessageWindow.show();
     });
 
     ipcMain.on(IPCEventType.OPEN_H5_APP_WINDOW, async (event, args) => {

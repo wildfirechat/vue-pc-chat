@@ -106,31 +106,54 @@ export default {
             this.compositeMessage = this.message;
             this.loadMediaCompositeMessage(this.compositeMessage);
             return;
-        } else if(this.favItem) {
+        }
+        if (this.favItem) {
             this.compositeMessage = this.favItem.toMessage();
-        } else {
-        let hash = window.location.hash;
+            if (this.compositeMessage) {
+                store._patchMessage(this.compositeMessage, 0);
+                if (isElectron()) {
+                    document.title = this.compositeMessage.messageContent.title;
+                }
+                this.loadMediaCompositeMessage(this.compositeMessage);
+            }
+            return;
+        }
+        this.loadCompositeFromLocation();
+    },
+
+    watch: {
+        // 独立窗口复用时会换 messageUid（只变 hash），组件不会重新挂载，这里跟着重载
+        '$route'() {
+            if (!this.message && !this.favItem) {
+                this.loadCompositeFromLocation();
+            }
+        },
+    },
+
+    methods: {
+        /** 从当前地址栏 hash 解析并加载聊天记录（独立窗口用） */
+        loadCompositeFromLocation() {
+            let hash = window.location.hash;
             if (hash.indexOf('messageUid=') >= 0) {
                 let messageUid = hash.substring(hash.indexOf('=') + 1);
-                this.compositeMessage = store.getMessageByUid(messageUid);
-                if (!this.compositeMessage) {
-                    wfc.loadRemoteMessage(messageUid, msg => {
-                        this.compositeMessage = msg
-
-                        if (this.compositeMessage) {
-                            store._patchMessage(this.compositeMessage, 0);
-                            if (isElectron()) {
-                                document.title = this.compositeMessage.messageContent.title;
-                            }
-                            this.loadMediaCompositeMessage(this.compositeMessage);
+                let msg = store.getMessageByUid(messageUid);
+                if (!msg) {
+                    wfc.loadRemoteMessage(messageUid, m => {
+                        if (!m) {
+                            return;
                         }
+                        store._patchMessage(m, 0);
+                        if (isElectron()) {
+                            document.title = m.messageContent.title;
+                        }
+                        this.compositeMessage = m;
+                        this.loadMediaCompositeMessage(m);
                     }, err => {
                         console.error('load remote message error', err);
-                    })
-                }
-                if (!this.compositeMessage) {
+                    });
                     return;
                 }
+                this.compositeMessage = msg;
             } else {
                 let faveItemData = hash.substring(hash.indexOf('=') + 1);
                 let favItemRaw = JSON.parse((wfc.b64_to_utf8(wfc.unescape(faveItemData))));
@@ -139,17 +162,14 @@ export default {
                 favItem.favType = favItem.type;
                 this.compositeMessage = favItem.toMessage();
             }
-        }
-        if (this.compositeMessage) {
-            store._patchMessage(this.compositeMessage, 0);
-            if (isElectron()) {
-                document.title = this.compositeMessage.messageContent.title;
+            if (this.compositeMessage) {
+                store._patchMessage(this.compositeMessage, 0);
+                if (isElectron()) {
+                    document.title = this.compositeMessage.messageContent.title;
+                }
+                this.loadMediaCompositeMessage(this.compositeMessage);
             }
-            this.loadMediaCompositeMessage(this.compositeMessage);
-        }
-    },
-
-    methods: {
+        },
         hideCompositeMessagePage() {
             this.$modal.hide('show-composite-message-modal' + '-' + ( this.favItem ? this.favItem.id : stringValue(this.message.messageUid)))
         },
