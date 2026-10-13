@@ -760,6 +760,20 @@ export default {
                 return;
             }
 
+            // 正在语音输入时：先停识别、等最后一段识别结果写进输入框，再发送，
+            // 否则最后半句会被丢掉（对齐 wf-enterprise-chat 4a2073d3）。等待期间连点只发一次。
+            if (this.asrInputState !== 'idle') {
+                if (this._asrSending) {
+                    return;
+                }
+                this._asrSending = true;
+                try {
+                    await this.stopAsrInputAndWait();
+                } finally {
+                    this._asrSending = false;
+                }
+            }
+
             // let text = this.$refs['input'].textContent;
             // if (!text.trim()) {
             //   return;
@@ -782,9 +796,6 @@ export default {
                 || !this.canisend()
                 || !message
             ) return;
-
-            // 发送消息或者 Ctrl+Enter 换行时结束语音输入，避免之后返回的识别结果写入输入框
-            this.cancelAsrInput();
 
             if (e.ctrlKey) {
                 // e.preventDefault();
@@ -1546,6 +1557,7 @@ export default {
                         this.updateAsrText(asrText, text);
                     }
                     this.asrInputState = 'idle';
+                    this._finishAsrStop();
                 },
                 onError: message => {
                     this.$notify({
@@ -1553,6 +1565,7 @@ export default {
                         type: 'error'
                     });
                     this.asrInputState = 'idle';
+                    this._finishAsrStop();
                 },
             });
         },
@@ -1587,6 +1600,15 @@ export default {
                 selection.collapse(node, node.length);
             }
             this.updateInputState();
+            // 识别文本超过输入框高度时，把最新一句滚进可视区
+            if (caretFollows) {
+                this.$nextTick(() => {
+                    let el = this.$refs.input;
+                    if (el) {
+                        el.scrollTop = el.scrollHeight;
+                    }
+                });
+            }
         },
 
         /**
@@ -1598,6 +1620,41 @@ export default {
         },
 
         /**
+         * 停止录音并等最后一段识别结果写入输入框（发送时用）。
+         * 语音服务不响应时最多等 5 秒，到点按输入框已有内容发送（对齐 wf-enterprise-chat 4a2073d3）。
+         */
+        stopAsrInputAndWait() {
+            if (this.asrInputState === 'idle') {
+                return Promise.resolve();
+            }
+            return new Promise(resolve => {
+                this._asrStopResolve = resolve;
+                this._asrStopTimer = setTimeout(() => {
+                    this._asrStopTimer = null;
+                    // 超时：不再等，直接结束语音输入
+                    if (this._asrStopResolve) {
+                        this.asrInputState = 'idle';
+                        this._finishAsrStop();
+                    }
+                }, 5000);
+                this.stopAsrInput();
+            });
+        },
+
+        /** 语音输入会话真的结束了（识别结果返回 / 出错 / 超时 / 取消）时，唤醒等待发送的一方 */
+        _finishAsrStop() {
+            if (this._asrStopTimer) {
+                clearTimeout(this._asrStopTimer);
+                this._asrStopTimer = null;
+            }
+            if (this._asrStopResolve) {
+                let resolve = this._asrStopResolve;
+                this._asrStopResolve = null;
+                resolve();
+            }
+        },
+
+        /**
          * 结束语音输入，丢弃还没返回的识别结果，已写入输入框的文本保持不变
          */
         cancelAsrInput() {
@@ -1605,6 +1662,7 @@ export default {
                 this.asrManager.cancelRecognition();
                 this.asrInputState = 'idle';
             }
+            this._finishAsrStop();
         },
 
         setupConversationInput() {
