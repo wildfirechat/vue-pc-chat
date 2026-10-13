@@ -9,7 +9,7 @@
                 <label style="max-width: 200px; text-overflow: ellipsis" class="single-line">{{ $t('common.wfc_id') + ': ' + userInfo.name }}</label>
             </div>
             <div>
-                <img class="avatar" draggable="false" v-bind:src="userInfo.portrait" @click="pickFile"/>
+                <img class="avatar" draggable="false" v-bind:src="userInfo.portrait" @click="onAvatarClick"/>
                 <input v-if="enableUpdatePortrait" ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
                        accept="image/png, image/jpeg"
                        style="display: none">
@@ -72,6 +72,7 @@ import ModifyMyInfoType from '../../../wfc/model/modifyMyInfoType';
 import IpcSub from '../../../ipc/ipcSub';
 import WfcUtil from '../../../wfc/util/wfcUtil';
 import Config from '../../../config';
+import {previewPortrait} from '../../util/portraitPreview';
 
 export default {
     name: 'UserCardView',
@@ -165,6 +166,14 @@ export default {
                 return;
             }
             this.$refs['fileInput'].click();
+        },
+        /** 点头像：自己的换头像，别人的看大图（对齐 wf-enterprise-chat 7cfc2b58、96182762） */
+        onAvatarClick() {
+            if (this.enableUpdatePortrait) {
+                this.pickFile();
+                return;
+            }
+            previewPortrait(this.userInfo.portrait, this.userInfo.displayName);
         },
         onPickFile(event) {
             // this.batchProcess(e.target.files[0]);
