@@ -176,7 +176,7 @@ export default {
             shouldShowAllMessageHit: false,
             employeeSearchResult: [],
             messageHitResults: [],
-            rootOrgId: null,
+            rootOrgIds: [],
             floatingStyle: {
                 left: '0px',
                 top: '0px',
@@ -191,9 +191,8 @@ export default {
         if (organizationServerApi.isServiceAvailable) {
             try {
                 const orgs = await organizationServerApi.getRootOrganization();
-                if (orgs && orgs.length > 0) {
-                    this.rootOrgId = orgs[0].id;
-                }
+                // 可能配置了多个根组织：全局搜索要跨所有根组织找人
+                this.rootOrgIds = (orgs || []).map(o => o.id).filter(id => id !== undefined && id !== null);
             } catch (e) {
                 // org service not available
             }
@@ -520,19 +519,36 @@ export default {
         },
 
         async searchEmployee(keyword) {
-            if (!keyword || !this.rootOrgId) {
+            if (!keyword || !this.rootOrgIds.length) {
                 this.employeeSearchResult = [];
                 return;
             }
             if (!organizationServerApi.isServiceAvailable) {
                 return;
             }
-            try {
-                this.employeeSearchResult = await organizationServerApi.searchEmployee(this.rootOrgId, keyword);
-            } catch (e) {
-                console.error('search employee error', e);
-                this.employeeSearchResult = [];
-            }
+            // 遍历所有根组织并合并去重：只搜第一个根组织会在多根部署时漏人
+            // （对齐 wf-enterprise-chat 8f658df9）
+            const results = await Promise.all(this.rootOrgIds.map(async orgId => {
+                try {
+                    return await organizationServerApi.searchEmployee(orgId, keyword);
+                } catch (e) {
+                    console.error('search employee error, orgId=', orgId, e);
+                    return [];
+                }
+            }));
+            const seen = new Set();
+            const merged = [];
+            results.forEach(list => {
+                (list || []).forEach(employee => {
+                    const key = employee && (employee.employeeId || employee.id || employee.name);
+                    if (!key || seen.has(key)) {
+                        return;
+                    }
+                    seen.add(key);
+                    merged.push(employee);
+                });
+            });
+            this.employeeSearchResult = merged;
         },
 
         showAllOrgEmployee() {
