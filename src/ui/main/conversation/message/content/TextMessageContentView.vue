@@ -1,7 +1,12 @@
 <template>
     <div class="text-message-container"
          v-bind:class="{out:message.direction === 0}">
-        <p class="text" v-html="this.$xss(this.textContent)" @click="handleLinkClick" @mouseup="mouseUp" @contextmenu="preventContextMenuTextSelection"></p>
+        <p class="text" v-html="this.$xss(this.textContent)" @click="handleLinkClick" @dblclick.stop="viewLargeText" @mouseup="mouseUp" @contextmenu="preventContextMenuTextSelection"></p>
+        <!-- 双击文本消息进入大字号查看页（对齐 wf-enterprise-chat ef62e540） -->
+        <div v-if="showLargeText" class="large-text-overlay" @click="showLargeText = false">
+            <div class="large-text-content" v-html="this.$xss(this.textContent)" @click.stop></div>
+            <p class="large-text-hint">点击任意处关闭</p>
+        </div>
     </div>
 </template>
 
@@ -24,12 +29,20 @@ export default {
     data() {
         return {
             textSelected: false,
+            showLargeText: false,
         }
     },
     mounted() {
     },
 
     methods: {
+        /** 双击进大字号查看页；有选中文本时不弹，避免和选择冲突 */
+        viewLargeText() {
+            if (window.getSelection() && window.getSelection().toString()) {
+                return;
+            }
+            this.showLargeText = true;
+        },
         mouseUp(event) {
             let selection = window.getSelection().toString();
             this.textSelected = !!selection;
@@ -169,6 +182,52 @@ export default {
 
 .text-message-container .text >>> .emoji {
     vertical-align: middle;
+}
+
+/* 双击文本消息的大字号查看页（对齐 wf-enterprise-chat ef62e540） */
+.large-text-overlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3000;
+    background-color: rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    cursor: zoom-out;
+}
+
+.large-text-content {
+    max-width: 760px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 28px 32px;
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    border-radius: var(--radius-md);
+    font-size: 20px;
+    line-height: 1.8;
+    word-break: break-word;
+    user-select: text;
+    cursor: auto;
+}
+
+.large-text-content >>> a {
+    white-space: normal;
+}
+
+.large-text-content >>> img {
+    max-width: 100% !important;
+}
+
+.large-text-hint {
+    margin-top: 14px;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: var(--font-size-xs);
 }
 
 </style>
