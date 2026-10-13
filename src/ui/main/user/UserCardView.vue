@@ -17,7 +17,8 @@
         </div>
         <div class="content">
             <ul>
-                <li v-if="isFriend">
+                <!-- 文件传输助手不显示备注 -->
+                <li v-if="isFriend && !isFileHelper">
                     <label>{{ $t('common.alias') }}</label>
                     <div class="input-wrapper">
                         <input @click.stop="" type="text"
@@ -43,11 +44,11 @@
                 <i class="icon-ion-ios-chatboxes-outline"></i>
                 发消息
             </div>
-            <div class="i-button-wrapper i-button-large" v-if="!isSelf" @click.prevent="startAudioCall">
+            <div class="i-button-wrapper i-button-large" v-if="!isSelf && !isFileHelper" @click.prevent="startAudioCall">
                 <i class="icon-ion-ios-telephone-outline"></i>
                 语音通话
             </div>
-            <div class="i-button-wrapper i-button-large" v-if="!isSelf" @click.prevent="startVideoCall">
+            <div class="i-button-wrapper i-button-large" v-if="!isSelf && !isFileHelper" @click.prevent="startVideoCall">
                 <i class="icon-ion-ios-videocam-outline"></i>
                 视频通话
             </div>
@@ -70,6 +71,7 @@ import ModifyMyInfoEntry from '../../../wfc/model/modifyMyInfoEntry';
 import ModifyMyInfoType from '../../../wfc/model/modifyMyInfoType';
 import IpcSub from '../../../ipc/ipcSub';
 import WfcUtil from '../../../wfc/util/wfcUtil';
+import Config from '../../../config';
 
 export default {
     name: 'UserCardView',
@@ -194,6 +196,10 @@ export default {
         },
         isSelf() {
             return this.userInfo.uid === wfc.getUserId();
+        },
+        // 文件传输助手是服务端内置机器人：不查好友/组织，动作区只留发消息（对齐 wf-enterprise-chat 9a5a67b0）
+        isFileHelper() {
+            return this.userInfo.uid === Config.FILE_HELPER_ID;
         },
         isExternalDomainUser() {
             let user = this.userInfo;
