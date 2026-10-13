@@ -85,6 +85,10 @@
                         <span class="edit-icon">&#9998;</span>
                     </div>
                 </label>
+                <div class="group-todo-entry" @click="showGroupQrCode">
+                    <span>群二维码</span>
+                    <i class="icon-ion-ios-arrow-right"></i>
+                </div>
                 <label>
                     {{ $t('group.alias') }}
                     <div class="input-wrapper">
@@ -137,6 +141,8 @@ import MessageContentMediaType from "../../../wfc/messages/messageContentMediaTy
 import MessageContentType from "../../../wfc/messages/messageContentType";
 import {isElectron} from "../../../platform";
 import {showComplainAlert} from "./conversationComplainHelper";
+import QRCodeDialogView from "../../common/QRCodeDialogView.vue";
+import WfcScheme from "../../../wfcScheme";
 
 export default {
     name: "GroupConversationInfoView",
@@ -188,6 +194,20 @@ export default {
 
     components: { UserCardView },
     methods: {
+        /** 群二维码：群资料入口，扫码可加群（对齐 wf-enterprise-chat c50b7d41、2903246f） */
+        showGroupQrCode() {
+            this.$modal.show(QRCodeDialogView, {
+                name: 'group-qrcode-modal',
+                title: '群二维码',
+                content: WfcScheme.QR_CODE_PREFIX_GROUP + this.conversationInfo.conversation.target,
+            }, null, {
+                name: 'group-qrcode-modal',
+                width: 360,
+                height: 460,
+                clickToClose: true,
+            });
+        },
+
         onReceiveMessage(msg, hasMore) {
             if (msg.conversation.equal(this.conversationInfo.conversation) && msg.messageContent.type === MessageContentType.RejectJoinGroup) {
                 let content = msg.messageContent;
@@ -765,6 +785,21 @@ export default {
 
 .conversation-action-item:active {
     background: var(--background-item-placeholder);
+}
+
+.group-info-section .group-todo-entry {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.group-info-section .group-todo-entry i {
+    color: var(--text-tertiary);
 }
 
 .group-info-section .switch {
