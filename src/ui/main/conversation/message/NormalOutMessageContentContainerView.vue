@@ -149,8 +149,16 @@ export default {
             console.log('closeUserCard', this.$refs["userCardTippy"]);
             this.$refs["userCardTippy"]._tippy.hide();
         },
-        resend() {
-            wfc.deleteMessage(this.message.messageId);
+        async resend() {
+            // 先删除旧的失败消息，等删除事件处理完再发新的。
+            // 原来两件事并发，删除事件可能作用到刚重新发送、messageId 相同的新消息上，
+            // 表现就是「点重发后消息在界面上消失，其实已经发成功」（对齐 wf-enterprise-chat 1bae684d）
+            try {
+                await wfc.deleteMessage(this.message.messageId);
+            } catch (e) {
+                console.warn('resend delete old message failed', e);
+            }
+            await new Promise(resolve => setTimeout(resolve, 0));
             wfc.sendMessage(this.message);
         },
         openMessageContextMenu(event, message) {
