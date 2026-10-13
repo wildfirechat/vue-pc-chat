@@ -75,7 +75,9 @@
                         <ul>
                             <li v-for="fr in computedFileRecords"
                                 :key="fr.messageUid.toString()">
-                                <div class="file-record-item" @click="clickFile(fr)">
+                                <div class="file-record-item"
+                                     @click="clickFile(fr)"
+                                     @contextmenu.prevent="showFileMenu($event, fr)">
                                     <img :src="require(`@/assets/images/filetypes/${fr._fileIconName}`)" alt="">
                                     <div class="file-name-sender-container">
                                         <p class="name single-line"> {{ fr.name }}</p>
@@ -89,6 +91,17 @@
                                 </div>
                             </li>
                         </ul>
+                        <vue-context ref="fileMenu" v-slot="{data: fr}" :close-on-scroll="true">
+                            <li v-if="fr && fr.url">
+                                <a @click.prevent="downloadFile(fr)">下载</a>
+                            </li>
+                            <li v-if="fr">
+                                <a @click.prevent="forwardFile(fr)">{{ $t('common.forward') }}</a>
+                            </li>
+                            <li v-if="fr && canDelete(fr)">
+                                <a class="danger" @click.prevent="deleteFile(fr)">{{ $t('common.delete') }}</a>
+                            </li>
+                        </vue-context>
                         <infinite-loading v-if="!fileQuery" :identifier="loadingIdentifier" force-use-infinite-wrapper
                                           direction="bottom"
                                           @infinite="infiniteHandler">
@@ -113,6 +126,10 @@ import IpcEventType from "../../ipcEventType";
 import Config from "../../config";
 import { markRaw } from 'vue';
 import ConversationItemLiteView from '../main/conversationList/ConversationItemLiteView.vue';
+import wfc from "../../wfc/client/wfc";
+import Message from "../../wfc/messages/message";
+import FileMessageContent from "../../wfc/messages/fileMessageContent";
+import ForwardType from "../main/conversation/message/forward/ForwardType";
 
 export default {
     name: "FileRecordPage",
@@ -265,6 +282,10 @@ export default {
         },
 
         clickFile(fileRecord) {
+            this.downloadFile(fileRecord);
+        },
+
+        downloadFile(fileRecord) {
             if (isElectron()) {
                 ipcRenderer.send(IpcEventType.DOWNLOAD_FILE, {
                     // TODO -1时，不通知进度
@@ -276,6 +297,49 @@ export default {
                     windowId: currentWindow.getMediaSourceId(),
                 });
             }
+        },
+
+        showFileMenu(event, fileRecord) {
+            if (!fileRecord) {
+                return;
+            }
+            this.$refs.fileMenu.open(event, fileRecord);
+        },
+
+        /** 只有自己发起的文件记录才能删除（与服务端限制一致） */
+        canDelete(fileRecord) {
+            return !!fileRecord && fileRecord.userId === wfc.getUserId();
+        },
+
+        forwardFile(fileRecord) {
+            let message = new Message(fileRecord.conversation,
+                new FileMessageContent('', Config.urlRedirect(fileRecord.url), fileRecord.name, fileRecord.size));
+            this.$forwardMessage({
+                forwardType: ForwardType.NORMAL,
+                messages: [message],
+            });
+        },
+
+        deleteFile(fileRecord) {
+            this.$alert({
+                showIcon: false,
+                content: '确定删除该文件记录？删除后可以在聊天记录中重新找到它。',
+                confirmText: '删除',
+                cancelText: '取消',
+                confirmCallback: () => {
+                    wfc.deleteFileRecord(fileRecord.messageUid, () => {
+                        this.fileRecords = this.fileRecords.filter(fr => fr.messageUid !== fileRecord.messageUid);
+                        this.searchFileRecordResult = this.searchFileRecordResult.filter(fr => fr.messageUid !== fileRecord.messageUid);
+                        this.$notify({title: '提示', text: '文件记录已删除', type: 'success'});
+                    }, (err) => {
+                        console.error('delete file record error', err);
+                        this.$notify({title: '提示', text: '删除文件记录失败', type: 'warn'});
+                    });
+                },
+                cancelCallback: () => {
+                    // do nothing
+                }
+            });
         },
         cancelSearch() {
             this.$refs['input'].innerHTML = '';
