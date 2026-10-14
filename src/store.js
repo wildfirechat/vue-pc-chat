@@ -610,6 +610,9 @@ let store = {
             this.state.misc.subWindowLoadDataOptions = subWindowLoadDataOptions ? subWindowLoadDataOptions : {};
 
             if (!isMainWindow && wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected) {
+                // 子窗口收不到连接成功事件，这两项也先读一次（设置窗口要用）
+                this.state.misc.isCommercialServer = wfc.isCommercialServer();
+                this.state.misc.isDisableSyncDraft = wfc.isDisableSyncDraft();
                 // 根据 subWindowLoadDataOptions 配置去加载
                 this._loadDefaultData();
             }
@@ -617,6 +620,42 @@ let store = {
         }
         this.state.misc.isMainWindow = isMainWindow;
         window.__cw = currentWindow;
+        this._listenLocalSettingChanges();
+    },
+
+    /**
+     * PC 设置在独立窗口里改，改动只写进 localStorage。别的窗口靠 storage 事件（只发给其他窗口）同步过来，实时生效
+     */
+    _listenLocalSettingChanges() {
+        if (this._localSettingListener) {
+            return;
+        }
+        const userSettingKeys = ['notification', 'notificationDetail', 'closeWindowToExit', 'autoLogin', 'showSendButton', 'conversationListFilter'];
+        this._localSettingListener = (e) => {
+            let key = e.key;
+            if (!key || e.storageArea !== localStorage) {
+                return;
+            }
+            if (key === 'theme') {
+                this.state.misc.theme = e.newValue || 'system';
+                this.applyTheme();
+            } else if (key === 'fontScale') {
+                this.state.misc.fontScale = parseFloat(e.newValue) || 1;
+                this.applyFontScale();
+            } else if (key === 'minimizable') {
+                this.state.misc.enableMinimize = e.newValue === null || e.newValue === '1';
+                if (isElectron()) {
+                    currentWindow.minimizable = this.state.misc.enableMinimize;
+                }
+            } else {
+                // 键是 <userId>-<设置项>；先比设置项，子窗口里 getUserId 是同步 IPC，别的键不用去调
+                let index = key.lastIndexOf('-');
+                if (index > 0 && userSettingKeys.includes(key.substring(index + 1)) && key.substring(0, index) === wfc.getUserId()) {
+                    this._loadUserLocalSettings();
+                }
+            }
+        };
+        window.addEventListener('storage', this._localSettingListener);
     },
 
     _loadImageThumbPara() {

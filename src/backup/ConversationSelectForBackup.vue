@@ -80,6 +80,7 @@ import {app} from "../platform";
 import ConversationBackupItemView from "./ConversationBackupItemView.vue";
 import store from "../store";
 import {stringValue} from "../wfc/util/longUtil";
+import {setBackupRunning} from "./backupRunning";
 
 export default {
     name: "ConversationSelectForBackup",
@@ -109,6 +110,19 @@ export default {
         }
     },
     mounted() {
+    },
+    beforeUnmount() {
+        setBackupRunning(this, null);
+    },
+    computed: {
+        backupRunning() {
+            return this.showProgress && !this.backupCompleted && !this.isCancelled;
+        },
+    },
+    watch: {
+        backupRunning(running) {
+            setBackupRunning(this, running ? 'backup' : null);
+        },
     },
     methods: {
 

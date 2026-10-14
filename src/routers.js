@@ -124,6 +124,12 @@ const routers = [
         component: MessageHistoryPage,
     },
     {
+        // PC 设置独立窗口（侧栏「更多」→ 设置）；网页版仍是主界面里的 /home/setting
+        name: 'setting-window',
+        path: '/setting',
+        component: SettingPage,
+    },
+    {
         name: 'conversation-message-history',
         path: '/conversation-message-history',
         component: ConversationMessageHistoryPage,

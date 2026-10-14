@@ -201,6 +201,8 @@ let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
 let collectionWindow;
 let pollWindow;
+// 设置：单个独立窗口，再次打开时置顶
+let settingsWindow = null;
 let conversationWindowMap = new Map();
 let screenshots;
 let tray;
@@ -817,19 +819,6 @@ const createMainWindow = async () => {
         }
     });
 
-    const isInternalUrl = (url) => {
-        if (!url || url === 'about:blank') {
-            return true;
-        }
-        if (process.env.WEBPACK_DEV_SERVER_URL && url.startsWith(process.env.WEBPACK_DEV_SERVER_URL)) {
-            return true;
-        }
-        if (url.startsWith('app://')) {
-            return true;
-        }
-        return false;
-    }
-
     // open url in default browser, electron 22-
     mainWindow.webContents.on('will-navigate', (event, url) => {
         event.preventDefault(); // 必须拦截，防止应用刷新/跳转
@@ -1205,6 +1194,48 @@ const createMainWindow = async () => {
         }
     });
 
+    // 设置等页面的独立窗口。URL 由渲染进程拼好（如 #/setting），单实例复用
+    const showPageWindow = (current, url, width, height, minWidth, minHeight, onClosed) => {
+        if (current && !current.isDestroyed()) {
+            if (current.webContents.getURL() !== url) {
+                current.loadURL(url);
+            }
+            current.show();
+            current.focus();
+            if (current.moveTop) {
+                current.moveTop();
+            }
+            return current;
+        }
+        let win = createWindow(url, width, height, minWidth, minHeight, true, false);
+        // 和主窗口一样：页面里的链接不许把窗口导走，外部地址交给系统浏览器
+        win.webContents.on('will-navigate', (e, navUrl) => {
+            e.preventDefault();
+            if (!isInternalUrl(navUrl)) {
+                shell.openExternal(navUrl);
+            }
+        });
+        // 用 closed：设置窗口备份中会在 beforeunload 里拦下关窗，close 事件发出时窗口不一定真关了
+        win.on('closed', onClosed);
+        clampToScreen(win, mainWindow);
+        win.show();
+        return win;
+    };
+
+    ipcMain.on(IPCEventType.SHOW_SETTINGS_WINDOW, (event, args) => {
+        // 窗口开着 node，只加载应用自己的页面
+        if (!args || !args.url || !isInternalUrl(args.url)) {
+            return;
+        }
+        settingsWindow = showPageWindow(settingsWindow, args.url, 880, 640, 720, 520, () => {
+            settingsWindow = null;
+        });
+    });
+
+    ipcMain.on(IPCEventType.CLOSE_SUB_WINDOWS, () => {
+        closeSubWindows();
+    });
+
     ipcMain.on(IPCEventType.SHOW_COLLECTION_WINDOW, async (event, args) => {
         console.log(`on ${IPCEventType.SHOW_COLLECTION_WINDOW}`, collectionWindow, args)
         // URL 由渲染进程拼接好传入，便于 web 端复用
@@ -1313,6 +1344,10 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on(IPCEventType.LOGOUT, (event, args) => {
+        closeSubWindows();
+        // 可能是在设置窗口里退出的，把主窗口（登录页）带到前面
+        mainWindow.show();
+        mainWindow.focus();
         mainWindowState.unmanage();
         mainWindow.resizable = isDevelopment;
         mainWindow.maximizable = false;
@@ -1407,6 +1442,69 @@ const createMainWindow = async () => {
 };
 
 // TODO titleBarStyle
+// 把新窗口放到参考窗口附近，并保证整窗落在某个显示器的工作区里
+function clampToScreen(win, refWin) {
+    try {
+        const {screen} = require('electron');
+        const bounds = win.getBounds();
+        let display = null;
+        if (refWin && !refWin.isDestroyed()) {
+            display = screen.getDisplayMatching(refWin.getBounds());
+        }
+        if (!display) {
+            display = screen.getPrimaryDisplay();
+        }
+        const area = display.workArea;
+        const x = refWin && !refWin.isDestroyed()
+            ? Math.round(refWin.getBounds().x + 40)
+            : Math.round(area.x + (area.width - bounds.width) / 2);
+        const y = refWin && !refWin.isDestroyed()
+            ? Math.round(refWin.getBounds().y + 40)
+            : Math.round(area.y + (area.height - bounds.height) / 2);
+        win.setBounds({
+            x: Math.max(area.x, Math.min(x, area.x + area.width - bounds.width)),
+            y: Math.max(area.y, Math.min(y, area.y + area.height - bounds.height)),
+            width: Math.min(bounds.width, area.width),
+            height: Math.min(bounds.height, area.height),
+        });
+    } catch (e) {
+        console.warn('clampToScreen failed', e && e.message);
+    }
+}
+
+// 放在模块级：主窗口和 createWindow 创建的子窗口都要用
+function isInternalUrl(url) {
+    if (!url || url === 'about:blank') {
+        return true;
+    }
+    if (process.env.WEBPACK_DEV_SERVER_URL && url.startsWith(process.env.WEBPACK_DEV_SERVER_URL)) {
+        return true;
+    }
+    if (url.startsWith('app://')) {
+        return true;
+    }
+    return false;
+}
+
+// 退出登录、被踢下线等回到登录页时，关掉所有子窗口：里面都是上一个账号的东西（对齐 wf-enterprise-chat cc6e5d78）。
+// 通话窗口由通话自己收尾（avenginekitproxy.forceCloseVoipWindow），截图窗口是复用的，都不动
+function closeSubWindows() {
+    BrowserWindow.getAllWindows().forEach(win => {
+        if (win === mainWindow || win.isDestroyed()) {
+            return;
+        }
+        if (screenshots && win === screenshots.$win) {
+            return;
+        }
+        if (win.webContents.getURL().indexOf('#/voip') >= 0) {
+            return;
+        }
+        // 设置窗口备份中会在 beforeunload 里拦下关窗，这里不管，直接关
+        win.webContents.once('will-prevent-unload', e => e.preventDefault());
+        win.close();
+    });
+}
+
 function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false, minimizable = true, extraOptions = {}) {
     let win = new BrowserWindow(
         {

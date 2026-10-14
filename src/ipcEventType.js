@@ -27,6 +27,10 @@ const IpcEventType = {
     GET_SOURCE: 'get-source',
     SHOW_COLLECTION_WINDOW: 'show-collection-window',
     SHOW_POLL_WINDOW: 'show-poll-window',
+    // 设置独立窗口（侧栏「更多」→ 设置，对齐 wf-enterprise-chat cc6e5d78）
+    SHOW_SETTINGS_WINDOW: 'show-settings-window',
+    // 退出登录、被踢下线等回到登录页时，关掉所有子窗口
+    CLOSE_SUB_WINDOWS: 'close-sub-windows',
     OPEN_MAIN_DEV_TOOLS: 'open-main-dev-tools',
     CHECK_FOR_UPDATES: 'check-for-updates',
     // 主进程发起的检查更新（菜单、托盘、启动时），交给主窗口按双网选好更新地址后，再发 CHECK_FOR_UPDATES

@@ -1,5 +1,5 @@
 <template>
-    <section class="setting-container">
+    <section class="setting-container" :class="{standalone}">
         <!-- 左侧菜单栏 -->
         <div class="setting-menu-panel">
             <!-- 设置标题头部 -->
@@ -32,7 +32,8 @@
             </ul>
         </div>
 
-        <ResizeBar/>
+        <!-- 独立窗口里不拖：分栏宽度是全局共享的，拖了会连主窗口的列表一起变 -->
+        <ResizeBar v-if="!standalone"/>
 
         <!-- 右侧内容区域 -->
         <div class="setting-content-panel">
@@ -340,6 +341,7 @@ import updateServerApi from '../../../api/updateServerApi';
 import ResizeBar from '../../common/ResizeBar.vue';
 import UserSettingScope from '../../../wfc/client/userSettingScope';
 import {isVoipRingEnabled} from '../../voip/voipRing';
+import {runningBackupKind} from '../../../backup/backupRunning';
 
 export default {
     name: 'SettingPage',
@@ -348,6 +350,8 @@ export default {
             sharedMiscState: store.state.misc,
             sharedContactState: store.state.contact,
             openPcChatTimeoutHandler: 0,
+            // 备份中关窗，用户已确认中断
+            closeConfirmed: false,
             receiveVoipNotification: isVoipRingEnabled(),
             appVersion: '',
             langs: [{ lang: 'zh-CN', name: '简体中文' }, { lang: 'zh-TW', name: '繁體中文' }, { lang: 'en', name: 'English' }],
@@ -584,19 +588,57 @@ export default {
 
         handleLogoError(e) {
             e.target.style.display = 'none';
-        }
+        },
+
+        /**
+         * 本地备份 / 恢复跑在设置窗口里，关窗就中断了，关之前先拦下（对齐 wf-enterprise-chat cc6e5d78）。
+         * 退出登录时主进程关子窗口不受这里影响
+         */
+        onBeforeUnload(e) {
+            let kind = runningBackupKind();
+            if (!kind || this.closeConfirmed) {
+                return;
+            }
+            // Electron 里 returnValue 不是 undefined 就会取消关窗，不弹系统确认框
+            e.returnValue = false;
+            if (kind === 'restore') {
+                // 恢复中途不能取消，恢复界面也不让取消
+                this.$notify({text: '正在恢复聊天记录，请等恢复完成后再关闭', type: 'warn'});
+                return;
+            }
+            this.$alert({
+                name: 'close-setting-window-alert',
+                content: '正在备份聊天记录，关闭窗口会中断备份，确定关闭吗？',
+                confirmText: '关闭',
+                cancelText: '取消',
+                confirmButtonType: 'danger',
+                confirmCallback: () => {
+                    this.closeConfirmed = true;
+                    window.close();
+                },
+            });
+        },
     },
 
     async mounted() {
         window.addEventListener('blur', this.blurListener)
+        if (this.standalone) {
+            document.title = this.$t('setting.setting');
+            window.addEventListener('beforeunload', this.onBeforeUnload);
+        }
         if (isElectron()) {
             this.appVersion = await ipcRenderer.invoke('get-app-version');
         }
     },
     beforeUnmount() {
         window.removeEventListener('blur', this.blurListener)
+        window.removeEventListener('beforeunload', this.onBeforeUnload);
     },
     computed: {
+        // PC 设置独立窗口（#/setting）；网页版是主界面里的 /home/setting
+        standalone() {
+            return this.$route.path === '/setting';
+        },
         currentLang() {
             let lang = getItem('lang')
             lang = lang ? lang : 'zh-CN';
@@ -674,6 +716,17 @@ export default {
     border-bottom-right-radius: var(--main-border-radius);
     background: var(--background-primary);
     overflow: hidden;
+}
+
+/* 独立窗口：铺满窗口，左栏固定宽度 */
+.setting-container.standalone {
+    height: 100vh;
+    border-radius: 0;
+}
+
+.setting-container.standalone .setting-menu-panel {
+    width: 200px;
+    flex: 0 0 200px;
 }
 
 /* --- 左侧选项栏 --- */

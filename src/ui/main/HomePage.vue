@@ -56,12 +56,6 @@
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home/fav'}"></i>
                             </div>
                         </li>
-                        <li v-if="sharedMiscState.isElectron && sharedMiscState.isCommercialServer">
-                            <div class="i-button-wrapper" @click="go2Files">
-                                <i class="icon-ion-ios-folder"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/files'}"></i>
-                            </div>
-                        </li>
                         <li v-if="sharedMiscState.enableOpenWorkSpace">
                             <div class="i-button-wrapper" @click="go2Workspace">
                                 <i class="icon-ion-code-working"
@@ -80,16 +74,29 @@
                                    v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/ai'}"></i>
                             </div>
                         </li>
+                        <!-- 底部「更多」（参考微信 / wf-enterprise-chat）：放不常用的入口，PC 上文件、设置都开独立窗口 -->
                         <li>
-                            <div class="i-button-wrapper"
-                                 v-show="this.$router.currentRoute.value.path !== '/home/ai'"
-                                 @click="go2Setting">
-                                <i class="icon-ion-android-settings"
-                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"></i>
+                            <div ref="moreButton" class="i-button-wrapper" title="更多" @click="toggleMoreMenu">
+                                <i class="icon-ion-navicon-round"
+                                   v-bind:class="{active : showMoreMenu || this.$router.currentRoute.value.path === '/home/setting'}"></i>
                             </div>
                         </li>
                     </ul>
                 </nav>
+                <!-- 菜单开在按钮右边，底边和按钮对齐往上长 -->
+                <Teleport to="body">
+                    <div v-if="showMoreMenu" class="more-menu" :style="moreMenuStyle">
+                        <div v-if="sharedMiscState.isElectron && sharedMiscState.isCommercialServer"
+                             class="more-menu-item" @click="onMoreMenuItem(go2Files)">
+                            <i class="icon-ion-ios-folder"></i>
+                            <span>文件</span>
+                        </div>
+                        <div class="more-menu-item" @click="onMoreMenuItem(go2Setting)">
+                            <i class="icon-ion-android-settings"></i>
+                            <span>{{ $t('setting.setting') }}</span>
+                        </div>
+                    </div>
+                </Teleport>
             </section>
             <router-view v-slot="{ Component, route }">
                 <keep-alive v-show="route.path !== '/home/ai'">
@@ -146,6 +153,7 @@ import store from "../../store";
 import wfc from "../../wfc/client/wfc";
 import EventType from "../../wfc/client/wfcEvent";
 import ConnectionStatus from "../../wfc/client/connectionStatus";
+import {openSettingsWindow} from "../util/pageWindow";
 import ElectronWindowsControlButtonView from "../common/ElectronWindowsControlButtonView.vue";
 import {removeItem} from "../util/storageHelper";
 import {ipcRenderer, app} from "../../platform";
@@ -179,6 +187,8 @@ export default {
             conferenceMinimized: false,
             conferenceMinimizing: false,
             voipTransformOrigin: '5% 95%',
+            showMoreMenu: false,
+            moreMenuStyle: {},
         };
     },
 
@@ -298,7 +308,32 @@ export default {
             }
             this.isSetting = false;
         },
+        toggleMoreMenu() {
+            this.showMoreMenu = !this.showMoreMenu;
+            if (this.showMoreMenu) {
+                const rect = this.$refs.moreButton.getBoundingClientRect();
+                this.moreMenuStyle = {
+                    left: `${rect.right + 8}px`,
+                    bottom: `${window.innerHeight - rect.bottom}px`,
+                };
+            }
+        },
+        closeMoreMenu(e) {
+            if (e && e.target instanceof Node && this.$refs.moreButton && this.$refs.moreButton.contains(e.target)) {
+                return;
+            }
+            this.showMoreMenu = false;
+        },
+        onMoreMenuItem(action) {
+            this.showMoreMenu = false;
+            action();
+        },
         go2Setting() {
+            // PC 设置是独立窗口（对齐 wf-enterprise-chat cc6e5d78），网页版还是主界面里的页面
+            if (isElectron()) {
+                openSettingsWindow();
+                return;
+            }
             if (this.$router.currentRoute.path === '/home/setting') {
                 return;
             }
@@ -324,6 +359,8 @@ export default {
                 if (this.$router.currentRoute.path !== '/') {
                     this.$router.replace({path: "/"});
                 }
+                // 回登录页了，子窗口里都是上一个账号的东西，全部关掉
+                isElectron() && ipcRenderer.send(IpcEventType.CLOSE_SUB_WINDOWS);
                 if (status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
                     || status === ConnectionStatus.ConnectionStatusLogout
                     || status === ConnectionStatus.ConnectionStatusTokenIncorrect
@@ -406,6 +443,14 @@ export default {
     },
 
     mounted() {
+        document.addEventListener('click', this.closeMoreMenu);
+        window.addEventListener('resize', this.closeMoreMenu);
+        window.addEventListener('contextmenu', this.closeMoreMenu);
+        window.addEventListener('blur', this.closeMoreMenu);
+        if (isElectron()) {
+            // macOS 菜单栏「偏好设置」（Cmd+,）
+            ipcRenderer.on('show-settings', this.go2Setting);
+        }
         if (!isElectron()) {
             this.$eventBus.$on('conference-slider-opened', () => { this.conferenceSliderOpen = true; });
             this.$eventBus.$on('conference-slider-closed', () => { this.conferenceSliderOpen = false; });
@@ -446,6 +491,13 @@ export default {
         }
     },
     unmounted() {
+        document.removeEventListener('click', this.closeMoreMenu);
+        window.removeEventListener('resize', this.closeMoreMenu);
+        window.removeEventListener('contextmenu', this.closeMoreMenu);
+        window.removeEventListener('blur', this.closeMoreMenu);
+        if (isElectron()) {
+            ipcRenderer.removeListener('show-settings', this.go2Setting);
+        }
         if (!isElectron()) {
             this.$eventBus.$off('conference-slider-opened');
             this.$eventBus.$off('conference-slider-closed');
@@ -554,6 +606,46 @@ i {
 
 i.active {
     color: var(--accent-color-active);
+}
+
+/* 侧栏「更多」菜单（Teleport 到 body，样式同搜索栏「+」菜单） */
+.more-menu {
+    position: fixed;
+    z-index: 10000;
+    min-width: 120px;
+    padding: 4px;
+    font-size: var(--font-size-base);
+    background-color: var(--background-tooltip);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-tooltip);
+}
+
+.more-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: .4rem .85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--duration-fast), color var(--duration-fast);
+}
+
+.more-menu-item i {
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.more-menu-item:hover {
+    background-color: var(--accent-color);
+    color: var(--text-on-accent);
+}
+
+.more-menu-item:hover i {
+    color: var(--text-on-accent);
 }
 
 .drag-area {

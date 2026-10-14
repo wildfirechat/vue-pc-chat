@@ -78,6 +78,7 @@ const crypto = require('crypto');
 import wfc from "../wfc/client/wfc";
 import {app} from "../platform";
 import Message from "../wfc/messages/message";
+import {setBackupRunning} from "./backupRunning";
 
 export default {
     name: "BackupRestoreProgressView",
@@ -119,6 +120,14 @@ export default {
     },
     mounted() {
         this.loadBackupInfo();
+    },
+    beforeUnmount() {
+        setBackupRunning(this, null);
+    },
+    watch: {
+        isRestoring(restoring) {
+            setBackupRunning(this, restoring ? 'restore' : null);
+        },
     },
     methods: {
         loadBackupInfo() {
