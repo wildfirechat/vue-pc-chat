@@ -5,8 +5,8 @@
         </div>
         <nav class="breadcrumb">
             <ul>
-                <li v-for="org in currentOrganizationPathList" :key="org.id">
-                    <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
+                <li v-for="(org, index) in currentOrganizationPathList" :key="org.id">
+                    <a href="#" @click.prevent="backToOrganization(index)">{{ org.name }}</a>
                 </li>
             </ul>
             <div class="search-action" :class="{ active: searchActive }">
@@ -28,9 +28,9 @@
                 <template v-if="!searchMode">
                     <li v-for="(org, index) in subOrganizations" :key="org.id">
                         <!-- 整行可点，进入该部门 -->
-                        <div class="organization-item" @click="loadAndShowOrganization(org)">
+                        <div class="organization-item" @click="enterSubOrganization(org)">
                             <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
-                            <p class="name">{{ org.name }}</p>
+                            <p class="name">{{ org.name }}({{ org.memberCount || 0 }})</p>
                             <i class="row-chevron icon-ion-ios-arrow-right"></i>
                         </div>
                     </li>
@@ -59,7 +59,10 @@
                             <img :src="portraitUrl(employee)"
                                  :ref="'ref-employee-' + employee.employeeId"
                                  :id="'infoTrigger-' + employee.employeeId">
-                            <p class="name">{{ employee.name }}</p>
+                            <div class="employee-info">
+                                <p class="name single-line">{{ employee.name }}</p>
+                                <p v-if="employee.title" class="employee-title single-line">{{ employee.title }}</p>
+                            </div>
                         </div>
                     </li>
                 </template>
@@ -92,7 +95,10 @@
                             <img :src="portraitUrl(employee)"
                                  :ref="'ref-employee-' + employee.employeeId"
                                  :id="'infoTrigger-' + employee.employeeId">
-                            <p class="name">{{ employee.name }}</p>
+                            <div class="employee-info">
+                                <p class="name single-line">{{ employee.name }}</p>
+                                <p v-if="employee.title" class="employee-title single-line">{{ employee.title }}</p>
+                            </div>
                         </div>
                     </li>
                 </template>
@@ -156,7 +162,23 @@ export default {
         this.loadAndShowOrganization(org);
     },
     methods: {
-        loadAndShowOrganization(org) {
+        // 进入下级部门：面包屑在本地接上一级，不用再逐级请求路径（对齐 wf-enterprise-chat）
+        enterSubOrganization(org) {
+            const path = this.currentOrganizationPathList;
+            // 入口的路径还没取回来时，本地拼不出完整路径，退回去请求
+            const pathReady = path.length && path[path.length - 1].id === this.currentOrgId;
+            this.loadAndShowOrganization(org, pathReady ? [...path, org] : null);
+        },
+        // 点面包屑回到上级：截掉后面的
+        backToOrganization(index) {
+            const path = this.currentOrganizationPathList;
+            this.loadAndShowOrganization(path[index], path.slice(0, index + 1));
+        },
+        /**
+         * @param org 要显示的部门
+         * @param pathList 从根到该部门的面包屑；不传时（从左栏、资料卡「所属部门」进来）向服务端请求
+         */
+        loadAndShowOrganization(org, pathList = null) {
             // 列表要换掉了，原来那张资料卡的 tippy 会跟着销毁
             this.closeUserCard();
             this.activeTippy = null;
@@ -165,13 +187,30 @@ export default {
             this.searchResults = [];
             this.searchActive = false;
             this.currentOrgId = org.id;
+
+            // 进过的部门先显示缓存，同时后台刷新；没进过的先清空，免得上一个部门的内容还留着能点
+            const cached = organizationServerApi.getCachedOrganizationEx(org.id);
+            this.subOrganizations = cached ? cached.subOrganizations : [];
+            this.employees = cached ? cached.employees : [];
             organizationServerApi.getOrganizationEx(org.id)
                 .then(res => {
+                    // 连续点了几个部门时，只认最后一个
+                    if (this.currentOrgId !== org.id) {
+                        return;
+                    }
                     this.subOrganizations = res.subOrganizations;
                     this.employees = res.employees;
                 });
+
+            if (pathList) {
+                this.currentOrganizationPathList = pathList;
+                return;
+            }
             organizationServerApi.getOrganizationPath(org.id)
                 .then(orgs => {
+                    if (this.currentOrgId !== org.id) {
+                        return;
+                    }
                     this.currentOrganizationPathList = orgs.reverse();
                 })
         },
@@ -382,6 +421,18 @@ export default {
     flex-shrink: 0;
     margin-left: auto;
     font-size: var(--font-size-lg);
+    color: var(--text-tertiary);
+}
+
+/* 成员名下面一行显示职务（对齐 wf-enterprise-chat） */
+.organization-item .employee-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.organization-item .employee-title {
+    margin-top: 2px;
+    font-size: var(--font-size-sm);
     color: var(--text-tertiary);
 }
 

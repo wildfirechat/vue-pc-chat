@@ -10,7 +10,7 @@
                                    v-bind:value="org"
                                    :checked="isOrganizationChecked(org)">
                             <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
-                            <p class="name">{{ org.name }}</p>
+                            <p class="name">{{ org.name }}({{ org.memberCount || 0 }})</p>
                             <p class="button" v-bind:class="{disabled: isOrganizationChecked(org)}" @click.stop="onShowSubOrganizationButtonClick(org)">下级</p>
                         </div>
                     </li>
@@ -21,7 +21,10 @@
                                    v-bind:value="employee"
                                    :checked="isEmployeeChecked(employee)">
                             <img :src="employeePortraitUrl(employee)">
-                            <p class="name">{{ employee.name }}</p>
+                            <div class="employee-info">
+                                <p class="name single-line">{{ employee.name }}</p>
+                                <p v-if="employee.title" class="employee-title single-line">{{ employee.title }}</p>
+                            </div>
                         </div>
                     </li>
                 </template>
@@ -36,7 +39,10 @@
                                    v-bind:value="employee"
                                    :checked="isEmployeeChecked(employee)">
                             <img :src="employeePortraitUrl(employee)">
-                            <p class="name">{{ employee.name }}</p>
+                            <div class="employee-info">
+                                <p class="name single-line">{{ employee.name }}</p>
+                                <p v-if="employee.title" class="employee-title single-line">{{ employee.title }}</p>
+                            </div>
                         </div>
                     </li>
                 </template>
@@ -243,6 +249,18 @@ export default {
     color: var(--text-secondary);
     text-align: center;
     font-size: var(--font-size-base);
+}
+
+/* 成员名下面一行显示职务（对齐 wf-enterprise-chat） */
+.organization-item .employee-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.organization-item .employee-title {
+    margin-top: 2px;
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
 }
 
 </style>

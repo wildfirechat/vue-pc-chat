@@ -8,12 +8,15 @@ import UserInfo from "../wfc/model/userInfo";
 export class OrganizationServerApi {
     isServiceAvailable = true;
     serviceUnavailbelError = new OrganizationServerError(-1, '未登录或服务不可用');
+    // 部门内容（子部门 + 本级成员）缓存，切换部门时先拿它显示（对齐 wf-enterprise-chat OrganizationCache）；重新登录时清掉
+    _organizationExCache = new Map();
 
     constructor() {
         // do nothing
     }
 
     login() {
+        this._organizationExCache.clear();
         return new Promise((resolve, reject) => {
             //        int ApplicationType_Robot = 0;
 //        int ApplicationType_Channel = 1;
@@ -72,7 +75,15 @@ export class OrganizationServerApi {
     }
 
     getOrganizationEx(orgId) {
-        return this._post('/api/organization/query_ex', {id: orgId});
+        return this._post('/api/organization/query_ex', {id: orgId})
+            .then(res => {
+                this._organizationExCache.set(orgId, res);
+                return res;
+            });
+    }
+
+    getCachedOrganizationEx(orgId) {
+        return this._organizationExCache.get(orgId);
     }
 
     getOrganizations(orgIds) {

@@ -10,6 +10,16 @@
                     </div>
                 </div>
             </li>
+            <!-- 根组织下面再列出自己直属的部门，点了直接进（对齐 wf-enterprise-chat） -->
+            <li v-for="organization in myOrganizations" :key="'my-' + organization.id" @click="showOrganization(organization)">
+                <div class="organization-item"
+                     v-bind:class="{active: sharedContactState.currentOrganization && sharedContactState.currentOrganization.id === organization.id}">
+                    <img class="avatar" :src="organization.portrait ? organization.portrait : defaultDepartmentPortraitUrl">
+                    <div class="item-info">
+                        <p class="single-line">{{ organization.name }}</p>
+                    </div>
+                </div>
+            </li>
         </ul>
     </section>
 
@@ -19,6 +29,7 @@
 import store from "../../../store";
 import organizationServerApi from "../../../api/organizationServerApi";
 import Config from "../../../config";
+import wfc from "../../../wfc/client/wfc";
 
 export default {
     name: "OrganizationListView",
@@ -27,7 +38,9 @@ export default {
         return {
             sharedContactState: store.state.contact,
             rootOrganizations: [],
+            myOrganizations: [],
             defaultPortraitUrl: Config.DEFAULT_ORGANIZATION_PORTRAIT_URL,
+            defaultDepartmentPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
         }
     },
     mounted() {
@@ -42,9 +55,22 @@ export default {
                 })
                 console.error(error);
             })
-
+        this.loadMyOrganizations();
     },
     methods: {
+        // 自己直属的部门：组织关系里标了 bottom 的那些
+        async loadMyOrganizations() {
+            try {
+                const relationships = await organizationServerApi.getRelationShip(wfc.getUserId()) || [];
+                const orgIds = [...new Set(relationships.filter(r => r.bottom).map(r => r.organizationId))];
+                if (orgIds.length) {
+                    const orgs = await organizationServerApi.getOrganizations(orgIds);
+                    this.myOrganizations = (orgs || []).filter(o => o && o.id);
+                }
+            } catch (e) {
+                console.error('load my organizations failed', e);
+            }
+        },
         showOrganization(organization) {
             store.setCurrentOrganization(organization)
         },

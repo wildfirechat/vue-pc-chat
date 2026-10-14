@@ -203,13 +203,18 @@ export default {
         }
     },
     mounted() {
-        this.checkSameOrganization();
-        this.loadDepartment();
-        if (this.showCommonGroupsRow) {
-            // tippy 的内容是常驻的：消息列表里每条消息都挂着一张资料卡。共同群聊要请求 IM 服务，
-            // 所以等卡片真正显示出来才取，每次弹出都刷新一次
-            observeVisible(this.$refs.root, () => this.loadCommonGroups());
-        }
+        // tippy 的内容是常驻的：消息列表里每条消息、组织结构里每个成员都挂着一张资料卡。所属部门、是否同组织、
+        // 共同群聊都要发请求，所以等卡片真正显示出来才取。部门和组织关系取一次就够，共同群聊每次弹出都刷新一次
+        observeVisible(this.$refs.root, () => {
+            if (!this._orgInfoRequested) {
+                this._orgInfoRequested = true;
+                this.checkSameOrganization();
+                this.loadDepartment();
+            }
+            if (this.showCommonGroupsRow) {
+                this.loadCommonGroups();
+            }
+        });
     },
     beforeUnmount() {
         unobserveVisible(this.$refs.root);
