@@ -128,6 +128,17 @@
                                :checked="sharedMiscState.enableNotificationMessageDetail"
                                @change="enableNotificationDetail($event.target.checked)">
                     </div>
+                    <!-- 用户设置 VoipSilent（多端同步），关闭后来电不响铃（对齐 wf-enterprise-chat d6e3f7d2） -->
+                    <div class="card-row switch">
+                        <div class="row-info">
+                            <span class="row-title">接收语音或视频来电通知</span>
+                            <span class="row-desc">关闭后来电时不再响铃</span>
+                        </div>
+                        <input type="checkbox"
+                               role="switch"
+                               :checked="receiveVoipNotification"
+                               @change="setReceiveVoipNotification($event.target.checked)">
+                    </div>
                 </div>
             </div>
 
@@ -327,6 +338,8 @@ import avenginekit from '../../../wfc/av/internal/engine.min';
 import Config from '../../../config';
 import updateServerApi from '../../../api/updateServerApi';
 import ResizeBar from '../../common/ResizeBar.vue';
+import UserSettingScope from '../../../wfc/client/userSettingScope';
+import {isVoipRingEnabled} from '../../voip/voipRing';
 
 export default {
     name: 'SettingPage',
@@ -335,6 +348,7 @@ export default {
             sharedMiscState: store.state.misc,
             sharedContactState: store.state.contact,
             openPcChatTimeoutHandler: 0,
+            receiveVoipNotification: isVoipRingEnabled(),
             appVersion: '',
             langs: [{ lang: 'zh-CN', name: '简体中文' }, { lang: 'zh-TW', name: '繁體中文' }, { lang: 'en', name: 'English' }],
             themes: [{ id: 'system', name: '跟随系统' }, { id: 'light', name: '浅色' }, { id: 'dark', name: '暗黑' }],
@@ -468,6 +482,15 @@ export default {
 
         enableNotification(enable) {
             store.setEnableNotification(enable)
+        },
+        setReceiveVoipNotification(enable) {
+            this.receiveVoipNotification = enable;
+            wfc.setUserSetting(UserSettingScope.VoipSilent, '', enable ? '0' : '1', () => {
+                // do nothing
+            }, (code) => {
+                this.receiveVoipNotification = !enable;
+                this.$notify({text: '设置失败 ' + code, type: 'error'});
+            });
         },
         enableMinimize(enable) {
             store.setEnableMinimize(enable)
