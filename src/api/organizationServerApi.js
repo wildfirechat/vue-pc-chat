@@ -5,11 +5,16 @@ import wfc from "../wfc/client/wfc";
 import OrganizationServerError from "./organizationServerError";
 import UserInfo from "../wfc/model/userInfo";
 
+const RELATIONSHIP_CACHE_MS = 5 * 60 * 1000;
+
 export class OrganizationServerApi {
     isServiceAvailable = true;
     serviceUnavailbelError = new OrganizationServerError(-1, '未登录或服务不可用');
     // 部门内容（子部门 + 本级成员）缓存，切换部门时先拿它显示（对齐 wf-enterprise-chat OrganizationCache）；重新登录时清掉
     _organizationExCache = new Map();
+    // 组织关系按人短时缓存：资料卡（同组织判断、所属部门）、单聊副标题都要用，避免重复请求。
+    // 只缓存成功的结果，且 5 分钟后重新取（组织调整后不会一直用旧的）；重新登录时清掉
+    _relationshipCache = new Map();
 
     constructor() {
         // do nothing
@@ -17,6 +22,7 @@ export class OrganizationServerApi {
 
     login() {
         this._organizationExCache.clear();
+        this._relationshipCache.clear();
         return new Promise((resolve, reject) => {
             //        int ApplicationType_Robot = 0;
 //        int ApplicationType_Channel = 1;
@@ -72,6 +78,41 @@ export class OrganizationServerApi {
 
     getRelationShip(employeeId) {
         return this._post('/api/relationship/employee', {employeeId});
+    }
+
+    getRelationshipCached(employeeId) {
+        const cached = this._relationshipCache.get(employeeId);
+        if (cached && Date.now() - cached.at < RELATIONSHIP_CACHE_MS) {
+            return cached.promise;
+        }
+        const promise = this.getRelationShip(employeeId).then(list => list || []);
+        this._relationshipCache.set(employeeId, {at: Date.now(), promise});
+        promise.catch(() => this._relationshipCache.delete(employeeId));
+        return promise;
+    }
+
+    /**
+     * 对方是否和我同组织：取双方组织关系，有共同节点即同组织同事（对齐 wf-enterprise-chat 624d0210）。
+     * 同组织同事之间不需要加好友：资料卡不显示「添加好友」，单聊副标题不提示「你们还不是好友」。
+     * 服务不可用或查询失败时按非同组织处理，退回加好友
+     * @param {string} userId
+     * @return {Promise<boolean>}
+     */
+    async isSameOrganization(userId) {
+        const myId = wfc.getUserId();
+        if (!myId || !userId || userId === myId || !this.isServiceAvailable) {
+            return false;
+        }
+        try {
+            const [mine, theirs] = await Promise.all([
+                this.getRelationshipCached(myId),
+                this.getRelationshipCached(userId),
+            ]);
+            const mineOrgs = new Set(mine.map(r => r.organizationId));
+            return theirs.some(r => mineOrgs.has(r.organizationId));
+        } catch (e) {
+            return false;
+        }
     }
 
     getOrganizationEx(orgId) {

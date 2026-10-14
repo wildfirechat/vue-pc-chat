@@ -124,22 +124,6 @@ import CardMessageContent from '../../../wfc/messages/cardMessageContent';
 import Message from '../../../wfc/messages/message';
 import ForwardType from '../conversation/message/forward/ForwardType';
 
-// 组织关系按人短时缓存：同组织判断、所属部门在每个资料卡打开时都要用，避免重复请求。
-// 只缓存成功的结果，且 5 分钟后重新取（组织调整、换账号登录后不会一直用旧的）
-const RELATIONSHIP_CACHE_MS = 5 * 60 * 1000;
-const relationshipCache = new Map();
-
-function getRelationshipCached(employeeId) {
-    const cached = relationshipCache.get(employeeId);
-    if (cached && Date.now() - cached.at < RELATIONSHIP_CACHE_MS) {
-        return cached.promise;
-    }
-    const promise = organizationServerApi.getRelationShip(employeeId).then(list => list || []);
-    relationshipCache.set(employeeId, {at: Date.now(), promise});
-    promise.catch(() => relationshipCache.delete(employeeId));
-    return promise;
-}
-
 // 所有资料卡共用一个 IntersectionObserver，卡片显示出来时回调
 let visibilityObserver = null;
 const visibilityCallbacks = new WeakMap();
@@ -229,7 +213,7 @@ export default {
                 return;
             }
             try {
-                const relationships = await getRelationshipCached(this.userInfo.uid);
+                const relationships = await organizationServerApi.getRelationshipCached(this.userInfo.uid);
                 let orgIds = relationships.filter(r => r.bottom).map(r => r.organizationId);
                 if (!orgIds.length) {
                     const employee = await organizationServerApi.getEmployee(this.userInfo.uid);
@@ -279,26 +263,11 @@ export default {
         onGroupAvatarError(e) {
             e.target.src = Config.DEFAULT_GROUP_PORTRAIT_URL;
         },
-        /** 取双方组织关系，有共同节点即同组织同事（对齐 wf-enterprise-chat 624d0210） */
         async checkSameOrganization() {
-            const myId = wfc.getUserId();
-            if (!myId || this.userInfo.uid === myId || this.isFileHelper || !organizationServerApi.isServiceAvailable) {
-                this.sameOrgChecked = true;
-                return;
+            if (!this.isFileHelper) {
+                this.isSameOrganization = await organizationServerApi.isSameOrganization(this.userInfo.uid);
             }
-            try {
-                const [mine, theirs] = await Promise.all([
-                    getRelationshipCached(myId),
-                    getRelationshipCached(this.userInfo.uid),
-                ]);
-                const mineOrgs = new Set((mine || []).map(r => r.organizationId));
-                this.isSameOrganization = (theirs || []).some(r => mineOrgs.has(r.organizationId));
-            } catch (e) {
-                // 失败按非同组织处理，退回加好友
-                this.isSameOrganization = false;
-            } finally {
-                this.sameOrgChecked = true;
-            }
+            this.sameOrgChecked = true;
         },
         closePopupMenus() {
             this.showAvatarMenu = false;

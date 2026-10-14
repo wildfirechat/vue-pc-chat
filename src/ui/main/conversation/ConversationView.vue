@@ -209,6 +209,7 @@ import ChannelConversationInfoView from "./ChannelConversationInfoView";
 import FriendRequestView from "../contact/FriendRequestView";
 import {currentWindow, ipcRenderer} from "../../../platform";
 import appServerApi from "../../../api/appServerApi";
+import organizationServerApi from "../../../api/organizationServerApi";
 import asrServerApi from "../../../api/asrServerApi";
 import Config from "../../../config";
 import IPCEventType from "../../../ipcEventType";
@@ -287,7 +288,17 @@ export default {
             resizeRafId: 0,
             pendingPointerY: 0,
             lastMessageListHeight: 0,
+            // 单聊对方是否和我同组织，sameOrgCheckedTarget 为已查过的对方 id
+            sameOrgCheckedTarget: '',
+            isSameOrgWithTarget: false,
         };
+    },
+
+    watch: {
+        singleChatTarget: {
+            handler: 'checkSameOrgWithTarget',
+            immediate: true,
+        },
     },
 
     provide() {
@@ -436,8 +447,24 @@ export default {
             currentWindow.setAlwaysOnTop(this.isWindowAlwaysTop)
         },
 
+        async checkSameOrgWithTarget(target) {
+            this.sameOrgCheckedTarget = '';
+            this.isSameOrgWithTarget = false;
+            if (!target) {
+                return;
+            }
+            const same = await organizationServerApi.isSameOrganization(target);
+            if (target === this.singleChatTarget) {
+                this.isSameOrgWithTarget = same;
+                this.sameOrgCheckedTarget = target;
+            }
+        },
+        // 和资料卡「添加好友」按钮同一判断：不是好友，且查过不是同组织同事
+        shouldShowAddFriendHint(target) {
+            return !wfc.isMyFriend(target) && this.sameOrgCheckedTarget === target && !this.isSameOrgWithTarget;
+        },
         clickConversationDesc() {
-            if (this.conversationInfo.conversation.type === ConversationType.Single && !wfc.isMyFriend(this.conversationInfo.conversation.target)) {
+            if (this.singleChatTarget && this.shouldShowAddFriendHint(this.singleChatTarget)) {
                 this.$modal.show(
                     FriendRequestView,
                     {
@@ -1138,10 +1165,17 @@ export default {
             }
             return '';
         },
+        singleChatTarget() {
+            let info = this.sharedConversationState.currentConversationInfo;
+            if (info && info.conversation.type === ConversationType.Single && info.conversation.target !== Config.FILE_HELPER_ID) {
+                return info.conversation.target;
+            }
+            return '';
+        },
         targetUserOnlineStateDesc() {
             let info = this.sharedConversationState.currentConversationInfo;
             if (info.conversation.type === ConversationType.Single && info.conversation.target !== Config.FILE_HELPER_ID) {
-                if (!wfc.isMyFriend(info.conversation.target)) {
+                if (this.shouldShowAddFriendHint(info.conversation.target)) {
                     return '你们还不是好友，点击添加好友';
                 }
                 if (info.conversation._target.type === 0) {
