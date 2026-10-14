@@ -36,6 +36,8 @@ export class AvEngineKitProxy {
     // 期间若已收到 end 就不弹（对齐 wf-enterprise-chat bc93d403）
     endedCallIds = new Set();
     pendingIncomingCallTimer = null;
+    // 等待弹出来电界面期间收到的同一通电话的后续消息
+    pendingIncomingMessages = [];
     isSupportVoip = false;
     hasMicrophone = false;
     hasSpeaker = false;
@@ -275,16 +277,25 @@ export class AvEngineKitProxy {
                             };
                             // 等 200ms 再弹接听界面：登录时同步到的 start/end 成对消息不要闪一下
                             clearTimeout(this.pendingIncomingCallTimer);
+                            this.pendingIncomingMessages = [];
                             this.pendingIncomingCallTimer = setTimeout(() => {
                                 this.pendingIncomingCallTimer = null;
+                                const pending = this.pendingIncomingMessages;
+                                this.pendingIncomingMessages = [];
                                 if (this.endedCallIds.has(startCallId) || this.callId !== startCallId || this.callWin) {
                                     console.log('incoming call ended or superseded, skip ui', startCallId);
+                                    if (!this.callWin && this.callId === startCallId) {
+                                        // 没弹界面，也就不会有关窗口时的重置：把这通电话的状态清掉，免得带到下一通
+                                        this.resetIncomingCallState();
+                                    }
                                     return;
                                 }
                                 this.showCallUI(startConversation, false, {
                                     event: 'message',
                                     args: startUiArgs,
                                 });
+                                // 窗口刚建好还没就绪，这些消息会进 queueEvents，就绪后按顺序发过去
+                                pending.forEach(m => this.emitToVoip('message', m));
                             }, 200);
                         } else {
                             console.log('call ended')
@@ -320,15 +331,15 @@ export class AvEngineKitProxy {
                     if (content.callId !== this.callId) {
                         return;
                     }
-                    // 记录已结束的通话，并取消还没弹出来的接听界面
-                    this.endedCallIds.add(content.callId);
-                    if (this.endedCallIds.size > 20) {
-                        this.endedCallIds.delete(this.endedCallIds.values().next().value);
+                    // 这通电话在本端是否已经结束：本账号其他端挂断，或者单聊里对方挂断。
+                    // 群聊里别人挂断只是那个人退出，通话不一定结束（对齐 wf-enterprise-chat _endsCallHere）
+                    if (msg.direction === 0 || msg.conversation.type === ConversationType.Single) {
+                        this.onIncomingCallEndedHere(content.callId);
                     }
-                    if (this.pendingIncomingCallTimer) {
-                        clearTimeout(this.pendingIncomingCallTimer);
-                        this.pendingIncomingCallTimer = null;
-                    }
+                } else if (content.type === MessageContentType.VOIP_CONTENT_TYPE_ACCEPT && msg.direction === 0
+                    && content.callId === this.callId) {
+                    // 本账号其他端已经接听：还没弹出来的来电界面不用再弹
+                    this.onIncomingCallEndedHere(content.callId);
                 }
 
                 if (msg.conversation.type === ConversationType.Group
@@ -352,10 +363,40 @@ export class AvEngineKitProxy {
                     if (!ignore) {
                         this.emitToVoip("message", msg);
                     }
+                } else if (this.pendingIncomingCallTimer && content.callId === this.callId
+                    && MessageContentType.VOIP_CONTENT_TYPE_START !== msg.messageContent.type
+                    && MessageContentType.VOIP_REMOTE_CONTROL_REQUEST !== msg.messageContent.type) {
+                    // 来电界面还在那 200ms 的等待里：同一通电话的后续消息先存着，弹出界面后按顺序补发，
+                    // 不能丢（wf-enterprise-chat 按批顺序处理，等待期间的消息也会转给通话窗口）
+                    this.pendingIncomingMessages.push(msg);
                 }
             }
         }
     };
+
+    /** 记录在本端已经结束的通话，并取消还没弹出来的接听界面 */
+    onIncomingCallEndedHere(callId) {
+        this.endedCallIds.add(callId);
+        if (this.endedCallIds.size > 20) {
+            this.endedCallIds.delete(this.endedCallIds.values().next().value);
+        }
+        if (this.pendingIncomingCallTimer) {
+            clearTimeout(this.pendingIncomingCallTimer);
+            this.pendingIncomingCallTimer = null;
+            this.pendingIncomingMessages = [];
+            if (!this.callWin) {
+                this.resetIncomingCallState();
+            }
+        }
+    }
+
+    /** 来电在弹出界面之前就结束了：清掉这通电话记下的状态（弹出过界面的由关窗口时重置） */
+    resetIncomingCallState() {
+        this.conversation = null;
+        this.callId = null;
+        this.inviteMessageUid = null;
+        this.participants = [];
+    }
 
     emitToVoip(event, args) {
         console.log('emitToVoip', event, args)

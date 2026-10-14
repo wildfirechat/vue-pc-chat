@@ -144,14 +144,21 @@
                 <div v-for="group in groupedItems" :key="group.label" class="result-group">
                     <div class="group-header">{{ group.label }}</div>
                     <ul class="result-list">
-                        <li v-for="item in group.items" :key="item.messageId" class="result-item" @click="locate(item)">
+                        <li v-for="item in group.items" :key="item.messageId" class="result-item"
+                            @click="onItemClick(item)"
+                            @contextmenu.prevent="onItemContextMenu($event, item)">
                             <img class="avatar" :src="portraitOf(item.sender)" @error="onAvatarError"/>
                             <div class="item-main">
                                 <div class="item-header">
                                     <span class="sender-name single-line">{{ nameOf(item.sender) }}</span>
                                     <span class="item-time">{{ formatTime(item.timestamp) }}</span>
                                 </div>
-                                <div v-if="mediaOf(item)" class="item-media">
+                                <!-- 位置：缩略图和地址一起给，光看文字看不出位置在哪（对齐 wf-enterprise-chat f2ba9cf5） -->
+                                <div v-if="mediaOf(item) && mediaOf(item).kind === 'location'" class="item-location">
+                                    <img v-if="mediaOf(item).src" :src="mediaOf(item).src" alt="" @error="onMediaError"/>
+                                    <span class="single-line">{{ mediaOf(item).title || '位置' }}</span>
+                                </div>
+                                <div v-else-if="mediaOf(item)" class="item-media">
                                     <StickerView v-if="mediaOf(item).kind === 'sticker'"
                                                  :src="mediaOf(item).src"
                                                  :width="64"
@@ -175,6 +182,19 @@
             </template>
         </div>
 
+        <!-- 文件消息的右键菜单（对齐 wf-enterprise-chat 0af2ac7d） -->
+        <vue-context ref="fileMenu" v-slot="{data: item}" :close-on-scroll="true">
+            <li v-if="item && fileUrlOf(item)">
+                <a @click.prevent="downloadItemFile(item)">下载</a>
+            </li>
+            <li v-if="item">
+                <a @click.prevent="forwardItem(item)">{{ $t('common.forward') }}</a>
+            </li>
+            <li v-if="item">
+                <a @click.prevent="locate(item)">定位到聊天位置</a>
+            </li>
+        </vue-context>
+
         <!-- 点击空白关闭下拉 -->
         <div v-if="showMenu" class="menu-mask" @click="showMenu = null"></div>
     </section>
@@ -192,6 +212,9 @@ import {pushInAppSubWindow, backInAppSubWindowOrRouter, getSubWindowQuery, isInA
 import {imageThumbnailSrc} from "../../util/imageThumbUtil";
 import {messageFromOutputMessageData} from "../../util/outputMessageData";
 import StickerView from "../conversation/sticker/StickerView.vue";
+import FileMessageContent from "../../../wfc/messages/fileMessageContent";
+import ForwardType from "../conversation/message/forward/ForwardType";
+import {downloadFile} from "../../../platformHelper";
 
 // 常见消息类型（多选；取值映射本项目 MessageContentType.js，服务端透传 int）
 const TYPE_OPTIONS = [
@@ -559,6 +582,45 @@ export default {
             }
         },
 
+        /** 文件消息直接下载（同点会话里的文件消息），其余定位到聊天位置 */
+        onItemClick(item) {
+            const message = this.fileMessageOf(item);
+            if (message) {
+                downloadFile(message);
+                return;
+            }
+            this.locate(item);
+        },
+        onItemContextMenu(event, item) {
+            if (this.fileMessageOf(item)) {
+                this.$refs.fileMenu.open(event, item);
+            }
+        },
+        /** 搜索结果里的文件消息（OutputMessageData 转成的本地 Message），不是文件返回 null */
+        fileMessageOf(item) {
+            if (this.contentTypeOf(item) !== MessageContentType.File) {
+                return null;
+            }
+            try {
+                const message = messageFromOutputMessageData(item);
+                return message && message.messageContent instanceof FileMessageContent ? message : null;
+            } catch (e) {
+                return null;
+            }
+        },
+        fileUrlOf(item) {
+            const message = this.fileMessageOf(item);
+            return message ? message.messageContent.remotePath : '';
+        },
+        downloadItemFile(item) {
+            downloadFile(this.fileMessageOf(item));
+        },
+        forwardItem(item) {
+            this.$forwardMessage({
+                forwardType: ForwardType.NORMAL,
+                messages: [this.fileMessageOf(item)],
+            });
+        },
         locate(item) {
             // messageId 为字符串（64 位 ID 防精度丢失），原样传递。
             // 用 pushInAppSubWindow 压栈打开（返回时回到搜索界面，而非直接关闭）
@@ -720,7 +782,7 @@ export default {
                             break;
                         }
                         case MessageContentType.Location:
-                            result = {kind: 'location', src: c.thumbnail ? 'data:image/jpeg;base64,' + c.thumbnail : ''};
+                            result = {kind: 'location', src: c.thumbnail ? 'data:image/jpeg;base64,' + c.thumbnail : '', title: c.title || ''};
                             break;
                         case MessageContentType.Sticker:
                             result = {kind: 'sticker', src: c.remotePath || ''};
@@ -1283,6 +1345,22 @@ export default {
     color: var(--accent-color);
     font-weight: 600;
     padding: 0;
+}
+
+.item-location {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+    min-width: 0;
+}
+
+.item-location img {
+    width: 72px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
 }
 
 .item-media {

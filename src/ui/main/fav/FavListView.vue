@@ -52,6 +52,12 @@
                                     <source :src="appServerAudioUrl(favItem.url)" type="audio/mp4"/>
                                 </audio>
                             </div>
+                            <!--            位置（对齐 wf-enterprise-chat f2ba9cf5）-->
+                            <div v-else-if="favItem.type === 4" class="fav-item-location">
+                                <img v-if="favItem.data && favItem.data.thumb" :src="locationThumb(favItem)" alt="">
+                                <i v-else class="icon-ion-ios-location location-placeholder"></i>
+                                <p class="single-line">[位置] {{ favItem.title }}</p>
+                            </div>
                             <!--                            组合消息-->
                             <div v-else-if="favItem.type === 11" class="fav-item-other">
                                 <p>
@@ -107,6 +113,7 @@ import Config from "../../../config";
 import IpcEventType from "../../../ipcEventType";
 import appServerApi from "../../../api/appServerApi";
 import { downloadFile, previewMM } from '../../../platformHelper';
+import {locationThumbnailSrc, openLocationInMap} from "../../util/location";
 
 export default {
     name: "FavListView",
@@ -247,6 +254,14 @@ export default {
                     let fi = Object.assign(new FavItem(), favItem);
                     downloadFile(fi.toMessage())
                     break;
+                case MessageContentType.Location: {
+                    // 和会话里的位置气泡一致，交给系统地图；老收藏没有经纬度时按不支持处理
+                    let data = favItem.data || {};
+                    if (!openLocationInMap(data.latitude, data.longitude, favItem.title)) {
+                        this.$notify({text: '暂不支持查看该位置', type: 'info'});
+                    }
+                    break;
+                }
                 case MessageContentType.Composite_Message:
                     if (isElectron()) {
                         let hash = window.location.hash;
@@ -286,6 +301,9 @@ export default {
                     console.log('todo click', favItem)
                     break;
             }
+        },
+        locationThumb(favItem) {
+            return locationThumbnailSrc(favItem.data && favItem.data.thumb);
         },
         handleClickMedia(index, favItems) {
             favItems = favItems.filter(favItem => (favItem.url || favItem.thumbUrl || (favItem.data && favItem.data.thumb)))
@@ -446,6 +464,30 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.fav-item-location {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.fav-item-location img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.fav-item-location .location-placeholder {
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    font-size: 26px;
+    color: var(--text-secondary);
+    background-color: var(--background-item-placeholder);
+    border-radius: var(--radius-sm);
+}
+
 .fav-list-container {
     height: 100%;
     display: flex;

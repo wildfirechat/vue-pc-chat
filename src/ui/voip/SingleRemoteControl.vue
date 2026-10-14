@@ -90,6 +90,7 @@
 </template>
 
 <script>
+import {isVoipRingEnabled} from "./voipRing";
 import avenginekit from "../../wfc/av/internal/engine.min";
 import CallSessionCallback from "../../wfc/av/engine/callSessionCallback";
 import CallState from "../../wfc/av/engine/callState";
@@ -216,9 +217,12 @@ export default {
                 } else if (state === CallState.STATUS_INCOMING) {
                     // 来电响铃（对齐 wf-enterprise-chat d6e3f7d2），浏览器自动播放被拒绝时忽略
                     console.log('start incoming ring')
-                    this.ringAudio = new Audio(require("@/assets/audios/incoming_call_ring.mp3"))
-                    this.ringAudio.loop = true;
-                    this.playRing(this.ringAudio);
+                    // 关了「接收语音或视频来电通知」就不响（回铃音不受影响）
+                    if (isVoipRingEnabled()) {
+                        this.ringAudio = new Audio(require("@/assets/audios/incoming_call_ring.mp3"))
+                        this.ringAudio.loop = true;
+                        this.playRing(this.ringAudio);
+                    }
                 } else {
                     if (this.ringAudio) {
                         this.ringAudio.pause();

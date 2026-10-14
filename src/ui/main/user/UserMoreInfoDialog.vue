@@ -62,7 +62,7 @@ export default {
         openGroup(group) {
             let conversation = new Conversation(ConversationType.Group, group.target, 0);
             store.setCurrentConversation(conversation);
-            if (this.$router && this.$router.currentRoute.path !== '/home') {
+            if (this.$router && this.$router.currentRoute.value.path !== '/home') {
                 this.$router.replace('/home');
             }
             this.close();

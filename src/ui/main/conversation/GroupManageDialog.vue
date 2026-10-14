@@ -17,6 +17,7 @@
         <template v-else>
             <h3 class="dialog-title">选择新的群主</h3>
             <p class="hint">转让后你将不再是群主</p>
+            <input v-model.trim="keyword" class="member-search" placeholder="搜索群成员">
             <ul class="member-list">
                 <li v-for="user in transferCandidates" :key="user.uid" @click="confirmTransfer(user)">
                     <img class="avatar" :src="user.portrait" alt="" @error="onAvatarError"/>
@@ -50,11 +51,14 @@ export default {
     data() {
         return {
             transferring: false,
+            keyword: '',
         }
     },
     computed: {
         transferCandidates() {
-            return (this.members || []).filter(u => u && u.uid && u.uid !== this.selfUserId);
+            const keyword = (this.keyword || '').toLowerCase();
+            return (this.members || []).filter(u => u && u.uid && u.uid !== this.selfUserId)
+                .filter(u => !keyword || [u._displayName, u.displayName, u.uid].some(n => n && String(n).toLowerCase().includes(keyword)));
         }
     },
     methods: {
@@ -64,7 +68,7 @@ export default {
         confirmTransfer(user) {
             this.$alert({
                 showIcon: false,
-                content: `确定把群主转让给「${user._displayName || user.displayName || user.uid}」？`,
+                content: `确定选择「${user._displayName || user.displayName || user.uid}」为新群主？你将自动放弃群主身份。`,
                 confirmText: '确定',
                 cancelText: '取消',
                 confirmCallback: () => {
@@ -92,6 +96,18 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.member-search {
+    width: 100%;
+    height: 30px;
+    margin-bottom: 8px;
+    padding: 0 10px;
+    border: 1px solid var(--border-muted);
+    border-radius: var(--radius-sm);
+    background-color: var(--background-input);
+    color: var(--text-primary);
+    outline: none;
+}
+
 .group-manage-dialog {
     padding: 20px 24px;
     min-width: 320px;

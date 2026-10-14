@@ -12,6 +12,7 @@ import MessagePayload from "../messages/messagePayload";
 import SoundMessageContent from "../messages/soundMessageContent";
 import Long from "long";
 import UnknownMessageContent from "../messages/unknownMessageContent";
+import LocationMessageContent from "../messages/locationMessageContent";
 
 import Config from '../../config'
 import {eq} from "../util/longUtil";
@@ -113,6 +114,20 @@ export default class FavItem {
                 }
                 favItem.data = JSON.stringify(data);
                 break;
+            case MessageContentType.Location: {
+                // 与 wf-enterprise-chat 的收藏格式一致：data 里放经纬度和缩略图（base64）
+                let locationContent = message.messageContent;
+                favItem.title = locationContent.title;
+                data = {
+                    latitude: Number(locationContent.lat),
+                    longitude: Number(locationContent.long),
+                };
+                if (locationContent.thumbnail) {
+                    data.thumb = locationContent.thumbnail;
+                }
+                favItem.data = JSON.stringify(data);
+                break;
+            }
             // TODO
             // case MessageContentType.Link:
             //     break
@@ -182,6 +197,20 @@ export default class FavItem {
                         content.duration = this.data.duration;
                     }
                     break;
+                case MessageContentType.Location: {
+                    let d = this.data;
+                    if (typeof d === 'string') {
+                        try {
+                            d = JSON.parse(d);
+                        } catch (e) {
+                            d = null;
+                        }
+                    }
+                    d = d || {};
+                    // 老收藏（或别的端收藏的）data 里没有经纬度时坐标为 0，打开时按不支持处理
+                    content = new LocationMessageContent(this.title || '', d.thumb || '', d.latitude || 0, d.longitude || 0);
+                    break;
+                }
                 // TODO
                 // case MessageContentType.Link:
                 //     break

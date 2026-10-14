@@ -17,7 +17,7 @@
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import {isElectron, shell} from "../../../../../platform";
+import {locationThumbnailSrc, openLocationInMap} from "../../../../util/location";
 
 export default {
     name: "LocationMessageContentView",
@@ -35,14 +35,7 @@ export default {
     computed: {
         // 位置缩略图在消息体里是不带头部信息的 base64，按 Flutter 的 LocationThumbnail 编码成 JPEG
         thumbnailSrc() {
-            let thumbnail = this.message.messageContent.thumbnail;
-            if (!thumbnail) {
-                return '';
-            }
-            if (thumbnail.startsWith('data:image')) {
-                return thumbnail;
-            }
-            return 'data:image/jpeg;base64,' + thumbnail;
+            return locationThumbnailSrc(this.message.messageContent.thumbnail);
         },
         locationTitle() {
             return this.message.messageContent.title || '位置';
@@ -51,33 +44,7 @@ export default {
     methods: {
         openLocation() {
             let content = this.message.messageContent;
-            let lat = Number(content.lat);
-            let lng = Number(content.long);
-            if (!isFinite(lat) || !isFinite(lng)) {
-                return;
-            }
-            let latStr = lat.toFixed(6);
-            let lngStr = lng.toFixed(6);
-            let title = content.title || '';
-            let url;
-            if (process.platform === 'darwin') {
-                // macOS 系统地图用 Apple 地图，与 Flutter location_launcher 一致
-                url = `https://maps.apple.com/?ll=${latStr},${lngStr}`;
-                if (title) {
-                    url += `&q=${encodeURIComponent(title)}`;
-                }
-            } else {
-                // 桌面端没有系统地图应用，直接用网页地图（高德）。坐标是 GCJ-02。
-                url = `https://uri.amap.com/marker?position=${lngStr},${latStr}&coordinate=gaode`;
-                if (title) {
-                    url += `&name=${encodeURIComponent(title)}`;
-                }
-            }
-            if (isElectron()) {
-                shell.openExternal(url);
-            } else {
-                window.open(url);
-            }
+            openLocationInMap(content.lat, content.long, content.title || '');
         }
     }
 }

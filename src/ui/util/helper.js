@@ -97,32 +97,68 @@ const helper = {
             .replace(/<iframe/gi, "&lt;iframe");
     },
 
+    /**
+     * 识别正文里的网址、邮箱、国内手机号（对齐 wf-enterprise-chat 119c7534 的 RichTextMessageWidget）。
+     * 传入的是已转义的 HTML（escapeHtml 之后），必须单次扫描：分多次 replace 会把刚生成的 <a> 再包一层。
+     * - 网址：http(s):// 或 www. 开头，只收 URL 允许的 ASCII 字符。中文、全角标点、空白都算网址结束
+     *   （中文消息里网址后面常常直接跟文字）；末尾的句读和没有配对的右括号不算网址。
+     * - 手机号：11 位，可带 +86，可按 3-4-4 用空格或横线分隔；前后紧挨着数字或字母的不算（订单号、ID 里的一段）。
+     */
     linkify: (text) => {
-        // 一次扫描识别 http(s) 网址、www. 网址、邮箱、国内手机号（对齐 wf-enterprise-chat 119c7534）。
-        // 必须单次替换：分多次 replace 会把刚生成的 <a> 里的内容再次包一层
-        const pattern = /(https?:\/\/[^\s<>"']+)|(www\.[^\s<>"']+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(1[3-9]\d{9})/g;
+        const pattern = /((?:https?:\/\/|www\.)[a-z0-9][-a-z0-9._~:/?#[\]@!$&'()*+,;=%]*)|((?<![a-z0-9._%+-])[a-z0-9._%+-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})|((?<![0-9a-z+])(?:\+86[- ]?)?1[3-9][0-9](?:[- ]?[0-9]{4}){2}(?![0-9a-z]))/gi;
+        // 转义后的 < > " ' 和连续空格（&amp; 是网址里本来的 &，保留）
+        const entity = /&(?:lt|gt|quot|#39|nbsp);/i;
+        const trimUrlTail = (url) => {
+            const cut = url.search(entity);
+            if (cut >= 0) {
+                url = url.substring(0, cut);
+            }
+            const balanced = (end, open, close) => {
+                let depth = 0;
+                for (let i = 0; i < end; i++) {
+                    if (url[i] === open) depth++;
+                    if (url[i] === close) depth--;
+                }
+                return depth >= 0;
+            };
+            let end = url.length;
+            while (end > 0) {
+                const c = url[end - 1];
+                if (".,;:!?'\"".indexOf(c) >= 0) {
+                    end--;
+                } else if (c === ')' && !balanced(end, '(', ')')) {
+                    end--;
+                } else if (c === ']' && !balanced(end, '[', ']')) {
+                    end--;
+                } else {
+                    break;
+                }
+            }
+            return url.substring(0, end);
+        };
         let result = '';
         let lastIndex = 0;
         let m;
         while ((m = pattern.exec(text)) !== null) {
-            result += text.slice(lastIndex, m.index);
+            let link;
+            let href;
             if (m[1]) {
-                result += `<a href="${m[1]}">${m[1]}</a>`;
+                link = trimUrlTail(m[1]);
+                href = /^www\./i.test(link) ? 'https://' + link : link;
             } else if (m[2]) {
-                result += `<a href="https://${m[2]}">${m[2]}</a>`;
-            } else if (m[3]) {
-                result += `<a href="mailto:${m[3]}">${m[3]}</a>`;
-            } else if (m[4]) {
-                // 手机号前后不能再是数字，避免把长数字串的一截当成手机号
-                let before = text[m.index - 1];
-                let after = text[m.index + m[4].length];
-                if ((before === undefined || !/\d/.test(before)) && (after === undefined || !/\d/.test(after))) {
-                    result += `<a href="tel:${m[4]}">${m[4]}</a>`;
-                } else {
-                    result += m[4];
-                }
+                link = m[2];
+                href = 'mailto:' + link;
+            } else {
+                link = m[3];
+                href = 'tel:' + link.replace(/[- ]/g, '');
             }
-            lastIndex = m.index + m[0].length;
+            if (!link || /^www\.$/i.test(link)) {
+                pattern.lastIndex = m.index + 1;
+                continue;
+            }
+            result += text.slice(lastIndex, m.index) + `<a href="${href}">${link}</a>`;
+            lastIndex = m.index + link.length;
+            pattern.lastIndex = lastIndex;
         }
         result += text.slice(lastIndex);
         return result;

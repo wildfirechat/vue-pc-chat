@@ -1,5 +1,5 @@
 <template>
-    <section @click.stop="" class="user-info-container">
+    <section @click.stop="showAvatarMenu = false" class="user-info-container">
         <div class="header">
             <div class="desc">
                 <div class="flex-row flex-align-center">
@@ -8,8 +8,13 @@
                 </div>
                 <label style="max-width: 200px; text-overflow: ellipsis" class="single-line">{{ $t('common.wfc_id') + ': ' + userInfo.name }}</label>
             </div>
-            <div>
-                <img class="avatar" draggable="false" v-bind:src="userInfo.portrait" @click="onAvatarClick"/>
+            <div class="avatar-wrapper">
+                <img class="avatar" draggable="false" v-bind:src="userInfo.portrait" @click.stop="onAvatarClick"/>
+                <!-- 自己的头像：先出「查看 / 修改」（对齐 wf-enterprise-chat 7cfc2b58） -->
+                <ul v-if="showAvatarMenu" class="avatar-menu" @click.stop>
+                    <li @click="viewOwnAvatar">查看</li>
+                    <li @click="modifyOwnAvatar">修改</li>
+                </ul>
                 <input v-if="enableUpdatePortrait" ref="fileInput" @change="onPickFile($event)" class="icon-ion-android-attach" type="file"
                        accept="image/png, image/jpeg"
                        style="display: none">
@@ -28,17 +33,14 @@
                         <span class="edit-icon">&#9998;</span>
                     </div>
                 </li>
-                <li>
-                    <label>{{ $t('common.area') }}</label>
-                    <div>{{ $t('misc.beijing') }}</div>
-                </li>
-                <li v-if="departmentOrg">
+                <!-- 一个人可能挂在多个部门下，逐个列出，点一个去联系人页打开它（对齐 wf-enterprise-chat b764b881） -->
+                <li v-if="departmentOrgs.length">
                     <label>所属部门</label>
-                    <div class="department-link" @click.stop="openDepartment">{{ departmentOrg.name }}</div>
-                </li>
-                <li>
-                    <label>{{ $t('common.label') }}</label>
-                    <div>{{ $t('misc.test_user') }}</div>
+                    <div class="department-list">
+                        <div v-for="org in departmentOrgs" :key="org.id" class="department-link single-line"
+                             @click.stop="openDepartment(org)">{{ org.name }}
+                        </div>
+                    </div>
                 </li>
                 <li v-if="!isSelf && !isFileHelper" class="more-info-row" @click.stop="showMoreInfo">
                     <label>更多信息</label>
@@ -85,14 +87,20 @@ import {previewPortrait} from '../../util/portraitPreview';
 import UserMoreInfoDialog from './UserMoreInfoDialog.vue';
 import AvatarCropper from './AvatarCropper.vue';
 
-// 组织关系按人缓存：同组织判断会在每个资料卡打开时用到，避免重复请求
+// 组织关系按人短时缓存：同组织判断、所属部门在每个资料卡打开时都要用，避免重复请求。
+// 只缓存成功的结果，且 5 分钟后重新取（组织调整、换账号登录后不会一直用旧的）
+const RELATIONSHIP_CACHE_MS = 5 * 60 * 1000;
 const relationshipCache = new Map();
 
 function getRelationshipCached(employeeId) {
-    if (!relationshipCache.has(employeeId)) {
-        relationshipCache.set(employeeId, organizationServerApi.getRelationShip(employeeId).catch(() => []));
+    const cached = relationshipCache.get(employeeId);
+    if (cached && Date.now() - cached.at < RELATIONSHIP_CACHE_MS) {
+        return cached.promise;
     }
-    return relationshipCache.get(employeeId);
+    const promise = organizationServerApi.getRelationShip(employeeId).then(list => list || []);
+    relationshipCache.set(employeeId, {at: Date.now(), promise});
+    promise.catch(() => relationshipCache.delete(employeeId));
+    return promise;
 }
 
 export default {
@@ -114,7 +122,8 @@ export default {
             // 是否已判断出与对方同组织；判断出结果前先不放「加好友」，避免闪一下
             sameOrgChecked: false,
             isSameOrganization: false,
-            departmentOrg: null,
+            departmentOrgs: [],
+            showAvatarMenu: false,
         }
     },
     mounted() {
@@ -122,30 +131,38 @@ export default {
         this.loadDepartment();
     },
     methods: {
-        /** 取对方所属部门，卡片上展示并可跳到联系人页（对齐 wf-enterprise-chat b764b881） */
+        /**
+         * 取对方所属部门：组织关系里的直属部门（bottom）可能不止一个，逐个列出（对齐 wf-enterprise-chat b764b881）。
+         * 老服务端的组织关系没有 bottom 标记时，退回员工资料里的主部门。
+         */
         async loadDepartment() {
             if (this.isFileHelper || !organizationServerApi.isServiceAvailable) {
                 return;
             }
             try {
-                const employee = await organizationServerApi.getEmployee(this.userInfo.uid);
-                if (employee && employee.organizationId) {
-                    const path = await organizationServerApi.getOrganizationPath(employee.organizationId);
-                    if (path && path.length) {
-                        // path[0] 是直属部门，最后一个是根组织
-                        this.departmentOrg = path[0];
+                const relationships = await getRelationshipCached(this.userInfo.uid);
+                let orgIds = relationships.filter(r => r.bottom).map(r => r.organizationId);
+                if (!orgIds.length) {
+                    const employee = await organizationServerApi.getEmployee(this.userInfo.uid);
+                    if (employee && employee.organizationId) {
+                        orgIds = [employee.organizationId];
                     }
+                }
+                orgIds = [...new Set(orgIds)];
+                if (orgIds.length) {
+                    const orgs = await organizationServerApi.getOrganizations(orgIds);
+                    this.departmentOrgs = (orgs || []).filter(o => o && o.id);
                 }
             } catch (e) {
                 console.warn('load user department failed', e);
             }
         },
-        openDepartment() {
-            if (!this.departmentOrg) {
+        openDepartment(org) {
+            if (!org) {
                 return;
             }
-            store.setCurrentOrganization(this.departmentOrg);
-            if (this.$router.currentRoute.path !== '/home/contact') {
+            store.setCurrentOrganization(org);
+            if (this.$router.currentRoute.value.path !== '/home/contact') {
                 this.$router.replace('/home/contact');
             }
             this.close();
@@ -160,7 +177,8 @@ export default {
             });
         },
         /** 取双方组织关系，有共同节点即同组织同事（对齐 wf-enterprise-chat 624d0210） */
-        async checkSameOrganization() {            const myId = wfc.getUserId();
+        async checkSameOrganization() {
+            const myId = wfc.getUserId();
             if (!myId || this.userInfo.uid === myId || this.isFileHelper || !organizationServerApi.isServiceAvailable) {
                 this.sameOrgChecked = true;
                 return;
@@ -253,13 +271,21 @@ export default {
             }
             this.$refs['fileInput'].click();
         },
-        /** 点头像：自己的换头像，别人的看大图（对齐 wf-enterprise-chat 7cfc2b58、96182762） */
+        /** 点头像：自己的出「查看 / 修改」，别人的看大图（对齐 wf-enterprise-chat 7cfc2b58、96182762） */
         onAvatarClick() {
             if (this.enableUpdatePortrait) {
-                this.pickFile();
+                this.showAvatarMenu = !this.showAvatarMenu;
                 return;
             }
             previewPortrait(this.userInfo.portrait, this.userInfo.displayName);
+        },
+        viewOwnAvatar() {
+            this.showAvatarMenu = false;
+            previewPortrait(this.userInfo.portrait, this.userInfo.displayName);
+        },
+        modifyOwnAvatar() {
+            this.showAvatarMenu = false;
+            this.pickFile();
         },
         onPickFile(event) {
             let file = event.target.files[0];
@@ -339,6 +365,40 @@ export default {
 </script>
 
 <style lang="css" scoped>
+.avatar-wrapper {
+    position: relative;
+}
+
+.avatar-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 10;
+    margin-top: 4px;
+    padding: 4px 0;
+    min-width: 72px;
+    list-style: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--background-primary);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+}
+
+.avatar-menu li {
+    padding: 6px 14px;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+}
+
+.avatar-menu li:hover {
+    background-color: var(--background-item-hover);
+}
+
+.department-list {
+    max-height: 66px;
+    overflow-y: auto;
+    min-width: 0;
+}
+
 .user-info-container {
     pointer-events: auto !important;
     width: 300px;
