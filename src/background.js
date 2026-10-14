@@ -1195,7 +1195,7 @@ const createMainWindow = async () => {
     });
 
     // 设置等页面的独立窗口。URL 由渲染进程拼好（如 #/setting），单实例复用
-    const showPageWindow = (current, url, width, height, minWidth, minHeight, onClosed) => {
+    const showPageWindow = (current, url, width, height, minWidth, minHeight, onClosed, extraOptions = {}) => {
         if (current && !current.isDestroyed()) {
             if (current.webContents.getURL() !== url) {
                 current.loadURL(url);
@@ -1207,7 +1207,7 @@ const createMainWindow = async () => {
             }
             return current;
         }
-        let win = createWindow(url, width, height, minWidth, minHeight, true, false);
+        let win = createWindow(url, width, height, minWidth, minHeight, true, false, true, false, true, extraOptions);
         // 和主窗口一样：页面里的链接不许把窗口导走，外部地址交给系统浏览器
         win.webContents.on('will-navigate', (e, navUrl) => {
             e.preventDefault();
@@ -1227,9 +1227,10 @@ const createMainWindow = async () => {
         if (!args || !args.url || !isInternalUrl(args.url)) {
             return;
         }
+        // 设置窗口只留关闭：不能最小化、最大化，macOS 绿灯也不能全屏
         settingsWindow = showPageWindow(settingsWindow, args.url, 880, 640, 720, 520, () => {
             settingsWindow = null;
-        });
+        }, {minimizable: false, fullscreenable: false});
     });
 
     ipcMain.on(IPCEventType.CLOSE_SUB_WINDOWS, () => {
