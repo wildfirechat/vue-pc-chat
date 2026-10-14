@@ -527,4 +527,4 @@ function videoSize(url) {
     });
 }
 
-export {mergeImages, genGroupPortrait, videoThumbnail, videoDuration, imageThumbnail, fileFromDataUri, scaleDown, imageSize, videoSize};
+export {mergeImages, genGroupPortrait, videoThumbnail, videoDuration, imageThumbnail, fileFromDataUri, dataURItoBlob, scaleDown, imageSize, videoSize};

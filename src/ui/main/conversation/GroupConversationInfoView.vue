@@ -143,8 +143,7 @@ import MessageContentMediaType from "../../../wfc/messages/messageContentMediaTy
 import MessageContentType from "../../../wfc/messages/messageContentType";
 import {isElectron} from "../../../platform";
 import {showComplainAlert} from "./conversationComplainHelper";
-import QRCodeDialogView from "../../common/QRCodeDialogView.vue";
-import WfcScheme from "../../../wfcScheme";
+import GroupQrCodeDialog from "./GroupQrCodeDialog.vue";
 import GroupManageDialog from "./GroupManageDialog.vue";
 import AvatarCropper from "../user/AvatarCropper.vue";
 
@@ -198,16 +197,14 @@ export default {
 
     components: { UserCardView },
     methods: {
-        /** 群二维码：群资料入口，扫码可加群（对齐 wf-enterprise-chat c50b7d41、2903246f） */
+        /** 群二维码：群资料入口，扫码可加群（对齐 wf-enterprise-chat c50b7d41、2903246f）；样式参考微信 */
         showGroupQrCode() {
-            this.$modal.show(QRCodeDialogView, {
-                name: 'group-qrcode-modal',
-                title: '群二维码',
-                content: WfcScheme.buildGroupLink(this.conversationInfo.conversation.target, wfc.getUserId()),
+            this.$modal.show(GroupQrCodeDialog, {
+                groupId: this.conversationInfo.conversation.target,
             }, null, {
                 name: 'group-qrcode-modal',
-                width: 360,
-                height: 460,
+                width: 420,
+                height: 'auto',
                 clickToClose: true,
             });
         },
