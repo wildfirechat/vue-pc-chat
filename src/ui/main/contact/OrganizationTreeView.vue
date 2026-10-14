@@ -27,10 +27,11 @@
             <ul>
                 <template v-if="!searchMode">
                     <li v-for="(org, index) in subOrganizations" :key="org.id">
-                        <div class="organization-item">
+                        <!-- 整行可点，进入该部门 -->
+                        <div class="organization-item" @click="loadAndShowOrganization(org)">
                             <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
                             <p class="name">{{ org.name }}</p>
-                            <p class="button" @click="loadAndShowOrganization(org)">下级</p>
+                            <i class="row-chevron icon-ion-ios-arrow-right"></i>
                         </div>
                     </li>
                     <li v-for="(employee, index) in employees" :key="employee.employeeId">
@@ -128,6 +129,12 @@ export default {
         }
     },
     watch: {
+        // 已经停在组织结构页时，再点左栏别的组织、或资料卡里的「所属部门」，组件不会重建，要在这里重新加载
+        'sharedContactState.currentOrganization'(org) {
+            if (org && org.id !== this.currentOrgId) {
+                this.loadAndShowOrganization(org);
+            }
+        },
         searchQuery(newVal) {
             if (this._searchTimer) {
                 clearTimeout(this._searchTimer);
@@ -150,6 +157,9 @@ export default {
     },
     methods: {
         loadAndShowOrganization(org) {
+            // 列表要换掉了，原来那张资料卡的 tippy 会跟着销毁
+            this.closeUserCard();
+            this.activeTippy = null;
             this.searchQuery = '';
             this.searchMode = false;
             this.searchResults = [];
@@ -368,17 +378,11 @@ export default {
     margin-right: 8px;
 }
 
-.organization-item .button {
-    justify-self: flex-end;
+.organization-item .row-chevron {
+    flex-shrink: 0;
     margin-left: auto;
-    padding: 4px;
-    font-size: var(--font-size-base);
-    color: var(--accent-color);
-}
-
-.organization-item .button:hover {
-    background: var(--background-selected-dim);
-    border-radius: var(--radius-md);
+    font-size: var(--font-size-lg);
+    color: var(--text-tertiary);
 }
 
 </style>

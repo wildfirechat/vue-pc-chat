@@ -120,7 +120,7 @@ export class OrganizationServerApi {
     employeeToUserInfo(employee) {
         let userInfo = new UserInfo();
         userInfo.uid = employee.employeeId;
-        userInfo.name = employee.name;
+        userInfo.name = employee.employeeId;
         userInfo.displayName = employee.name;
         userInfo.portrait = this.employeePortraitUrl(employee);
         userInfo.gender = employee.gender;
