@@ -194,8 +194,8 @@ function filterMenuTemplate(template) {
 let mainWindow;
 let fileWindow;
 let multimediaPreviewWindow;
-// 聊天记录(合并消息)窗口：全局单窗口，再点别的记录换内容并置顶（对齐 wf-enterprise-chat e511f73a）
-let compositeMessageWindow = null;
+// 聊天记录(合并消息)窗口：每条记录（包括嵌套的）各开一个新窗口，按 url 区分，同一条再点只置顶
+let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
@@ -1112,25 +1112,18 @@ const createMainWindow = async () => {
         console.log('on show-composite-message-window', args)
         let messageUid = args.messageUid;
         let url = messageUid ? (args.url + ('?messageUid=' + messageUid)) : args.url;
-        if (compositeMessageWindow && !compositeMessageWindow.isDestroyed()) {
-            // 全局单窗口复用：换内容并置顶
-            try {
-                await compositeMessageWindow.loadURL(url);
-            } catch (e) {
-                compositeMessageWindow.reload();
-            }
-            compositeMessageWindow.show();
-            compositeMessageWindow.focus();
-            if (compositeMessageWindow.moveTop) {
-                compositeMessageWindow.moveTop();
-            }
+        let win = compositeMessageWindows.get(url);
+        if (win && !win.isDestroyed()) {
+            win.show();
+            win.focus();
             return;
         }
-        compositeMessageWindow = createWindow(url, 960, 600, 640, 400, false, false);
-        compositeMessageWindow.on('close', () => {
-            compositeMessageWindow = null;
+        win = createWindow(url, 960, 600, 640, 400, false, false);
+        compositeMessageWindows.set(url, win);
+        win.on('close', () => {
+            compositeMessageWindows.delete(url);
         });
-        compositeMessageWindow.show();
+        win.show();
     });
 
     ipcMain.on(IPCEventType.OPEN_H5_APP_WINDOW, async (event, args) => {

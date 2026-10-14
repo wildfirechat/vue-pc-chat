@@ -3,11 +3,6 @@
         <div v-if="!sharedMiscState.isElectron" class="close-button-container" @click="hideCompositeMessagePage">
             <i class="icon-ion-close"></i>
         </div>
-        <!-- 嵌套的聊天记录在本窗口内压一页，可以返回上一层（对齐 wf-enterprise-chat e511f73a） -->
-        <div v-if="parentStack.length > 0" class="nested-header" @click="backToParent">
-            <i class="icon-ion-ios-arrow-back"></i>
-            <span class="single-line">返回上一层</span>
-        </div>
         <div v-if="!compositeMessage">
             {{ 'Null CompositeMessagePage' }}
         </div>
@@ -80,6 +75,8 @@ import FileMessageContentView from "./conversation/message/content/FileMessageCo
 import StickerMessageContentView from "./conversation/message/content/StickerMessageContentView";
 import UnknowntMessageContentView from "./conversation/message/content/UnknownMessageContentView";
 import Message from "../../wfc/messages/message";
+import MessagePayload from "../../wfc/messages/messagePayload";
+import Long from "long";
 import {stringValue} from "../../wfc/util/longUtil";
 import wfc from "../../wfc/client/wfc";
 import FavItem from "../../wfc/model/favItem";
@@ -105,18 +102,14 @@ export default {
     data() {
         return {
             compositeMessage: null,
-            // 进入嵌套聊天记录前的上一层，返回时出栈
-            parentStack: [],
             sharedMiscState: store.state.misc,
         }
     },
 
     provide() {
-        // 本页里点嵌套的聊天记录时，由 CompositeMessageContentView 交给这里在页内打开
+        // 本页里的聊天记录都是嵌套的，CompositeMessageContentView 据此把消息本身带给新窗口
         return {
-            compositeNavigator: {
-                push: (msg) => this.openNested(msg),
-            },
+            isInCompositePage: true,
         };
     },
 
@@ -140,21 +133,22 @@ export default {
         this.loadCompositeFromLocation();
     },
 
-    watch: {
-        // 独立窗口复用时会换 messageUid（只变 hash），组件不会重新挂载，这里跟着重载
-        '$route'() {
-            if (!this.message && !this.favItem) {
-                this.parentStack = [];
-                this.loadCompositeFromLocation();
-            }
-        },
-    },
-
     methods: {
         /** 从当前地址栏 hash 解析并加载聊天记录（独立窗口用） */
         loadCompositeFromLocation() {
             let hash = window.location.hash;
-            if (hash.indexOf('messageUid=') >= 0) {
+            if (hash.indexOf('?msg=') >= 0) {
+                // 嵌套的聊天记录：消息本身由打开它的窗口带过来（见 CompositeMessageContentView.nestedCompositeParam）
+                let data = JSON.parse(wfc.b64_to_utf8(wfc.unescape(hash.substring(hash.indexOf('?msg=') + 5))));
+                let msg = new Message();
+                msg.conversation = new Conversation(data.type, data.target, data.line);
+                msg.from = data.from;
+                msg.direction = data.direction;
+                msg.messageUid = Long.fromValue(data.uid);
+                msg.timestamp = Long.fromValue(data.serverTime);
+                msg.messageContent = Message.messageContentFromMessagePayload(Object.assign(new MessagePayload(), data.payload), msg.from);
+                this.compositeMessage = msg;
+            } else if (hash.indexOf('messageUid=') >= 0) {
                 let messageUid = hash.substring(hash.indexOf('=') + 1);
                 let msg = store.getMessageByUid(messageUid);
                 if (!msg) {
@@ -189,38 +183,6 @@ export default {
                 }
                 this.loadMediaCompositeMessage(this.compositeMessage);
             }
-        },
-        /** 在本页打开嵌套的聊天记录（压一页），子消息不在本地库里，直接用解出来的消息对象 */
-        openNested(msg) {
-            if (!msg || !this.compositeMessage) {
-                return;
-            }
-            this.parentStack.push(this.compositeMessage);
-            store._patchMessage(msg, 0);
-            this.compositeMessage = msg;
-            this.updateTitle();
-            this.loadMediaCompositeMessage(msg);
-            this.scrollToTop();
-        },
-        backToParent() {
-            if (this.parentStack.length === 0) {
-                return;
-            }
-            this.compositeMessage = this.parentStack.pop();
-            this.updateTitle();
-            this.scrollToTop();
-        },
-        updateTitle() {
-            if (isElectron() && this.compositeMessage && !this.message && !this.favItem) {
-                document.title = this.compositeMessage.messageContent.title;
-            }
-        },
-        scrollToTop() {
-            this.$nextTick(() => {
-                if (this.$el && this.$el.scrollTo) {
-                    this.$el.scrollTo(0, 0);
-                }
-            });
         },
         hideCompositeMessagePage() {
             this.$modal.hide('show-composite-message-modal' + '-' + ( this.favItem ? this.favItem.id : stringValue(this.message.messageUid)))
@@ -273,20 +235,6 @@ export default {
     height: var(--composite-message-page-height);
     background: var(--background-primary);
     overflow: scroll;
-}
-
-.nested-header {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 20px;
-    background: var(--background-primary);
-    border-bottom: 1px solid var(--border-tertiary);
-    color: var(--text-link);
-    cursor: pointer;
 }
 
 .close-button-container {

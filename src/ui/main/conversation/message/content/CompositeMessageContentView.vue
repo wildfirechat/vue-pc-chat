@@ -27,9 +27,9 @@ export default {
             required: true,
         }
     },
-    // 在聊天记录页（CompositeMessagePage）里时由它提供，用来在页内打开嵌套的聊天记录
+    // 在聊天记录页（CompositeMessagePage）里时由它提供，表示这是嵌套的聊天记录
     inject: {
-        compositeNavigator: {default: null},
+        isInCompositePage: {default: false},
     },
 
     computed: {
@@ -81,12 +81,22 @@ export default {
             }
             return content;
         },
+        /** 嵌套的聊天记录不在本地库里，没法按 messageUid 加载，把消息本身带给新窗口 */
+        nestedCompositeParam() {
+            let m = this.message;
+            let data = {
+                type: m.conversation.type,
+                target: m.conversation.target,
+                line: m.conversation.line,
+                from: m.from,
+                direction: m.direction,
+                uid: stringValue(m.messageUid),
+                serverTime: stringValue(m.timestamp),
+                payload: m.messageContent.encode(),
+            };
+            return wfc.escape(wfc.utf8_to_b64(JSON.stringify(data)));
+        },
         showCompositePage() {
-            // 在聊天记录页里点嵌套的聊天记录：在当前页内压一页，不另开/替换窗口（对齐 wf-enterprise-chat e511f73a）
-            if (this.compositeNavigator) {
-                this.compositeNavigator.push(this.message);
-                return;
-            }
             if (isElectron()) {
                 let hash = window.location.hash;
                 let url = window.location.origin;
@@ -94,6 +104,12 @@ export default {
                     url = window.location.href.replace(hash, '#/composite');
                 } else {
                     url += "/composite"
+                }
+                if (this.isInCompositePage) {
+                    ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
+                        url: url + '?msg=' + this.nestedCompositeParam(),
+                    });
+                    return;
                 }
                 ipcRenderer.send(IpcEventType.SHOW_COMPOSITE_MESSAGE_WINDOW, {
                     messageUid: stringValue(this.message.messageUid),
