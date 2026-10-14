@@ -27,6 +27,10 @@ export default {
             required: true,
         }
     },
+    // 在聊天记录页（CompositeMessagePage）里时由它提供，用来在页内打开嵌套的聊天记录
+    inject: {
+        compositeNavigator: {default: null},
+    },
 
     computed: {
         title() {
@@ -78,6 +82,11 @@ export default {
             return content;
         },
         showCompositePage() {
+            // 在聊天记录页里点嵌套的聊天记录：在当前页内压一页，不另开/替换窗口（对齐 wf-enterprise-chat e511f73a）
+            if (this.compositeNavigator) {
+                this.compositeNavigator.push(this.message);
+                return;
+            }
             if (isElectron()) {
                 let hash = window.location.hash;
                 let url = window.location.origin;

@@ -763,6 +763,11 @@ export default {
             // 正在语音输入时：先停识别、等最后一段识别结果写进输入框，再发送，
             // 否则最后半句会被丢掉（对齐 wf-enterprise-chat 4a2073d3）。等待期间连点只发一次。
             if (this.asrInputState !== 'idle') {
+                // 回车要在 await 之前就拦下默认行为，否则等识别收尾的这段时间里，
+                // 回车已经往输入框里插了一个换行，会跟着消息一起发出去。Ctrl+Enter 换行由下面自己处理
+                if (e && e.preventDefault && !e.ctrlKey) {
+                    e.preventDefault();
+                }
                 if (this._asrSending) {
                     return;
                 }
@@ -1631,13 +1636,16 @@ export default {
                 this._asrStopResolve = resolve;
                 this._asrStopTimer = setTimeout(() => {
                     this._asrStopTimer = null;
-                    // 超时：不再等，直接结束语音输入
+                    // 超时：不再等，取消识别（丢掉之后才回来的结果，免得写进已经发出、清空的输入框），
+                    // 按输入框已有内容发送
                     if (this._asrStopResolve) {
-                        this.asrInputState = 'idle';
-                        this._finishAsrStop();
+                        this.cancelAsrInput();
                     }
                 }, 5000);
-                this.stopAsrInput();
+                // 已经在收尾（用户先点了停止）就不用再停一次
+                if (this.asrInputState === 'recording') {
+                    this.stopAsrInput();
+                }
             });
         },
 

@@ -9,12 +9,14 @@
                     @mousedown.prevent="onMouseDown"
                     @mousemove="onMouseMove"
                     @mouseup="onMouseUp"
-                    @mouseleave="onMouseUp"></canvas>
+                    @mouseleave="onMouseUp"
+                    @wheel.prevent="onWheel"></canvas>
         </div>
         <div class="tools">
-            <i class="icon-ion-ios-minus tool" @click="zoomBy(-0.1)"></i>
-            <input class="zoom" type="range" min="1" max="3" step="0.01" v-model.number="zoom">
-            <i class="icon-ion-ios-plus tool" @click="zoomBy(0.1)"></i>
+            <i class="icon-ion-ios-minus tool" :class="{disabled: zoom <= MIN_ZOOM}" @click="zoomBy(-0.25)"></i>
+            <input class="zoom" type="range" :min="MIN_ZOOM" :max="MAX_ZOOM" step="0.01" :value="zoom"
+                   @input="setZoom(Number($event.target.value))">
+            <i class="icon-ion-ios-plus tool" :class="{disabled: zoom >= MAX_ZOOM}" @click="zoomBy(0.25)"></i>
             <i class="icon-ion-ios-refresh tool rotate" title="旋转" @click="rotate"></i>
         </div>
         <div class="actions">
@@ -29,6 +31,9 @@
 const OUTPUT_SIZE = 480;
 const DISPLAY_SIZE = 300;
 const JPEG_QUALITY = 0.7;
+// 缩放范围 1~4 倍（对齐 wf-enterprise-chat a64c8faf）
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 4;
 
 export default {
     name: "AvatarCropper",
@@ -40,6 +45,8 @@ export default {
     data() {
         return {
             displaySize: DISPLAY_SIZE,
+            MIN_ZOOM,
+            MAX_ZOOM,
             zoom: 1,
             rotation: 0,
             offsetX: 0,
@@ -90,12 +97,42 @@ export default {
             }
         },
         zoomBy(delta) {
-            this.zoom = Math.min(3, Math.max(1, this.zoom + delta));
+            this.setZoom(this.zoom + delta);
+        },
+        /** 以取景框中心为锚点缩放：框中心对着的那一点缩放后仍在框中心 */
+        setZoom(value) {
+            const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+            if (!isFinite(next) || next === this.zoom) {
+                return;
+            }
+            const ratio = next / this.zoom;
+            this.zoom = next;
+            this.offsetX *= ratio;
+            this.offsetY *= ratio;
+            this.clampOffset();
             this.draw();
+        },
+        onWheel(e) {
+            this.setZoom(this.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1));
         },
         rotate() {
             this.rotation = (this.rotation + 90) % 360;
+            this.clampOffset();
             this.draw();
+        },
+        /** 图片始终盖满取景框：拖动、缩放、旋转后都把偏移限制在不露出黑边的范围内 */
+        clampOffset() {
+            if (!this.image) {
+                return;
+            }
+            const scale = this.effectiveScale();
+            const sideways = this.rotation % 180 !== 0;
+            const w = (sideways ? this.image.height : this.image.width) * scale;
+            const h = (sideways ? this.image.width : this.image.height) * scale;
+            const maxX = Math.max(0, (w - DISPLAY_SIZE) / 2);
+            const maxY = Math.max(0, (h - DISPLAY_SIZE) / 2);
+            this.offsetX = Math.min(maxX, Math.max(-maxX, this.offsetX));
+            this.offsetY = Math.min(maxY, Math.max(-maxY, this.offsetY));
         },
         onMouseDown(e) {
             this.dragging = true;
@@ -110,6 +147,7 @@ export default {
             }
             this.offsetX = this.dragOriginX + (e.clientX - this.dragStartX);
             this.offsetY = this.dragOriginY + (e.clientY - this.dragStartY);
+            this.clampOffset();
             this.draw();
         },
         onMouseUp() {
@@ -183,6 +221,11 @@ export default {
 
 .tools .tool:hover {
     color: var(--text-primary);
+}
+
+.tools .tool.disabled {
+    opacity: 0.4;
+    pointer-events: none;
 }
 
 .tools .zoom {

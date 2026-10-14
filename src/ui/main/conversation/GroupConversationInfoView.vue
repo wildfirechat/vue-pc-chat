@@ -203,7 +203,7 @@ export default {
             this.$modal.show(QRCodeDialogView, {
                 name: 'group-qrcode-modal',
                 title: '群二维码',
-                content: WfcScheme.QR_CODE_PREFIX_GROUP + this.conversationInfo.conversation.target,
+                content: WfcScheme.buildGroupLink(this.conversationInfo.conversation.target, wfc.getUserId()),
             }, null, {
                 name: 'group-qrcode-modal',
                 width: 360,
@@ -336,9 +336,16 @@ export default {
         },
 
         quitGroup() {
+            // 群主也是「退出群聊」：服务端自动转让（管理员优先，其次最早入群），只剩自己则解散（对齐 wf-enterprise-chat 2a554bfa）
+            let content = '确定退出群组？';
+            let groupInfo = this.conversationInfo.conversation._target;
+            if (groupInfo && groupInfo.owner === wfc.getUserId()) {
+                let memberCount = (this.groupMemberUserInfos || []).length || groupInfo.memberCount || 0;
+                content = memberCount <= 1 ? '群里只剩你一人，退出后群聊将解散。' : '你是群主，退出后群主身份将自动转让给其他成员（管理员优先）。';
+            }
             this.$alert({
                 title: '退出群组',
-                content: '确定退出群组？',
+                content,
                 confirmText: '确定',
                 confirmButtonType: 'danger',
                 cancelText: '取消',

@@ -3,6 +3,11 @@
         <div v-if="!sharedMiscState.isElectron" class="close-button-container" @click="hideCompositeMessagePage">
             <i class="icon-ion-close"></i>
         </div>
+        <!-- 嵌套的聊天记录在本窗口内压一页，可以返回上一层（对齐 wf-enterprise-chat e511f73a） -->
+        <div v-if="parentStack.length > 0" class="nested-header" @click="backToParent">
+            <i class="icon-ion-ios-arrow-back"></i>
+            <span class="single-line">返回上一层</span>
+        </div>
         <div v-if="!compositeMessage">
             {{ 'Null CompositeMessagePage' }}
         </div>
@@ -44,6 +49,8 @@
                                                        v-else-if="message.messageContent.type === 7"/>
                             <CompositeMessageContentView :message="message"
                                                          v-else-if="message.messageContent.type === 11"/>
+                            <LocationMessageContentView :message="message"
+                                                        v-else-if="message.messageContent.type === 4"/>
                             <!--                            <CallStartMessageContentView :message="message"-->
                             <!--                                                         v-else-if="message.messageContent.type === 400"/>-->
                             <!--                            <ConferenceInviteMessageContentView :message="message"-->
@@ -79,6 +86,7 @@ import FavItem from "../../wfc/model/favItem";
 import Conversation from "../../wfc/model/conversation";
 import axios from "axios";
 import {isElectron} from "../../platform";
+import LocationMessageContentView from "./conversation/message/content/LocationMessageContentView";
 
 export default {
     name: "CompositeMessagePage",
@@ -97,8 +105,19 @@ export default {
     data() {
         return {
             compositeMessage: null,
+            // 进入嵌套聊天记录前的上一层，返回时出栈
+            parentStack: [],
             sharedMiscState: store.state.misc,
         }
+    },
+
+    provide() {
+        // 本页里点嵌套的聊天记录时，由 CompositeMessageContentView 交给这里在页内打开
+        return {
+            compositeNavigator: {
+                push: (msg) => this.openNested(msg),
+            },
+        };
     },
 
     mounted() {
@@ -125,6 +144,7 @@ export default {
         // 独立窗口复用时会换 messageUid（只变 hash），组件不会重新挂载，这里跟着重载
         '$route'() {
             if (!this.message && !this.favItem) {
+                this.parentStack = [];
                 this.loadCompositeFromLocation();
             }
         },
@@ -170,6 +190,38 @@ export default {
                 this.loadMediaCompositeMessage(this.compositeMessage);
             }
         },
+        /** 在本页打开嵌套的聊天记录（压一页），子消息不在本地库里，直接用解出来的消息对象 */
+        openNested(msg) {
+            if (!msg || !this.compositeMessage) {
+                return;
+            }
+            this.parentStack.push(this.compositeMessage);
+            store._patchMessage(msg, 0);
+            this.compositeMessage = msg;
+            this.updateTitle();
+            this.loadMediaCompositeMessage(msg);
+            this.scrollToTop();
+        },
+        backToParent() {
+            if (this.parentStack.length === 0) {
+                return;
+            }
+            this.compositeMessage = this.parentStack.pop();
+            this.updateTitle();
+            this.scrollToTop();
+        },
+        updateTitle() {
+            if (isElectron() && this.compositeMessage && !this.message && !this.favItem) {
+                document.title = this.compositeMessage.messageContent.title;
+            }
+        },
+        scrollToTop() {
+            this.$nextTick(() => {
+                if (this.$el && this.$el.scrollTo) {
+                    this.$el.scrollTo(0, 0);
+                }
+            });
+        },
         hideCompositeMessagePage() {
             this.$modal.hide('show-composite-message-modal' + '-' + ( this.favItem ? this.favItem.id : stringValue(this.message.messageUid)))
         },
@@ -209,6 +261,7 @@ export default {
         VideoMessageContentView,
         FileMessageContentView,
         StickerMessageContentView,
+        LocationMessageContentView,
     }
 }
 </script>
@@ -220,6 +273,20 @@ export default {
     height: var(--composite-message-page-height);
     background: var(--background-primary);
     overflow: scroll;
+}
+
+.nested-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    background: var(--background-primary);
+    border-bottom: 1px solid var(--border-tertiary);
+    color: var(--text-link);
+    cursor: pointer;
 }
 
 .close-button-container {

@@ -18,6 +18,30 @@ const THUMBNAIL_ONLY_TYPES = new Set([
     MessageContentType.Location,
 ]);
 
+/** 消息体内联上限：与原生 SDK、wf-enterprise-chat 一致，按 UTF-8 字节计 */
+const MAX_INLINE_SIZE = 20 * 1024;
+/** 可搜索内容上限（字符数，中文按 3 字节算约 6K） */
+const MAX_SEARCHABLE_LENGTH = 2000;
+
+function utf8Length(str) {
+    if (typeof TextEncoder !== 'undefined') {
+        return new TextEncoder().encode(str).length;
+    }
+    return unescape(encodeURIComponent(str)).length;
+}
+
+/** 消息体里能放下的前几条（累计不超过 MAX_INLINE_SIZE 字节）；第一条就超了返回 0 */
+function inlineCountOf(arr) {
+    let size = 0;
+    for (let i = 0; i < arr.length; i++) {
+        size += utf8Length(JSON.stringify(arr[i]));
+        if (size > MAX_INLINE_SIZE) {
+            return i;
+        }
+    }
+    return arr.length;
+}
+
 export default class CompositeMessageContent extends MediaMessageContent {
     title = '';
     messages = [];
@@ -91,30 +115,27 @@ export default class CompositeMessageContent extends MediaMessageContent {
             arr.push(o);
         });
 
-        // 消息体里只内联前几条（累计不超过 20K）。第一条就超时一条都不放，
-        // 否则消息体可能超过协议栈 64K 上限、本地直接拒发（对齐 wf-enterprise-chat ac442ff3）
-        let inlineCount = 0;
-        let size = 0;
-        for (let i = 0; i < arr.length; i++) {
-            size += JSON.stringify(arr[i]).length;
-            if (size > 20480) {
-                break;
-            }
-            inlineCount++;
-        }
-        const overflow = inlineCount < arr.length;
+        // 完整内容超过 20K 时写成文件随媒体上传，消息体里只内联前几条（对齐 wf-enterprise-chat ac442ff3）：
+        // - 大小按 UTF-8 字节算（中文一个字 3 字节，按字符数算会低估到三分之一，照样超 64K 发不出去）；
+        // - 内联的几条去掉图片/视频/位置缩略图后再计数（老图片缩略图 base64 后单张能到 80K，完整内容文件里有）；
+        // - 第一条就超时一条都不放。
+        const overflow = inlineCountOf(arr) < arr.length;
         let binArr = null;
-        if (overflow) {
-            // 内联预览只用来在气泡上显示「[图片]」之类摘要，去掉图片/视频/位置缩略图：
-            // 老图片缩略图 base64 后单张能到 80K，完整内容文件里有缩略图
-            binArr = arr.slice(0, inlineCount).map(o => {
-                if (THUMBNAIL_ONLY_TYPES.has(o.ctype)) {
+        if (overflow || this.file || this.localPath || this.remotePath) {
+            const stripped = arr.map(o => {
+                if (THUMBNAIL_ONLY_TYPES.has(o.ctype) && o.cbc) {
                     let copy = Object.assign({}, o);
                     delete copy.cbc;
                     return copy;
                 }
                 return o;
             });
+            binArr = stripped.slice(0, inlineCountOf(stripped));
+        }
+
+        // 可搜索内容是逐条拼起来的，消息一多同样能把消息体撑过 64K；只留开头一段用于搜索
+        if (payload.searchableContent && payload.searchableContent.length > MAX_SEARCHABLE_LENGTH) {
+            payload.searchableContent = payload.searchableContent.substring(0, MAX_SEARCHABLE_LENGTH);
         }
 
         let obj;

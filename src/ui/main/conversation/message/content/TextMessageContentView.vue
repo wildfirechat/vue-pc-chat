@@ -2,11 +2,14 @@
     <div class="text-message-container"
          v-bind:class="{out:message.direction === 0}">
         <p class="text" v-html="this.$xss(this.textContent)" @click="handleLinkClick" @dblclick.stop="viewLargeText" @mouseup="mouseUp" @contextmenu="preventContextMenuTextSelection"></p>
-        <!-- 双击文本消息进入大字号查看页（对齐 wf-enterprise-chat ef62e540） -->
-        <div v-if="showLargeText" class="large-text-overlay" @click="showLargeText = false">
-            <div class="large-text-content" v-html="this.$xss(this.textContent)" @click.stop></div>
-            <p class="large-text-hint">点击任意处关闭</p>
-        </div>
+        <!-- 双击文本消息进入大字号查看页（对齐 wf-enterprise-chat ef62e540）。
+             挂到 body 上，免得消息列表里带 transform 的祖先把 fixed 定位限制在列表内 -->
+        <Teleport to="body">
+            <div v-if="showLargeText" class="large-text-overlay" @click="closeLargeText">
+                <div class="large-text-content" v-html="this.$xss(this.textContent)" @click.stop="handleLinkClick"></div>
+                <p class="large-text-hint">点击空白处或按 Esc 关闭</p>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -34,14 +37,32 @@ export default {
     },
     mounted() {
     },
+    beforeUnmount() {
+        window.removeEventListener('keydown', this.onLargeTextKeydown);
+    },
 
     methods: {
-        /** 双击进大字号查看页；有选中文本时不弹，避免和选择冲突 */
+        /**
+         * 双击进大字号查看页。正文可选中，双击这一下浏览器同时会选中一个词，
+         * 这里先把选区清掉再打开（对齐 wf-enterprise-chat ef62e540 的 clearTextSelection）。
+         */
         viewLargeText() {
-            if (window.getSelection() && window.getSelection().toString()) {
-                return;
+            let selection = window.getSelection && window.getSelection();
+            if (selection) {
+                selection.removeAllRanges();
             }
+            this.textSelected = false;
             this.showLargeText = true;
+            window.addEventListener('keydown', this.onLargeTextKeydown);
+        },
+        closeLargeText() {
+            this.showLargeText = false;
+            window.removeEventListener('keydown', this.onLargeTextKeydown);
+        },
+        onLargeTextKeydown(e) {
+            if (e.key === 'Escape') {
+                this.closeLargeText();
+            }
         },
         mouseUp(event) {
             let selection = window.getSelection().toString();
