@@ -95,10 +95,15 @@
     height: 6px;
 }
 
+/* 滚动条平时隐藏，鼠标移到可滚动区域上才显示（参考微信） */
 ::-webkit-scrollbar-thumb {
-    background-color: var(--scrollbar-thumb);
+    background-color: transparent;
     border-radius: var(--radius-sm);
     -webkit-appearance: none;
+}
+
+:hover::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
 }
 
 ::-webkit-scrollbar-thumb:hover,
@@ -121,6 +126,10 @@
 /*electron 28+ / chrome 121+ 时生效*/
 * {
     scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+:hover {
     scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 

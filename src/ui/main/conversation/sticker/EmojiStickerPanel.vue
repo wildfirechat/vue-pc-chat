@@ -168,11 +168,6 @@ export default {
     width: 4px;
 }
 
-.sticker-page::-webkit-scrollbar-thumb {
-    background-color: var(--scrollbar-thumb);
-    border-radius: var(--radius-sm);
-}
-
 .panel-page-title {
     padding: 10px 12px 6px;
     font-size: 12px;

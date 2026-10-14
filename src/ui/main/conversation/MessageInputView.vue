@@ -1948,11 +1948,6 @@ export default {
     height: 3px;
 }
 
-.sticker-suggestion-list::-webkit-scrollbar-thumb {
-    background-color: var(--scrollbar-thumb);
-    border-radius: var(--radius-sm);
-}
-
 .sticker-suggestion-item {
     flex-shrink: 0;
     width: 56px;
