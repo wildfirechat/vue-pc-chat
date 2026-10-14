@@ -277,19 +277,21 @@ export default {
     border-bottom-right-radius: var(--main-border-radius);
 }
 
+/* 标题栏与收藏等第三栏统一：60px 高、16px 字号 */
 .title-bar {
     display: flex;
     align-items: center;
     padding: 0 20px;
-    height: 63px;
+    height: 60px;
     flex-shrink: 0;
-    border-bottom: 1px solid var(--border-tertiary);
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .title {
     flex: 1;
-    font-size: var(--font-size-2xl);
-    font-weight: normal;
+    font-size: var(--font-size-lg);
+    font-weight: 500;
+    color: var(--text-primary);
     margin: 0;
 }
 
