@@ -735,6 +735,27 @@ let store = {
             || message.messageContent.type === MessageContentType.Transcription;
     },
 
+    /**
+     * 转发、分享时选会话要用最近会话列表，「创建新聊天」要用好友列表。
+     * 子窗口（媒体预览、独立会话窗口、消息搜索、聊天记录等）启动时按路由决定加载哪些数据，多数没加载这两样，
+     * 弹出选会话界面时是空的；这里在打开前按需补上，并记下来，之后重连时也一起刷新
+     */
+    ensureForwardPickData() {
+        if (this.state.misc.isMainWindow) {
+            return;
+        }
+        let loadOptions = this.state.misc.subWindowLoadDataOptions || {};
+        this.state.misc.subWindowLoadDataOptions = loadOptions;
+        if (!loadOptions.loadDefaultConversationList || this.state.conversation.conversationInfoList.length === 0) {
+            loadOptions.loadDefaultConversationList = true;
+            this._loadDefaultConversationList();
+        }
+        if (!loadOptions.loadFriendList || this.state.contact.friendList.length === 0) {
+            loadOptions.loadFriendList = true;
+            this._loadFriendList();
+        }
+    },
+
     _loadDefaultConversationList() {
         console.log('store _loadDefaultConversationList');
         let conversationTypes = isElectron() ? [0, 1, 3, 5] : [0, 1, 3];

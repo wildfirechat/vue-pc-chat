@@ -1,7 +1,5 @@
 <template>
     <div class="pick-contact-container">
-        <!-- PC 弹窗里用右上角关闭，不再用返回箭头（对齐 wf-enterprise-chat dbb95737） -->
-        <i class="icon-ion-ios-close pick-close-btn" @click="cancel" title="关闭"></i>
         <section class="contact-list-container">
             <div class="input-container">
                 <input type="text" :placeholder="$t('common.search')" v-model="filterQuery">
@@ -269,22 +267,6 @@ export default {
     display: flex;
     height: 100%;
     width: 100%;
-    position: relative;
-}
-
-.pick-close-btn {
-    position: absolute;
-    top: 10px;
-    right: 12px;
-    font-size: 20px;
-    line-height: 1;
-    cursor: pointer;
-    color: var(--text-secondary);
-    z-index: 10;
-}
-
-.pick-close-btn:hover {
-    color: var(--text-primary);
 }
 
 .contact-list-container {

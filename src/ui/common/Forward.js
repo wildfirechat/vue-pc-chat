@@ -5,6 +5,8 @@ import ForwardMessageByCreateConversationView from "../main/conversation/message
 export default {
     install(app, options) {
         app.config.globalProperties.$forwardMessage = function (options) {
+            // 子窗口里打开时，最近会话、好友列表可能还没加载
+            store.ensureForwardPickData();
             const pickConversationAndForwardMessage = (forwardType, messages) => {
                 return new Promise(((resolve, reject) => {
                     let beforeClose = (event) => {

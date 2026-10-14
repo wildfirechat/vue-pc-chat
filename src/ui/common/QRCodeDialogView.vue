@@ -16,6 +16,8 @@ import jrQRCode from 'jr-qrcode';
 import ForwardType from "../main/conversation/message/forward/ForwardType";
 import Message from "../../wfc/messages/message";
 import ImageMessageContent from "../../wfc/messages/imageMessageContent";
+import {fileFromDataUri, imageThumbnail} from "../util/imageUtil";
+import Config from "../../config";
 
 export default {
     name: "QRCodeDialogView",
@@ -49,9 +51,18 @@ export default {
             this.$modal.hide(this.name);
         },
 
-        share() {
+        async share() {
+            // 二维码是 data URI：直接当 localPath 传给 SDK 会被当成本地文件路径去读，上传失败、发不出去。
+            // 和输入框粘贴图片一样转成 File，SDK 发送时先上传；缩略图按普通图片消息生成
+            let file = fileFromDataUri(this.qrCodeDataUri, `qrcode_${Date.now()}.png`);
+            let result = await imageThumbnail(file);
+            let thumbnail = result && result.thumbnail ? result.thumbnail : Config.DEFAULT_THUMBNAIL_URL;
             let message = new Message();
-            message.messageContent = new ImageMessageContent(this.qrCodeDataUri, null, this.qrCodeDataUri.split(',')[1]);
+            message.messageContent = new ImageMessageContent(file, null, thumbnail.split(',')[1]);
+            if (result) {
+                message.messageContent.imageWidth = result.width;
+                message.messageContent.imageHeight = result.height;
+            }
             this.$forwardMessage({
                 forwardType: ForwardType.NORMAL,
                 messages: [message],
