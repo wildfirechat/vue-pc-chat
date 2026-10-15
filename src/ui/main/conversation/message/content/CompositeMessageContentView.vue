@@ -143,7 +143,7 @@ export default {
 <style lang="css" scoped>
 .composite-message-container {
     margin: 0 8px;
-    padding: 8px;
+    padding: 12px;
     background-color: var(--background-primary);
     position: relative;
     border-radius: var(--radius-md);
