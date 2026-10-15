@@ -1289,6 +1289,9 @@ const createMainWindow = async () => {
         mainWindow.setMinimumSize(960, 600);
         mainWindow.setSize(mainWindowState.width, mainWindowState.height);
         mainWindow.center();
+        // 主窗口 reload（崩溃自动恢复、Ctrl+F5、开发时页面整页刷新）后会自动登录、再发一次 LOGIN，中间没有 LOGOUT；
+        // manage() 每次都往窗口上加一套 resize/move/close/closed 监听，先 unmanage 再 manage，不然会一直叠加
+        mainWindowState.unmanage();
         mainWindowState.manage(mainWindow);
 
         userId = args.userId
