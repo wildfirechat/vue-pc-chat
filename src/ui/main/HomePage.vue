@@ -557,6 +557,8 @@ export default {
     background-color: var(--text-secondary);
     display: block;
     margin: 8px auto;
+    width: var(--size-avatar);
+    height: var(--size-avatar);
 }
 
 .menu {
