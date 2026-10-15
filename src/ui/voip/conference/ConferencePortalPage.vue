@@ -81,6 +81,7 @@ import JoinConferenceView from "./JoinConferenceView";
 import OrderConferenceView from "./OrderConferenceView";
 import conferenceApi from "../../../api/conferenceApi";
 import ConferenceInfoView from "./ConferenceInfoView";
+import {fitContentModalAttrs} from "../../util/featureDialog";
 import conferenceManager from "./conferenceManager";
 import wfc from "../../../wfc/client/wfc";
 import ResizeBar from "../../common/ResizeBar.vue";
@@ -213,8 +214,7 @@ export default {
                     conferenceInfo: info,
                 }, null,{
                     name: 'conference-info-modal',
-                    width: 320,
-                    height: 580,
+                    ...fitContentModalAttrs(320, 720),
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,

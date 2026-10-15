@@ -20,6 +20,7 @@ import avenginekit from "../../../../../wfc/av/internal/engine.min";
 import store from "../../../../../store";
 import ConversationType from "../../../../../wfc/model/conversationType";
 import ConferenceInfoView from "../../../../voip/conference/ConferenceInfoView";
+import {fitContentModalAttrs} from "../../../../util/featureDialog";
 import conferenceApi from "../../../../../api/conferenceApi";
 import Config from "../../../../../config";
 
@@ -94,8 +95,7 @@ export default {
                     conferenceInfo: info,
                 }, null, {
                     name: 'conference-info-modal',
-                    width: 320,
-                    height: 600,
+                    ...fitContentModalAttrs(320, 720),
                     clickToClose: true,
                 }, {
                     'before-open': beforeOpen,

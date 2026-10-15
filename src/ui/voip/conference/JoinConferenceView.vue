@@ -23,6 +23,7 @@
 <script>
 import conferenceApi from "../../../api/conferenceApi";
 import ConferenceInfoView from "./ConferenceInfoView.vue";
+import {fitContentModalAttrs} from "../../util/featureDialog";
 
 export default {
     name: "CreateConferenceView",
@@ -44,8 +45,7 @@ export default {
                             conferenceInfo: info,
                         }, null, {
                             name: 'conference-info-modal',
-                            width: 320,
-                            height: 580,
+                            ...fitContentModalAttrs(320, 720),
                             clickToClose: true,
                         }, {})
                     this.$modal.hide('join-conference-modal')
