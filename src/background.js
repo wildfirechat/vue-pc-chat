@@ -199,8 +199,6 @@ let compositeMessageWindows = new Map();
 let openPlatformAppHostWindows = new Map();
 let conversationMessageHistoryMessageWindow;
 let messageHistoryMessageWindow;
-let collectionWindow;
-let pollWindow;
 // 设置：单个独立窗口，再次打开时置顶
 let settingsWindow = null;
 let conversationWindowMap = new Map();
@@ -1235,52 +1233,6 @@ const createMainWindow = async () => {
 
     ipcMain.on(IPCEventType.CLOSE_SUB_WINDOWS, () => {
         closeSubWindows();
-    });
-
-    ipcMain.on(IPCEventType.SHOW_COLLECTION_WINDOW, async (event, args) => {
-        console.log(`on ${IPCEventType.SHOW_COLLECTION_WINDOW}`, collectionWindow, args)
-        // URL 由渲染进程拼接好传入，便于 web 端复用
-        let url = args.url;
-
-        if (!url) {
-            console.error('SHOW_COLLECTION_WINDOW: url is required');
-            return;
-        }
-
-        if (!collectionWindow) {
-            collectionWindow = createWindow(url, 360, 640, 360, 640, false, false, true);
-            collectionWindow.on('close', () => {
-                collectionWindow = null;
-            });
-            collectionWindow.show();
-        } else {
-            collectionWindow.loadURL(url);
-            collectionWindow.show();
-            collectionWindow.focus();
-        }
-    });
-
-    ipcMain.on(IPCEventType.SHOW_POLL_WINDOW, async (event, args) => {
-        console.log(`on ${IPCEventType.SHOW_POLL_WINDOW}`, pollWindow, args)
-        // URL 由渲染进程拼接好传入，便于 web 端复用
-        let url = args.url;
-
-        if (!url) {
-            console.error('SHOW_POLL_WINDOW: url is required');
-            return;
-        }
-
-        if (!pollWindow) {
-            pollWindow = createWindow(url, 400, 700, 360, 640, false, false, true);
-            pollWindow.on('close', () => {
-                pollWindow = null;
-            });
-            pollWindow.show();
-        } else {
-            pollWindow.loadURL(url);
-            pollWindow.show();
-            pollWindow.focus();
-        }
     });
 
     ipcMain.on(IPCEventType.showConversationFloatPage, async (event, args) => {

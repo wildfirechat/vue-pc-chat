@@ -1,58 +1,51 @@
 <template>
-    <div class="collection-create">
-        <!-- Create Form -->
-        <div class="create-content">
-            <div class="form-wrapper">
-                <h2 class="page-title">{{ $t('collection.create_collection') }}</h2>
-                <div class="form-item">
-                    <label class="form-label">{{ $t('collection.collection_title') }}</label>
-                    <input v-model="form.title" type="text" :placeholder="$t('collection.collection_title_hint')" class="input-field" autofocus />
+    <DialogFrame :title="$t('collection.create_collection')" :tinted="false"
+                 :primary="{label: $t('collection.done'), disabled: !canSubmit, busy: creating}"
+                 :secondary="{label: $t('common.cancel'), disabled: creating}"
+                 @primary="createCollection" @secondary="close">
+        <div class="df-form">
+            <label class="df-label">{{ $t('collection.collection_title') }}</label>
+            <input ref="title" v-model="title" type="text" class="df-input" maxlength="100"
+                   :placeholder="$t('collection.collection_title_hint')">
+            <div class="df-gap"></div>
+            <label class="df-label">{{ $t('collection.collection_desc') }}</label>
+            <textarea v-model="desc" rows="3" class="df-input" maxlength="500"
+                      :placeholder="$t('collection.collection_desc_hint')"></textarea>
+            <div class="df-gap"></div>
+            <!-- 模板：群成员参与时输入框里的占位格式 -->
+            <label class="df-label">{{ $t('collection.collection_template') }}</label>
+            <input v-model="template" type="text" class="df-input" maxlength="100"
+                   :placeholder="$t('collection.collection_template_example')">
+            <p class="df-hint">{{ $t('collection.collection_template_hint') }}</p>
+            <div class="df-gap"></div>
+            <div class="df-card">
+                <div class="df-row clickable" @click="$refs.expirePicker.open(expireAt || tomorrow())">
+                    <span class="df-row-label">{{ $t('collection.collection_end_time') }}</span>
+                    <span class="df-row-value" :class="{set: expireAt}">{{ expireAt ? formatTime(expireAt) : $t('collection.collection_no_end_time') }}</span>
+                    <span v-if="expireAt" class="collection-clear" @click.stop="expireAt = 0"><i class="icon-ion-close-circled"></i></span>
+                    <i v-else class="icon-ion-ios-arrow-right df-row-arrow"></i>
+                    <NativeDateTimePicker ref="expirePicker" @pick="expireAt = $event"/>
                 </div>
-                <div class="form-item">
-                    <label class="form-label">{{ $t('collection.collection_desc') }}</label>
-                    <textarea v-model="form.desc" :placeholder="$t('collection.collection_desc_hint')" rows="4" class="input-field textarea-field"></textarea>
-                </div>
-                <div class="form-item">
-                    <label class="form-label">{{ $t('collection.collection_template') }}</label>
-                    <input v-model="form.template" type="text" :placeholder="$t('collection.collection_template_hint')" class="input-field" />
-                </div>
-                <div class="form-item">
-                    <label class="form-label">{{ $t('collection.collection_expire_type') }}</label>
-                    <div class="radio-group">
-                        <label class="radio-card" :class="{active: form.expireType === 0}">
-                            <input type="radio" v-model="form.expireType" :value="0" />
-                            <span class="radio-label">{{ $t('collection.collection_no_expire') }}</span>
-                        </label>
-                        <label class="radio-card" :class="{active: form.expireType === 1}">
-                            <input type="radio" v-model="form.expireType" :value="1" />
-                            <span class="radio-label">{{ $t('collection.collection_set_expire') }}</span>
-                        </label>
-                    </div>
-                </div>
-                <transition name="fade">
-                    <div class="form-item" v-if="form.expireType === 1">
-                        <label class="form-label">{{ $t('collection.collection_expire_time') }}</label>
-                        <input type="datetime-local" v-model="form.expireAtStr" class="input-field datetime-input" :min="minDateStr" />
-                    </div>
-                </transition>
             </div>
         </div>
-
-        <!-- Floating Footer Button -->
-        <div class="floating-footer">
-            <button class="action-btn" :disabled="!form.title" @click="createCollection">
-                {{ $t('common.send') }}
-            </button>
-        </div>
-    </div>
+    </DialogFrame>
 </template>
 
 <script>
 import collectionApi from "../../api/collectionApi";
-import store from "../../store";
-import { closeInAppSubWindowOrWindow, getSubWindowQuery, isInAppSubWindow } from '../util/subWindowNavigator';
-import { isElectron } from '../../platform';
+import DialogFrame from "../common/DialogFrame.vue";
+import NativeDateTimePicker from "../common/NativeDateTimePicker.vue";
+import {getSubWindowQuery} from '../util/subWindowNavigator';
+import {closeFeatureDialog} from "../util/featureDialog";
+import '../common/dialogForm.css';
 
+function pad(n) {
+    return n < 10 ? '0' + n : '' + n;
+}
+
+/**
+ * 发起接龙（对齐 wf-enterprise-chat 的 CreateCollectionScreen）：标题、描述、填写模板（预填一个示例）、截止时间。
+ */
 export default {
     name: "CollectionCreate",
     props: {
@@ -62,255 +55,86 @@ export default {
             default: null,
         }
     },
+    emits: ['close'],
     data() {
         return {
-            groupId: '',
-            form: {
-                title: '',
-                desc: '',
-                template: '',
-                expireType: 0,
-                expireAtStr: '',
-            },
-            sharedMiscState: store.state.misc,
+            groupId: getSubWindowQuery(this).groupId || '',
+            title: '',
+            desc: '',
+            // 模板用示例预填好，群成员直接按这个格式接龙
+            template: this.$t('collection.collection_template_example'),
+            // 0 = 无截止时间
+            expireAt: 0,
+            creating: false,
         };
     },
-    computed: {
-        isElectron() {
-            return this.sharedMiscState.isElectron;
-        },
-        minDateStr() {
-            let now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            return now.toISOString().slice(0, 16);
-        }
-    },
     mounted() {
-
-        if(isElectron()){
-            document.title = this.$t('collection.create_collection');
-        }
-
-        // Initialize expire time to tomorrow
-        let tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
-        this.form.expireAtStr = tomorrow.toISOString().slice(0, 16);
-
-        this.groupId = getSubWindowQuery(this).groupId || '';
+        this.$nextTick(() => this.$refs.title && this.$refs.title.focus());
+    },
+    computed: {
+        canSubmit() {
+            return !this.creating && !!this.title.trim();
+        },
     },
     methods: {
+        tomorrow() {
+            return Date.now() + 24 * 3600 * 1000;
+        },
+        formatTime(ms) {
+            let d = new Date(ms);
+            return `${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        },
         async createCollection() {
-            if (!this.form.title) return;
-            this.loading = true;
+            if (!this.canSubmit) {
+                return;
+            }
+            if (this.expireAt && this.expireAt <= Date.now()) {
+                this.$notify({text: this.$t('collection.expire_time_invalid'), type: 'warn'});
+                return;
+            }
+            this.creating = true;
             try {
-                let expireAt = 0;
-                if (this.form.expireType === 1 && this.form.expireAtStr) {
-                    expireAt = new Date(this.form.expireAtStr).getTime();
-                }
-
                 await collectionApi.createCollection(
                     this.groupId,
-                    this.form.title,
-                    this.form.desc,
-                    this.form.template,
-                    this.form.expireType,
-                    expireAt,
+                    this.title.trim(),
+                    this.desc.trim(),
+                    this.template.trim(),
+                    this.expireAt ? 1 : 0,
+                    this.expireAt,
                     0
                 );
-
-                this.closeWindow();
+                this.$notify({text: this.$t('collection.collection_create_success'), type: 'success'});
+                this.close();
             } catch (e) {
-                alert(this.$t('collection.collection_create_failed') + ': ' + e.message);
+                this.$notify({text: this.$t('collection.collection_create_failed') + ': ' + e.message, type: 'error'});
             } finally {
-                this.loading = false;
+                this.creating = false;
             }
         },
-        closeWindow() {
-            closeInAppSubWindowOrWindow(this);
-        }
-    }
+        close() {
+            closeFeatureDialog(this);
+        },
+    },
+    components: {
+        DialogFrame,
+        NativeDateTimePicker,
+    },
 }
 </script>
 
 <style scoped>
-.collection-create {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    height: 100vh;
-    background-color: var(--background-tertiary);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    color: var(--text-primary);
-    user-select: none;
-}
-
-/* Header */
-.page-header {
-    height: 50px;
-    width: 100%;
-    background: var(--background-primary);
+.collection-clear {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border-primary);
-    -webkit-app-region: drag;
-    flex-shrink: 0;
-    z-index: 10;
-}
-.header-left, .header-right {
-    width: 80px;
-    -webkit-app-region: no-drag;
-}
-.header-right {
-    text-align: right;
-}
-.header-title {
-    font-weight: 600;
-    font-size: var(--font-size-lg);
-    color: var(--text-primary);
-}
-.back-btn {
     cursor: pointer;
-    font-size: var(--font-size-base);
-    color: var(--text-muted);
-    padding: 4px 0;
-}
-.back-btn:hover {
-    color: var(--text-primary);
 }
 
-/* Create Form */
-.create-content {
-    flex: 1;
-    width: 100%;
-    overflow-y: auto;
-    padding: 20px;
-    padding-bottom: 80px;
-    background: var(--background-primary);
-}
-.form-wrapper {
-    width: 100%;
-}
-.page-title {
-    font-size: var(--font-size-3xl);
-    font-weight: bold;
-    margin-bottom: 24px;
-    color: var(--text-primary);
+.collection-clear i {
+    font-size: 15px;
+    color: var(--text-tertiary);
 }
 
-.form-item {
-    margin-bottom: 24px;
-}
-.form-label {
-    display: block;
-    margin-bottom: 8px;
-    color: var(--text-primary);
-    font-size: var(--font-size-base);
-    font-weight: 600;
-}
-.input-field {
-    width: 100%;
-    padding: 12px 14px;
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
-    background: var(--background-primary);
-    font-size: var(--font-size-lg);
-    color: var(--text-primary);
-    box-sizing: border-box;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.datetime-input {
-    margin-bottom: 40px;
-}
-.input-field:focus {
-    border-color: var(--accent-color);
-    box-shadow: var(--shadow-accent-focus);
-}
-.textarea-field {
-    resize: none;
-    line-height: 1.5;
-}
-
-/* Radio Cards */
-.radio-group {
-    display: flex;
-    gap: 16px;
-}
-.radio-card {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 12px;
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all 0.2s;
-    background: var(--background-primary);
-}
-.radio-card:hover {
-    background: var(--background-item-hover);
-}
-.radio-card.active {
-    border-color: var(--accent-color);
-    background: var(--background-item-selected);
-    color: var(--accent-color);
-}
-.radio-card input {
-    display: none;
-}
-.radio-label {
-    font-size: var(--font-size-base);
-    font-weight: 500;
-}
-
-/* Floating Footer */
-.floating-footer {
-    position: absolute;
-    bottom: 24px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    pointer-events: none;
-}
-.action-btn {
-    pointer-events: auto;
-    background: var(--accent-color);
-    color: var(--text-on-accent);
-    border: none;
-    padding: 12px 60px;
-    border-radius: 24px;
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: var(--shadow-accent);
-    transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
-}
-.action-btn:hover {
-    background: var(--status-info);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-accent-strong);
-}
-.action-btn:active {
-    transform: translateY(1px);
-    box-shadow: var(--shadow-accent);
-}
-.action-btn:disabled {
-    background: var(--accent-color-subtle);
-    box-shadow: none;
-    cursor: default;
-    transform: none;
-}
-
-/* Transitions */
-.fade-enter-active, .fade-leave-active {
-    transition: opacity 0.3s;
-}
-.fade-enter, .fade-leave-to {
-    opacity: 0;
+.collection-clear:hover i {
+    color: var(--text-secondary);
 }
 </style>

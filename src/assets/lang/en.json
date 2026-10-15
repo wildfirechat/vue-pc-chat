@@ -316,7 +316,23 @@
         "forward_public_poll_tip": "Public polls can be forwarded to other groups or friends. Forward now?",
         "forward_not_implemented": "Forward feature is not yet implemented",
         "result_stats": "{totalVotes} votes · {voterCount} people participated",
-        "poll_updated": "Poll updated"
+        "poll_updated": "Poll updated",
+        "create_poll_subtitle": "Start a new group poll",
+        "my_polls_subtitle": "Polls you created",
+        "no_polls": "No polls yet",
+        "publish": "Publish",
+        "max_select": "Max choices",
+        "option_count": "{count} options",
+        "max_options_limit": "You can add at most {count} options",
+        "poll_create_success": "Poll created",
+        "vote_count": "{count} votes",
+        "selected_count": "{count}/{max} selected",
+        "minutes_left": "{minutes} min left",
+        "view_result": "View results",
+        "join_action": "Vote",
+        "forward": "Forward",
+        "forward_coming_soon": "Forwarding polls is coming soon",
+        "service_not_configured": "Poll service is not configured"
     },
     "collection": {
         "collection": "Collection",
@@ -363,6 +379,15 @@
         "collection_creating": "Creating...",
         "collection_create_success": "Created successfully",
         "collection_create_failed": "Failed to create",
-        "collection_not_in_group": "You are not in this group"
+        "collection_not_in_group": "You are not in this group",
+        "collection_template_example": "Name - Phone",
+        "collection_template_label": "Template: ",
+        "collection_end_time": "Deadline",
+        "collection_no_end_time": "No deadline",
+        "collection_creator_suffix": "Started by {name}",
+        "people_count": "{count} joined",
+        "more_participants": "{count} more joined",
+        "collection_update_success": "Updated",
+        "collection_update_failed": "Update failed"
     }
 }

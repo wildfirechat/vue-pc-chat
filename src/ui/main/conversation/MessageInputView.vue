@@ -254,7 +254,8 @@ import {vOnClickOutside} from '@vueuse/components'
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
 import avenginekitproxy from "../../../wfc/av/engine/avenginekitproxy";
 import avenginekit from "../../../wfc/av/internal/engine.min";
-import { buildCollectionUrl, buildPollUrl } from '../../../platformHelper'
+import {showPollHome} from "../../poll/pollUi";
+import {showCollectionCreate} from "../../collection/collectionUi";
 import { openInAppSubWindow } from '../../util/subWindowNavigator'
 import searchServerApi from "../../../api/searchServerApi";
 import AsrManager from "../../../asr/AsrManager";
@@ -504,20 +505,7 @@ export default {
             let collectionServer = Config.getCollectionServer();
             if (collectionServer && ((appServer.indexOf('wildfirechat.net') >= 0 && collectionServer.indexOf('wildfirechat.net') >= 0)
                 || (appServer.indexOf('wildfirechat.net') === -1 && collectionServer.indexOf('wildfirechat.net') === -1))) {
-                if (!this.sharedMiscState.isElectron) {
-                    openInAppSubWindow(this, '/collection/create', {
-                        groupId: this.conversationInfo.conversation.target
-                    });
-                    return;
-                }
-                const url = buildCollectionUrl({
-                    mode: 'create',
-                    groupId: this.conversationInfo.conversation.target
-                });
-                ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
-                    url: url,
-                    groupId: this.conversationInfo.conversation.target
-                });
+                showCollectionCreate(this, this.conversationInfo.conversation.target);
             } else {
                 this.$notify({
                     type: 'error',
@@ -530,20 +518,7 @@ export default {
             let pollServer = Config.getPollServer();
             if (pollServer && ((appServer.indexOf('wildfirechat.net') >= 0 && pollServer.indexOf('wildfirechat.net') >= 0)
                 || (appServer.indexOf('wildfirechat.net') === -1 && pollServer.indexOf('wildfirechat.net') === -1))) {
-                if (!this.sharedMiscState.isElectron) {
-                    openInAppSubWindow(this, '/poll', {
-                        groupId: this.conversationInfo.conversation.target
-                    });
-                    return;
-                }
-                const url = buildPollUrl({
-                    mode: 'home',
-                    groupId: this.conversationInfo.conversation.target
-                });
-                ipcRenderer.send(IpcEventType.SHOW_POLL_WINDOW, {
-                    url: url,
-                    groupId: this.conversationInfo.conversation.target
-                });
+                showPollHome(this, this.conversationInfo.conversation.target);
             } else {
                 this.$notify({
                     type: 'error',

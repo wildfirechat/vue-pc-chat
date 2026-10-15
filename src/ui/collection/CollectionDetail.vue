@@ -1,79 +1,58 @@
 <template>
-    <div class="collection-detail">
-        <!-- Header -->
-        <header v-if="!isElectron" class="page-header">
-            <div class="header-left">
-                <span class="back-btn" @click="closeWindow">{{ $t('common.back') }}</span>
-            </div>
-            <div class="header-title">{{ $t('collection.collection_detail') }}</div>
-            <div class="header-right"></div>
-        </header>
-
-        <div v-if="loading && !collection" class="loading-state">
-            <div class="spinner"></div>
-            <p>{{ $t('collection.loading') }}</p>
+    <DialogFrame :title="$t('collection.collection_detail')"
+                 :primary="joinable ? {label: $t('collection.collection_submit'), disabled: !canSubmit, busy} : null"
+                 :secondary="joinable ? {label: $t('common.cancel')} : null"
+                 @primary="onSubmit" @secondary="close">
+        <div v-if="!collection" class="df-center">
+            <span v-if="loading" class="df-spinner"></span>
+            <span v-else>{{ error || $t('collection.collection_load_failed') }}</span>
         </div>
-        <div v-else-if="error" class="error-state">
-            <i class="icon-error"></i>
-            <p>{{ error }}</p>
-        </div>
-
-        <div v-else-if="collection" class="detail-content">
-            <div class="detail-header">
-                <div class="creator-info">
-                    <img :src="getAvatar(collection.creatorId)" class="creator-avatar" alt="">
-                    <div class="creator-text">
-                        <span class="creator-name">{{ getCreatorName(collection.creatorId) }}</span>
-                        <span class="meta-info">{{ $t('collection.collection_meta_info', { count: collection.participantCount || 0 }) }}</span>
-                    </div>
+        <div v-else class="df-form">
+            <div class="collection-header">
+                <p class="collection-title">{{ collection.title }}</p>
+                <p v-if="desc" class="collection-desc">{{ desc }}</p>
+                <span v-if="collection.template" class="collection-template">{{ $t('collection.collection_template_label') }}{{ collection.template }}</span>
+                <div class="collection-creator">
+                    <img :src="portrait(collection.creatorId)" alt="">
+                    <span class="collection-creator-name">{{ $t('collection.collection_creator_suffix', {name: userName(collection.creatorId)}) }}</span>
+                    <span class="collection-count">{{ $t('collection.people_count', {count: entries.length}) }}</span>
                 </div>
-                <div class="collection-title">{{ collection.title }}</div>
-                <div v-if="collection.desc || collection.description" class="collection-desc">{{ collection.desc ? collection.desc : collection.description }}</div>
-                <div v-if="collection.template" class="collection-template">{{ $t('collection.collection_template') }}: {{ collection.template }}</div>
             </div>
 
-            <div class="divider"></div>
-
-            <div class="entry-list">
-                <div v-for="(item, index) in displayEntries" :key="index" class="entry-item">
-                    <div class="index-badge">{{ item.index }}</div>
-
-                    <!-- Edit Mode -->
-                    <div v-if="item.isEdit" class="entry-content edit-mode">
-                        <textarea
-                            ref="editInput"
-                            v-model="myEntryContent"
-                            :placeholder="collection.template || $t('collection.collection_join_hint')"
-                            class="edit-input"
-                            rows="1"
-                            @input="autoResize"
-                            @keydown.enter.prevent="onSubmit"
-                        ></textarea>
-                    </div>
-
-                    <!-- View Mode -->
-                    <div v-else class="entry-content view-mode">
-                        <span class="entry-text">{{ item.content }}</span>
-                    </div>
+            <div v-if="entries.length || showNewEntry" class="df-card collection-entries">
+                <div v-for="(entry, index) in entries" :key="entry.userId + '-' + index" class="collection-entry"
+                     :class="{editable: isEditable(entry)}">
+                    <span class="collection-index">{{ index + 1 }}</span>
+                    <textarea v-if="isEditable(entry)" ref="editInput" v-model="draft" rows="1" class="collection-input"
+                              :placeholder="collection.template || $t('collection.collection_join_hint')"
+                              @input="autoResize" @keydown.enter.exact.prevent="onSubmit"></textarea>
+                    <span v-else class="collection-entry-text">{{ entry.content }}</span>
+                </div>
+                <!-- 还没参与、接龙进行中：清单末尾挂一行空的编辑位 -->
+                <div v-if="showNewEntry" class="collection-entry editable">
+                    <span class="collection-index">{{ entries.length + 1 }}</span>
+                    <textarea ref="editInput" v-model="draft" rows="1" class="collection-input"
+                              :placeholder="collection.template || $t('collection.collection_join_hint')"
+                              @input="autoResize" @keydown.enter.exact.prevent="onSubmit"></textarea>
                 </div>
             </div>
         </div>
-
-        <!-- Floating Footer Button -->
-        <div class="floating-footer" v-if="collection">
-            <button class="action-btn" :disabled="!canSubmit" @click="onSubmit">
-                {{ $t('collection.done') }}
-            </button>
-        </div>
-    </div>
+    </DialogFrame>
 </template>
 
 <script>
 import collectionApi from "../../api/collectionApi";
 import wfc from "../../wfc/client/wfc";
-import store from "../../store";
-import { closeInAppSubWindowOrWindow, getSubWindowQuery } from '../util/subWindowNavigator';
+import Config from "../../config";
+import DialogFrame from "../common/DialogFrame.vue";
+import {getSubWindowQuery} from '../util/subWindowNavigator';
+import {closeFeatureDialog} from "../util/featureDialog";
+import '../common/dialogForm.css';
 
+/**
+ * 接龙详情（对齐 wf-enterprise-chat 的 CollectionDetailScreen）：接龙内容 + 参与清单，自己那条就地编辑。
+ * 清空自己的内容再提交即退出接龙，所以按钮叫「提交」。进来直接聚焦到自己那一行，没参与时预填「昵称 - 」。
+ */
 export default {
     name: "CollectionDetail",
     props: {
@@ -83,402 +62,303 @@ export default {
             default: null,
         }
     },
+    emits: ['close'],
     data() {
+        let query = getSubWindowQuery(this);
         return {
             loading: false,
             error: null,
-            groupId: '',
-            collectionId: null,
+            busy: false,
+            groupId: query.groupId || '',
+            collectionId: query.collectionId,
             collection: null,
-            myEntryContent: '',
-            originalEntryContent: '',
-            sharedMiscState: store.state.misc,
+            draft: '',
+            original: '',
+            me: wfc.getUserId(),
         };
     },
-    computed: {
-        isElectron() {
-            return this.sharedMiscState.isElectron;
-        },
-        selfUid() {
-            return wfc.getUserId();
-        },
-        hasJoined() {
-            if (!this.collection || !this.collection.entries) return false;
-            return this.collection.entries.some(e => e.userId === this.selfUid);
-        },
-        myEntryIndex() {
-            if (!this.collection || !this.collection.entries) return -1;
-            return this.collection.entries.findIndex(e => e.userId === this.selfUid);
-        },
-        displayEntries() {
-            if (!this.collection) return [];
-            let entries = [];
-            let rawEntries = this.collection.entries || [];
-
-            // Map existing entries
-            rawEntries.forEach((e, i) => {
-                let isMe = e.userId === this.selfUid;
-                entries.push({
-                    index: i + 1,
-                    isEdit: isMe && this.collection.status === 0,
-                    content: e.content,
-                    userId: e.userId,
-                    avatar: this.getAvatar(e.userId),
-                    timestamp: e.timestamp
-                });
-            });
-
-            // If not joined and active, add new row
-            if (!this.hasJoined && this.collection.status === 0) {
-                entries.push({
-                    index: rawEntries.length + 1,
-                    isEdit: true,
-                    content: '',
-                    userId: this.selfUid,
-                    avatar: this.getAvatar(this.selfUid),
-                    timestamp: Date.now()
-                });
-            }
-
-            return entries;
-        },
-        canSubmit() {
-            if (!this.collection) return false;
-            let current = this.myEntryContent.trim();
-            let original = this.originalEntryContent.trim();
-            return current !== original;
-        }
-    },
     mounted() {
-        document.title = this.$t('collection.collection_detail');
-        
-        let query = getSubWindowQuery(this);
-        this.collectionId = query.collectionId;
-        this.groupId = query.groupId || '';
         this.fetchCollection();
+    },
+    computed: {
+        desc() {
+            return this.collection.description || this.collection.desc || '';
+        },
+        entries() {
+            return ((this.collection && this.collection.entries) || []).filter(e => !e.deleted);
+        },
+        myEntry() {
+            return this.entries.find(e => e.userId === this.me) || null;
+        },
+        joinable() {
+            let c = this.collection;
+            if (!c || c.status !== 0) {
+                return false;
+            }
+            if (c.expireType && c.expireAt > 0 && c.expireAt < Date.now()) {
+                return false;
+            }
+            return !(c.maxParticipants > 0 && this.entries.length >= c.maxParticipants);
+        },
+        showNewEntry() {
+            return this.joinable && !this.myEntry;
+        },
+        // 没参与：有内容才能提交；参与过：内容变了才能提交（清空 = 退出接龙）
+        canSubmit() {
+            if (!this.joinable || this.busy) {
+                return false;
+            }
+            let current = this.draft.trim();
+            if (this.myEntry) {
+                return current === '' ? !!this.original : current !== this.original;
+            }
+            return current !== '';
+        },
     },
     methods: {
         async fetchCollection() {
             this.loading = true;
             try {
-                this.collection = await collectionApi.getCollection(this.collectionId, this.groupId);
-                if (!this.collection.entries) {
-                    this.collection.entries = [];
+                let collection = await collectionApi.getCollection(this.collectionId, this.groupId);
+                if (!collection.entries) {
+                    collection.entries = [];
                 }
-                if (!this.groupId && this.collection.groupId) {
-                    this.groupId = this.collection.groupId;
+                if (!this.groupId && collection.groupId) {
+                    this.groupId = collection.groupId;
                 }
-                this.updateMyEntryState();
+                this.collection = collection;
+                this.error = null;
+                this.resetDraft();
             } catch (e) {
                 this.error = this.$t('collection.collection_load_failed') + ': ' + e.message;
             } finally {
                 this.loading = false;
             }
         },
-        updateMyEntryState() {
-            if (this.hasJoined) {
-                let entry = this.collection.entries[this.myEntryIndex];
-                this.myEntryContent = entry.content;
-                this.originalEntryContent = entry.content;
+        resetDraft() {
+            if (this.myEntry) {
+                this.draft = this.myEntry.content || '';
+                this.original = this.draft.trim();
             } else {
-                this.myEntryContent = '';
-                this.originalEntryContent = '';
-                // Auto fill name：未参与时预填「昵称 - 」并聚焦到输入框（对齐 wf-enterprise-chat 00708a21）
-                let userInfo = wfc.getUserInfo(this.selfUid, false);
-                let name = userInfo.displayName || userInfo.name;
-                if (name) {
-                    this.myEntryContent = name + ' - ';
-                    this.$nextTick(() => {
-                        let input = this.$refs.editInput?.[0] || this.$refs.editInput;
-                        this.autoResize({target: input});
-                        if (input && input.focus) {
-                            input.focus();
-                        }
-                    });
-                }
+                // 没填过：新行预填「昵称 - 」，省得每次自己打名字
+                let name = wfc.getGroupMemberDisplayName(this.groupId, this.me);
+                this.draft = name && !name.startsWith('<') ? name + ' - ' : '';
+                this.original = '';
             }
+            this.$nextTick(() => {
+                let input = this.$refs.editInput;
+                input = Array.isArray(input) ? input[0] : input;
+                if (input) {
+                    this.autoResize({target: input});
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                }
+            });
         },
-        async onSubmit() {
-            let content = this.myEntryContent.trim();
-            if (content === this.originalEntryContent && content !== '') return;
-
-            this.loading = true;
+        isEditable(entry) {
+            return this.joinable && entry.userId === this.me;
+        },
+        onSubmit() {
+            if (!this.canSubmit) {
+                return;
+            }
+            let content = this.draft.trim();
+            if (this.myEntry && content === '') {
+                this.$alert({
+                    content: this.$t('collection.confirm_delete_entry'),
+                    confirmText: this.$t('common.delete'),
+                    confirmButtonType: 'danger',
+                    confirmCallback: () => this.deleteEntry(),
+                });
+                return;
+            }
+            this.join(content);
+        },
+        // 参与和修改是同一个接口，只是提示语不同
+        async join(content) {
+            let joined = !!this.myEntry;
+            this.busy = true;
             try {
-                if (this.hasJoined && content === '') {
-                    // Delete
-                    if(confirm(this.$t('collection.confirm_delete_entry'))) {
-                        await collectionApi.deleteCollectionEntry(this.collectionId, this.groupId);
-                    } else {
-                        this.loading = false;
-                        return;
-                    }
-                } else {
-                    // Join or Update
-                    await collectionApi.joinCollection(this.collectionId, this.groupId, content);
-                }
-                await this.fetchCollection();
-                this.closeWindow();
+                await collectionApi.joinCollection(this.collectionId, this.groupId, content);
+                this.$notify({text: this.$t(joined ? 'collection.collection_update_success' : 'collection.collection_join_success'), type: 'success'});
+                this.close();
             } catch (e) {
-                alert(this.$t('collection.operation_failed') + ': ' + e.message);
+                this.toastError(e, this.$t(joined ? 'collection.collection_update_failed' : 'collection.collection_join_failed'));
             } finally {
-                this.loading = false;
+                this.busy = false;
             }
         },
-        closeWindow() {
-            closeInAppSubWindowOrWindow(this);
+        async deleteEntry() {
+            this.busy = true;
+            try {
+                await collectionApi.deleteCollectionEntry(this.collectionId, this.groupId);
+                this.$notify({text: this.$t('collection.collection_delete_success'), type: 'success'});
+                await this.fetchCollection();
+            } catch (e) {
+                this.toastError(e, this.$t('collection.delete_failed'));
+            } finally {
+                this.busy = false;
+            }
         },
-        getCreatorName(userId) {
-            return wfc.getUserDisplayName(userId);
-        },
-        getAvatar(userId) {
-            let userInfo = wfc.getUserInfo(userId, false);
-            return userInfo.portrait;
+        // 3003 = 已不在该群，接龙里很常见，单独给一句人话
+        toastError(e, fallback) {
+            let msg = (e && e.message) || String(e);
+            this.$notify({
+                text: msg.indexOf('3003') >= 0 ? this.$t('collection.collection_not_in_group') : fallback + ': ' + msg,
+                type: 'error',
+            });
         },
         autoResize(event) {
-            if (!event || !event.target) return;
-            event.target.style.height = 'auto';
-            event.target.style.height = event.target.scrollHeight + 'px';
-        }
-    }
+            let el = event && event.target;
+            if (!el) {
+                return;
+            }
+            el.style.height = 'auto';
+            let max = parseFloat(getComputedStyle(el).maxHeight) || Infinity;
+            el.style.height = Math.min(el.scrollHeight, max) + 'px';
+            // 没到最高时不出滚动条，到了才能滚
+            el.style.overflowY = el.scrollHeight > max ? 'auto' : 'hidden';
+        },
+        userName(userId) {
+            return wfc.getGroupMemberDisplayName(this.groupId, userId);
+        },
+        portrait(userId) {
+            let userInfo = wfc.getUserInfo(userId, false, this.groupId);
+            return (userInfo && userInfo.portrait) || Config.DEFAULT_PORTRAIT_URL;
+        },
+        close() {
+            closeFeatureDialog(this);
+        },
+    },
+    components: {
+        DialogFrame,
+    },
 }
 </script>
 
 <style scoped>
-.collection-detail {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    height: 100vh;
-    background-color: var(--background-tertiary);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    color: var(--text-primary);
-    user-select: none;
+.collection-header {
+    padding: 16px;
+    border-radius: 8px;
+    background: var(--background-primary);
 }
 
-/* Header */
-.page-header {
-    height: 50px;
-    background: var(--background-primary);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
-    border-bottom: 1px solid var(--border-primary);
-    -webkit-app-region: drag;
-    flex-shrink: 0;
-    z-index: 10;
-}
-.header-left, .header-right {
-    width: 80px;
-    -webkit-app-region: no-drag;
-}
-.header-right {
-    text-align: right;
-}
-.header-title {
-    font-weight: 600;
-    font-size: var(--font-size-lg);
-    color: var(--text-primary);
-}
-.back-btn {
-    cursor: pointer;
-    font-size: var(--font-size-base);
-    color: var(--text-muted);
-    padding: 4px 0;
-}
-.back-btn:hover {
-    color: var(--text-primary);
-}
-
-.loading-state, .error-state {
-    padding: 60px;
-    text-align: center;
-    color: var(--text-hint);
-}
-.spinner {
-    border: 3px solid var(--background-trans-muted);
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-circle);
-    border-left-color: var(--accent-color);
-    animation: spin 1s linear infinite;
-    margin: 0 auto 8px;
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-.error-state {
-    color: var(--text-danger);
-}
-
-/* Detail Mode */
-.detail-content {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 80px;
-    background: var(--background-primary);
-    width: 100%;
-}
-.detail-header {
-    background: var(--background-primary);
-    padding: 24px 24px 16px 24px;
-}
-.creator-info {
-    display: flex;
-    align-items: center;
-    margin-bottom: 16px;
-}
-.creator-avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    margin-right: 12px;
-}
-.creator-text {
-    display: flex;
-    flex-direction: column;
-}
-.creator-name {
-    font-size: var(--font-size-base);
-    font-weight: 600;
-    color: var(--text-primary);
-}
-.meta-info {
-    font-size: var(--font-size-xs);
-    color: var(--text-hint);
-    margin-top: 2px;
-}
 .collection-title {
-    font-size: var(--font-size-3xl);
-    font-weight: bold;
-    color: var(--text-primary);
-    margin-bottom: 12px;
-    line-height: 1.3;
-}
-.collection-desc {
-    font-size: var(--font-size-lg);
-    color: var(--text-muted);
-    margin-bottom: 12px;
-    white-space: pre-wrap;
-    line-height: 1.6;
-}
-.collection-template {
-    font-size: var(--font-size-sm);
-    color: var(--accent-color);
-    background: var(--background-item-selected);
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: var(--radius-sm);
-}
-.divider {
-    height: 8px;
-    background: var(--background-tertiary);
-    flex-shrink: 0;
-}
-
-/* Entry List */
-.entry-list {
-    background: var(--background-primary);
-    flex: 1;
-    padding: 8px 0;
-}
-.entry-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border-secondary);
-    transition: background 0.2s;
-}
-.entry-item:hover {
-    background: var(--background-secondary);
-}
-.index-badge {
-    width: 24px;
-    height: 24px;
-    background: var(--background-secondary);
-    color: var(--text-link);
-    border-radius: var(--radius-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: var(--font-size-xs);
+    font-size: calc(18px * var(--font-scale, 1));
     font-weight: 600;
-    margin-right: 16px;
-    flex-shrink: 0;
-    margin-top: 4px;
-}
-
-.entry-content {
-    flex: 1;
-    display: flex;
-    align-items: flex-start;
-}
-.view-mode {
-    align-items: center;
-}
-.entry-text {
-    flex: 1;
-    font-size: var(--font-size-lg);
-    color: var(--text-primary);
-    line-height: 1.6;
+    line-height: 1.4;
     word-break: break-word;
 }
 
-.edit-input {
-    width: 100%;
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
-    padding: 8px 12px;
-    font-size: var(--font-size-lg);
+.collection-desc {
+    margin-top: 6px;
+    font-size: var(--font-size-base);
     line-height: 1.5;
-    outline: none;
-    resize: none;
-    background: var(--background-primary);
-    font-family: inherit;
-    color: var(--text-primary);
-    box-shadow: var(--shadow-accent-focus);
-    border-color: var(--accent-color);
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
-/* Floating Footer */
-.floating-footer {
-    position: absolute;
-    bottom: 24px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: center;
-    pointer-events: none;
-}
-.action-btn {
-    pointer-events: auto;
-    background: var(--accent-color);
-    color: var(--text-on-accent);
-    border: none;
-    padding: 12px 60px;
-    border-radius: 24px;
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: var(--shadow-accent);
-    transition: transform 0.1s, box-shadow 0.2s, background 0.2s;
-}
-.action-btn:hover {
-    background: var(--status-info);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-accent-strong);
-}
-.action-btn:active {
-    transform: translateY(1px);
-    box-shadow: var(--shadow-accent);
-}
-.action-btn:disabled {
+.collection-template {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: var(--font-size-xs);
+    color: var(--accent-color);
     background: var(--accent-color-subtle);
-    box-shadow: none;
-    cursor: default;
-    transform: none;
+}
+
+.collection-creator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.collection-creator img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.collection-creator-name {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.collection-count {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+}
+
+.collection-entries {
+    margin-top: 12px;
+}
+
+.collection-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 14px;
+}
+
+.collection-entry.editable {
+    background: var(--accent-color-subtle);
+}
+
+.collection-index {
+    flex: 0 0 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xxs);
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--border-secondary);
+}
+
+.collection-entry.editable .collection-index {
+    color: var(--text-on-accent);
+    background: var(--accent-color);
+}
+
+.collection-entry-text {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-base);
+    line-height: 20px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+textarea.collection-input {
+    flex: 1;
+    min-width: 0;
+    height: 20px;
+    max-height: 60px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    font-size: var(--font-size-base);
+    line-height: 20px;
+    overflow-y: hidden;
+    font-family: inherit;
+    color: var(--text-primary);
+    resize: none;
+    outline: none;
+}
+
+textarea.collection-input::placeholder {
+    color: var(--text-tertiary);
 }
 </style>

@@ -1,44 +1,46 @@
 <template>
-    <div class="poll-list-page">
-        <div class="list-header">
-            <span class="back-btn" @click="goBack">‹ {{ $t('common.back') }}</span>
-            <span class="list-title">{{ $t('poll.my_polls') }}</span>
-            <span class="placeholder"></span>
+    <DialogFrame :title="$t('poll.my_polls')">
+        <div v-if="loading && !polls.length" class="df-center">
+            <span class="df-spinner"></span>
         </div>
-        <div class="list-content">
-            <div v-if="loading" class="loading-state">
-                <div class="spinner"></div>
-                <p>{{ $t('common.loading') }}</p>
-            </div>
-            <div v-else-if="polls.length === 0" class="empty-state">
-                <p>{{ $t('poll.no_polls') }}</p>
-            </div>
-            <div v-else class="poll-list">
-                <div v-for="poll in polls" :key="poll.pollId" class="poll-list-item" @click="openPollDetail(poll)">
-                    <div class="poll-type-icon">
-                        <span v-if="poll.type === 1">◉</span>
-                        <span v-else>☑</span>
-                    </div>
-                    <div class="poll-info">
-                        <div class="poll-list-title">{{ poll.title }}</div>
-                        <div class="poll-list-meta">
-                            <span class="poll-status" :class="{ended: poll.status === 1 || isPollExpired(poll)}">
-                                {{ getPollStatusText(poll) }}
-                            </span>
-                            <span class="poll-count">{{ $t('poll.voter_count', {count: poll.voterCount || 0}) }}</span>
-                        </div>
-                    </div>
-                    <div class="poll-arrow">›</div>
+        <div v-else-if="!polls.length" class="df-center">
+            <i class="icon-ion-stats-bars poll-list-empty-icon"></i>
+            <span>{{ $t('poll.no_polls') }}</span>
+        </div>
+        <div v-else class="poll-list">
+            <div v-for="poll in polls" :key="pollIdOf(poll)" class="poll-card" @click="openDetail(poll)">
+                <div class="poll-card-head">
+                    <span class="poll-card-title">{{ poll.title }}</span>
+                    <span v-if="poll.isCreator" class="poll-card-delete" :title="$t('common.delete')"
+                          @click.stop="deletePoll(poll)"><i class="icon-ion-ios-trash-outline"></i></span>
+                    <span class="df-chip poll-card-chip" :class="chipClass(poll)">{{ chipText(poll) }}</span>
+                </div>
+                <p v-if="descOf(poll)" class="poll-card-desc">{{ descOf(poll) }}</p>
+                <div class="poll-card-meta">
+                    <i class="icon-ion-android-people"></i>
+                    <span>{{ $t('poll.voter_count', {count: poll.voterCount || 0}) }}</span>
+                    <i class="icon-ion-stats-bars"></i>
+                    <span>{{ $t('poll.vote_count', {count: poll.totalVotes || 0}) }}</span>
+                    <span class="spacer"></span>
+                    <span v-if="remainingText(poll)" :class="{remaining: !isEnded(poll)}">{{ remainingText(poll) }}</span>
                 </div>
             </div>
         </div>
-    </div>
+    </DialogFrame>
 </template>
 
 <script>
 import pollApi from "../../api/pollApi";
-import { backInAppSubWindowOrRouter, getSubWindowQuery, isInAppSubWindow, pushInAppSubWindow } from '../util/subWindowNavigator';
+import DialogFrame from "../common/DialogFrame.vue";
+import {getSubWindowQuery} from '../util/subWindowNavigator';
+import {showPollDetail} from "./pollUi";
+import {pollRemainingText} from "./pollUtil";
+import '../common/dialogForm.css';
 
+/**
+ * 我发起的投票（对齐 wf-enterprise-chat 的 PollListScreen）。点一张卡片在上面叠开详情（管理模式），
+ * 关了详情回到列表并刷新；删除按钮 hover 时出现。
+ */
 export default {
     name: "PollList",
     props: {
@@ -48,207 +50,180 @@ export default {
             default: null,
         }
     },
+    emits: ['close'],
     data() {
         return {
             loading: false,
             polls: [],
-            groupId: ''
+            groupId: getSubWindowQuery(this).groupId || '',
         };
     },
     mounted() {
-        document.title = this.$t('poll.my_polls');
-        this.groupId = getSubWindowQuery(this).groupId || '';
-        this.loadMyPolls();
+        this.loadPolls();
     },
     methods: {
-        goBack() {
-            backInAppSubWindowOrRouter(this);
-        },
-        async loadMyPolls() {
+        async loadPolls() {
             this.loading = true;
             try {
-                this.polls = await pollApi.getMyPolls();
+                this.polls = (await pollApi.getMyPolls()) || [];
             } catch (e) {
-                alert(this.$t('poll.poll_load_failed') + ': ' + e.message);
+                this.$notify({text: this.$t('poll.poll_load_failed') + ': ' + e.message, type: 'error'});
             } finally {
                 this.loading = false;
             }
         },
-        isPollExpired(poll) {
-            if (poll.endTime > 0) {
-                return poll.endTime < Date.now();
-            }
-            return false;
+        pollIdOf(poll) {
+            return poll.id || poll.pollId;
         },
-        getPollStatusText(poll) {
-            if (poll.status === 1 || this.isPollExpired(poll)) {
+        descOf(poll) {
+            return poll.description || poll.desc || '';
+        },
+        isEnded(poll) {
+            return poll.status === 1 || (poll.endTime > 0 && poll.endTime < Date.now());
+        },
+        chipClass(poll) {
+            if (poll.status === 1) {
+                return 'ended';
+            }
+            return poll.hasVoted ? 'success' : '';
+        },
+        chipText(poll) {
+            if (poll.status === 1) {
                 return this.$t('poll.poll_ended');
             }
-            return this.$t('poll.poll_in_progress');
+            return poll.hasVoted ? this.$t('poll.already_voted') : this.$t('poll.poll_in_progress');
         },
-        openPollDetail(poll) {
-            const query = {
-                pollId: poll.id,
-                groupId: this.groupId
-            };
-            if (isInAppSubWindow(this)) {
-                pushInAppSubWindow(this, '/poll/detail', query);
-     
-            } else {
-                this.$router.push({
-                    path: '/poll/detail',
-                    query,
-                });
-            }
-        }
-    }
+        remainingText(poll) {
+            return pollRemainingText(this, poll);
+        },
+        openDetail(poll) {
+            showPollDetail(this, {
+                pollId: this.pollIdOf(poll),
+                groupId: poll.groupId || this.groupId,
+                stack: true,
+                onClosed: () => this.loadPolls(),
+            });
+        },
+        deletePoll(poll) {
+            this.$alert({
+                content: this.$t('poll.confirm_delete'),
+                confirmText: this.$t('common.delete'),
+                confirmButtonType: 'danger',
+                confirmCallback: async () => {
+                    try {
+                        await pollApi.deletePoll(this.pollIdOf(poll), poll.groupId || this.groupId);
+                        this.$notify({text: this.$t('poll.poll_deleted'), type: 'success'});
+                        this.loadPolls();
+                    } catch (e) {
+                        this.$notify({text: this.$t('poll.delete_failed') + ': ' + e.message, type: 'error'});
+                    }
+                },
+            });
+        },
+    },
+    components: {
+        DialogFrame,
+    },
 }
 </script>
 
 <style scoped>
-.poll-list-page {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    height: 100vh;
-    width: 100%;
-    background-color: var(--background-tertiary);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    color: var(--text-primary);
-    user-select: none;
-}
-
-.list-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px;
-    background: var(--background-primary);
-    border-bottom: 1px solid var(--border-primary);
-    width: 100%;
-}
-
-.back-btn {
-    font-size: var(--font-size-lg);
-    color: var(--text-link);
-    cursor: pointer;
-}
-
-.list-title {
-    font-size: 17px;
-    font-weight: 600;
-}
-
-.placeholder {
-    width: 60px;
-}
-
-.list-content {
-    flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-    width: 100%;
-}
-
-.loading-state {
-    padding: 60px;
-    text-align: center;
-    color: var(--text-hint);
-}
-
-.spinner {
-    border: 3px solid var(--background-trans-muted);
-    width: 30px;
-    height: 30px;
-    border-radius: var(--radius-circle);
-    border-left-color: var(--accent-color);
-    animation: spin 1s linear infinite;
-    margin: 0 auto 8px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.empty-state {
-    padding: 60px;
-    text-align: center;
-    color: var(--text-hint);
-}
-
 .poll-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-}
-
-.poll-list-item {
-    display: flex;
-    align-items: center;
+    gap: 10px;
     padding: 16px;
+}
+
+.poll-list-empty-icon {
+    font-size: 44px;
+    color: var(--text-tertiary);
+    opacity: .6;
+}
+
+.poll-card {
+    padding: 14px 16px;
+    border-radius: 8px;
     background: var(--background-primary);
-    border-radius: var(--radius-lg);
     cursor: pointer;
+    transition: box-shadow var(--duration-fast);
 }
 
-.poll-list-item:hover {
-    background: var(--background-item-hover);
+.poll-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
 }
 
-.poll-type-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-circle);
-    background: var(--background-item-selected);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 12px;
-    font-size: var(--font-size-2xl);
-    color: var(--accent-color);
-}
-
-.poll-info {
-    flex: 1;
-}
-
-.poll-list-title {
-    font-size: var(--font-size-lg);
-    font-weight: 500;
-    color: var(--text-primary);
-    margin-bottom: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.poll-list-meta {
+.poll-card-head {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.poll-status {
+.poll-card-title {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* 删除按钮只在 hover 时出现，并让掉状态标签的位置 */
+.poll-card-delete {
+    display: none;
+    cursor: pointer;
+}
+
+.poll-card-delete i {
+    font-size: 18px;
+    color: var(--text-tertiary);
+}
+
+.poll-card-delete:hover i {
+    color: var(--text-danger);
+}
+
+.poll-card:hover .poll-card-delete {
+    display: flex;
+}
+
+.poll-card:hover .poll-card-delete + .poll-card-chip {
+    display: none;
+}
+
+.poll-card-desc {
+    margin-top: 4px;
     font-size: var(--font-size-xs);
-    color: var(--accent-color);
-    background: var(--background-item-selected);
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-.poll-status.ended {
-    color: var(--text-hint);
-    background: var(--background-tertiary);
-}
-
-.poll-count {
+.poll-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
     font-size: var(--font-size-xs);
-    color: var(--text-hint);
+    color: var(--text-tertiary);
 }
 
-.poll-arrow {
-    font-size: var(--font-size-2xl);
-    color: var(--text-hint);
+.poll-card-meta i {
+    font-size: 14px;
+    color: var(--text-tertiary);
+}
+
+.poll-card-meta span + i {
+    margin-left: 10px;
+}
+
+.poll-card-meta .spacer {
+    flex: 1;
+}
+
+.poll-card-meta .remaining {
+    color: var(--status-warning);
 }
 </style>

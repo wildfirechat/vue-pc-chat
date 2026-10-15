@@ -1,51 +1,32 @@
 <template>
-    <div class="collection-message-container" @click="onClick" :class="{out: message.direction === 0}">
-        <!-- Header: Icon + Title + Count -->
-        <div class="msg-header">
-            <i class="icon-ion-ios-list-outline collection-icon" :class="{out: message.direction === 0}"></i>
-            <div class="title-container">
-                <div class="title">{{ message.messageContent.title }}</div>
-            </div>
-            <div class="count">{{ formatCount($t('collection.collection_participant_count'), participantCount) }}</div>
+    <div class="collection-card" :class="{out: message.direction === 0}" @click="onClick">
+        <div class="collection-card-title">
+            <i class="icon-ion-ios-list-outline"></i>
+            <span class="title">{{ content.title }}</span>
+            <span class="count">{{ $t('collection.people_count', {count: entries.length}) }}</span>
         </div>
-
-        <!-- Description (Optional) -->
-        <div class="desc" v-if="message.messageContent.desc">{{ message.messageContent.desc }}</div>
-
-        <div class="divider"></div>
-
-        <!-- Entries Preview -->
-        <div class="entries-container">
-            <div v-if="previewEntries.length === 0" class="empty-hint">
-                {{ $t('collection.collection_empty_hint') }}
-            </div>
-            <div v-else class="entry-list">
-                <div v-for="(entry, index) in previewEntries" :key="index" class="entry-item">
-                    <span class="entry-text">{{ index + 1 }}. {{ entry.content }}</span>
-                </div>
-            </div>
-            <div v-if="remainingCount > 0" class="more-hint">
-                {{ formatCount($t('collection.collection_more_participants'), remainingCount) }}
-            </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Footer Action -->
-        <div class="footer">
-            <span class="action-text" :class="{ended: status !== 0}">{{ actionText }}</span>
-        </div>
+        <p v-if="content.desc" class="collection-card-desc">{{ content.desc }}</p>
+        <div class="collection-card-divider"></div>
+        <p v-if="!preview.length" class="collection-card-hint">{{ $t('collection.collection_empty_hint') }}</p>
+        <template v-else>
+            <p v-for="(entry, index) in preview" :key="index" class="collection-card-entry">{{ index + 1 }}. {{ entry.content }}</p>
+            <p v-if="remaining > 0" class="collection-card-hint more">{{ $t('collection.more_participants', {count: remaining}) }}</p>
+        </template>
+        <div class="collection-card-divider"></div>
+        <p class="collection-card-action"><span>{{ actionText }}</span><i class="icon-ion-ios-arrow-right"></i></p>
     </div>
 </template>
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import IpcEventType from "../../../../../ipcEventType";
-import {ipcRenderer, isElectron} from '../../../../../platform';
-import Config from '../../../../../config'
-import { buildCollectionUrl } from '../../../../../platformHelper';
-import { openInAppSubWindow } from '../../../../util/subWindowNavigator';
+import {showCollectionDetail} from "../../../../collection/collectionUi";
 
+const MAX_PREVIEW = 5;
+
+/**
+ * 接龙消息气泡（对齐 wf-enterprise-chat 的 CollectionCellBuilder）：标题 + 前 5 条参与记录。
+ * 与投票气泡同一条规则：气泡内一律用气泡的文字色，层级靠字重 / 透明度。
+ */
 export default {
     name: "CollectionMessageContentView",
     props: {
@@ -55,188 +36,140 @@ export default {
         }
     },
     computed: {
+        content() {
+            return this.message.messageContent;
+        },
         entries() {
-            return this.message.messageContent.entries || [];
+            return (this.content.entries || []).filter(e => !e.deleted);
         },
-        participantCount() {
-            // Filter out deleted entries if needed, but Android seems to just use list size or dedicated count field
-            // Assuming entries list is the source of truth for preview
-            return this.entries.length;
+        preview() {
+            return this.entries.slice(0, MAX_PREVIEW);
         },
-        previewEntries() {
-            // Show top 5
-            return this.entries.slice(0, 5);
-        },
-        remainingCount() {
-            return Math.max(0, this.entries.length - 5);
-        },
-        status() {
-            return this.message.messageContent.status;
+        remaining() {
+            return this.entries.length - this.preview.length;
         },
         actionText() {
-            if (this.status === 1) return this.$t('collection.collection_status_ended');
-            if (this.status === 2) return this.$t('collection.collection_status_cancelled');
+            if (this.content.status === 1) {
+                return this.$t('collection.collection_status_ended');
+            }
+            if (this.content.status === 2) {
+                return this.$t('collection.collection_status_cancelled');
+            }
             return this.$t('collection.collection_join_action');
-        }
+        },
     },
     methods: {
-        formatCount(template, count) {
-            return String(template).replace('%d', count);
-        },
         onClick() {
-            if(!Config.getCollectionServer()){
-                this.$notify({
-                    text: '未配置接龙服务地址',
-                    type: 'error',
-                })
-                return;
-            }
-            if (!isElectron()) {
-                openInAppSubWindow(this, '/collection/detail', {
-                    collectionId: this.message.messageContent.collectionId,
-                    groupId: this.message.messageContent.groupId
-                });
-                return;
-            }
-            const url = buildCollectionUrl({
-                mode: 'detail',
-                collectionId: this.message.messageContent.collectionId,
-                groupId: this.message.messageContent.groupId
+            showCollectionDetail(this, {
+                collectionId: this.content.collectionId,
+                groupId: this.content.groupId || this.message.conversation.target,
             });
-            ipcRenderer.send(IpcEventType.SHOW_COLLECTION_WINDOW, {
-                url: url,
-                collectionId: this.message.messageContent.collectionId,
-                groupId: this.message.messageContent.groupId
-            });
-        }
-    }
+        },
+    },
 }
 </script>
 
 <style scoped>
-.collection-message-container {
+.collection-card {
     margin: 0 8px;
     /* 气泡箭头(.leftarrow/.rightarrow:before)以卡片为定位基准，否则会定位到整行，发出的消息箭头超出右边缘，会话列表出现横向滚动条 */
     position: relative;
-    background-color: var(--background-primary);
+    width: 220px;
+    padding: 12px;
+    box-sizing: border-box;
     border-radius: var(--radius-md);
+    background-color: var(--background-message-in);
+    color: var(--text-primary);
     cursor: pointer;
-    width: 280px; /* Slightly wider for list content */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
 }
 
-.collection-message-container.out {
-    background-color: var(--background-message-out); /* Match bubble color */
+.collection-card.out {
+    background-color: var(--background-message-out);
 }
 
-/* Header */
-.msg-header {
-    padding: 8px 12px 4px 12px;
+.collection-card p, .collection-card span, .collection-card i {
+    color: inherit;
+}
+
+.collection-card-title {
     display: flex;
     align-items: flex-start;
-}
-.collection-icon {
-    font-size: var(--font-size-2xl);
-    margin-right: 8px;
-    color: var(--text-link);
-    margin-top: 2px;
-}
-.collection-icon.out {
-    color: var(--text-primary); /* Darker on blue bg */
-}
-.title-container {
-    flex: 1;
-    margin-right: 8px;
-}
-.title {
-    font-weight: bold;
-    font-size: var(--font-size-lg);
+    gap: 6px;
     line-height: 1.4;
-    color: var(--text-primary);
-}
-.count {
-    font-size: 11px;
-    color: var(--text-hint);
-    white-space: nowrap;
-    margin-top: 4px;
-}
-.collection-message-container.out .count {
-    color: var(--text-muted);
 }
 
-/* Description */
-.desc {
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-    padding: 0 12px 8px 12px; /* Indent to align with title */
+.collection-card-title i {
+    flex: 0 0 auto;
+    font-size: 16px;
+    line-height: 20px;
+}
+
+.collection-card-title .title {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+}
+
+.collection-card-title .count {
+    flex: 0 0 auto;
+    font-size: var(--font-size-xs);
+    line-height: 20px;
+    opacity: .7;
+}
+
+.collection-card-desc {
+    margin-top: 4px;
+    font-size: var(--font-size-xs);
     line-height: 1.4;
+    opacity: .7;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
-.collection-message-container.out .desc {
-    color: var(--text-muted);
+
+.collection-card-divider {
+    height: 0.5px;
+    margin: 8px 0;
+    background: currentColor;
+    opacity: .25;
 }
 
-.divider {
-    height: 1px;
-    background-color: var(--background-trans-subtle);
-    margin: 0 12px;
-}
-
-/* Entries */
-.entries-container {
-    padding: 8px 12px;
-    min-height: 20px;
-}
-.empty-hint {
-    font-size: var(--font-size-sm);
-    color: var(--text-hint);
-    text-align: center;
-    padding: 8px 0;
-}
-.collection-message-container.out .empty-hint {
-    color: var(--text-muted);
-}
-.entry-list {
-    display: flex;
-    flex-direction: column;
-}
-.entry-item {
-    font-size: var(--font-size-sm);
-    color: var(--text-primary);
+.collection-card-entry {
     padding: 2px 0;
-    white-space: nowrap;
+    font-size: var(--font-size-xs);
     overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
 }
-.more-hint {
+
+.collection-card-hint {
     font-size: var(--font-size-xs);
-    color: var(--text-hint);
-    margin-top: 4px;
-}
-.collection-message-container.out .more-hint {
-    color: var(--text-muted);
+    opacity: .7;
 }
 
-/* Footer */
-.footer {
-    padding: 8px 12px;
-    font-size: var(--font-size-sm);
-    color: var(--text-link);
-    border-top: 1px solid var(--background-trans-subtle);
+.collection-card-hint.more {
+    margin-top: 4px;
+}
+
+.collection-card-action {
     display: flex;
-    justify-content: flex-start;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
 }
-.collection-message-container.out .footer {
-    color: var(--text-primary);
-    border-top-color: var(--background-trans-muted);
-}
-.action-text.ended {
-    color: var(--text-hint);
+
+.collection-card-action i {
+    font-size: 12px;
+    opacity: .6;
 }
 </style>

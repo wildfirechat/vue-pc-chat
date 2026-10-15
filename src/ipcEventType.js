@@ -25,8 +25,6 @@ const IpcEventType = {
     START_SCREEN_SHARE: 'start-screen-share',
     STOP_SCREEN_SHARE: 'stop-screen-share',
     GET_SOURCE: 'get-source',
-    SHOW_COLLECTION_WINDOW: 'show-collection-window',
-    SHOW_POLL_WINDOW: 'show-poll-window',
     // 设置独立窗口（侧栏「更多」→ 设置，对齐 wf-enterprise-chat cc6e5d78）
     SHOW_SETTINGS_WINDOW: 'show-settings-window',
     // 退出登录、被踢下线等回到登录页时，关掉所有子窗口

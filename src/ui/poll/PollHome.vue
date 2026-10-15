@@ -1,25 +1,35 @@
 <template>
-    <div class="poll-home">
-        <div class="home-content">
-            <div class="home-title">{{ $t('poll.poll') }}</div>
-            <div class="home-menu">
-                <div class="home-menu-item" @click="goToCreate">
-                    <div class="menu-icon create-icon">📊</div>
-                    <div class="menu-text">{{ $t('poll.create_poll') }}</div>
-                    <div class="menu-arrow">›</div>
+    <DialogFrame :title="$t('poll.poll')" :tinted="false">
+        <div class="poll-home">
+            <div class="poll-home-item" @click="openCreate">
+                <span class="poll-home-icon"><i class="icon-ion-android-add-circle"></i></span>
+                <div class="poll-home-text">
+                    <p class="title">{{ $t('poll.create_poll') }}</p>
+                    <p class="subtitle">{{ $t('poll.create_poll_subtitle') }}</p>
                 </div>
-                <div class="home-menu-item" @click="goToMyPolls">
-                    <div class="menu-icon list-icon">📋</div>
-                    <div class="menu-text">{{ $t('poll.my_polls') }}</div>
-                    <div class="menu-arrow">›</div>
+                <i class="icon-ion-ios-arrow-right poll-home-arrow"></i>
+            </div>
+            <div class="poll-home-item" @click="openList">
+                <span class="poll-home-icon"><i class="icon-ion-android-list"></i></span>
+                <div class="poll-home-text">
+                    <p class="title">{{ $t('poll.my_polls') }}</p>
+                    <p class="subtitle">{{ $t('poll.my_polls_subtitle') }}</p>
                 </div>
+                <i class="icon-ion-ios-arrow-right poll-home-arrow"></i>
             </div>
         </div>
-    </div>
+    </DialogFrame>
 </template>
 
 <script>
-import { getSubWindowQuery, isInAppSubWindow, pushInAppSubWindow } from '../util/subWindowNavigator';
+import DialogFrame from "../common/DialogFrame.vue";
+import {getSubWindowQuery} from '../util/subWindowNavigator';
+import {closeFeatureDialog} from "../util/featureDialog";
+import {showPollCreate, showPollList} from "./pollUi";
+
+/**
+ * 投票入口：发起投票 / 我的投票。矮弹窗，选完即关，再打开下一个弹窗（不做弹窗套弹窗）。
+ */
 export default {
     name: "PollHome",
     props: {
@@ -29,114 +39,83 @@ export default {
             default: null,
         }
     },
-    mounted() {
-        document.title = this.$t('poll.poll');
-    },
+    emits: ['close'],
     methods: {
-        getQuery() {
-            return getSubWindowQuery(this);
+        groupId() {
+            return getSubWindowQuery(this).groupId || '';
         },
-        goToCreate() {
-            const query = { groupId: this.getQuery().groupId };
-            if (isInAppSubWindow(this)) {
-                pushInAppSubWindow(this, '/poll/create', query);
-            } else {
-            this.$router.push({
-                path: '/poll/create',
-                    query,
-            });
-            }
+        openCreate() {
+            let groupId = this.groupId();
+            closeFeatureDialog(this);
+            showPollCreate(this, groupId);
         },
-        goToMyPolls() {
-            const query = { groupId: this.getQuery().groupId };
-            if (isInAppSubWindow(this)) {
-                pushInAppSubWindow(this, '/poll/list', query);
-            } else {
-            this.$router.push({
-                path: '/poll/list',
-                    query,
-            });
-            }
-        }
-    }
+        openList() {
+            let groupId = this.groupId();
+            closeFeatureDialog(this);
+            showPollList(this, groupId);
+        },
+    },
+    components: {
+        DialogFrame,
+    },
 }
 </script>
 
 <style scoped>
 .poll-home {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    height: 100vh;
-    background-color: var(--background-tertiary);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    color: var(--text-primary);
-    user-select: none;
-    padding: 24px;
+    padding: 8px;
 }
 
-.home-content {
-    flex: 1;
-    width: 100%;
-    height: 100%;
-}
-
-.home-title {
-    font-size: 28px;
-    font-weight: bold;
-    margin-bottom: 32px;
-    color: var(--text-primary);
-}
-
-.home-menu {
-    background: var(--background-primary);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-}
-
-.home-menu-item {
+.poll-home-item {
     display: flex;
     align-items: center;
-    padding: 16px;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 8px;
     cursor: pointer;
-    border-bottom: 1px solid var(--border-secondary);
+    transition: background var(--duration-fast);
 }
 
-.home-menu-item:last-child {
-    border-bottom: none;
-}
-
-.home-menu-item:hover {
+.poll-home-item:hover {
     background: var(--background-item-hover);
 }
 
-.menu-icon {
+.poll-home-icon {
     width: 40px;
     height: 40px;
-    border-radius: var(--radius-lg);
+    flex: 0 0 40px;
+    border-radius: 10px;
+    background: var(--accent-color-subtle);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--font-size-2xl);
-    margin-right: 12px;
 }
 
-.create-icon {
-    background: var(--background-item-selected);
+.poll-home-icon i {
+    font-size: 20px;
+    color: var(--accent-color);
 }
 
-.list-icon {
-    background: var(--background-item-selected);
-}
-
-.menu-text {
+.poll-home-text {
     flex: 1;
-    font-size: var(--font-size-lg);
-    color: var(--text-primary);
+    min-width: 0;
 }
 
-.menu-arrow {
-    font-size: var(--font-size-2xl);
-    color: var(--text-hint);
+.poll-home-text .title {
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    line-height: 20px;
+}
+
+.poll-home-text .subtitle {
+    margin-top: 2px;
+    font-size: var(--font-size-xs);
+    line-height: 18px;
+    color: var(--text-tertiary);
+}
+
+.poll-home-arrow {
+    font-size: 14px;
+    color: var(--text-tertiary);
 }
 </style>

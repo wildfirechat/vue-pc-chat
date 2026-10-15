@@ -1,37 +1,22 @@
 <template>
-    <div
-        class="poll-result-message-container"
-        @click="onClick"
-        :class="{ out: message.direction === 0 }"
-    >
-        <!-- 标题 -->
-        <div class="poll-result-title">
-            <span class="poll-icon">📊</span>
-            <span class="poll-title-text">{{
-                message.messageContent.title
-            }}</span>
+    <div class="poll-card" :class="{out: message.direction === 0}" @click="onClick">
+        <div class="poll-card-title">
+            <i class="icon-ion-pie-graph"></i>
+            <span>{{ content.title }}</span>
         </div>
-
-        <!-- 统计信息 -->
-        <div class="poll-result-stats">
-            {{ statsText }}
-        </div>
-
-        <!-- 状态 -->
-        <div class="poll-result-status" :class="{ ended: isEnded }">
-            {{ statusText }}
-        </div>
+        <p class="poll-card-meta">{{ statsText }}</p>
+        <div class="poll-card-divider"></div>
+        <p class="poll-card-action"><span>{{ content.status === 1 ? $t('poll.poll_ended') : $t('poll.poll_updated') }} · {{ $t('poll.view_result') }}</span><i class="icon-ion-ios-arrow-right"></i></p>
     </div>
 </template>
 
 <script>
 import Message from "../../../../../wfc/messages/message";
-import IpcEventType from "../../../../../ipcEventType";
-import Config from "../../../../../config";
-import { buildPollUrl } from "../../../../../platformHelper";
-import { ipcRenderer, isElectron } from '../../../../../platform';
-import { openInAppSubWindow } from '../../../../util/subWindowNavigator';
+import {showPollDetail} from "../../../../poll/pollUi";
 
+/**
+ * 投票结果消息：与投票消息同款气泡，点开进投票详情
+ */
 export default {
     name: "PollResultMessageContentView",
     props: {
@@ -44,47 +29,16 @@ export default {
         content() {
             return this.message.messageContent;
         },
-        isEnded() {
-            return this.content.status === 1;
-        },
         statsText() {
-            const totalVotes = this.content.totalVotes || 0;
-            const voterCount = this.content.voterCount || 0;
-            return this.$t("poll.result_stats", { totalVotes, voterCount });
-        },
-        statusText() {
-            if (this.isEnded) {
-                return this.$t("poll.poll_ended");
-            }
-            return this.$t("poll.poll_updated");
+            return this.$t("poll.result_stats", {totalVotes: this.content.totalVotes || 0, voterCount: this.content.voterCount || 0});
         },
     },
     methods: {
         onClick() {
-            if (!Config.getPollServer()) {
-                this.$notify({
-                    text: "未配置投票服务地址",
-                    type: "error",
-                });
-                return;
-            }
-            if (!isElectron()) {
-                openInAppSubWindow(this, '/poll/detail', {
-                    pollId: this.content.pollId,
-                    groupId: this.content.groupId,
-                    fromMessage: '1'
-                });
-                return;
-            }
-            // 点击结果消息也进入投票详情
-            const url = buildPollUrl({
-                mode: "detail",
+            showPollDetail(this, {
                 pollId: this.content.pollId,
-                groupId: this.content.groupId,
+                groupId: this.content.groupId || this.message.conversation.target,
                 fromMessage: true,
-            });
-            ipcRenderer.send(IpcEventType.SHOW_POLL_WINDOW, {
-                url:url,
             });
         },
     },
@@ -92,75 +46,74 @@ export default {
 </script>
 
 <style scoped>
-.poll-result-message-container {
+.poll-card {
     margin: 0 8px;
     /* 气泡箭头(.leftarrow/.rightarrow:before)以卡片为定位基准，否则会定位到整行，发出的消息箭头超出右边缘，会话列表出现横向滚动条 */
     position: relative;
-    background-color: var(--background-primary);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    width: 280px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    width: 220px;
     padding: 12px;
+    box-sizing: border-box;
+    border-radius: var(--radius-md);
+    background-color: var(--background-message-in);
+    color: var(--text-primary);
+    cursor: pointer;
 }
 
-.poll-result-message-container.out {
+.poll-card.out {
     background-color: var(--background-message-out);
 }
 
-.poll-result-title {
+.poll-card p, .poll-card span, .poll-card i {
+    color: inherit;
+}
+
+.poll-card-title {
     display: flex;
     align-items: flex-start;
+    gap: 6px;
     font-size: var(--font-size-base);
-    font-weight: bold;
-    color: var(--text-primary);
+    font-weight: 600;
     line-height: 1.4;
 }
 
-.poll-icon {
-    margin-right: 4px;
-    flex-shrink: 0;
+.poll-card-title i {
+    flex: 0 0 auto;
+    font-size: 16px;
+    line-height: 20px;
 }
 
-.poll-title-text {
+.poll-card-title span {
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    word-break: break-all;
 }
 
-.poll-result-message-container.out .poll-result-title {
-    color: var(--text-primary);
-}
-
-.poll-result-stats {
-    font-size: var(--font-size-xs);
-    color: var(--text-hint);
+.poll-card-meta {
     margin-top: 8px;
-}
-
-.poll-result-message-container.out .poll-result-stats {
-    color: var(--text-muted);
-}
-
-.poll-result-status {
     font-size: var(--font-size-xs);
-    color: var(--text-link);
-    margin-top: 4px;
+    opacity: .7;
 }
 
-.poll-result-message-container.out .poll-result-status {
-    color: var(--text-primary);
+.poll-card-divider {
+    height: 0.5px;
+    margin: 8px 0;
+    background: currentColor;
+    opacity: .25;
 }
 
-.poll-result-status.ended {
-    color: var(--text-hint);
+.poll-card-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
 }
 
-.poll-result-message-container.out .poll-result-status.ended {
-    color: var(--text-muted);
+.poll-card-action i {
+    font-size: 12px;
+    opacity: .6;
 }
 </style>

@@ -68,6 +68,16 @@ import FocusTrap from '../utils/focusTrap'
 
 const defaultTransition = 'vm-transition--default'
 
+// 打开中的弹窗，后开的在后。弹窗叠弹窗时（我的投票 → 投票详情）Esc 只关最上面那个
+const openedModals = []
+
+function removeOpenedModal(modal) {
+  const index = openedModals.indexOf(modal)
+  if (index !== -1) {
+    openedModals.splice(index, 1)
+  }
+}
+
 const TransitionState = {
   Enter: 'enter',
   Entering: 'entering',
@@ -277,6 +287,7 @@ export default {
     if (this.clickToClose || this.escToClose) {
       window.removeEventListener('keyup', this.onEscapeKeyUp)
     }
+    removeOpenedModal(this)
     /**
      * Removes blocked scroll
      */
@@ -443,6 +454,7 @@ export default {
     isComponentReadyToBeDestroyed(isReady) {
       if (isReady) {
         this.visible = false
+        removeOpenedModal(this)
       }
     }
   },
@@ -545,7 +557,7 @@ export default {
     },
 
     onEscapeKeyUp(event) {
-      if (event.which === 27 && this.visible) {
+      if (event.which === 27 && this.visible && openedModals[openedModals.length - 1] === this) {
         this.$modal.hide(this.name)
       }
     },
@@ -698,6 +710,8 @@ export default {
       blurActiveElement()
 
       this.visible = true
+      removeOpenedModal(this)
+      openedModals.push(this)
       /* Making sure that entering tranition uses "enter" sequance instead of "appear" */
       this.$nextTick(() => {
         this.startTransitionEnter()

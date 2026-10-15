@@ -318,7 +318,23 @@
     "forward_public_poll_tip": "公開投票可以轉發給其他群或好友，是否立即轉發？",
     "forward_not_implemented": "轉發功能尚未實現",
     "result_stats": "{totalVotes}票 · {voterCount}人參與",
-    "poll_updated": "投票有更新"
+    "poll_updated": "投票有更新",
+    "create_poll_subtitle": "建立一個新的群投票",
+    "my_polls_subtitle": "查看我發起的投票",
+    "no_polls": "暫無投票記錄",
+    "publish": "發佈",
+    "max_select": "最多選幾項",
+    "option_count": "{count}項",
+    "max_options_limit": "最多只能新增{count}個選項",
+    "poll_create_success": "投票建立成功",
+    "vote_count": "{count}票",
+    "selected_count": "已選{count}/{max}",
+    "minutes_left": "還剩{minutes}分鐘",
+    "view_result": "查看結果",
+    "join_action": "參與投票",
+    "forward": "轉發",
+    "forward_coming_soon": "轉發投票功能開發中",
+    "service_not_configured": "投票服務未配置"
   },
   "collection": {
     "collection": "接龍",
@@ -365,6 +381,15 @@
     "collection_creating": "建立中...",
     "collection_create_success": "接龍建立成功",
     "collection_create_failed": "建立失敗",
-    "collection_not_in_group": "您已不在該群組中"
+    "collection_not_in_group": "您已不在該群組中",
+    "collection_template_example": "姓名 - 手機號",
+    "collection_template_label": "模板: ",
+    "collection_end_time": "截止時間",
+    "collection_no_end_time": "無截止時間",
+    "collection_creator_suffix": "{name} 發起的接龍",
+    "people_count": "{count}人",
+    "more_participants": "等{count}人參與",
+    "collection_update_success": "更新成功",
+    "collection_update_failed": "更新失敗"
   }
 }

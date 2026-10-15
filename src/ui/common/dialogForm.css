@@ -1,0 +1,178 @@
+/* 弹窗里的表单与卡片（发起投票 / 发起接龙 / 投票详情 / 接龙详情共用），类名都带 df- 前缀。
+   结构对应 wf-enterprise-chat 的 FormFieldLabel / FormBorderedInput / FormCard / OptionItem，
+   尺寸按桌面端收紧（Flutter 那套是移动端尺寸：16px 粗体标签、48px 高的输入框）。 */
+
+.df-form {
+    padding: 20px;
+}
+
+.df-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    line-height: 20px;
+    color: var(--text-primary);
+}
+
+.df-gap {
+    height: 20px;
+}
+
+input.df-input:not([role=switch]), textarea.df-input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 12px;
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    background: var(--background-primary);
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    line-height: 20px;
+    outline: none;
+    resize: none;
+    font-family: inherit;
+    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+input.df-input:not([role=switch]) {
+    height: calc(36px * var(--layout-scale-row, 1));
+}
+
+input.df-input:hover, textarea.df-input:hover {
+    border-color: var(--border-strong);
+}
+
+input.df-input:focus, textarea.df-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px var(--accent-color-subtle);
+}
+
+input.df-input::placeholder, textarea.df-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.df-hint {
+    padding-top: 6px;
+    font-size: var(--font-size-xs);
+    line-height: 18px;
+    color: var(--text-tertiary);
+}
+
+/* 白色圆角卡片，行间一条发丝线 */
+.df-card {
+    background: var(--background-primary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* 白底的表单里（发起投票 / 接龙）卡片描一圈边，和输入框一致 */
+.dialog-frame-body:not(.tinted) .df-card {
+    border: 1px solid var(--border-primary);
+}
+
+.df-card > * + * {
+    border-top: 0.5px solid var(--border-primary);
+}
+
+/* 卡片里的一行：名称 + 值 + 右箭头 / 开关 */
+.df-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: calc(44px * var(--layout-scale-row, 1));
+    padding: 0 12px 0 14px;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+}
+
+/* 带开关的行是 label：压过全局 label:has([role=switch]) 的 inline-flex，整行点了切开关 */
+.df-card label.df-row {
+    display: flex;
+    gap: 8px;
+    zoom: 1;
+    cursor: pointer;
+}
+
+.df-row.clickable {
+    cursor: pointer;
+}
+
+.df-row.clickable:hover {
+    background: var(--background-item-hover);
+}
+
+.df-row .df-row-label {
+    flex: 1;
+    min-width: 0;
+}
+
+.df-row .df-row-value {
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.df-row .df-row-value.set {
+    color: var(--text-primary);
+}
+
+.df-row .df-row-arrow {
+    font-size: 14px;
+    color: var(--text-tertiary);
+}
+
+.df-row input[role=switch] {
+    margin-right: 4px;
+}
+
+/* 状态小标签：进行中（蓝）/ 已投票（绿）/ 已结束（灰） */
+.df-chip {
+    flex: 0 0 auto;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: var(--font-size-xxs);
+    line-height: 16px;
+    color: var(--accent-color);
+    background: var(--accent-color-subtle);
+    white-space: nowrap;
+}
+
+.df-chip.success {
+    color: var(--status-success);
+    background: var(--background-success-subtle);
+}
+
+.df-chip.ended {
+    color: var(--text-tertiary);
+    background: var(--border-secondary);
+}
+
+/* 加载中 / 出错：高度随内容的弹窗里也撑出一块，免得弹窗先缩成一条再弹开 */
+.df-center {
+    height: 100%;
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+}
+
+.df-spinner {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid var(--border-primary);
+    border-top-color: var(--accent-color);
+    animation: df-spin .8s linear infinite;
+}
+
+@keyframes df-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
