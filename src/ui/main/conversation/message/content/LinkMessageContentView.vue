@@ -1,12 +1,18 @@
 <template>
-    <div class="link-message-container"
-         @click="clickLink"
-         v-bind:class="{out:message.direction === 0}">
-        <div class="flex-column flex-align-start" style="display: block">
-            <p class="title">{{ this.message.messageContent.title }}</p>
-            <p class="desc">{{ this.message.messageContent.digest(this.message) }}</p>
+    <!-- 卡片自带白底和描边，不套气泡色、不带气泡箭头（同 wf-enterprise-chat LinkCellBuilder） -->
+    <div class="link-card" @click="clickLink">
+        <img v-if="thumbnail && !thumbnailError" class="link-card-cover" :src="thumbnail" alt="" draggable="false"
+             @error="thumbnailError = true">
+        <div class="link-card-body">
+            <div class="link-card-text">
+                <p v-if="content.title" class="link-card-title">{{ content.title }}</p>
+                <p v-if="digest" class="link-card-digest">{{ digest }}</p>
+                <div v-if="content.url" class="link-card-url" :title="content.url">
+                    <i class="icon-ion-link"></i>
+                    <span>{{ content.url }}</span>
+                </div>
+            </div>
         </div>
-        <img :src="message.messageContent.thumbnailUrl" alt="">
     </div>
 </template>
 
@@ -22,6 +28,12 @@ export default {
             type: Message,
             required: true,
         }
+    },
+
+    data() {
+        return {
+            thumbnailError: false,
+        };
     },
 
     methods: {
@@ -61,53 +73,112 @@ export default {
         }
     },
 
-    computed: {}
+    computed: {
+        content() {
+            return this.message.messageContent;
+        },
+        thumbnail() {
+            // 封面地址同媒体消息，按发出时所在的网络生成，换成当前网络的地址
+            return Config.urlRedirect(this.content.thumbnail);
+        },
+        digest() {
+            const digest = this.content.contentDigest ? this.content.contentDigest.trim() : '';
+            // 不少来源摘要就是标题，重复显示一遍没意义
+            return digest && digest !== (this.content.title || '').trim() ? digest : '';
+        },
+    },
+
+    watch: {
+        thumbnail() {
+            this.thumbnailError = false;
+        },
+    },
 }
 </script>
 
 <style lang="css" scoped>
-
-.link-message-container {
+.link-card {
     margin: 0 8px;
-    padding: 8px;
-    background-color: var(--background-primary);
-    position: relative;
+    width: 300px;
+    box-sizing: border-box;
     border-radius: var(--radius-md);
+    border: 1px solid var(--border-secondary);
+    background-color: var(--background-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.link-card-cover {
+    display: block;
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    background-color: var(--background-secondary);
+}
+
+.link-card-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+}
+
+.link-card-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.link-card-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+}
+
+.link-card-digest {
+    margin-top: 4px;
+    font-size: var(--font-size-xs);
+    line-height: 1.5;
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+}
+
+.link-card-url {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    max-width: 500px;
-    min-width: 150px;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: var(--font-size-xs);
+    line-height: 1.4;
+    color: var(--text-tertiary);
 }
 
-.link-message-container img {
-    width: 40px;
-    height: 40px;
-    margin-left: 8px;
-    min-width: 40px;
-    background: lightgray;
-    border-radius: var(--radius-sm);
+/* 只有地址时不留上边距 */
+.link-card-url:first-child {
+    margin-top: 0;
 }
 
-.link-message-container .title {
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
+.link-card-url i {
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.link-card-url span {
+    flex: 1;
+    min-width: 0;
     overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
-}
-
-.link-message-container .desc {
-    color: var(--text-hint);
-    font-size: var(--font-size-sm);
-    -webkit-line-clamp: 3;
-    line-height: 20px;
-    max-height: 60px;
-    overflow: hidden;
-    display: inline-block;
-    text-overflow: ellipsis;
-}
-
-.rightarrow:before {
-    border-left-color: var(--text-on-accent);
 }
 </style>
