@@ -2,16 +2,19 @@
     <div class="file-message-container"
          @click="clickFile"
          v-bind:class="{out:message.direction === 0}">
-        <img :src="fileIcon" alt="">
-        <div class="flex-column flex-align-start" draggable="true" @dragstart="dragFile($event)">
+        <img class="file-icon" :src="fileIcon" alt="">
+        <div class="file-info" draggable="true" @dragstart="dragFile($event)">
             <p class="file-name">{{ this.message.messageContent.name }}</p>
             <p class="file-size single-line">{{ size }}</p>
         </div>
-        <div v-if="downloadStats" style="height:5px; background: var(--accent-color); position: absolute; left: 0; bottom: 0"
-             v-bind:style="{width: downloadStats.progress / downloadStats.total * 100 + '%'}">
-        </div>
-        <div v-if="sendStats" style="height:5px; background: var(--accent-color); position: absolute; left: 0; bottom: 0"
-             v-bind:style="{width: sendStats.progress / sendStats.total * 100 + '%'}">
+        <!-- 进度条放在和卡片同圆角、overflow:hidden 的轨道里，避免直角溢出圆角；卡片本身不能 overflow:hidden，会裁掉气泡箭头 -->
+        <div v-if="downloadStats || sendStats" class="progress-track">
+            <div v-if="downloadStats" class="progress"
+                 v-bind:style="{width: downloadStats.progress / downloadStats.total * 100 + '%'}">
+            </div>
+            <div v-if="sendStats" class="progress"
+                 v-bind:style="{width: sendStats.progress / sendStats.total * 100 + '%'}">
+            </div>
         </div>
     </div>
 </template>
@@ -117,26 +120,38 @@ export default {
 <style lang="css" scoped>
 .file-message-container {
     margin: 0 8px;
-    padding: 8px;
+    padding: 12px 14px;
     background-color: var(--background-primary);
     position: relative;
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    max-width: 500px;
-    min-width: 150px;
+    gap: 12px;
+    width: max-content;
+    min-width: 240px;
+    max-width: 320px;
+    cursor: pointer;
 }
 
-.file-message-container img {
-    width: 32px;
-    height: 32px;
-    margin-right: 8px;
-    min-width: 32px;
-    border-radius: var(--radius-sm);
+.file-message-container .file-icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.file-message-container .file-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
 }
 
 .file-message-container .file-name {
+    font-size: var(--font-size-base);
+    line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -146,12 +161,24 @@ export default {
 
 .file-message-container .file-size {
     color: var(--text-hint);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
+    line-height: 1.4;
 }
 
-.file-message-container .text {
-    color: var(--text-primary);
-    font-size: var(--font-size-lg);
+.file-message-container .progress-track {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.file-message-container .progress {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--accent-color);
 }
 
 .rightarrow:before {

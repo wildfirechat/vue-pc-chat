@@ -32,33 +32,58 @@ const helper = {
     },
 
     getFiletypeIcon: (extension) => {
-        var filename = 'unknow';
+        // 图标取自 wf-enterprise-chat（chat/assets/images/file_type），分类对齐其 Utilities.fileType
+        var filename = 'unknown';
 
         extension = (extension || '').toLowerCase().replace(/^\./, '');
 
         switch (true) {
-            case ['mp3', 'flac', 'aac', 'm4a', 'wma'].includes(extension):
-                filename = 'audio';
-                break;
-
-            case ['mp4', 'mkv', 'avi', 'flv'].includes(extension):
-                filename = 'audio';
-                break;
-
-            case ['zip', 'rar', 'tar', 'tar.gz'].includes(extension):
-                filename = 'archive';
-                break;
-
-            case ['doc', 'docx'].includes(extension):
+            case ['doc', 'docx', 'pages'].includes(extension):
                 filename = 'word';
                 break;
 
-            case ['xls', 'xlsx'].includes(extension):
-                filename = 'excel';
+            case ['xls', 'xlsx', 'numbers', 'csv'].includes(extension):
+                filename = 'xls';
                 break;
 
-            case ['ai', 'apk', 'exe', 'ipa', 'pdf', 'ppt', 'psd'].includes(extension):
-                filename = extension;
+            case ['ppt', 'pptx', 'keynote'].includes(extension):
+                filename = 'ppt';
+                break;
+
+            case ['pdf'].includes(extension):
+                filename = 'pdf';
+                break;
+
+            case ['html', 'htm'].includes(extension):
+                filename = 'html';
+                break;
+
+            case ['txt', 'md', 'log'].includes(extension):
+                filename = 'text';
+                break;
+
+            case ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(extension):
+                filename = 'image';
+                break;
+
+            case ['mp3', 'flac', 'aac', 'm4a', 'wma', 'wav', 'amr', 'aif'].includes(extension):
+                filename = 'audio';
+                break;
+
+            case ['mp4', 'mkv', 'avi', 'flv', 'mov', 'wmv', 'mpeg', 'rmvb', 'f4v', 'webm'].includes(extension):
+                filename = 'video';
+                break;
+
+            case ['exe', 'msi'].includes(extension):
+                filename = 'exe';
+                break;
+
+            case ['xml'].includes(extension):
+                filename = 'xml';
+                break;
+
+            case ['zip', 'rar', '7z', 'tar', 'gz', 'gzip', 'xz'].includes(extension):
+                filename = 'zip';
                 break;
             default:
                 break;
