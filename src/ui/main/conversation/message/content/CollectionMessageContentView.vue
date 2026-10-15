@@ -116,6 +116,8 @@ export default {
 <style scoped>
 .collection-message-container {
     margin: 0 8px;
+    /* 气泡箭头(.leftarrow/.rightarrow:before)以卡片为定位基准，否则会定位到整行，发出的消息箭头超出右边缘，会话列表出现横向滚动条 */
+    position: relative;
     background-color: var(--background-primary);
     border-radius: var(--radius-md);
     cursor: pointer;
