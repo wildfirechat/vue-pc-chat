@@ -26,6 +26,8 @@
         <div class="member-list-container">
             <ul>
                 <template v-if="!searchMode">
+                    <!-- 部门、成员分两段，各带小标题（对齐 wf-enterprise-chat） -->
+                    <li v-if="subOrganizations.length" class="section-header">下级部门</li>
                     <li v-for="(org, index) in subOrganizations" :key="org.id">
                         <!-- 整行可点，进入该部门 -->
                         <div class="organization-item" @click="enterSubOrganization(org)">
@@ -34,6 +36,7 @@
                             <i class="row-chevron icon-ion-ios-arrow-right"></i>
                         </div>
                     </li>
+                    <li v-if="employees.length" class="section-header">成员</li>
                     <li v-for="(employee, index) in employees" :key="employee.employeeId">
                         <div class="organization-item"
                              @click="showUserCardView($event, employee)"
@@ -190,16 +193,16 @@ export default {
 
             // 进过的部门先显示缓存，同时后台刷新；没进过的先清空，免得上一个部门的内容还留着能点
             const cached = organizationServerApi.getCachedOrganizationEx(org.id);
-            this.subOrganizations = cached ? cached.subOrganizations : [];
-            this.employees = cached ? cached.employees : [];
+            this.subOrganizations = (cached && cached.subOrganizations) || [];
+            this.employees = (cached && cached.employees) || [];
             organizationServerApi.getOrganizationEx(org.id)
                 .then(res => {
                     // 连续点了几个部门时，只认最后一个
                     if (this.currentOrgId !== org.id) {
                         return;
                     }
-                    this.subOrganizations = res.subOrganizations;
-                    this.employees = res.employees;
+                    this.subOrganizations = res.subOrganizations || [];
+                    this.employees = res.employees || [];
                 });
 
             if (pathList) {
@@ -396,6 +399,13 @@ export default {
     margin: 4px 4px 20px 4px;
     flex: 1;
     overflow-y: scroll;
+}
+
+/* 「下级部门」「成员」小标题，左边与行内头像对齐 */
+.section-header {
+    padding: 12px 20px 4px 20px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
 }
 
 .organization-item {

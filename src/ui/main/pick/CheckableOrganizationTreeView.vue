@@ -3,6 +3,8 @@
         <div class="member-list-container">
             <ul>
                 <template v-if="!searchMode">
+                    <!-- 部门、成员分两段，各带小标题（对齐 wf-enterprise-chat）；多个根组织并列时那一层全是组织，不加 -->
+                    <li v-if="currentOrgId && subOrganizations.length" class="section-header">下级部门</li>
                     <li v-for="(org, index) in subOrganizations" :key="org.id">
                         <div class="organization-item"
                              @click.stop="clickOrganizationItem(org)">
@@ -14,6 +16,7 @@
                             <p class="button" v-bind:class="{disabled: isOrganizationChecked(org)}" @click.stop="onShowSubOrganizationButtonClick(org)">下级</p>
                         </div>
                     </li>
+                    <li v-if="employees.length" class="section-header">成员</li>
                     <li v-for="(employee, index) in employees" :key="employee.employeeId">
                         <div class="organization-item "
                              @click.stop="clickEmployeeItem(employee)">
@@ -135,8 +138,8 @@ export default {
             organizationServerApi.getOrganizationEx(orgId)
                 .then(res => {
                     if (this.currentOrgId !== orgId) return;
-                    this.subOrganizations = res.subOrganizations;
-                    this.employees = res.employees;
+                    this.subOrganizations = res.subOrganizations || [];
+                    this.employees = res.employees || [];
                 });
             organizationServerApi.getOrganizationPath(orgId)
                 .then(orgs => {
@@ -218,6 +221,13 @@ export default {
 
 .organization-item:hover {
     background: var(--background-item-hover);
+}
+
+/* 「下级部门」「成员」小标题，左边与勾选框对齐 */
+.section-header {
+    padding: 12px 20px 4px 20px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
 }
 
 .organization-item img {
