@@ -1167,7 +1167,10 @@ export default {
         },
         singleChatTarget() {
             let info = this.sharedConversationState.currentConversationInfo;
-            if (info && info.conversation.type === ConversationType.Single && info.conversation.target !== Config.FILE_HELPER_ID) {
+            if (info && info.conversation.type === ConversationType.Single
+                && info.conversation.target !== Config.FILE_HELPER_ID
+                && info.conversation._target
+                && info.conversation._target.type === 0) {
                 return info.conversation.target;
             }
             return '';
@@ -1568,4 +1571,3 @@ i.active {
     color: var(--accent-color-active);
 }
 </style>
-

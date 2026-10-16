@@ -13,7 +13,7 @@
                             <div class="search-result-item contact" @click.stop="chatToContact(user)">
                                 <img :src="user.portrait">
                                 <span class="single-line">{{ user.displayName }}</span>
-                                <button v-if="!isFriend(user.uid)" @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
+                                <button v-if="isNormalUser(user) && !isFriend(user.uid)" @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
                             </div>
                         </li>
                     </ul>
@@ -359,7 +359,13 @@ export default {
         isFriend(userId) {
             return wfc.isMyFriend(userId);
         },
+        isNormalUser(user) {
+            return user && user.type === 0 && user.uid !== Config.FILE_HELPER_ID;
+        },
         addFriend(user) {
+            if (!this.isNormalUser(user) || this.isFriend(user.uid)) {
+                return;
+            }
             this.$modal.show(
                 FriendRequestView,
                 {

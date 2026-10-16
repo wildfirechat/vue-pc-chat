@@ -97,7 +97,7 @@
                 <i class="icon-ion-ios-videocam-outline"></i>
                 <span>视频通话</span>
             </div>
-            <div class="action-item" v-if="!isFriend && !isFileHelper && sameOrgChecked && !isSameOrganization" @click="addFriend">
+            <div class="action-item" v-if="canAddFriend" @click="addFriend">
                 <i class="icon-ion-ios-personadd-outline"></i>
                 <span>添加好友</span>
             </div>
@@ -264,7 +264,7 @@ export default {
             e.target.src = Config.DEFAULT_GROUP_PORTRAIT_URL;
         },
         async checkSameOrganization() {
-            if (!this.isFileHelper) {
+            if (this.isNormalUser) {
                 this.isSameOrganization = await organizationServerApi.isSameOrganization(this.userInfo.uid);
             }
             this.sameOrgChecked = true;
@@ -339,6 +339,9 @@ export default {
             this.$startVoipCall({ audioOnly: false, conversation: conversation });
         },
         addFriend() {
+            if (!this.canAddFriend) {
+                return;
+            }
             this.close();
             this.$modal.show(
                 FriendRequestView,
@@ -455,8 +458,15 @@ export default {
     },
 
     computed: {
+        isNormalUser() {
+            return this.userInfo.type === 0 && !this.isFileHelper;
+        },
         isFriend() {
-            return wfc.getUserId() === this.userInfo.uid || wfc.isMyFriend(this.userInfo.uid)
+            return this.isNormalUser
+                && (wfc.getUserId() === this.userInfo.uid || wfc.isMyFriend(this.userInfo.uid));
+        },
+        canAddFriend() {
+            return this.isNormalUser && !this.isFriend && this.sameOrgChecked && !this.isSameOrganization;
         },
         isSelf() {
             return this.userInfo.uid === wfc.getUserId();
