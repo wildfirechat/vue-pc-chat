@@ -31,7 +31,7 @@
                 </ul>
             </div>
         </div>
-        <div v-if="showAliasRow || departmentOrgs.length || showCommonGroupsRow" class="info-section">
+        <div v-if="showAliasRow || departmentOrgs.length || displayCommonGroupsRow" class="info-section">
             <!-- 好友设置备注，自己这一行改的是自己的昵称；文件传输助手不显示 -->
             <div v-if="showAliasRow" class="info-row">
                 <label class="row-label">{{ isSelf ? '昵称' : $t('common.alias') }}</label>
@@ -54,7 +54,7 @@
                 </div>
             </div>
             <!-- 共同群聊（对齐 wf-enterprise-chat d2a8e82e、990ac36d）：点开在卡片旁边弹出群列表，同微信 -->
-            <div v-if="showCommonGroupsRow" class="info-row">
+            <div v-if="displayCommonGroupsRow" class="info-row">
                 <label class="row-label">共同群聊</label>
                 <tippy v-if="commonGroups && commonGroups.length"
                        ref="commonGroupsTippy"
@@ -480,6 +480,10 @@ export default {
         },
         showCommonGroupsRow() {
             return !this.isSelf && !this.isFileHelper;
+        },
+        displayCommonGroupsRow() {
+            return this.showCommonGroupsRow
+                && (!this.commonGroups || this.commonGroups.length > 0);
         },
         isExternalDomainUser() {
             let user = this.userInfo;
