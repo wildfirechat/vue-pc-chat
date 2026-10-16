@@ -12,7 +12,7 @@
                                    v-bind:value="org"
                                    :checked="isOrganizationChecked(org)">
                             <img :src="org.portrait ? org.portrait : defaultDepartmentPortraitUrl">
-                            <p class="name">{{ org.name }}({{ org.memberCount || 0 }})</p>
+                            <p class="name single-line">{{ org.name }}({{ org.memberCount || 0 }})</p>
                             <p class="button" v-bind:class="{disabled: isOrganizationChecked(org)}" @click.stop="onShowSubOrganizationButtonClick(org)">下级</p>
                         </div>
                     </li>
@@ -233,16 +233,25 @@ export default {
 .organization-item img {
     width: 36px;
     height: 36px;
+    flex-shrink: 0;
     border-radius: var(--default-portrait-border-radius);
     margin-right: 8px;
 }
 
+.organization-item .name {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+}
+
 .organization-item .button {
     justify-self: flex-end;
+    flex-shrink: 0;
     margin-left: auto;
     padding: 4px;
     font-size: var(--font-size-base);
     color: var(--accent-color);
+    white-space: nowrap;
 }
 
 .organization-item .button:not(.disabled):hover {

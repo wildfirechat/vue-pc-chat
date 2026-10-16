@@ -16,11 +16,13 @@
                     </div>
                     <div v-show="expandOrganizationSection" class="organization-section">
                         <div v-if="organizationPathList.length" class="pick-source-nav">
-                            <ul>
-                                <li v-for="org in organizationPathList" :key="org.id">
-                                    <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
-                                </li>
-                            </ul>
+                            <div ref="organizationPathNav" class="pick-source-nav-scroll">
+                                <ul>
+                                    <li v-for="org in organizationPathList" :key="org.id">
+                                        <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                         <CheckableOrganizationTreeView
                             ref="checkableOrganizationTreeView"
@@ -149,7 +151,7 @@ export default {
             sharedPickState: store.state.pick,
             filterQuery: '',
             organizationPathList: [],
-            expandOrganizationSection: false,
+            expandOrganizationSection: this.users.length === 0,
             expandContactSection: true,
             defaultOrganizationPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
             orgServiceAvailable: organizationServerApi.isServiceAvailable,
@@ -181,6 +183,12 @@ export default {
 
         onOrganizationPathUpdate(orgPathList) {
             this.organizationPathList = orgPathList;
+            this.$nextTick(() => {
+                const nav = this.$refs.organizationPathNav;
+                if (nav) {
+                    nav.scrollLeft = nav.scrollWidth;
+                }
+            });
         },
 
         loadAndShowOrganization(org) {
@@ -403,23 +411,36 @@ export default {
 }
 
 .pick-source-nav {
-    padding: 8px 0 0 20px;
+    box-sizing: border-box;
+    padding: 8px 16px 0 20px;
     width: 100%;
-    display: flex;
-    align-items: center;
+}
+
+.pick-source-nav-scroll {
+    width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .pick-source-nav ul {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     list-style: none;
     margin: 0;
     padding: 0;
 }
 
+.pick-source-nav li {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
 .pick-source-nav a {
     text-decoration: none;
     font-size: var(--font-size-base);
+    white-space: nowrap;
 }
 
 .pick-source-nav li:not(:last-child)::after {
