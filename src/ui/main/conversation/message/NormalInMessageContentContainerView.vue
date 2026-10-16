@@ -21,27 +21,30 @@
                         :popper-options="{ strategy: 'fixed', modifiers: [{ name: 'eventListeners', options: { scroll: false } }] }"
                     >
                         <template #default>
-                            <img ref="userCardTippy"
-                                 :id="userCardTriggerId"
-                                 @click="onClickUserPortrait(message.from)"
-                                 @contextmenu.prevent="openMessageSenderContextMenu($event, message)"
-                                 class="avatar"
-                                 draggable="false"
-                                 :src="messageSenderPortrait">
+                            <span ref="userCardTippy" class="avatar-presence">
+                                <img :id="userCardTriggerId"
+                                     @click="onClickUserPortrait(message.from)"
+                                     @contextmenu.prevent="openMessageSenderContextMenu($event, message)"
+                                     class="avatar"
+                                     draggable="false"
+                                     :src="messageSenderPortrait">
+                                <span v-if="isOnlineGroupSender" class="online-indicator" title="在线"></span>
+                            </span>
                         </template>
                         <template #content>
                             <ChannelCardView v-if="message.conversation.type === 3" v-on:close="closeUserCard" :channel-id="message.conversation.target"/>
                             <UserCardView v-else v-on:close="closeUserCard" :user-info="message._from"/>
                         </template>
                     </tippy>
-                    <img v-else
-                         ref="userCardTippy"
-                         :id="userCardTriggerId"
-                         @click="onClickUserPortrait(message.from)"
-                         @contextmenu.prevent="openMessageSenderContextMenu($event, message)"
-                         class="avatar"
-                         draggable="false"
-                         :src="messageSenderPortrait">
+                    <span v-else ref="userCardTippy" class="avatar-presence">
+                        <img :id="userCardTriggerId"
+                             @click="onClickUserPortrait(message.from)"
+                             @contextmenu.prevent="openMessageSenderContextMenu($event, message)"
+                             class="avatar"
+                             draggable="false"
+                             :src="messageSenderPortrait">
+                        <span v-if="isOnlineGroupSender" class="online-indicator" title="在线"></span>
+                    </span>
                 </div>
                 <!--消息内容 根据情况，if-else-->
                 <div class="message-name-content-container">
@@ -162,6 +165,11 @@ export default {
             return this.activeStore.isDownloadingMessage(this.message.messageId);
         },
 
+        isOnlineGroupSender() {
+            return this.message.conversation.type === ConversationType.Group
+                && this.activeStore.isUserOnline(this.message.from);
+        },
+
         messageSenderPortrait() {
             if (this.message.conversation.type === 3) {
                 let channelInfo = wfc.getChannelInfo(this.message.conversation.target, false);
@@ -231,6 +239,22 @@ export default {
     display: flex;
     padding-left: 2px;
     align-items: center;
+}
+
+.avatar-presence {
+    position: relative;
+    display: inline-flex;
+}
+
+.online-indicator {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--background-primary);
+    border-radius: 50%;
+    background-color: var(--status-success);
 }
 
 .avatar-container input {

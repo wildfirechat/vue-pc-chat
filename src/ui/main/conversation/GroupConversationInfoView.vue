@@ -25,7 +25,10 @@
                             class="member-grid-item"
                             @click="onClickMember(user)"
                         >
-                            <img :src="user.portrait" @error="onImgError($event)" class="member-avatar"/>
+                            <span class="member-avatar-wrapper">
+                                <img :src="user.portrait" @error="onImgError($event)" class="member-avatar"/>
+                                <span v-if="isUserOnline(user)" class="online-indicator" title="在线"></span>
+                            </span>
                             <p class="member-name">{{ user._displayName || user.displayName }}</p>
                         </div>
                         <template #content>
@@ -253,6 +256,9 @@ export default {
         },
         onUserInfosUpdate() {
             this.groupMemberUserInfos = this.activeStore.getConversationMemberUsrInfos(this.conversationInfo.conversation);
+        },
+        isUserOnline(user) {
+            return this.activeStore.isUserOnline(user.uid);
         },
         showCreateConversationModal() {
             let successCB = users => {
@@ -723,6 +729,22 @@ export default {
     border-radius: var(--default-portrait-border-radius);
     object-fit: cover;
     -webkit-user-drag: none;
+}
+
+.member-avatar-wrapper {
+    position: relative;
+    display: inline-flex;
+}
+
+.online-indicator {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 10px;
+    height: 10px;
+    border: 1.5px solid var(--background-primary);
+    border-radius: 50%;
+    background-color: var(--status-success);
 }
 
 .member-name {

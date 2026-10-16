@@ -986,7 +986,8 @@ let store = {
         if (this.state.conversation.currentConversationInfo &&(!conversationInfo || !this.state.conversation.currentConversationInfo.conversation.equal(conversationInfo.conversation))) {
                 let conversation = this.state.conversation.currentConversationInfo.conversation;
 
-                if (wfc.isUserOnlineStateEnabled() && ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target))) {
+                if (wfc.isUserOnlineStateEnabled() && (conversation.type === ConversationType.Group
+                    || ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target)))) {
                     wfc.unwatchOnlineState(conversation.type, [conversation.target]);
                 }
                 if (conversation.type === ConversationType.Channel) {
@@ -1013,7 +1014,8 @@ let store = {
         let conversation = conversationInfo.conversation;
         // 会话列表加载时不再解析 target，进入会话时（本来就要展示）确保已解析
         this.ensureConversationTarget(conversation);
-        if (wfc.isUserOnlineStateEnabled() && ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target))) {
+        if (wfc.isUserOnlineStateEnabled() && (conversation.type === ConversationType.Group
+            || ((conversation.type === ConversationType.Single || conversation.type === ConversationType.SecretChat) && !wfc.isMyFriend(conversation.target)))) {
             wfc.watchOnlineState(conversation.type, [conversation.target], 1000, (states) => {
                 states.forEach((e => {
                     this.state.misc.userOnlineStateMap.set(e.userId, e);
