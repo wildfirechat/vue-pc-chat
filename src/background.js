@@ -1596,9 +1596,55 @@ app.on('ready', () => {
         registerLocalResourceProtocol();
 
         screenshots = new Screenshots({
-            // logger: console.log
+            // 带时间戳的日志，用于定位截图各阶段（capture/reset/show）耗时
+            logger: (...args) => console.log('[screenshots]', Date.now(), ...args),
             singleWindow: true,
         })
+
+        // node-screenshots 在 macOS 15+ 抓屏必定失败，在 Windows 上因 Electron 不允许原生模块创建外部 Buffer 也必定失败（Failed to create napi buffer），
+        // 失败后再回退到 desktopCapturer，白白浪费时间。这里 macOS 直接使用系统 screencapture，Windows 直接使用 desktopCapturer
+        if (process.platform === 'darwin' || process.platform === 'win32') {
+            const originCapture = screenshots.capture.bind(screenshots);
+            const captureWithScreencapture = async (display, file) => {
+                const {x, y, width, height} = display;
+                await new Promise((resolve, reject) => {
+                    require('child_process').execFile('screencapture', ['-x', '-t', 'png', `-R${x},${y},${width},${height}`, file],
+                        {timeout: 5000}, err => err ? reject(err) : resolve());
+                });
+                const data = fs.readFileSync(file);
+                if (data.length === 0) {
+                    throw new Error('empty screencapture');
+                }
+                return 'data:image/png;base64,' + data.toString('base64');
+            };
+            const captureWithDesktopCapturer = async (display) => {
+                const sources = await desktopCapturer.getSources({
+                    types: ['screen'],
+                    thumbnailSize: {width: display.width, height: display.height}
+                });
+                const source = sources.length === 1
+                    ? sources[0]
+                    : sources.find(s => s.display_id === display.id.toString() || s.id.startsWith(`screen:${display.id}:`));
+                if (!source || source.thumbnail.isEmpty()) {
+                    throw new Error("Can't find screen source");
+                }
+                return source.thumbnail.toDataURL();
+            };
+            screenshots.capture = async (display) => {
+                const file = tmp.tmpNameSync() + '.png';
+                try {
+                    return process.platform === 'darwin'
+                        ? await captureWithScreencapture(display, file)
+                        : await captureWithDesktopCapturer(display);
+                } catch (e) {
+                    console.log('capture failed, fallback', e);
+                    return originCapture(display);
+                } finally {
+                    fs.unlink(file, () => {
+                    });
+                }
+            };
+        }
 
         const onScreenShotEnd = (result) => {
             console.log('onScreenShotEnd', isMainWindowFocusedWhenStartScreenshot, screenShotWindowId);
