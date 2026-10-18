@@ -148,7 +148,7 @@
 
         <footer class="agent-agent-footer">
             <button class="agent-agent-btn" :disabled="applying || loading" @click="compact">压缩上下文</button>
-            <button class="agent-agent-btn agent-agent-btn-danger" :disabled="applying || loading" @click="resetSession">重置会话</button>
+            <button class="agent-agent-btn" :disabled="applying || loading" @click="resetSession">新建会话</button>
             <!-- 销毁按钮不受 applying 限制：危险操作必须始终可点（点击后弹确认，确认才发送） -->
             <button class="agent-agent-btn agent-agent-btn-destroy" @click="destroyGroup">销毁会话</button>
         </footer>
@@ -223,10 +223,11 @@
                                     class="agent-agent-cwd-item agent-agent-session-item"
                                     @click="switchToSession(s)"
                                 >
-                                    <span class="agent-agent-session-time">{{ formatSessionTime(s.updatedAt) }}</span>
-                                    <span class="agent-agent-session-id">{{ shortSessionId(s.id) }}</span>
-                                    <span class="agent-agent-session-cwd">{{ s.cwd || '未记录工作目录' }}</span>
-                                    <span v-if="s.current" class="agent-agent-session-current">当前</span>
+                                    <div class="agent-agent-session-title">{{ s.title || ('会话 ' + shortSessionId(s.id)) }}</div>
+                                    <div class="agent-agent-session-meta">
+                                        {{ formatSessionTime(s.updatedAt) }}
+                                        <span v-if="s.current" class="agent-agent-session-current">当前</span>
+                                    </div>
                                 </li>
                             </ul>
                         </template>
@@ -465,7 +466,7 @@ export default {
             this.flash();
         },
         resetSession() {
-            if (!window.confirm("重置会话将清空全部上下文（工作目录保留），继续？")) return;
+            if (!window.confirm("新建会话将开启全新上下文；当前会话保留，可稍后在「会话」里切回。继续？")) return;
             this.sendCommand("set", "/reset");
             this.flash();
         },
@@ -1049,39 +1050,31 @@ export default {
     background: var(--background-quaternary, #e5e5e5);
 }
 
-/* 会话列表行：时间 · 短id · cwd · 当前标记 */
+/* 会话列表行（两行）：标题 + 最近活跃时间/当前标记；不显示路径与裸 id */
 .agent-agent-session-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    display: block;
+    padding: 8px;
 }
 
-.agent-agent-session-time {
-    color: var(--text-secondary, #888);
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.agent-agent-session-id {
+.agent-agent-session-title {
     color: var(--text-primary);
-    font-size: 12px;
-    font-family: var(--font-mono, monospace);
-    white-space: nowrap;
-}
-
-.agent-agent-session-cwd {
-    flex: 1;
-    min-width: 0;
-    color: var(--text-secondary, #888);
-    font-size: 12px;
+    font-size: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
+.agent-agent-session-meta {
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary, #888);
+    font-size: 12px;
+}
+
 .agent-agent-session-current {
-    flex: none;
-    padding: 1px 6px;
+    padding: 0 6px;
     border-radius: 8px;
     font-size: 11px;
     color: var(--text-on-accent, #fff);
