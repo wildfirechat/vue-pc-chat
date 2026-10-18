@@ -7,6 +7,9 @@
   目录列表（工作目录选择）不再随 type=3 下发：打开弹窗时发 207 op=dirs（带 seq/robotId）
   → 插件回 209 Agent_Command_Result（透明消息）→ 本组件按 seq 关联 pending 渲染；
   缓存 TTL 60s；5s 超时重试 1 次；无应答（老插件）回退读 type=3 的 dirs（§10）。
+  会话选择：顶部「会话」行，发 207 op=sessions（seq/robotId）→ 209 列出最近 10 个历史
+  会话（按最近活跃倒序）；点选发 207 op=switch（sessionId）→ 恢复该会话上下文
+  （工作目录随会话切换）。5s 无应答提示重试。
 -->
 <template>
     <div class="agent-agent-panel" @click.stop>
@@ -19,6 +22,19 @@
         <div class="agent-agent-body">
             <div v-if="loading" class="agent-agent-loading">正在加载会话状态…</div>
             <template v-else>
+                <!-- 会话（DSH 历史会话；选中恢复上下文） -->
+                <div class="agent-agent-row">
+                    <label class="agent-agent-label">会话</label>
+                    <div class="agent-agent-row">
+                        <span class="agent-agent-cwd-current">{{ currentSessionShort || '未激活' }}</span>
+                        <button
+                            class="agent-agent-btn agent-agent-btn-sm"
+                            :disabled="applying || sessionLoading"
+                            @click="openSessionPicker"
+                        >选择</button>
+                    </div>
+                </div>
+
                 <!-- 模型 -->
                 <div class="agent-agent-row">
                     <label class="agent-agent-label">模型</label>
@@ -180,6 +196,45 @@
                 </div>
             </div>
         </Teleport>
+
+        <!-- 会话选择弹窗（207 op=sessions → 209 最近会话列表；op=switch 切换） -->
+        <Teleport to="body">
+            <div v-if="sessionPickerOpen" class="agent-agent-picker-mask" @click="closeSessionPicker">
+                <div class="agent-agent-picker" @click.stop>
+                    <header class="agent-agent-header">
+                        <span class="agent-agent-title">选择会话</span>
+                        <button class="agent-agent-close" title="关闭" @click="closeSessionPicker">×</button>
+                    </header>
+                    <div class="agent-agent-picker-body">
+                        <div v-if="sessionLoading" class="agent-agent-cwd-empty">正在获取会话列表…</div>
+                        <template v-else>
+                            <div v-if="sessionError" class="agent-agent-cwd-empty agent-agent-cwd-row agent-agent-cwd-error">
+                                <span>{{ sessionError }}</span>
+                                <button class="agent-agent-btn agent-agent-btn-sm" @click="requestSessions">重试</button>
+                            </div>
+                            <div v-else-if="!sessionList.length" class="agent-agent-cwd-empty agent-agent-cwd-row">
+                                <span>暂无历史会话</span>
+                                <button class="agent-agent-btn agent-agent-btn-sm" @click="requestSessions">刷新</button>
+                            </div>
+                            <ul v-else class="agent-agent-cwd-list">
+                                <li
+                                    v-for="s in sessionList"
+                                    :key="s.id"
+                                    class="agent-agent-cwd-item agent-agent-session-item"
+                                    @click="switchToSession(s)"
+                                >
+                                    <span class="agent-agent-session-time">{{ formatSessionTime(s.updatedAt) }}</span>
+                                    <span class="agent-agent-session-id">{{ shortSessionId(s.id) }}</span>
+                                    <span class="agent-agent-session-cwd">{{ s.cwd || '未记录工作目录' }}</span>
+                                    <span v-if="s.current" class="agent-agent-session-current">当前</span>
+                                </li>
+                            </ul>
+                        </template>
+                    </div>
+                    <p class="agent-agent-hint">切换会话 = 恢复该会话上下文（工作目录随会话切换）</p>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -227,6 +282,17 @@ export default {
             cwdFallback: '',      // 209 应答里的 cwd（type=3 未就绪时兜底展示）
             _dirsCacheAt: 0,      // 目录缓存写入时间戳（TTL 60s）
             _dirSeq: 0,           // seq 自增（关联 207 请求与 209 应答）
+            // ─── 会话选择（207 op=sessions/switch → 209 应答） ───
+            sessionPickerOpen: false,
+            sessionList: [],       // 最近会话（id/cwd/createdAt/updatedAt/eventCount/sizeBytes/current）
+            sessionLoading: false,
+            sessionError: '',
+            currentSessionId: '',  // type=3 / 209 里的当前 session id
+            _sessionSeq: 0,        // 会话列表 pending seq（0=无）
+            _switchSeq: 0,         // 会话切换 pending seq
+            _switchTimer: 0,
+            _sessionTimer: 0,
+            _seqBase: 0,           // 自增 seq 起点（首次用毫秒取模）
         };
     },
     computed: {
@@ -286,6 +352,10 @@ export default {
             // 新插件：207 op=dirs → 209 应答（缓存 TTL 60s）；老插件：type=3 内联 dirs 回退
             return this.cwdDirs || [];
         },
+        // 当前会话 id 缩短展示（前缀是会话哈希，展示无意义）
+        currentSessionShort() {
+            return this.currentSessionId ? this.shortSessionId(this.currentSessionId) : '';
+        },
     },
     created() {
         // seq → {robotId, timer, attempt}：非响应式（内含定时器句柄，不放进 data 避免被代理）
@@ -309,13 +379,16 @@ export default {
         wfc.eventEmitter.removeListener(EventType.ReceiveMessage, this.onReceiveMessage);
         window.removeEventListener("keydown", this.onKeyDown);
         clearTimeout(this._flashTimer);
-        // 组件销毁：清掉未完成的目录请求，避免定时器泄漏/回调打到已销毁实例
+        // 组件销毁：清掉未完成的目录/会话请求，避免定时器泄漏/回调打到已销毁实例
         this.cancelPendingDirs();
+        this.cancelSessionRequest();
     },
     methods: {
         onKeyDown(e) {
             if (e.key !== "Escape") return;
-            if (this.cwdPickerOpen) {
+            if (this.sessionPickerOpen) {
+                this.closeSessionPicker();
+            } else if (this.cwdPickerOpen) {
                 this.closeCwdPicker();
             } else {
                 this.$emit("close");
@@ -329,6 +402,10 @@ export default {
                 // 面板据此同步本地状态（此前只依赖本地默认值，切换后重开面板会显示回默认）。
                 if (data && data.mode && data.mode.current) {
                     this.convMode = data.mode.current;
+                }
+                // 当前会话 id（type=3 sessionId；209 sessions 应答也会更新）
+                if (data && data.sessionId) {
+                    this.currentSessionId = data.sessionId;
                 }
                 // 兼容老插件：type=3 仍内联 dirs 时直接作为候选（新插件不含 dirs，走 207 op=dirs）
                 if (data && Array.isArray(data.dirs) && data.dirs.length && !this.cwdDirs.length) {
@@ -433,6 +510,80 @@ export default {
             this.cwdError = '';
         },
 
+        // ─── 会话选择：207 op=sessions → 209 列表；op=switch 切换 ───
+        nextSeq() {
+            if (!this._seqBase) this._seqBase = Date.now() % 100000;
+            this._seqBase = (this._seqBase + 1) % 100000;
+            return this._seqBase;
+        },
+        shortSessionId(id) {
+            const s = String(id || '');
+            return s.length > 8 ? `…${s.slice(-8)}` : s;
+        },
+        formatSessionTime(ms) {
+            if (!ms) return '';
+            const d = new Date(ms);
+            const p = (n) => (n < 10 ? `0${n}` : `${n}`);
+            return `${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+        },
+        openSessionPicker() {
+            if (this.applying) return;
+            this.sessionPickerOpen = true;
+            this.sessionError = '';
+            this.requestSessions();
+        },
+        closeSessionPicker() {
+            this.sessionPickerOpen = false;
+            clearTimeout(this._switchTimer);
+            this._switchTimer = 0;
+            this._switchSeq = 0;
+            this.cancelSessionRequest();
+            this.sessionLoading = false;
+            this.sessionError = '';
+        },
+        /** 请求最近会话列表（207 op=sessions，透明消息；5s 无 209 应答提示重试）。 */
+        requestSessions() {
+            this.cancelSessionRequest();
+            const seq = this.nextSeq();
+            this._sessionSeq = seq;
+            this.sessionLoading = true;
+            this.sessionError = '';
+            this.sendSessionCommand('sessions', seq);
+            this._sessionTimer = setTimeout(() => {
+                this._sessionSeq = 0;
+                this.sessionLoading = false;
+                this.sessionError = '获取会话列表超时，请重试';
+            }, 5000);
+        },
+        cancelSessionRequest() {
+            clearTimeout(this._sessionTimer);
+            this._sessionTimer = 0;
+            this._sessionSeq = 0;
+        },
+        sendSessionCommand(op, seq, sessionId) {
+            const content = new AgentCommandMessageContent(op, undefined, seq, this.robotUid || undefined, sessionId);
+            wfc.sendConversationMessage(this.conversation, content);
+        },
+        /** 切换到选中的历史会话（恢复其上下文；工作目录随会话切换）。 */
+        switchToSession(s) {
+            if (!s || !s.id || this.applying) return;
+            if (s.current || s.id === this.currentSessionId) {
+                this.closeSessionPicker();
+                return;
+            }
+            const seq = this.nextSeq();
+            this._switchSeq = seq;
+            this.sendSessionCommand('switch', seq, s.id);
+            clearTimeout(this._switchTimer);
+            this._switchTimer = setTimeout(() => {
+                if (this._switchSeq === seq) {
+                    this._switchSeq = 0;
+                    this.sessionError = '切换会话超时，请重试';
+                }
+            }, 10000);
+            this.flash();
+        },
+
         // ─── 目录列表：207 op=dirs 请求 → 209 Agent_Command_Result 应答 ───
         /** 发 207 op=dirs（透明消息），等待匹配 seq 的 209 应答。 */
         requestDirs() {
@@ -504,8 +655,36 @@ export default {
             const content = message && message.messageContent;
             if (!content || content.type !== MessageContentType.AGENT_COMMAND_RESULT) return;
             const data = this.parseCommandResult(content);
-            if (!data || data.op !== 'dirs') return;
+            if (!data) return;
             if (!this.isSameConversation(message.conversation)) return;
+            // 会话列表应答：只接受当前 pending 的 seq（透明消息可能乱序/重复）
+            if (data.op === 'sessions') {
+                if (!this._sessionSeq || data.seq !== this._sessionSeq) return;
+                clearTimeout(this._sessionTimer);
+                this._sessionSeq = 0;
+                this.sessionLoading = false;
+                this.sessionError = '';
+                this.sessionList = Array.isArray(data.sessions) ? data.sessions : [];
+                if (data.sessionId) this.currentSessionId = data.sessionId;
+                return;
+            }
+            // 会话切换应答：成功关闭弹窗并刷新面板；失败展示原因
+            if (data.op === 'switch') {
+                if (!this._switchSeq || data.seq !== this._switchSeq) return;
+                clearTimeout(this._switchTimer);
+                this._switchTimer = 0;
+                this._switchSeq = 0;
+                if (data.ok) {
+                    if (data.sessionId) this.currentSessionId = data.sessionId;
+                    this.closeSessionPicker();
+                    this.refreshPanelData();
+                    this.sendCommand('query');
+                } else {
+                    this.sessionError = data.error || '切换会话失败';
+                }
+                return;
+            }
+            if (data.op !== 'dirs') return;
             const hit = this.findPendingDirs(data.seq);
             if (!hit) return;
             const pending = hit.pending;
@@ -537,6 +716,10 @@ export default {
                     dirs: Array.isArray(content.dirs) ? content.dirs : [],
                     root: content.root,
                     cwd: content.cwd,
+                    sessions: Array.isArray(content.sessions) ? content.sessions : [],
+                    sessionId: content.sessionId,
+                    ok: content.ok,
+                    error: content.error,
                 };
             }
             try {
@@ -549,6 +732,10 @@ export default {
                     dirs: Array.isArray(d.dirs) ? d.dirs : [],
                     root: d.root,
                     cwd: d.cwd,
+                    sessions: Array.isArray(d.sessions) ? d.sessions : [],
+                    sessionId: d.sessionId,
+                    ok: d.ok,
+                    error: d.error,
                 };
             } catch (e) {
                 return null;
@@ -860,6 +1047,45 @@ export default {
 
 .agent-agent-cwd-item:hover {
     background: var(--background-quaternary, #e5e5e5);
+}
+
+/* 会话列表行：时间 · 短id · cwd · 当前标记 */
+.agent-agent-session-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.agent-agent-session-time {
+    color: var(--text-secondary, #888);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.agent-agent-session-id {
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: var(--font-mono, monospace);
+    white-space: nowrap;
+}
+
+.agent-agent-session-cwd {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-secondary, #888);
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.agent-agent-session-current {
+    flex: none;
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--text-on-accent, #fff);
+    background: var(--accent-color);
 }
 
 .agent-agent-cwd-empty {

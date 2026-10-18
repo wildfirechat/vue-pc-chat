@@ -1,9 +1,11 @@
 /*
  * AGENT_Command_Result (209)：AI 面板指令应答消息（机器人→用户）。
  * 透明消息（Transparent）：不存储、不计未读、不在消息流显示（digest 为空）。
- * content = JSON.stringify({ver:1, op:"dirs", seq, robotId?, cwd?, root?, dirs:[], total?, truncated?})
- * 当前仅 op="dirs"（目录列表按需获取）：客户端按 seq 关联 207 op=dirs 的 pending 请求，
- * 应答为目录名数组（非全路径）。decode 容错：非 JSON/字段缺失时保持空值。
+ * content = JSON.stringify({ver:1, op, seq, robotId?, ...})：
+ *   op="dirs"     {cwd?, root?, dirs:[], total?, truncated?}  目录列表按需获取
+ *   op="sessions" {sessionId, sessions:[{id,cwd,createdAt,updatedAt,eventCount,sizeBytes,current}], total}
+ *   op="switch"   {ok, sessionId?, cwd?, error?}              切换历史会话结果
+ * 客户端按 seq 关联 207 pending 请求；decode 容错：非 JSON/字段缺失时保持空值。
  */
 
 import MessageContent from './messageContent'
@@ -17,8 +19,12 @@ export default class AgentCommandResultMessageContent extends MessageContent {
     cwd; // 应答时机器人侧的工作目录
     root; // dirs 的来源目录（项目根，绝对路径）
     dirs; // 目录名数组（非全路径，按名称升序）
-    total; // 截断前的目录总数
+    total; // 截断前的目录总数 / 会话总数
     truncated; // 是否被插件截断（上限 3000）
+    sessions; // op=sessions：最近会话列表（id/cwd/createdAt/updatedAt/eventCount/sizeBytes/current）
+    sessionId; // op=sessions/switch：当前生效的 session id
+    ok; // op=switch：是否切换成功
+    error; // op=switch：失败原因
 
     constructor(op, seq, robotId, data) {
         super(MessageContentType.AGENT_COMMAND_RESULT);
@@ -32,6 +38,10 @@ export default class AgentCommandResultMessageContent extends MessageContent {
         this.dirs = Array.isArray(d.dirs) ? d.dirs : [];
         this.total = d.total;
         this.truncated = d.truncated;
+        this.sessions = Array.isArray(d.sessions) ? d.sessions : [];
+        this.sessionId = d.sessionId;
+        this.ok = d.ok;
+        this.error = d.error;
     }
 
     digest() {
@@ -47,6 +57,10 @@ export default class AgentCommandResultMessageContent extends MessageContent {
         if (Array.isArray(this.dirs)) data.dirs = this.dirs;
         if (this.total !== undefined) data.total = this.total;
         if (this.truncated !== undefined) data.truncated = this.truncated;
+        if (Array.isArray(this.sessions)) data.sessions = this.sessions;
+        if (this.sessionId) data.sessionId = this.sessionId;
+        if (this.ok !== undefined) data.ok = this.ok;
+        if (this.error) data.error = this.error;
         payload.content = JSON.stringify(data);
         payload.searchableContent = '';
         return payload;
@@ -68,6 +82,10 @@ export default class AgentCommandResultMessageContent extends MessageContent {
             this.dirs = Array.isArray(d.dirs) ? d.dirs : [];
             this.total = d.total;
             this.truncated = d.truncated;
+            this.sessions = Array.isArray(d.sessions) ? d.sessions : [];
+            this.sessionId = d.sessionId;
+            this.ok = d.ok;
+            this.error = d.error;
         } catch (e) {
             // 非 JSON 内容忽略
         }
