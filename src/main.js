@@ -151,6 +151,9 @@ const i18n = createI18n({
     }
 })
 app.use(i18n)
+// legacy 模式下 vue-i18n 在组件 unmounted 时会 delete this.$t，组件卸载后才回来的异步回调再调 this.$t 就报「$t is not a function」
+// （如打开群信息后切会话，群公告请求失败的回调）。补一个全局的 $t 兜底：组件存活时仍用组件自己的 $t，卸载后落到这里
+app.config.globalProperties.$t = (...args) => i18n.global.t(...args)
 
 app.use(Notifications)
 const router = createRouter({
