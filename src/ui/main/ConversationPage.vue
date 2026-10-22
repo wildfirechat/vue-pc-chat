@@ -29,6 +29,8 @@ export default {
 <style lang="css" scoped>
 .conversation-page {
     flex: 1;
+    /* flex 子项默认 min-width: auto，内容（长频道描述、宽消息）会把会话界面撑得比窗口还宽 */
+    min-width: 0;
     display: flex;
     height: 100%;
 }
@@ -41,6 +43,7 @@ export default {
 
 .conversation-view {
     flex: 1;
+    min-width: 0;
 }
 
 </style>

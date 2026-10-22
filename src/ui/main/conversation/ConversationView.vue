@@ -13,7 +13,7 @@
         <div v-else class="conversation-container">
             <header>
                 <div class="title-container">
-                    <div>
+                    <div class="title-text-container">
                         <h1 ref="titleEl" class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}</h1>
                         <p class="single-line user-online-status" @click="clickConversationDesc">{{ targetUserOnlineStateDesc }}</p>
                         <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
@@ -1325,6 +1325,12 @@ export default {
 }
 
 
+/* 标题、副标题（频道描述等）过长时省略，不能把标题栏撑宽：否则整个会话界面跟着变宽，右上角按钮被挤出窗口 */
+.title-text-container {
+    flex: 1;
+    min-width: 0;
+}
+
 .title-container h1 {
     font-size: var(--font-size-lg);
     word-wrap: break-word;
@@ -1365,6 +1371,7 @@ export default {
 
 .conversation-action-container {
     display: flex;
+    flex-shrink: 0;
     margin: 0 8px;
 }
 
