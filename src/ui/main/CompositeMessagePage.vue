@@ -77,13 +77,16 @@ import UnknowntMessageContentView from "./conversation/message/content/UnknownMe
 import Message from "../../wfc/messages/message";
 import MessagePayload from "../../wfc/messages/messagePayload";
 import Long from "long";
-import {stringValue} from "../../wfc/util/longUtil";
+import {eq, stringValue} from "../../wfc/util/longUtil";
 import wfc from "../../wfc/client/wfc";
 import FavItem from "../../wfc/model/favItem";
 import Conversation from "../../wfc/model/conversation";
 import axios from "axios";
 import {isElectron} from "../../platform";
 import LocationMessageContentView from "./conversation/message/content/LocationMessageContentView";
+import MessageContentType from "../../wfc/messages/messageContentType";
+import {previewMMList} from "../../platformHelper";
+import {imageThumbnailSrc} from "../util/imageThumbUtil";
 
 export default {
     name: "CompositeMessagePage",
@@ -207,7 +210,25 @@ export default {
 
         },
         previewCompositeMessage(focusMessageUid) {
-            store.previewCompositeMessage(this.compositeMessage, focusMessageUid)
+            if (!isElectron()) {
+                store.previewCompositeMessage(this.compositeMessage, focusMessageUid)
+                return;
+            }
+            // PC 和会话里的图片/视频一样用单独的媒体预览窗口打开，可左右切换本聊天记录里的其他图片/视频
+            let mediaMsgs = this.compositeMessage.messageContent.messages.filter(m => [MessageContentType.Image, MessageContentType.Video].indexOf(m.messageContent.type) > -1);
+            let mediaItems = mediaMsgs.map(m => {
+                let content = m.messageContent;
+                let thumbUrl = content.type === MessageContentType.Image ? imageThumbnailSrc(m) : (content.thumbnail ? 'data:image/jpeg;base64,' + content.thumbnail : '');
+                return {
+                    url: content.remotePath,
+                    thumbUrl: thumbUrl,
+                    type: content.type,
+                    title: content.name || '',
+                    messageUid: stringValue(m.messageUid),
+                };
+            });
+            let index = mediaMsgs.findIndex(m => eq(m.messageUid, focusMessageUid));
+            previewMMList(mediaItems, Math.max(index, 0));
         }
     },
 

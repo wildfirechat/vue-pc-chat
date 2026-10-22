@@ -4,6 +4,7 @@ import IPCEventType from './ipcEventType';
 import IpcEventType from './ipcEventType';
 import store from './store';
 import Config from './config';
+import wfc from './wfc/client/wfc';
 
 /**
  * 获取基础 URL（开发环境或生产环境）
@@ -90,4 +91,21 @@ export function previewMM(message, mixMultiMediaItemIndex = 0, continuous = true
         store.previewMessage(message, continuous);
     }
 
+}
+
+/**
+ * 用多媒体预览窗口预览一组不在本地消息库里的图片/视频（如聊天记录里的媒体），可左右切换；仅 PC
+ * @param {Array<{url: string, thumbUrl: string, type: number, title: string, messageUid: string}>} mediaItems type 为消息类型，3 图片、6 视频
+ * @param {number} index 先显示第几项
+ */
+export function previewMMList(mediaItems, index = 0) {
+    let hash = window.location.hash;
+    let url = window.location.origin;
+    if (hash) {
+        url = window.location.href.replace(hash, '#/mmpreview');
+    } else {
+        url += '/mmpreview';
+    }
+    url += `?favMediaIndex=${index}&favMediaData=${wfc.escape(wfc.utf8_to_b64(JSON.stringify(mediaItems)))}`;
+    ipcRenderer.send(IpcEventType.SHOW_MULTIMEDIA_PREVIEW_WINDOW, {url});
 }
