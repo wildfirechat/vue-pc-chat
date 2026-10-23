@@ -137,13 +137,19 @@ module.exports = {
                     },
                     hardenedRuntime: true,
                     gatekeeperAssess: false,
+                    // DSH runtime 含字体 trie 等“二进制数据”但不是 Mach-O；osx-sign 会误签，
+                    // 只放行 .node/.dylib/.so 等原生代码，其余 node_modules 数据文件跳过。
+                    signIgnore: [
+                        ".*dsh-runtime/(?:dsh|profile)/node_modules/(?!.*\\.(?:node|dylib|so)$).*",
+                        ".*extraResources/.*"
+                    ],
                     entitlements: "build/mac/entitlements.mac.plist",
                     entitlementsInherit: "build/mac/entitlements.mac.plist",
                     target: [
                         {
                             target: 'default',
                             arch: [
-                                'universal'
+                                process.env.MAC_ARCH || process.arch
                             ]
 
                         }
@@ -168,6 +174,10 @@ module.exports = {
                     {
                         from: './build/certs',
                         to: 'extraResources/certs'
+                    },
+                    {
+                        from: './build/dsh-runtime',
+                        to: 'dsh-runtime'
                     }
                 ],
                 extraFiles: [

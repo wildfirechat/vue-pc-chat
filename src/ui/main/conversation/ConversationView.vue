@@ -34,6 +34,9 @@
                         v-bind:style="{marginTop:(sharedMiscState.isElectronWindowsOrLinux || sharedMiscState.isOhos) ?  '30px' : '0'}"
                         class="conversation-action-container"
                     >
+                        <div v-if="dshMode" class="i-button-wrapper action" title="会话详情" @click.stop="$emit('toggle-dsh-detail')">
+                            <i class="icon-ion-gear-a" style="display: inline-block"></i>
+                        </div>
                         <div class="i-button-wrapper action" v-if="sharedMiscState.isElectron" @click.prevent="setWindowAlwaysTop">
                             <i class="icon-ion-pin"
                                style="display: inline-block"
@@ -250,6 +253,10 @@ export default {
         ScaleLoader,
     },
     props: {
+        dshMode: {
+            type: Boolean,
+            default: false,
+        },
         inputOptions: {
             type: Object,
             required: false,

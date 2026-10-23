@@ -298,6 +298,9 @@ let store = {
         });
 
         this._addWfcListener(EventType.ReceiveMessage, (msg, hasMore) => {
+            if (!msg || !msg.messageContent || !msg.conversation) {
+                return;
+            }
             if (this.state.misc.connectionStatus === ConnectionStatus.ConnectionStatusReceiveing) {
                 return;
             }
@@ -511,6 +514,9 @@ let store = {
 
         const messageStatusOrContentUpdateListener = (message) => {
             console.log('message status update', message)
+            if (!message || !message.messageContent || !message.conversation) {
+                return;
+            }
             if (!this._isDisplayMessage(message)) {
                 return;
             }
@@ -734,6 +740,9 @@ let store = {
     // conversation actions
 
     _isDisplayMessage(message) {
+        if (!message || !message.messageContent) {
+            return false;
+        }
         // return [PersistFlag.Persist, PersistFlag.Persist_And_Count].indexOf(MessageConfig.getMessageContentPersitFlag(message.messageContent.type)) > -1;
         // AGENT_Command (207) 是 AI 面板静默指令（透明消息），一律不显示
         if (message.messageContent.type === MessageContentType.AGENT_COMMAND) {
@@ -2833,6 +2842,10 @@ let store = {
                         this.close();
                     }
                     this.setCurrentConversation(msg.conversation)
+                    if (isElectron() && msg.conversation.type === 1 && msg.conversation.line === 2) {
+                        // V5：line2 DSH 会话统一在 DSH Tab 打开。
+                        window.location.hash = `#/home/dsh?session=${msg.conversation.target}`
+                    }
                 }
             }).catch(e => {
                 console.error('Please enable notification')

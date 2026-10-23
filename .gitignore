@@ -30,3 +30,9 @@ pnpm-debug.log*
 release
 /src/wfc/av/internal/soundMeter.js
 crash.log
+
+# DSH runtime artifacts（由 scripts/prepare-dsh-runtime.js 生成）
+/build/dsh-runtime/node
+/build/dsh-runtime/dsh
+/build/dsh-runtime/profile
+/build/dsh-runtime/VERSION

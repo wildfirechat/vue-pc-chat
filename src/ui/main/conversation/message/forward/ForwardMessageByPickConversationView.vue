@@ -146,6 +146,8 @@ export default {
             } else {
                 infos = this.sharedConversation.conversationInfoList;
             }
+            // V5：line2 DSH 会话不在普通 IM 转发列表中出现。
+            infos = infos.filter(info => !(info.conversation && info.conversation.type === 1 && info.conversation.line === 2));
             // Add id to each item for virtual-list
             return infos.map((info, index) => ({
                 ...info,

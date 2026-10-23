@@ -74,10 +74,11 @@
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home/conference'}"></i>
                             </div>
                         </li>
-                        <li v-if="aiPortalUrl">
+                        <li v-if="aiPortalUrl || sharedMiscState.isElectron">
                             <div class="i-button-wrapper" @click="go2AI">
                                 <i class="icon-ion-android-sunny"
-                                   v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/ai'}"></i>
+                                   v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/dsh' || this.$router.currentRoute.value.path === '/home/ai'}"></i>
+                                <em v-show="dshUnread > 0" class="badge">{{ dshUnread > 99 ? '···' : dshUnread }}</em>
                             </div>
                         </li>
                         <li>
@@ -162,6 +163,7 @@ import AI from "./AI.vue";
 import Config from "../../config";
 import BackupView from '../../backup/BackupView.vue'
 import SubWindowHost from "./SubWindowHost.vue";
+import { provisionDsh } from "../../dsh/renderer/dshClient";
 
 var avenginkitSetuped = false;
 export default {
@@ -178,11 +180,23 @@ export default {
             conferenceScreenSharing: false,
             conferenceMinimized: false,
             conferenceMinimizing: false,
+            dshProvisionStarted: false,
             voipTransformOrigin: '5% 95%',
         };
     },
 
     methods: {
+        async maybeProvisionDsh() {
+            if (this.dshProvisionStarted || !this.sharedMiscState.isElectron || !this.sharedContactState.selfUserInfo) return;
+            this.dshProvisionStarted = true;
+            try {
+                await provisionDsh(false);
+            } catch (e) {
+                this.dshProvisionStarted = false;
+                console.warn('[dsh] auto provision failed', e && e.message ? e.message : e);
+            }
+        },
+
         onConferenceStart(pos, event) {
             // Cancel drag (and prevent e.preventDefault()) when clicking inside
             // the conversation slider or on any interactive element inside the
@@ -242,6 +256,10 @@ export default {
             wfc.getUserInfo(this.sharedContactState.selfUserInfo.uid, true);
         },
         go2Conversation() {
+            const current = store.state.conversation.currentConversationInfo;
+            if (current && current.conversation && current.conversation.line === 2) {
+                store.setCurrentConversation(null);
+            }
             if (this.$router.currentRoute.value.path === '/home') {
                 this.$eventBus.$emit('scrollToNextUnreadConversation');
                 return
@@ -293,8 +311,8 @@ export default {
             this.isSetting = false;
         },
         go2AI() {
-            if (this.$router.currentRoute.value.path !== '/home/ai') {
-                this.$router.replace({path: '/home/ai'});
+            if (this.$router.currentRoute.value.path !== '/home/dsh' && this.$router.currentRoute.value.path !== '/home/ai') {
+                this.$router.replace({path: '/home/dsh'});
             }
             this.isSetting = false;
         },
@@ -340,6 +358,14 @@ export default {
     },
 
     watch: {
+        'sharedContactState.selfUserInfo'(newVal) {
+            if (!newVal) {
+                this.dshProvisionStarted = false;
+                return;
+            }
+            this.dshProvisionStarted = false;
+            this.maybeProvisionDsh();
+        },
         'sharedMiscState.isVoipOngoing'(newVal) {
             if (!newVal) {
                 this.conferenceScreenSharing = false;
@@ -350,6 +376,10 @@ export default {
         },
     },
 
+    mounted() {
+        this.maybeProvisionDsh();
+    },
+
     computed: {
         aiPortalUrl() {
             return Config.AI_PORTAL_URL
@@ -357,11 +387,19 @@ export default {
         unread() {
             let count = 0;
             this.shareConversationState.conversationInfoList.forEach(info => {
-                if (info.isSilent) {
-                    return;
-                }
-                let unreadCount = info.unreadCount;
-                count += unreadCount.unread;
+                if (info.isSilent) return;
+                const conv = info.conversation;
+                if (conv && conv.type === 1 && conv.line === 2) return;
+                count += info.unreadCount.unread;
+            });
+            return count;
+        },
+        dshUnread() {
+            let count = 0;
+            this.shareConversationState.conversationInfoList.forEach(info => {
+                if (info.isSilent) return;
+                const conv = info.conversation;
+                if (conv && conv.type === 1 && conv.line === 2) count += info.unreadCount.unread;
             });
             return count;
         },

@@ -20,6 +20,7 @@ import MessagePage from "./ui/main/MessagePage.vue";
 import MultimediaPreviewPage from "./ui/main/MultimediaPreviewPage.vue";
 import SingleRemoteControl from "./ui/voip/SingleRemoteControl.vue";
 import AI from "./ui/main/AI.vue";
+import DshWorkspace from "./ui/main/dsh/DshWorkspace.vue";
 import CollectionCreate from "./ui/collection/CollectionCreate.vue";
 import CollectionDetail from "./ui/collection/CollectionDetail.vue";
 import PollHome from "./ui/poll/PollHome.vue";
@@ -70,6 +71,11 @@ const routers = [
                 path: 'ai',
                 name: 'AI',
                 component: AI,
+            },
+            {
+                path: 'dsh',
+                name: 'DshWorkspace',
+                component: DshWorkspace,
             }
         ]
     },

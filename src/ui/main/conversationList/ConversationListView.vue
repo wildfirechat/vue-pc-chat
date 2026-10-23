@@ -9,12 +9,14 @@
         <div v-if="showFilterEmptyHint" class="filter-empty-hint">
             <span>{{ filterEmptyHintText }}</span>
         </div>
-        <virtual-list v-else :data-component="conversationItemView" :data-sources="conversationInfoList" :data-key="conversationInfoKey"
-                      ref="virtualList"
-                      :onScroll="onScroll"
-                      :estimate-size="30"
-                      class="conversation-virtual-list"
-                      style="overflow-y: auto;"/>
+        <template v-else>
+            <virtual-list :data-component="conversationItemView" :data-sources="conversationInfoList" :data-key="conversationInfoKey"
+                          ref="virtualList"
+                          :onScroll="onScroll"
+                          :estimate-size="30"
+                          class="conversation-virtual-list"
+                          style="overflow-y: auto;"/>
+        </template>
 
         <vue-context ref="menu" v-slot="{data:conversationInfo}" v-on:close="onConversationItemContextMenuClose">
             <li>
@@ -53,12 +55,13 @@
 
 <script>
 
-import ConversationItemView from "./ConversationItemView.vue";
+import ConversationListRow from "./ConversationListRow.vue";
 import store from "../../../store";
 import wfc from "../../../wfc/client/wfc";
 import IpcEventType from "../../../ipcEventType";
 import {ipcRenderer} from "../../../platform";
 import {markRaw} from "vue";
+import { localRobotId } from "../../../dsh/renderer/state";
 
 export default {
     name: 'ConversationListView',
@@ -66,9 +69,11 @@ export default {
         return {
             sharedConversationState: store.state.conversation,
             sharedMiscState: store.state.misc,
-            conversationItemView: markRaw(ConversationItemView),
+            conversationItemView: markRaw(ConversationListRow),
             currentConversationIndex: 0,
             currentFilter: 'all',
+            selectedWorkspaceKey: null,
+            dshTick: 0,
             // 进入未读/@我分组时冻结的会话 key 快照，保证清除未读数后会话仍保留在列表，
             // 切换分组时才刷新。null 表示不过滤（全部分组或功能关闭）
             filterKeys: null,
@@ -76,12 +81,13 @@ export default {
                 {value: 'all', label: 'conversation.filter_all'},
                 {value: 'unread', label: 'conversation.filter_unread'},
                 {value: 'mention', label: 'conversation.filter_mention'},
-                {value: 'ai', label: 'conversation.filter_ai'},
             ],
         };
     },
 
     created() {
+        wfc.eventEmitter.on('groupInfosUpdate', this.refreshDshWorkspaces);
+        window.addEventListener('dsh-provision-updated', this.refreshDshWorkspaces);
         this.$eventBus.$on('showConversationContextMenu', ([event, conversationInfo]) => {
             this.showConversationItemContextMenu(event, conversationInfo);
         });
@@ -89,11 +95,36 @@ export default {
     },
 
     unmounted() {
+        wfc.eventEmitter.off('groupInfosUpdate', this.refreshDshWorkspaces);
+        window.removeEventListener('dsh-provision-updated', this.refreshDshWorkspaces);
         this.$eventBus.$off('showConversationContextMenu');
         this.$eventBus.$off('scrollToNextUnreadConversation');
     },
 
     methods: {
+        refreshDshWorkspaces() {
+            this.dshTick++;
+            if (this.selectedWorkspaceKey && !this.dshWorkspaces.some(w => w.key === this.selectedWorkspaceKey)) {
+                this.selectedWorkspaceKey = null;
+            }
+        },
+
+        workspaceKeyFor(conversationInfo) {
+            const conv = conversationInfo && conversationInfo.conversation;
+            if (!conv || conv.type !== 1 || conv.line !== 2) return '';
+            const robotId = this.localRobotId;
+            if (!robotId) return '';
+            let groupInfo = null;
+            try { groupInfo = wfc.getGroupInfo(conv.target, false); } catch (e) { groupInfo = null; }
+            if (!groupInfo || !groupInfo.extra) return '';
+            try {
+                const extra = JSON.parse(groupInfo.extra);
+                const section = extra && extra.wfds && extra.wfds.robots ? extra.wfds.robots[robotId] : null;
+                return section && section.workspaceId ? `${robotId}:${section.workspaceId}` : '';
+            } catch (e) {
+                return '';
+            }
+        },
 
         setConversationTop(conversationInfo) {
             store.setConversationTop(conversationInfo.conversation, conversationInfo.top > 0 ? 0 : 1);
@@ -120,6 +151,9 @@ export default {
         },
 
         conversationInfoKey(conversationInfo) {
+            if (conversationInfo && conversationInfo._dshHeader) {
+                return conversationInfo._dshHeaderKey;
+            }
             let conv = conversationInfo.conversation;
             return conv.target + '-' + conv.type + '-' + conv.line;
         },
@@ -259,7 +293,7 @@ export default {
         scrollToNextUnreadConversation() {
             let currentConversationIndex = this.currentConversationIndex
             let nextUnreadConversationIndex = this.conversationInfoList.findIndex((ci, index) => {
-                if (index <= currentConversationIndex) {
+                if (index <= currentConversationIndex || ci._dshHeader) {
                     return false;
                 }
                 return !ci.isSilent && ci._unread > 0
@@ -267,7 +301,7 @@ export default {
 
             if (nextUnreadConversationIndex === -1 && currentConversationIndex > -1) {
                 nextUnreadConversationIndex = this.conversationInfoList.findIndex((ci, index) => {
-                    return !ci.isSilent && ci._unread > 0
+                    return !ci._dshHeader && !ci.isSilent && ci._unread > 0
                 });
             }
 
@@ -302,21 +336,89 @@ export default {
         }
     },
     computed: {
+        localRobotId() {
+            // dshTick 让 provision 更新后重新求值
+            this.dshTick;
+            return localRobotId();
+        },
+        dshWorkspaces() {
+            this.dshTick;
+            if (!this.localRobotId) return [];
+            const map = new Map();
+            for (const ci of this.baseConversationInfoList) {
+                const key = this.workspaceKeyFor(ci);
+                if (!key) continue;
+                const conv = ci.conversation;
+                let name = '工作区';
+                try {
+                    const groupInfo = wfc.getGroupInfo(conv.target, false);
+                    const extra = groupInfo && groupInfo.extra ? JSON.parse(groupInfo.extra) : null;
+                    const section = extra && extra.wfds && extra.wfds.robots ? extra.wfds.robots[this.localRobotId] : null;
+                    if (section && section.workspaceName) name = section.workspaceName;
+                } catch (e) { /* ignore */ }
+                if (!map.has(key)) map.set(key, { key, name, count: 0 });
+                map.get(key).count++;
+            }
+            return [...map.values()];
+        },
         // 排除独立窗口会话后的完整列表
         baseConversationInfoList() {
             return this.sharedConversationState.conversationInfoList.filter(ci => {
+                if (ci.conversation && ci.conversation.type === 1 && ci.conversation.line === 2) {
+                    // V5：line2 DSH 会话统一在 DSH Tab 展示，消息页永久隐藏。
+                    return false;
+                }
                 const index = this.sharedConversationState.floatingConversations.findIndex(c => c.equal(ci.conversation));
                 return index === -1;
             })
         },
         conversationInfoList() {
             let list = this.baseConversationInfoList;
-            if (!this.sharedMiscState.enableConversationListFilter || this.currentFilter === 'all' || !this.filterKeys) {
-                return list;
+            if (this.selectedWorkspaceKey) {
+                list = list.filter(ci => this.workspaceKeyFor(ci) === this.selectedWorkspaceKey);
             }
-            // 显示：快照内的会话（已读后仍保留）+ 当前实时命中分组的会话（新收到的未读/@我会话即时出现）
-            // 新命中的会话会通过 watch 加入快照，从而在被读后依然保留，直至下次切换分组
-            return list.filter(ci => this.filterKeys.has(this.conversationInfoKey(ci)) || this.matchFilter(ci, this.currentFilter));
+            if (this.sharedMiscState.enableConversationListFilter && this.currentFilter !== 'all' && this.filterKeys) {
+                // 显示：快照内的会话（已读后仍保留）+ 当前实时命中分组的会话（新收到的未读/@我会话即时出现）
+                // 新命中的会话会通过 watch 加入快照，从而在被读后依然保留，直至下次切换分组
+                list = list.filter(ci => this.filterKeys.has(this.conversationInfoKey(ci)) || this.matchFilter(ci, this.currentFilter));
+            }
+            if (!this.localRobotId) return list;
+            // V4：按工作区插入分组标题；群会话在列表中只出现一次。
+            const groups = new Map();
+            const order = [];
+            for (const ci of list) {
+                const key = this.workspaceKeyFor(ci) || '__shared__';
+                if (!groups.has(key)) {
+                    groups.set(key, { key, name: '未归类', count: 0, items: [] });
+                    order.push(key);
+                }
+                const g = groups.get(key);
+                g.count++;
+                g.items.push(ci);
+                if (key !== '__shared__') {
+                    try {
+                        const conv = ci.conversation;
+                        const groupInfo = wfc.getGroupInfo(conv.target, false);
+                        const extra = groupInfo && groupInfo.extra ? JSON.parse(groupInfo.extra) : null;
+                        const section = extra && extra.wfds && extra.wfds.robots ? extra.wfds.robots[this.localRobotId] : null;
+                        if (section && section.workspaceName) g.name = section.workspaceName;
+                    } catch (e) { /* ignore */ }
+                }
+            }
+            const out = [];
+            for (const key of order) {
+                const g = groups.get(key);
+                if (g.key !== '__shared__') {
+                    out.push({
+                        _dshHeader: true,
+                        _dshHeaderKey: `header-${g.key}`,
+                        name: g.name,
+                        count: g.count,
+                    });
+                }
+                out.push(...g.items);
+            }
+            return out;
         },
         // 当前实时命中分组的会话 key 指纹，用于监听未读/@我变化（即使会话未重排也能触发）
         filterMatchFingerprint() {
@@ -353,7 +455,7 @@ export default {
         }
     },
 
-    components: {ConversationItemView},
+    components: {ConversationListRow},
 };
 </script>
 
@@ -412,4 +514,26 @@ export default {
     font-weight: 600;
 }
 
+.dsh-workspace-bar {
+    display: flex;
+    gap: 6px;
+    padding: 8px 10px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border-color, #eee);
+}
+.dsh-ws-chip {
+    flex: 0 0 auto;
+    border: 1px solid var(--border-color, #e5e6eb);
+    background: transparent;
+    color: var(--text-secondary, #6b7280);
+    border-radius: 999px;
+    padding: 3px 9px;
+    font-size: 11px;
+    cursor: pointer;
+}
+.dsh-ws-chip.active {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+}
 </style>

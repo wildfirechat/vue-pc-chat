@@ -24,6 +24,8 @@
                     <div v-if="isOrganizationGroupConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
                         <h2 class="title single-line">{{ conversationTitle }}<i v-if="agentState" class="agent-list-dot" :class="agentStateClass"></i></h2>
                         <span v-if="isAiGroup" class="agent-group-badge">AI</span>
+                        <span v-if="dshWorkspaceName" class="dsh-workspace-badge">{{ dshWorkspaceName }}</span>
+                        <span v-if="dshMultiRobot" class="dsh-multi-badge">多机器人</span>
                         <p class="single-line" style="background: var(--accent-color); border-radius: 2px; color: var(--text-on-accent); padding: 1px 2px; font-size: 9px">官方</p>
                     </div>
                     <div v-else-if="isExternalDomainSingleConversation" class="flex-row flex-align-center" style="max-width: calc(100% - 60px)">
@@ -33,6 +35,8 @@
                     <template v-else>
                         <h2 class="title single-line">{{ conversationTitle }}<i v-if="agentState" class="agent-list-dot" :class="agentStateClass"></i></h2>
                         <span v-if="isAiGroup" class="agent-group-badge">AI</span>
+                        <span v-if="dshWorkspaceName" class="dsh-workspace-badge">{{ dshWorkspaceName }}</span>
+                        <span v-if="dshMultiRobot" class="dsh-multi-badge">多机器人</span>
                     </template>
                     <p class="time single-line">{{ source._timeStr }}</p>
                 </div>
@@ -64,6 +68,7 @@ import ConversationType from "../../../wfc/model/conversationType";
 import GroupType from "../../../wfc/model/groupType";
 import WfcUtil from "../../../wfc/util/wfcUtil";
 import SendMixMediaMessageView from "../view/SendMixMediaMessageView.vue";
+import { localRobotId } from '../../../dsh/renderer/state';
 
 export default {
     name: "ConversationItemView",
@@ -86,16 +91,25 @@ export default {
             dragAndDropEnterCount: 0,
             shareConversationState: store.state.conversation,
             groupPortrait: Config.DEFAULT_GROUP_PORTRAIT_URL,
+            dshWorkspaceName: '',
+            dshMultiRobot: false,
         };
     },
     mounted() {
         this.refreshAgentState();
+        this.refreshDshMeta();
         wfc.eventEmitter.on('settingUpdate', this.refreshAgentState);
+        wfc.eventEmitter.on('settingUpdate', this.refreshDshMeta);
+        wfc.eventEmitter.on(EventType.GroupInfosUpdate, this.refreshDshMeta);
+        window.addEventListener('dsh-provision-updated', this.refreshDshMeta);
         wfc.eventEmitter.on(EventType.UserOnlineEvent, this.onUserOnlineEvent);
         // this.refreshGroupPortrait();
     },
     beforeUnmount() {
         wfc.eventEmitter.off('settingUpdate', this.refreshAgentState);
+        wfc.eventEmitter.off('settingUpdate', this.refreshDshMeta);
+        wfc.eventEmitter.off(EventType.GroupInfosUpdate, this.refreshDshMeta);
+        window.removeEventListener('dsh-provision-updated', this.refreshDshMeta);
         wfc.eventEmitter.off(EventType.UserOnlineEvent, this.onUserOnlineEvent);
     },
     methods: {
@@ -565,4 +579,24 @@ export default {
     border: 1px solid var(--accent-color);
 }
 
+.dsh-workspace-badge {
+    margin-left: 4px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--background-secondary, #f2f3f5);
+    color: var(--text-secondary, #6b7280);
+    font-size: 10px;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dsh-multi-badge {
+    margin-left: 4px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: #e8f1ff;
+    color: #1d4ed8;
+    font-size: 10px;
+}
 </style>

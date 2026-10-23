@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { randomUUID } from 'crypto';
 import tmp from 'tmp';
 import {
     app,
@@ -33,6 +34,9 @@ import { loadSelfSignedCertificates, logSelfSignedCertificates, createCertificat
 import {init as initProtoMain} from "./wfc/proto/proto_main";
 import createProtocol from "./createProtocol";
 import { autoUpdater } from 'electron-updater';
+import DshProvisionService from './dsh/main/provisionService';
+import DshHostManager from './dsh/main/hostManager';
+import DshModelStore from './dsh/main/modelStore';
 
 console.log('start crash report', app.getPath('crashDumps'))
 // crashReporter.start({uploadToServer: false});
@@ -64,6 +68,21 @@ const workingDir = isDevelopment ? `${__dirname}/public` : `${__dirname}`;
 const selfSignedCerts = loadSelfSignedCertificates(nodePath.join(app.getPath('userData'), 'self-signed-certs'));
 // 主进程 Node 的 https 请求使用；没有内置证书时为 undefined，即 Node 默认行为
 const selfSignedHttpsAgent = createHttpsAgent(selfSignedCerts.certificates);
+
+// ===================== 内置 DSH 运行时 =====================
+// 消息链路走 gateway + dsh-plugin；主进程只负责开通、加密缓存与 Host 生命周期。
+const dshProvisionService = new DshProvisionService({
+    userDataPath: app.getPath('userData'),
+    httpsAgent: selfSignedHttpsAgent,
+});
+const dshModelStore = new DshModelStore(app.getPath('userData'));
+const dshHostManager = new DshHostManager({
+    userDataPath: app.getPath('userData'),
+    getWindow: () => mainWindow,
+    onStatus: (status) => {
+        console.log('[dsh] status', status.state, status.lastError || '');
+    },
+});
 
 // 渲染进程调用 wfc.UseTls 之前，同步取回 PEM 文件路径
 ipcMain.on(IPCEventType.GET_SELF_SIGNED_CERT_FILES, (event) => {
@@ -1225,6 +1244,7 @@ const createMainWindow = async () => {
     });
 
     ipcMain.on(IPCEventType.LOGOUT, (event, args) => {
+        dshHostManager.stop().catch(e => console.log('[dsh] stop on logout failed', e));
         mainWindowState.unmanage();
         mainWindow.resizable = isDevelopment;
         mainWindow.maximizable = false;
@@ -1394,7 +1414,7 @@ const icon = `${workingDir}/images/dock.png`;
 isDevelopment && app.dock && app.dock.setIcon(icon);
 
 // comment the following for multi-instance, start
-if (!app.requestSingleInstanceLock()) {
+if (!process.env.WF_ALLOW_MULTI_INSTANCE && !app.requestSingleInstanceLock()) {
     console.log('only allow start one instance!')
     app.quit()
 }
@@ -1438,6 +1458,262 @@ function registerLocalResourceProtocol() {
         callback(pathname);
     });
 }
+
+function readDevProvision() {
+    if (!process.env.DSH_DEV_PROVISION) return null;
+    try {
+        return JSON.parse(fs.readFileSync(process.env.DSH_DEV_PROVISION, 'utf8'));
+    } catch (e) {
+        console.log('[dsh] invalid DSH_DEV_PROVISION', e);
+        return null;
+    }
+}
+
+function devPublicView(provision) {
+    if (!provision) return provision;
+    return {
+        ...provision,
+        robot: { ...(provision.robot || {}), robotSecret: undefined },
+        ai: { ...(provision.ai || {}), apiKey: undefined },
+    };
+}
+
+// ===================== 内置 DSH IPC =====================
+ipcMain.handle(IPCEventType.DSH_PROVISION, async (event, args = {}) => {
+    try {
+        const { userId, appServerUrl, authToken, clientId, platform, forceRefresh } = args;
+        const dev = readDevProvision();
+        const result = dev
+            ? { full: dev, publicView: devPublicView(dev) }
+            : await dshProvisionService.provision({
+                userId,
+                appServerUrl,
+                authToken,
+                clientId,
+                platform,
+                forceRefresh,
+            });
+        let hostStatus = dshHostManager.getStatus();
+        const sameRobot = hostStatus && hostStatus.robotId === result.full.robot.robotId;
+        const alive = hostStatus && (hostStatus.state === 'running' || hostStatus.state === 'starting');
+        if (!(sameRobot && alive && !forceRefresh)) {
+            try {
+                hostStatus = await dshHostManager.start(result.full, false, dshModelStore.get(userId));
+            } catch (e) {
+                console.log('[dsh] start host failed', e);
+                hostStatus = dshHostManager.getStatus();
+            }
+        }
+        return {
+            ok: true,
+            provision: result.publicView,
+            hostStatus,
+        };
+    } catch (e) {
+        console.log('[dsh] provision failed', e);
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_GET_CACHED, async (event, userId) => {
+    try {
+        const dev = readDevProvision();
+        const cached = dev
+            ? { full: dev, publicView: devPublicView(dev) }
+            : dshProvisionService.getCached(userId);
+        if (!cached) return { ok: false, error: 'no cached provision' };
+        let hostStatus = dshHostManager.getStatus();
+        const sameRobot = hostStatus && hostStatus.robotId === cached.full.robot.robotId;
+        const alive = hostStatus && (hostStatus.state === 'running' || hostStatus.state === 'starting');
+        if (!(sameRobot && alive)) {
+            try { hostStatus = await dshHostManager.start(cached.full, false, dshModelStore.get(userId)); } catch (e) { hostStatus = dshHostManager.getStatus(); }
+        }
+        return { ok: true, provision: cached.publicView, hostStatus };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+function normalizeProviderId(value, fallbackName) {
+    let id = String(value || '').trim().toLowerCase();
+    if (id === 'default') throw new Error('Provider ID "default" 是服务端保留值');
+    if (!id) {
+        id = String(fallbackName || '').trim().toLowerCase()
+            .replace(/[^a-z0-9_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        if (!id || id === 'default') id = 'custom';
+    }
+    if (!/^[a-z0-9][a-z0-9_-]*$/.test(id)) {
+        throw new Error('Provider ID 只能包含小写字母、数字、- 和 _，且不能以符号开头');
+    }
+    return id;
+}
+
+function validateUserModel(input, requireKey) {
+    if (!input) throw new Error('missing model');
+    const name = String(input.name || '').trim();
+    const baseUrl = String(input.baseUrl || '').trim();
+    const model = String(input.model || '').trim();
+    const apiKey = String(input.apiKey || '').trim();
+    if (!name) throw new Error('请填写模型名称');
+    if (!/^https?:\/\//i.test(baseUrl)) throw new Error('Base URL 必须以 http:// 或 https:// 开头');
+    if (!model) throw new Error('请填写模型 ID');
+    if (requireKey && !apiKey) throw new Error('请填写 API Key');
+    const providerId = normalizeProviderId(input.providerId, name);
+    return {
+        providerId,
+        name,
+        baseUrl,
+        model,
+        apiKey,
+        reasoningEffort: String(input.reasoningEffort || '').trim(),
+        maxTokens: Number(input.maxTokens) || 8192,
+        contextWindow: Number(input.contextWindow) || 131072,
+    };
+}
+
+async function restartHostWithModels(userId) {
+    const models = dshModelStore.get(userId);
+    let hostStatus = dshHostManager.getStatus();
+    try {
+        if (hostStatus && (hostStatus.state === 'running' || hostStatus.state === 'starting' || hostStatus.state === 'restarting' || hostStatus.state === 'crashed')) {
+            hostStatus = await dshHostManager.restart(models);
+        }
+    } catch (e) {
+        console.log('[dsh] restart after model change failed', e && e.message ? e.message : e);
+    }
+    return { models: DshModelStore.publicView(models), hostStatus };
+}
+
+ipcMain.handle(IPCEventType.DSH_GET_MODELS, (event, userId) => {
+    return DshModelStore.publicView(dshModelStore.get(userId));
+});
+
+ipcMain.handle(IPCEventType.DSH_ADD_MODEL, async (event, args = {}) => {
+    try {
+        const { userId } = args;
+        if (!userId) throw new Error('未登录');
+        const input = validateUserModel(args.model, true);
+        const models = dshModelStore.get(userId);
+        if (models.some(m => (m.providerId || '') === input.providerId)) {
+            throw new Error(`Provider ID "${input.providerId}" 已存在`);
+        }
+        const item = { ...input, id: randomUUID(), createdAt: Date.now() };
+        models.push(item);
+        dshModelStore.save(userId, models);
+        const result = await restartHostWithModels(userId);
+        return { ok: true, ...result };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_UPDATE_MODEL, async (event, args = {}) => {
+    try {
+        const { userId, id } = args;
+        if (!userId || !id) throw new Error('参数不完整');
+        const models = dshModelStore.get(userId);
+        const index = models.findIndex(m => m.id === id);
+        if (index < 0) throw new Error('模型不存在');
+        const input = validateUserModel(args.model, false);
+        if (models.some((m, i) => i !== index && (m.providerId || '') === input.providerId)) {
+            throw new Error(`Provider ID "${input.providerId}" 已存在`);
+        }
+        if (!input.apiKey) input.apiKey = models[index].apiKey || '';
+        if (!input.apiKey) throw new Error('请填写 API Key');
+        models[index] = { ...models[index], ...input };
+        dshModelStore.save(userId, models);
+        const result = await restartHostWithModels(userId);
+        return { ok: true, ...result };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_DELETE_MODEL, async (event, args = {}) => {
+    try {
+        const { userId, id } = args;
+        if (!userId || !id) throw new Error('参数不完整');
+        const models = dshModelStore.get(userId).filter(m => m.id !== id);
+        dshModelStore.save(userId, models);
+        const result = await restartHostWithModels(userId);
+        return { ok: true, ...result };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_GET_STATUS, () => {
+    return dshHostManager.getStatus();
+});
+
+ipcMain.handle(IPCEventType.DSH_GET_LOG, (event, maxLines) => {
+    return dshHostManager.getLogTail(maxLines || 300);
+});
+
+ipcMain.handle(IPCEventType.DSH_GET_ROUTING, (event, limit) => {
+    return dshHostManager.getRouting(limit || 100);
+});
+
+ipcMain.handle(IPCEventType.DSH_GET_WORKSPACES, () => {
+    return dshHostManager.getWorkspaces();
+});
+
+ipcMain.handle(IPCEventType.DSH_PICK_DIRECTORY, async () => {
+    try {
+        const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+        const result = await dialog.showOpenDialog(win, {
+            title: '选择 DSH 工作区目录',
+            properties: ['openDirectory', 'createDirectory'],
+        });
+        if (result.canceled || !result.filePaths || !result.filePaths.length) {
+            return { ok: false, canceled: true };
+        }
+        return { ok: true, path: result.filePaths[0] };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_OPEN_PATH, async (event, targetPath) => {
+    if (!targetPath) return { ok: false, error: 'missing path' };
+    try {
+        const err = await shell.openPath(targetPath);
+        return err ? { ok: false, error: err } : { ok: true };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_RESTART, async () => {
+    try {
+        return { ok: true, status: await dshHostManager.restart() };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e), status: dshHostManager.getStatus() };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_STOP, async () => {
+    try {
+        return { ok: true, status: await dshHostManager.stop() };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e), status: dshHostManager.getStatus() };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_OPEN_LOG, () => {
+    return dshHostManager.openLog();
+});
+
+ipcMain.handle(IPCEventType.DSH_CLEAR_PROVISION, async (event, userId) => {
+    try {
+        dshProvisionService.clear(userId);
+        await dshHostManager.stop();
+        return { ok: true };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
 
 app.on('ready', () => {
         // 渲染进程的 axios/图片等请求走 Chromium，先把内置自签证书装上，必须在窗口发起请求之前
@@ -1534,6 +1810,19 @@ app.on('ready', () => {
             return app.getVersion();
         });
 
+        // 开发/冒烟专用：DSH_DEV_PROVISION=/path/to/provision.json 时直接启动 Host，
+        // 不经过应用服务登录流程。生产不会设置该环境变量。
+        if (process.env.DSH_DEV_PROVISION) {
+            try {
+                const provision = JSON.parse(fs.readFileSync(process.env.DSH_DEV_PROVISION, 'utf8'));
+                dshHostManager.start(provision, false, dshModelStore.get(provision.robot && provision.robot.owner)).then(status => {
+                    console.log('[dsh] dev provision host started', status.state, status.lastError || '');
+                }).catch(e => console.log('[dsh] dev provision host failed', e));
+            } catch (e) {
+                console.log('[dsh] invalid DSH_DEV_PROVISION', e);
+            }
+        }
+
     }
 );
 
@@ -1546,6 +1835,7 @@ app.on('ready', () => {
 app.on('before-quit', () => {
     // Fix issues #14
     forceQuit = true;
+    dshHostManager.stop().catch(e => console.log('[dsh] stop on quit failed', e));
 
     if (!tray) return;
     // if (!isOsx) {
