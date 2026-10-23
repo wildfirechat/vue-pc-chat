@@ -3,7 +3,7 @@
  * Prepare a self-contained DSH runtime under build/dsh-runtime.
  *
  * Source:
- *   - Node: current node (must be >= 22.19) or DSH_NODE_BINARY
+ *   - Node: DSH_NODE_BINARY, existing runtime node, current node, or npm node@22.x cache
  *   - DSH:  DSH_SOURCE or `npm root -g` + @deepseek-ai/dsh
  *   - Profile: DSH_PROFILE_SOURCE or ~/.dsh/profiles/wildfire
  *
@@ -122,7 +122,7 @@ function resolveDshSource() {
     fs.mkdirSync(depsDir, { recursive: true });
     const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
     try {
-        execFileSync(npm, ['install', '--prefix', depsDir, '--no-save', '--no-package-lock', `@deepseek-ai/dsh@${version}`], { stdio: 'inherit' });
+        execFileSync(npm, ['install', '--prefix', depsDir, '--no-save', '--no-package-lock', '--engine-strict=false', `@deepseek-ai/dsh@${version}`], { stdio: 'inherit' });
     } catch (e) {
         fail(`cannot install @deepseek-ai/dsh@${version}: ${e.message}`);
     }
@@ -131,11 +131,55 @@ function resolveDshSource() {
     return installed;
 }
 
-const nodeBinary = process.env.DSH_NODE_BINARY || process.execPath;
-if (!nodeVersionOk(process.version)) {
-    fail(`current Node ${process.version} is too old; need >=22.19. Set DSH_NODE_BINARY to a supported node.`);
+function findNodeBinary(root, depth = 0) {
+    if (depth > 5 || !fs.existsSync(root)) return null;
+    for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+        const full = path.join(root, entry.name);
+        if (entry.isFile() && (entry.name === 'node' || entry.name === 'node.exe')) {
+            try {
+                const out = execFileSync(full, ['-v'], { encoding: 'utf8', timeout: 3000 }).trim();
+                if (nodeVersionOk(out)) return full;
+            } catch (e) { /* not executable for this host */ }
+        } else if (entry.isDirectory() && entry.name !== '.cache') {
+            const found = findNodeBinary(full, depth + 1);
+            if (found) return found;
+        }
+    }
+    return null;
 }
-if (!fs.existsSync(nodeBinary)) fail(`node binary not found: ${nodeBinary}`);
+
+function resolveNodeBinary() {
+    const candidates = [
+        process.env.DSH_NODE_BINARY,
+        isWin ? path.join(dest, 'node', 'node.exe') : path.join(dest, 'node', 'bin', 'node'),
+        process.execPath,
+    ].filter(Boolean);
+    for (const candidate of candidates) {
+        if (!fs.existsSync(candidate)) continue;
+        try {
+            const out = execFileSync(candidate, ['-v'], { encoding: 'utf8', timeout: 3000 }).trim();
+            if (nodeVersionOk(out)) return candidate;
+        } catch (e) { /* continue */ }
+    }
+
+    // 构建机 Node 太旧（例如 Windows 上的 Node 18）：不要求全局安装新 Node，
+    // 用 npm 把带平台二进制的 node 包装到 build/.node-cache，再取其中的 node。
+    const cache = path.join(root, 'build', '.node-cache');
+    const version = process.env.DSH_NODE_VERSION || '22.23.3';
+    const npm = isWin ? 'npm.cmd' : 'npm';
+    console.log(`[prepare-dsh-runtime] installing node@${version} into build/.node-cache`);
+    fs.mkdirSync(cache, { recursive: true });
+    try {
+        execFileSync(npm, ['install', '--prefix', cache, '--no-save', '--no-package-lock', `node@${version}`], { stdio: 'inherit' });
+    } catch (e) {
+        fail(`cannot install node@${version}: ${e.message}\nSet DSH_NODE_BINARY to a Node >=22.19 binary.`);
+    }
+    const found = findNodeBinary(cache);
+    if (!found) fail(`node@${version} installed but no usable node binary found under ${cache}`);
+    return found;
+}
+
+const nodeBinary = resolveNodeBinary();
 
 const dshSource = resolveDshSource();
 if (!fs.existsSync(path.join(dshSource, 'lib', 'bin.js'))) {

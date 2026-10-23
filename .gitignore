@@ -44,3 +44,6 @@ crash.log
 # DSH profile template：必须随仓库分发，不受全局 node_modules 忽略影响
 !/build/dsh-profile-template/node_modules/
 !/build/dsh-profile-template/node_modules/**
+
+# 构建 Node 缓存
+/build/.node-cache
