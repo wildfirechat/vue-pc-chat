@@ -75,10 +75,19 @@
                             </div>
                         </li>
                         <!-- 底部「更多」（参考微信 / wf-enterprise-chat）：放不常用的入口，PC 上文件、设置都开独立窗口 -->
-                        <li>
+                        <li v-if="sharedMiscState.isElectron">
                             <div ref="moreButton" class="i-button-wrapper" title="更多" @click="toggleMoreMenu">
                                 <i class="icon-ion-navicon-round"
-                                   v-bind:class="{active : showMoreMenu || this.$router.currentRoute.value.path === '/home/setting'}"></i>
+                                   v-bind:class="{active : showMoreMenu}"></i>
+                            </div>
+                        </li>
+                        <!-- 网页版没有「文件」，菜单里只剩设置，还是直接放设置按钮 -->
+                        <li v-else>
+                            <div class="i-button-wrapper"
+                                 v-show="this.$router.currentRoute.value.path !== '/home/ai'"
+                                 @click="go2Setting">
+                                <i class="icon-ion-android-settings"
+                                   v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"></i>
                             </div>
                         </li>
                     </ul>
