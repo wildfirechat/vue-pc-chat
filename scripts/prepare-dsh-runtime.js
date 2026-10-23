@@ -23,6 +23,19 @@ if (process.env.SKIP_DSH_RUNTIME === '1') {
 }
 const dest = path.join(root, 'build', 'dsh-runtime');
 const isWin = process.platform === 'win32';
+assertWindowsSupport();
+
+function assertWindowsSupport() {
+    if (process.platform !== 'win32') return;
+    const release = os.release();
+    const major = Number(String(release).split('.')[0]);
+    if (major < 10) {
+        fail(`Node 22 does not support Windows ${release}. DSH 0.2 needs Windows 10/11 x64.`);
+    }
+    if (process.arch === 'ia32') {
+        fail('Node 22 has no supported 32-bit Windows build; use 64-bit Windows and Node.');
+    }
+}
 
 function fail(message) {
     console.error(`[prepare-dsh-runtime] ${message}`);
