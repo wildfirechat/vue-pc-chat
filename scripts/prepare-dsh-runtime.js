@@ -25,6 +25,42 @@ const dest = path.join(root, 'build', 'dsh-runtime');
 const isWin = process.platform === 'win32';
 assertWindowsSupport();
 
+function peMachine(file) {
+    try {
+        const fd = fs.openSync(file, 'r');
+        const buf = Buffer.alloc(64);
+        fs.readSync(fd, buf, 0, 64, 0);
+        fs.closeSync(fd);
+        if (buf.toString('ascii', 0, 2) !== 'MZ') return null;
+        const pe = buf.readUInt32LE(0x3c);
+        const head = Buffer.alloc(6);
+        const hfd = fs.openSync(file, 'r');
+        fs.readSync(hfd, head, 0, 6, pe);
+        fs.closeSync(hfd);
+        if (head.toString('ascii', 0, 4) !== 'PE\0\0') return null;
+        return head.readUInt16LE(4);
+    } catch (e) {
+        return null;
+    }
+}
+
+function expectedPeMachine() {
+    if (process.arch === 'x64') return 0x8664;
+    if (process.arch === 'arm64') return 0xaa64;
+    if (process.arch === 'ia32') return 0x014c;
+    return null;
+}
+
+function assertNodeBinaryForPlatform(file) {
+    if (!isWin) return;
+    const machine = peMachine(file);
+    const expected = expectedPeMachine();
+    if (!machine) fail(`node.exe is not a Windows PE executable: ${file}`);
+    if (expected && machine !== expected) {
+        fail(`node.exe architecture mismatch: file=0x${machine.toString(16)}, expected=0x${expected.toString(16)} (${process.arch}). Remove build/.node-cache and build/dsh-runtime, then rebuild.`);
+    }
+}
+
 function assertWindowsSupport() {
     if (process.platform !== 'win32') return;
     const release = os.release();
@@ -117,10 +153,14 @@ function nodeVersionOk(version) {
     return major > 22 || (major === 22 && minor >= 19) || major >= 24;
 }
 
-function runNpm(args) {
+function runNpm(args, extraEnv = {}) {
     const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
     // Windows 的 .cmd 不能直接 spawn，必须通过 shell 执行。
-    execFileSync(npm, args, { stdio: 'inherit', shell: process.platform === 'win32' });
+    execFileSync(npm, args, {
+        stdio: 'inherit',
+        shell: process.platform === 'win32',
+        env: { ...process.env, ...extraEnv },
+    });
 }
 
 function resolveDshSource() {
@@ -187,7 +227,10 @@ function resolveNodeBinary() {
     console.log(`[prepare-dsh-runtime] installing node@${version} into build/.node-cache`);
     fs.mkdirSync(cache, { recursive: true });
     try {
-        runNpm(['install', '--prefix', cache, '--no-save', '--no-package-lock', `node@${version}`]);
+        runNpm(['install', '--prefix', cache, '--no-save', '--no-package-lock', `node@${version}`], {
+            npm_config_platform: process.platform,
+            npm_config_arch: process.env.DSH_NODE_ARCH || process.arch,
+        });
     } catch (e) {
         fail(`cannot install node@${version}: ${e.message}\nSet DSH_NODE_BINARY to a Node >=22.19 binary.`);
     }
@@ -216,6 +259,7 @@ fs.mkdirSync(path.dirname(nodeDest), { recursive: true });
 fs.copyFileSync(nodeBinary, nodeDest);
 if (!isWin) fs.chmodSync(nodeDest, 0o755);
 // 复制后立即验证目标平台可执行，避免把空文件/错误架构的 node 打进安装包。
+assertNodeBinaryForPlatform(nodeDest);
 try {
     const out = execFileSync(nodeDest, ['-v'], { encoding: 'utf8', timeout: 5000 }).trim();
     if (!nodeVersionOk(out)) fail(`copied node is too old: ${out} (${nodeDest})`);
