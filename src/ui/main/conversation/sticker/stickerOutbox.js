@@ -3,6 +3,7 @@ import Config from "../../../../config";
 import StickerMessageContent from "../../../../wfc/messages/stickerMessageContent";
 import MessageContentMediaType from "../../../../wfc/messages/messageContentMediaType";
 import {getItem, setItem} from "../../../util/storageHelper";
+import {isElectron} from "../../../../platform";
 import {fetchStickerBytes, lottieSize, peekSticker, sniffStickerFormat, StickerFormat} from "./stickerLoader";
 
 /**
@@ -47,8 +48,10 @@ function upload(hash, ext, bytes) {
     if (p) {
         return p;
     }
+    // PC 协议栈要不带头部的 base64；网页版协议栈把字符串都当 data URI 解析，传 Blob
+    let data = isElectron() ? bytesToBase64(bytes) : new Blob([bytes]);
     p = new Promise((resolve, reject) => {
-        wfc.uploadMedia(hash + ext, bytesToBase64(bytes), MessageContentMediaType.Sticker, remoteUrl => {
+        wfc.uploadMedia(hash + ext, data, MessageContentMediaType.Sticker, remoteUrl => {
             let uploads = loadUploads();
             uploads[hash] = remoteUrl;
             saveUploads(uploads);
