@@ -36,6 +36,8 @@ const IpcEventType = {
     DSH_GET_LOG: 'dsh-get-log',
     DSH_GET_ROUTING: 'dsh-get-routing',
     DSH_GET_WORKSPACES: 'dsh-get-workspaces',
+    DSH_GET_PLUGINS: 'dsh-get-plugins',
+    DSH_LIST_FILES: 'dsh-list-files',
     DSH_GET_MODELS: 'dsh-get-models',
     DSH_ADD_MODEL: 'dsh-add-model',
     DSH_UPDATE_MODEL: 'dsh-update-model',

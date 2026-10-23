@@ -36,3 +36,11 @@ crash.log
 /build/dsh-runtime/dsh
 /build/dsh-runtime/profile
 /build/dsh-runtime/VERSION
+
+# DSH build 依赖缓存
+/build/.dsh-deps
+/build/vendor/@deepseek-ai/dsh
+
+# DSH profile template：必须随仓库分发，不受全局 node_modules 忽略影响
+!/build/dsh-profile-template/node_modules/
+!/build/dsh-profile-template/node_modules/**

@@ -1,0 +1,11 @@
+- insert:
+    - id: tool-ask-user
+      name: '@deepseek-ai/dsh-tool-ask-user'
+    - id: wildfire
+      name: '@wildfirechat/dsh-wildfire'
+      config:
+        gatewayUrl: ""
+        robotId: ""
+        robotSecret: ""
+        workspace:
+          root: "."

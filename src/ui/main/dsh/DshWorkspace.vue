@@ -10,13 +10,24 @@
                             <p>工作区 / 会话 · 本机 Agent</p>
                         </div>
                     </div>
-                    <div class="dsh-sidebar-actions">
+                </div>
+                <button class="dsh-new-session" :disabled="creating" @click="newSessionCurrent">
+                    <span>＋</span> 新会话
+                </button>
+                <button class="dsh-plugin-entry" :class="{active: showPlugins}" @click="openPluginView">
+                    <span class="dsh-plugin-glyph">◈</span> 插件
+                </button>
+                <div class="dsh-ws-section-head">
+                    <span>工作区</span>
+                    <div>
+                        <button class="dsh-sidebar-btn" :class="{active: filterMode !== 'all'}" :title="'筛选：' + filterLabel" @click="cycleFilter">⚲</button>
+                        <button class="dsh-sidebar-btn" :title="'排序：' + (sortMode === 'name' ? '名称' : '最近')" @click="cycleSort">⇅</button>
+                        <button class="dsh-sidebar-btn" title="搜索" @click="showSearch = !showSearch">⌕</button>
                         <button class="dsh-sidebar-btn" title="新建工作区" :disabled="creating" @click="showCreate = true">＋</button>
-                        <button class="dsh-sidebar-btn" title="DSH 设置" @click="openSettings">⚙</button>
                     </div>
                 </div>
-                <div class="dsh-session-search">
-                    <input v-model="search" type="search" placeholder="搜索工作区 / 会话"/>
+                <div v-if="showSearch" class="dsh-session-search">
+                    <input v-model="search" type="search" placeholder="搜索工作区 / 会话" autofocus/>
                 </div>
                 <div class="dsh-session-scroll">
                     <div v-if="!filteredWorkspaces.length" class="dsh-list-empty">
@@ -27,49 +38,90 @@
                     <div v-for="ws in filteredWorkspaces" :key="ws.key" class="dsh-ws-block">
                         <div class="dsh-ws-head">
                             <button class="dsh-ws-toggle" @click="toggleWorkspace(ws.key)">
-                                <span class="dsh-caret" :class="{collapsed: collapsed[ws.key]}">▾</span>
+                                <span class="dsh-caret" :class="{collapsed: expandedWorkspaceKey !== ws.key}">▾</span>
                                 <span class="dsh-ws-name">{{ ws.name }}</span>
                                 <span class="dsh-ws-count">{{ ws.sessions.length }}</span>
                             </button>
+                            <button v-if="ws.path" class="dsh-ws-add" title="重命名工作区" @click="renameWorkspace(ws)">✎</button>
+                            <button v-if="ws.path" class="dsh-ws-add" title="打开工作目录" @click="openWorkspaceDir(ws)">↗</button>
                             <button class="dsh-ws-add" title="在这个工作区新建会话" @click="createSession(ws)">＋</button>
                         </div>
-                        <div v-if="!collapsed[ws.key]" class="dsh-session-list">
-                            <button v-for="s in ws.sessions" :key="s.groupId"
+                        <div v-if="expandedWorkspaceKey === ws.key" class="dsh-session-list">
+                            <div v-for="s in ws.sessions" :key="s.groupId"
                                     class="dsh-session-row" :class="{active: selectedGroupId === s.groupId}"
-                                    @click="selectSession(s)">
+                                    role="button" tabindex="0"
+                                    @click="selectSession(s)"
+                                    @keyup.enter="selectSession(s)">
                                 <span class="dsh-session-status" :class="'state-' + (s.state && s.state.state || 'idle')"></span>
                                 <span class="dsh-session-content">
-                                    <span class="dsh-session-name">{{ s.name }}</span>
+                                    <span class="dsh-session-name">
+                                        {{ s.name }}
+                                        <span v-if="s.robots && s.robots.length > 1" class="dsh-multi-badge">{{ s.robots.length }}B</span>
+                                    </span>
                                     <span class="dsh-session-preview">{{ s.preview || '暂无消息' }}</span>
                                 </span>
                                 <span class="dsh-session-side">
                                     <span v-if="s.unread" class="dsh-session-unread">{{ s.unread > 99 ? '99+' : s.unread }}</span>
                                     <span class="dsh-session-time">{{ s.time || '' }}</span>
                                 </span>
-                            </button>
+                                <button class="dsh-session-more" title="更多" @click.stop="sessionMore(s)">⋯</button>
+                                <div v-if="sessionMenuId === s.groupId" class="dsh-session-menu" @click.stop>
+                                    <button @click="renameSession(s)">重命名</button>
+                                    <button @click="openSessionInIm(s)">在消息中打开</button>
+                                    <button @click="copySessionId(s)">复制群 ID</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="dsh-sidebar-foot">
+                    <button class="dsh-settings-entry" @click="openSettings">
+                        <span>⚙</span> 设置
+                    </button>
                 </div>
             </aside>
 
             <main class="dsh-chat-column">
-                <template v-if="selectedSession">
+                <DshPlugins v-if="showPlugins"/>
+                <template v-else-if="selectedSession">
                     <ConversationView class="dsh-embedded-chat" :dsh-mode="true" @toggle-dsh-detail="showDetail = !showDetail"/>
                 </template>
                 <div v-else class="dsh-chat-empty">
                     <div class="dsh-chat-empty-top">
                         <span>DSH 工作区</span>
-                        <button class="dsh-detail-toggle" title="DSH 设置" @click="openSettings">⚙</button>
+                        <span class="dsh-empty-status">{{ hostStatus.state === 'running' ? 'Agent 已就绪' : 'Agent 未启动' }}</span>
                     </div>
-                    <div class="dsh-chat-empty-icon">◌</div>
-                    <h2>选择一个 DSH 会话</h2>
-                    <p>从左侧工作区选择会话，或新建一个工作区开始。</p>
-                    <button class="dsh-top-btn" @click="showCreate = true">新建工作区</button>
+                    <div class="dsh-welcome">
+                        <div class="dsh-welcome-mark">◈</div>
+                        <h1>探索未至之境</h1>
+                        <p>选择一个工作区，新建一个 DSH 会话。</p>
+                        <div class="dsh-welcome-selectors">
+                            <label>
+                                <span>工作区</span>
+                                <select v-model="emptyWorkspaceKey" @change="expandedWorkspaceKey = emptyWorkspaceKey">
+                                    <option v-for="ws in workspaces" :key="ws.key" :value="ws.key">{{ ws.name }}</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>模型</span>
+                                <span class="dsh-welcome-model">{{ modelLabel }}</span>
+                            </label>
+                        </div>
+                        <div class="dsh-welcome-composer">
+                            <input v-model="emptyPrompt" type="text"
+                                   placeholder="按 Enter 新建会话"
+                                   @keyup.enter="createSessionFromEmpty"/>
+                            <button title="新建会话" :disabled="creating" @click="createSessionFromEmpty">↑</button>
+                        </div>
+                        <p class="dsh-welcome-hint">没有工作区？先在左侧新建一个工作区。</p>
+                    </div>
                 </div>
             </main>
 
-            <DshPlanSidebar v-if="selectedSession && showDetail"
+            <DshPlanSidebar v-if="!showPlugins && selectedSession && showDetail"
                             :conversation="selectedConversation" :robot-id="selectedRobotId"
+                            :robots="selectedRobots" :selected-robot-id="selectedRobotId"
+                            @select-robot="selectedRobotId = $event"
                             @close="showDetail = false"/>
         </div>
 
@@ -77,6 +129,10 @@
             <div class="dsh-modal">
                 <h2>新建工作区</h2>
                 <p class="dsh-modal-hint">工作区是一个本地目录；机器人会为该目录创建第一个会话群。</p>
+                <label class="dsh-field">
+                    <span>工作区名称（可选）</span>
+                    <input v-model.trim="newWorkspaceName" placeholder="例如：登录修复"/>
+                </label>
                 <label class="dsh-field">
                     <span>目录</span>
                     <div class="dsh-path-row">
@@ -99,30 +155,41 @@
 <script>
 import ConversationView from '../conversation/ConversationView.vue';
 import DshPlanSidebar from './DshPlanSidebar.vue';
+import DshPlugins from './DshPlugins.vue';
 import store from '../../../store';
 import wfc from '../../../wfc/client/wfc';
 import Conversation from '../../../wfc/model/conversation';
 import TextMessageContent from '../../../wfc/messages/textMessageContent';
-import { getDshStatus, getDshWorkspaces, pickDshDirectory } from '../../../dsh/renderer/dshClient';
-import { localRobotId } from '../../../dsh/renderer/state';
+import ModifyGroupInfoType from '../../../wfc/model/modifyGroupInfoType';
+import { getDshStatus, getDshWorkspaces, openDshPath, pickDshDirectory } from '../../../dsh/renderer/dshClient';
+import { dshState, localRobotId } from '../../../dsh/renderer/state';
 import { getAgentPanelDataFor, getAgentState } from '../../util/agentState';
 
 export default {
     name: 'DshWorkspace',
-    components: { ConversationView, DshPlanSidebar },
+    components: { ConversationView, DshPlanSidebar, DshPlugins },
     data() {
         return {
             hostStatus: {},
             search: '',
             workspaces: [],
             workspacePaths: {},
+            workspaceAliases: {},
             selectedGroupId: '',
             selectedRobotId: '',
             showDetail: false,
-            collapsed: {},
+            showPlugins: false,
+            expandedWorkspaceKey: '',
+            showSearch: false,
+            filterMode: 'all',
+            emptyWorkspaceKey: '',
+            emptyPrompt: '',
             states: {},
             showCreate: false,
             newWorkspacePath: '',
+            newWorkspaceName: '',
+            sessionMenuId: '',
+            sortMode: 'recent',
             creating: false,
             statusTimer: null,
         };
@@ -133,11 +200,19 @@ export default {
         },
         filteredWorkspaces() {
             const q = this.search.trim().toLowerCase();
-            if (!q) return this.workspaces;
-            return this.workspaces.map(ws => ({
-                ...ws,
-                sessions: ws.sessions.filter(s => (s.name || '').toLowerCase().includes(q) || (ws.name || '').toLowerCase().includes(q)),
-            })).filter(ws => ws.sessions.length || (ws.name || '').toLowerCase().includes(q));
+            return this.workspaces.map(ws => {
+                let sessions = ws.sessions;
+                if (this.filterMode === 'unread') sessions = sessions.filter(s => s.unread > 0);
+                if (this.filterMode === 'running') sessions = sessions.filter(s => s.state && s.state.state === 'running');
+                if (q) sessions = sessions.filter(s => (s.name || '').toLowerCase().includes(q) || (ws.name || '').toLowerCase().includes(q));
+                return { ...ws, sessions };
+            }).filter(ws => ws.sessions.length || (q && (ws.name || '').toLowerCase().includes(q)))
+              .sort((a, b) => this.sortMode === 'name'
+                  ? String(a.name).localeCompare(String(b.name), 'zh-CN')
+                  : (b.sortAt || 0) - (a.sortAt || 0));
+        },
+        filterLabel() {
+            return ({ all: '全部', unread: '未读', running: '运行中' })[this.filterMode] || '全部';
         },
         selectedSession() {
             for (const ws of this.workspaces) {
@@ -160,8 +235,19 @@ export default {
             if (!s || !s.robots) return [];
             return s.robots;
         },
+        currentWorkspace() {
+            if (this.selectedSession) {
+                return this.workspaces.find(ws => ws.sessions.some(s => s.groupId === this.selectedGroupId)) || null;
+            }
+            return this.workspaces.find(ws => ws.key === this.expandedWorkspaceKey) || null;
+        },
+        modelLabel() {
+            const ai = (dshState.provision && dshState.provision.ai) || {};
+            return ai.model ? `${ai.model}${ai.reasoningEffort ? ' · ' + ai.reasoningEffort : ''}` : '未配置模型';
+        },
     },
     created() {
+        this.workspaceAliases = this.loadWorkspaceAliases();
         window.addEventListener('dsh-provision-updated', this.load);
         try { wfc.eventEmitter.on('groupInfosUpdate', this.load); } catch (e) { /* ignore */ }
     },
@@ -202,9 +288,10 @@ export default {
                 // 目录映射优先：同一目录的多个群一定归到同一工作区；
                 // 群 extra 同步有延迟时也不会先掉进“未归类”。
                 const key = mappedPath ? `path:${mappedPath}` : (section && section.workspaceId ? section.workspaceId : '__shared__');
-                const name = section && section.workspaceName
+                const baseName = section && section.workspaceName
                     ? section.workspaceName
                     : (mappedPath ? mappedPath.split(/[\\/]/).filter(Boolean).pop() || mappedPath : '未归类');
+                const name = (mappedPath && this.workspaceAliases[mappedPath]) || baseName;
                 if (!byWs.has(key)) byWs.set(key, { key, name, path: mappedPath, sessions: [] });
                 if (mappedPath && !byWs.get(key).path) byWs.get(key).path = mappedPath;
                 const robots = Object.keys(wfds.robots || {}).map(id => ({
@@ -214,12 +301,16 @@ export default {
                 const last = info.lastMessage;
                 let preview = '';
                 try { preview = last && last.messageContent ? last.messageContent.digest(last) : ''; } catch (e) { preview = ''; }
-                byWs.get(key).sessions.push({
+                const wsEntry = byWs.get(key);
+                const sessionAt = Number(info.timestamp || 0);
+                if (sessionAt > (wsEntry.sortAt || 0)) wsEntry.sortAt = sessionAt;
+                wsEntry.sessions.push({
                     groupId: conv.target,
                     name: (groupInfo && groupInfo.name) || conv.target,
                     conversation: conv,
                     preview,
                     time: info._timeStr || '',
+                    sortAt: Number(info.timestamp || (last && last.timestamp) || 0),
                     unread: info._unread || 0,
                     robots,
                     path: this.workspacePaths[`wildfire:group:${conv.target}`] || '',
@@ -234,11 +325,15 @@ export default {
                 target = ws.sessions.find(s => s.groupId === wanted) || target;
             }
             if (!target) {
-                const first = this.workspaces.find(ws => ws.sessions.length);
-                target = first ? first.sessions[0] : null;
+                // 首次进入不自动打开会话，保留官方式欢迎/新建状态。
+                this.selectedGroupId = '';
+                this.selectedRobotId = '';
+            } else {
+                this.selectSession(target, false);
             }
-            if (target) this.selectSession(target, false);
-            else this.selectedGroupId = '';
+            const first = this.workspaces.find(ws => ws.sessions.length);
+            if (!this.expandedWorkspaceKey && first) this.expandedWorkspaceKey = first.key;
+            if (!this.emptyWorkspaceKey && first) this.emptyWorkspaceKey = first.key;
         },
         async refreshStates() {
             const entries = this.workspaces.flatMap(ws => ws.sessions);
@@ -251,13 +346,53 @@ export default {
             if (!s) return;
             this.selectedGroupId = s.groupId;
             this.selectedRobotId = this.localRobotId;
+            this.showPlugins = false;
+            this.sessionMenuId = '';
+            const ws = this.workspaces.find(w => w.sessions.some(x => x.groupId === s.groupId));
+            if (ws) this.expandedWorkspaceKey = ws.key;
             store.setCurrentConversation(s.conversation);
             if (updateRoute && this.$route.path === '/home/dsh' && this.$route.query.session !== s.groupId) {
                 this.$router.replace({ path: '/home/dsh', query: { session: s.groupId } }).catch(() => {});
             }
         },
         toggleWorkspace(key) {
-            this.collapsed = { ...this.collapsed, [key]: !this.collapsed[key] };
+            this.expandedWorkspaceKey = this.expandedWorkspaceKey === key ? '' : key;
+        },
+        cycleFilter() {
+            this.filterMode = this.filterMode === 'all' ? 'unread' : (this.filterMode === 'unread' ? 'running' : 'all');
+        },
+        cycleSort() {
+            this.sortMode = this.sortMode === 'recent' ? 'name' : 'recent';
+        },
+        openPluginView() {
+            this.showPlugins = true;
+        },
+        newSessionCurrent() {
+            if (!this.currentWorkspace) {
+                this.showCreate = true;
+                return;
+            }
+            this.createSession(this.currentWorkspace);
+        },
+        createSessionFromEmpty() {
+            const ws = this.workspaces.find(w => w.key === this.emptyWorkspaceKey);
+            const title = (this.emptyPrompt || '').trim();
+            if (ws) this.createSession(ws, title);
+            else this.showCreate = true;
+        },
+        loadWorkspaceAliases() {
+            try { return JSON.parse(localStorage.getItem('dsh-workspace-aliases') || '{}') || {}; } catch (e) { return {}; }
+        },
+        saveWorkspaceAliases() {
+            try { localStorage.setItem('dsh-workspace-aliases', JSON.stringify(this.workspaceAliases)); } catch (e) { /* ignore */ }
+        },
+        async renameWorkspace(ws) {
+            if (!ws || !ws.path) return;
+            const name = window.prompt('工作区名称', ws.name || '');
+            if (name === null || !name.trim() || name.trim() === ws.name) return;
+            this.workspaceAliases = { ...this.workspaceAliases, [ws.path]: name.trim() };
+            this.saveWorkspaceAliases();
+            ws.name = name.trim();
         },
         openSettings() {
             this.$router.push('/home/ai');
@@ -306,7 +441,18 @@ export default {
                 this.showCreate = false;
                 this.newWorkspacePath = '';
                 const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
-                if (found) this.$notify({ title: '工作区已创建', type: 'success' });
+                if (found) {
+                    const name = this.newWorkspaceName.trim();
+                    if (name) {
+                        if (found.path) {
+                            this.workspaceAliases = { ...this.workspaceAliases, [found.path]: name };
+                            this.saveWorkspaceAliases();
+                        }
+                        await this.applyGroupName(found, name);
+                    }
+                    this.newWorkspaceName = '';
+                    this.$notify({ title: '工作区已创建', type: 'success' });
+                }
                 else this.$notify({ title: '未检测到新工作区', text: '创建请求已发送，请打开机器人单聊查看结果（目录无效/等待确认时会提示）。', type: 'info' });
             } catch (e) {
                 this.$notify({ title: '创建工作区失败', text: (e && e.message) || '请确认机器人在线', type: 'error' });
@@ -314,7 +460,42 @@ export default {
                 this.creating = false;
             }
         },
-        async createSession(ws) {
+        async applyGroupName(s, name) {
+            const clean = String(name || '').trim();
+            if (!clean) return;
+            try {
+                await new Promise((resolve, reject) => {
+                    wfc.modifyGroupInfo(s.groupId, ModifyGroupInfoType.Modify_Group_Name, clean, [2], null,
+                        () => resolve(), (e) => reject(e));
+                });
+                s.name = clean;
+            } catch (e) {
+                this.$notify({ title: '会话重命名失败', text: (e && e.message) || '', type: 'error' });
+            }
+        },
+        sessionMore(s) {
+            this.sessionMenuId = this.sessionMenuId === s.groupId ? '' : s.groupId;
+        },
+        async renameSession(s) {
+            this.sessionMenuId = '';
+            const name = window.prompt('重命名会话', s.name || '');
+            if (name === null || !name.trim() || name.trim() === s.name) return;
+            await this.applyGroupName(s, name);
+        },
+        openSessionInIm(s) {
+            this.sessionMenuId = '';
+            store.setCurrentConversation(s.conversation);
+            this.$router.push('/home');
+        },
+        async copySessionId(s) {
+            try { await navigator.clipboard.writeText(s.groupId); } catch (e) { /* ignore */ }
+            this.sessionMenuId = '';
+            this.$notify({ title: '群 ID 已复制', type: 'info' });
+        },
+        async openWorkspaceDir(ws) {
+            if (ws && ws.path) await openDshPath(ws.path);
+        },
+        async createSession(ws, title = '') {
             if (this.creating) return;
             let path = ws.path || (ws.sessions[0] && ws.sessions[0].path) || '';
             if (!path && ws.sessions[0]) {
@@ -327,7 +508,11 @@ export default {
             try {
                 await this.sendControlCommand(`/create ${path}`);
                 const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
-                if (found) this.$notify({ title: '会话已创建', type: 'success' });
+                if (found && title) await this.applyGroupName(found, title);
+                if (found) {
+                    this.emptyPrompt = '';
+                    this.$notify({ title: '会话已创建', type: 'success' });
+                }
                 else this.$notify({ title: '未检测到新会话', text: '创建请求已发送，请打开机器人单聊查看结果（目录无效/等待确认时会提示）。', type: 'info' });
             } catch (e) {
                 this.$notify({ title: '创建会话失败', text: (e && e.message) || '请确认机器人在线', type: 'error' });
@@ -351,9 +536,67 @@ export default {
 .dsh-sidebar-btn { width: 22px; height: 22px; border: 0; background: transparent; border-radius: 5px; color: #6b7280; cursor: pointer; font-size: 14px; line-height: 1; }
 .dsh-sidebar-btn:hover { background: #eef1f5; color: #1d4ed8; }
 .dsh-sidebar-btn:disabled { opacity: .45; cursor: default; }
+.dsh-sidebar-btn.active { background: #eef4ff; color: #1d4ed8; }
 .dsh-workspace-main { flex: 1; min-height: 0; display: flex; }
 .dsh-session-column { flex: 0 0 var(--list-panel-width); width: var(--list-panel-width); min-width: var(--list-panel-width); max-width: var(--list-panel-width); display: flex; flex-direction: column; border-right: 1px solid var(--border-separator, #eceef1); background: #fafbfc; box-sizing: border-box; }
-.dsh-session-search { padding: 10px 10px 6px; }
+
+.dsh-new-session {
+    margin: 10px 12px 6px; height: 34px; border: 1px solid #d7dce3;
+    border-radius: 7px; background: #fff; color: #1f2329; font-size: 12px;
+    font-weight: 600; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; gap: 5px;
+}
+.dsh-new-session:hover { border-color: #b8c9f5; background: #f5f8ff; color: #1d4ed8; }
+.dsh-new-session:disabled { opacity: .5; cursor: default; }
+.dsh-plugin-entry {
+    margin: 0 12px 8px; height: 30px; border: 0; border-radius: 7px;
+    background: transparent; color: #4b5563; font-size: 12px; text-align: left;
+    padding: 0 8px; display: flex; align-items: center; gap: 7px; cursor: pointer;
+}
+.dsh-plugin-entry:hover, .dsh-plugin-entry.active { background: #eef1f5; color: #1d4ed8; }
+.dsh-plugin-glyph { font-size: 13px; }
+.dsh-ws-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px 4px 14px; color: #8a8f99; font-size: 10px;
+    font-weight: 650; letter-spacing: .04em;
+}
+.dsh-ws-section-head > div { display: flex; gap: 2px; }
+.dsh-sidebar-foot { flex: 0 0 auto; border-top: 1px solid #eceef1; padding: 7px 8px; }
+.dsh-settings-entry {
+    width: 100%; height: 30px; border: 0; border-radius: 7px; background: transparent;
+    color: #4b5563; font-size: 12px; text-align: left; padding: 0 8px;
+    display: flex; align-items: center; gap: 7px; cursor: pointer;
+}
+.dsh-settings-entry:hover { background: #eef1f5; color: #1d4ed8; }
+.dsh-empty-status { font-size: 10px; font-weight: 400; color: #9aa0a8; }
+.dsh-welcome { display: flex; flex-direction: column; align-items: center; max-width: 620px; padding: 0 24px 40px; }
+.dsh-welcome-mark { font-size: 26px; color: #1d4ed8; margin-bottom: 10px; }
+.dsh-welcome h1 { margin: 0 0 7px; font-size: 24px; font-weight: 650; color: #1f2329; }
+.dsh-welcome > p { margin: 0 0 20px; font-size: 12px; color: #8a8f99; }
+.dsh-welcome-selectors { display: flex; gap: 10px; margin-bottom: 12px; width: 100%; justify-content: center; }
+.dsh-welcome-selectors label { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #8a8f99; }
+.dsh-welcome-selectors select {
+    border: 1px solid #e1e4e8; background: #fff; border-radius: 6px;
+    padding: 4px 8px; font-size: 11px; color: #4b5563; max-width: 190px;
+}
+.dsh-welcome-model { color: #4b5563; font-size: 11px; }
+.dsh-welcome-composer {
+    width: 100%; display: flex; align-items: center; gap: 8px;
+    border: 1px dashed #d5dae2; border-radius: 10px; padding: 10px 10px 10px 14px;
+    background: #fff; box-sizing: border-box;
+}
+.dsh-welcome-composer input {
+    flex: 1; min-width: 0; border: 0; outline: none; background: transparent;
+    font-size: 13px; color: #1f2329;
+}
+.dsh-welcome-composer button {
+    width: 30px; height: 30px; border: 0; border-radius: 50%; background: #1d4ed8;
+    color: #fff; cursor: pointer; font-size: 16px; line-height: 1;
+}
+.dsh-welcome-composer button:disabled { opacity: .5; cursor: default; }
+.dsh-welcome-hint { margin-top: 10px !important; font-size: 10px !important; color: #a0a5ad !important; }
+
+.dsh-session-search { padding: 6px 12px 6px; }
 .dsh-session-search input { width: 100%; box-sizing: border-box; border: 1px solid #e1e4e8; border-radius: 7px; background: #fff; padding: 7px 9px; font-size: 12px; outline: none; }
 .dsh-session-scroll { flex: 1; overflow-y: auto; padding: 4px 6px 20px; }
 .dsh-list-empty { padding: 40px 16px; text-align: center; color: #8a8f99; font-size: 12px; }
@@ -368,7 +611,7 @@ export default {
 .dsh-ws-count { color: #a0a5ad; font-weight: 400; }
 .dsh-ws-add { border: 0; background: transparent; color: #8a8f99; font-size: 15px; cursor: pointer; padding: 0 4px; }
 .dsh-session-list { display: flex; flex-direction: column; gap: 2px; }
-.dsh-session-row { width: 100%; display: flex; align-items: center; gap: 7px; border: 0; border-radius: 7px; background: transparent; text-align: left; padding: 7px 7px; cursor: pointer; color: inherit; }
+.dsh-session-row { position: relative; width: 100%; display: flex; align-items: center; gap: 7px; border: 0; border-radius: 7px; background: transparent; text-align: left; padding: 7px 7px; cursor: pointer; color: inherit; }
 .dsh-session-row:hover { background: #eef1f5; }
 .dsh-session-row.active { background: #e8f1ff; }
 .dsh-session-status { width: 6px; height: 6px; border-radius: 50%; background: #b0b5bd; flex: 0 0 auto; }
@@ -377,9 +620,19 @@ export default {
 .dsh-session-status.state-error { background: #b42318; }
 .dsh-session-content { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .dsh-session-name { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsh-multi-badge { margin-left: 4px; padding: 0 4px; border-radius: 999px; background: #eef2f7; color: #64748b; font-size: 9px; font-weight: 500; }
 .dsh-session-preview { font-size: 10px; color: #9aa0a8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dsh-session-side { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
 .dsh-session-time { font-size: 9px; color: #a0a5ad; }
+.dsh-session-menu { position: absolute; right: 4px; top: 28px; z-index: 12; background: #fff; border: 1px solid #e1e4e8; border-radius: 7px; box-shadow: 0 8px 24px rgba(15,23,42,.14); padding: 4px; min-width: 120px; }
+.dsh-session-menu button { display: block; width: 100%; border: 0; background: transparent; color: #4b5563; font-size: 11px; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+.dsh-session-menu button:hover { background: #f2f4f7; color: #1d4ed8; }
+.dsh-session-more { border: 0; background: transparent; color: #a0a5ad; cursor: pointer; padding: 0 1px; font-size: 14px; line-height: 1; flex: 0 0 auto; opacity: 0; }
+.dsh-session-row:hover .dsh-session-menu { position: absolute; right: 4px; top: 28px; z-index: 12; background: #fff; border: 1px solid #e1e4e8; border-radius: 7px; box-shadow: 0 8px 24px rgba(15,23,42,.14); padding: 4px; min-width: 120px; }
+.dsh-session-menu button { display: block; width: 100%; border: 0; background: transparent; color: #4b5563; font-size: 11px; text-align: left; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+.dsh-session-menu button:hover { background: #f2f4f7; color: #1d4ed8; }
+.dsh-session-more { opacity: 1; }
+.dsh-session-more:hover { color: #1d4ed8; }
 .dsh-session-unread { min-width: 14px; height: 14px; padding: 0 4px; border-radius: 999px; background: #e5484d; color: #fff; font-size: 9px; line-height: 14px; text-align: center; }
 .dsh-chat-column { flex: 1; min-width: 0; display: flex; flex-direction: column; background: #fff; }
 .dsh-detail-toggle { width: 26px; height: 24px; border: 1px solid #e1e4e8; border-radius: 5px; background: #fff; color: #6b7280; cursor: pointer; font-size: 14px; line-height: 1; }

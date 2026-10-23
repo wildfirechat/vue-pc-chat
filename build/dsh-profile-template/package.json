@@ -1,0 +1,14 @@
+{
+  "name": "dsh-profile-wildfire",
+  "private": true,
+  "dependencies": {
+    "@wildfirechat/dsh-wildfire": "0.2.0"
+  },
+  "dsh": {
+    "profile": {
+      "bundles": [
+        "@deepseek-ai/dsh-base"
+      ]
+    }
+  }
+}

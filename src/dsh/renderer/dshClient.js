@@ -89,6 +89,16 @@ export async function deleteDshModel(userId, id) {
     return ipcRenderer.invoke(IpcEventType.DSH_DELETE_MODEL, { userId, id });
 }
 
+export async function getDshFiles(dir) {
+    if (!isElectron() || !dir) return [];
+    return ipcRenderer.invoke(IpcEventType.DSH_LIST_FILES, dir);
+}
+
+export async function getDshPlugins() {
+    if (!isElectron()) return { plugins: [], profileDir: '' };
+    return ipcRenderer.invoke(IpcEventType.DSH_GET_PLUGINS);
+}
+
 export async function getDshWorkspaces() {
     if (!isElectron()) return {};
     return ipcRenderer.invoke(IpcEventType.DSH_GET_WORKSPACES);

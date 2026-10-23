@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(node test/test_sdk.js)",
+      "Bash(node test/test_all_modules.js)",
+      "Bash(node test_load.js)"
+    ]
+  }
+}

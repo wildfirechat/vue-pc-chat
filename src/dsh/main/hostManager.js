@@ -405,6 +405,72 @@ export default class DshHostManager {
         }
     }
 
+    listFiles(dir, limit = 30) {
+        try {
+            if (!dir || !fs.existsSync(dir)) return [];
+            return fs.readdirSync(dir, { withFileTypes: true })
+                .slice(0, Math.max(1, limit))
+                .map(entry => {
+                    const full = path.join(dir, entry.name);
+                    let size = 0;
+                    try { size = entry.isFile() ? fs.statSync(full).size : 0; } catch (e) { /* ignore */ }
+                    return { name: entry.name, path: full, isDir: entry.isDirectory(), size };
+                })
+                .sort((a, b) => (a.isDir === b.isDir ? a.name.localeCompare(b.name) : (a.isDir ? -1 : 1)));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    getPlugins() {
+        const profileDir = path.join(this.dshHome, 'profiles', 'wildfire');
+        const plugins = [];
+        const readPkg = (dir) => {
+            try { return JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8')); } catch (e) { return null; }
+        };
+        const core = readPkg(path.join(this._runtimeRoot(), 'dsh'));
+        if (core) {
+            plugins.push({
+                id: core.name || '@deepseek-ai/dsh',
+                name: 'DeepSeek Harness',
+                version: core.version || '',
+                description: '内置 DSH Agent runtime / LLM / 工具系统',
+                kind: 'core',
+                enabled: true,
+            });
+        }
+        const wildfire = readPkg(path.join(profileDir, 'node_modules', '@wildfirechat', 'dsh-wildfire'));
+        if (wildfire) {
+            plugins.push({
+                id: wildfire.name,
+                name: 'Wildfire IM 渠道',
+                version: wildfire.version || '',
+                description: '通过 robot-gateway 接入野火IM群聊',
+                kind: 'channel',
+                enabled: true,
+            });
+        }
+        // 可选的 DSH 官方 UI/工具插件：从 profile 的依赖里挑出 dsh 插件描述。
+        try {
+            const pkg = readPkg(profileDir);
+            for (const dep of Object.keys((pkg && pkg.dependencies) || {})) {
+                if (dep === '@wildfirechat/dsh-wildfire') continue;
+                const info = readPkg(path.join(profileDir, 'node_modules', dep));
+                if (info && info.dsh) {
+                    plugins.push({
+                        id: dep,
+                        name: info.dsh.title || dep,
+                        version: info.version || '',
+                        description: info.description || '',
+                        kind: 'plugin',
+                        enabled: true,
+                    });
+                }
+            }
+        } catch (e) { /* ignore */ }
+        return { plugins, profileDir };
+    }
+
     getWorkspaces() {
         try {
             const file = path.join(this.dshHome, 'wildfire-workspaces.json');

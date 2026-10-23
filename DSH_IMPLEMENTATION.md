@@ -59,6 +59,13 @@
 - 远程机器人不裁剪消息：右栏始终显示完整群消息；机器人切换只影响 plan/context。
 - 新增 IPC：`DSH_GET_WORKSPACES`、`DSH_OPEN_PATH`、`DSH_PICK_DIRECTORY`，以及 Host 的 gateway/routing/log 读取。
 - 规划侧栏读取 scope31 panel/state/metrics，并从 208 task card / goal 消息提取任务；完整 plan 快照仍需插件补数据源。
+- 侧栏新增机器人切换（多机器人群，远程 plan 有数据时只读展示）和 Files 文件列表（cwd 下前 30 项，可打开）。
+- DSH 左侧新增「插件」入口：展示 runtime/profile 插件清单，支持打开插件目录；安装/卸载/启停尚未接。
+- 只展开当前工作区；新增整行「新会话」；空状态输入框回车在新会话时作为群名；设置固定左下角。
+- 会话行支持重命名，工作区支持打开目录。
+- 工作区支持本地别名重命名（localStorage，按目录路径），不修改服务端目录。
+- 多机器人详情栏支持机器人切换；Files 读取 cwd 前 30 项；空状态输入作为新会话群名。
+- 新增工作区名称输入、本地别名、排序（最近/名称）；会话 `⋯` 菜单支持重命名/在消息中打开/复制群 ID；详情栏支持拖拽调宽并持久化。
 - 设置页新增「模型」Tab：服务端 provision 的 AI 配置只读；可添加/编辑/删除多个 OpenAI-compatible 自定义模型，API Key 用 safeStorage 加密。
 - Host overlay 支持多 provider：服务端默认使用中性 ID `default`；自定义模型使用用户填写的 `providerId`（留空按名称生成，需唯一），各自 `apiKeyEnv`；有服务端默认时默认模型固定为服务端，没有时第一个自定义模型为默认。模型保存后自动重启 Host。
 - 关闭 dsh 内置 `llm-deepseek` / `llm-deepseek-account` 路由，避免 `/model` 出现没有凭据的 `deepseek-flash`、`deepseek-v4-pro`。
@@ -74,6 +81,14 @@
 - 新增「日志」页：主进程读取 Host 日志尾部 400 行，支持刷新/打开文件。
 - 概览/机器人页增加 gateway 实时状态：插件写 `wildfire-gateway-status.json`，Host 读取并随 `getStatus` 返回；页面 4s 轮询。
 - 群销毁/目录切换仍走群内 AgentPanel（已有 `/destroy` 与 `/cwd`），DSH 页暂不重复放危险操作。
+
+### 打包不再要求本机安装 dsh
+
+- `prepare-dsh-runtime.js` 不再依赖 `npm root -g` 的 dsh，也不再要求 `~/.dsh/profiles/wildfire`。
+- DSH 核心缺省从 npm 临时安装到 `build/.dsh-deps`（`@deepseek-ai/dsh@0.2.0-rc.2`，可用 `DSH_VERSION` 覆盖）；也可用 `DSH_SOURCE` 指向已有副本。
+- profile 使用仓库内的 `build/dsh-profile-template`（约 3.8MB，已含 wildfire 插件及其 node_modules），不再从宿主机复制。
+- Node 使用构建机的 Node >=22.19（或 `DSH_NODE_BINARY`）；构建机首次需要网络下载 dsh 包，CI 可缓存 `build/.dsh-deps`。
+- 目标平台的原生模块必须在对应平台构建；交叉编译请使用目标平台 CI 或预置目标 runtime。
 
 ### 宿主机隔离审计（打包版）
 

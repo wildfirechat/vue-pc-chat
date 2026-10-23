@@ -104,12 +104,29 @@ function nodeVersionOk(version) {
     return major > 22 || (major === 22 && minor >= 19) || major >= 24;
 }
 
-function npmGlobalRoot() {
-    try {
-        return execFileSync('npm', ['root', '-g'], { encoding: 'utf8' }).trim();
-    } catch (e) {
-        fail(`cannot resolve npm global root: ${e.message}`);
+function resolveDshSource() {
+    if (process.env.DSH_SOURCE) return process.env.DSH_SOURCE;
+    const candidates = [
+        path.join(root, 'build', 'vendor', '@deepseek-ai', 'dsh'),
+        path.join(root, 'build', '.dsh-deps', 'node_modules', '@deepseek-ai', 'dsh'),
+    ];
+    for (const candidate of candidates) {
+        if (fs.existsSync(path.join(candidate, 'lib', 'bin.js'))) return candidate;
     }
+    // 不要求全局安装 dsh：在构建目录临时 npm install，产物随包分发。
+    const depsDir = path.join(root, 'build', '.dsh-deps');
+    const version = process.env.DSH_VERSION || '0.2.0-rc.2';
+    console.log(`[prepare-dsh-runtime] installing @deepseek-ai/dsh@${version} into build/.dsh-deps`);
+    fs.mkdirSync(depsDir, { recursive: true });
+    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    try {
+        execFileSync(npm, ['install', '--prefix', depsDir, '--no-save', '--no-package-lock', `@deepseek-ai/dsh@${version}`], { stdio: 'inherit' });
+    } catch (e) {
+        fail(`cannot install @deepseek-ai/dsh@${version}: ${e.message}`);
+    }
+    const installed = path.join(depsDir, 'node_modules', '@deepseek-ai', 'dsh');
+    if (!fs.existsSync(path.join(installed, 'lib', 'bin.js'))) fail(`installed dsh not found: ${installed}`);
+    return installed;
 }
 
 const nodeBinary = process.env.DSH_NODE_BINARY || process.execPath;
@@ -118,11 +135,14 @@ if (!nodeVersionOk(process.version)) {
 }
 if (!fs.existsSync(nodeBinary)) fail(`node binary not found: ${nodeBinary}`);
 
-const dshSource = process.env.DSH_SOURCE || path.join(npmGlobalRoot(), '@deepseek-ai', 'dsh');
+const dshSource = resolveDshSource();
 if (!fs.existsSync(path.join(dshSource, 'lib', 'bin.js'))) {
     fail(`dsh source not found: ${dshSource} (set DSH_SOURCE)`);
 }
-const profileSource = process.env.DSH_PROFILE_SOURCE || path.join(os.homedir(), '.dsh', 'profiles', 'wildfire');
+const profileSource = process.env.DSH_PROFILE_SOURCE
+    || (fs.existsSync(path.join(root, 'build', 'dsh-profile-template'))
+        ? path.join(root, 'build', 'dsh-profile-template')
+        : path.join(os.homedir(), '.dsh', 'profiles', 'wildfire'));
 if (!fs.existsSync(path.join(profileSource, 'cordis.patch.yml'))) {
     fail(`profile source not found: ${profileSource} (set DSH_PROFILE_SOURCE to a profile with @wildfirechat/dsh-wildfire installed)`);
 }

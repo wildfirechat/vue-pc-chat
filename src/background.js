@@ -1659,6 +1659,14 @@ ipcMain.handle(IPCEventType.DSH_GET_WORKSPACES, () => {
     return dshHostManager.getWorkspaces();
 });
 
+ipcMain.handle(IPCEventType.DSH_GET_PLUGINS, () => {
+    return dshHostManager.getPlugins();
+});
+
+ipcMain.handle(IPCEventType.DSH_LIST_FILES, (event, dir) => {
+    return dshHostManager.listFiles(dir || '');
+});
+
 ipcMain.handle(IPCEventType.DSH_PICK_DIRECTORY, async () => {
     try {
         const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];

@@ -1,11 +1,21 @@
 <template>
-    <aside class="dsh-plan-sidebar">
+    <aside class="dsh-plan-sidebar" :style="{ width: width + 'px', flexBasis: width + 'px' }">
+        <div class="dsh-plan-resizer" @mousedown.prevent="startResize"></div>
         <div class="dsh-plan-head">
             <span>会话详情</span>
             <div class="dsh-plan-head-actions">
                 <button v-if="cwd" class="dsh-plan-icon" title="打开目录" @click="openDir">↗</button>
                 <button class="dsh-plan-icon" title="收起" @click="$emit('close')">×</button>
             </div>
+        </div>
+
+        <div v-if="robots.length > 1" class="dsh-plan-robots">
+            <span>机器人</span>
+            <select :value="selectedRobotId" @change="$emit('select-robot', $event.target.value)">
+                <option v-for="r in robots" :key="r.robotId" :value="r.robotId">
+                    {{ r.local ? '本机' : '远程' }} · {{ shortId(r.robotId) }}
+                </option>
+            </select>
         </div>
 
         <section class="dsh-plan-section">
@@ -37,6 +47,13 @@
         <section class="dsh-plan-section">
             <h3>Files</h3>
             <p v-if="cwd" class="mono dsh-plan-path">{{ cwd }}</p>
+            <div v-if="files.length" class="dsh-plan-files">
+                <button v-for="f in files" :key="f.path" class="dsh-plan-file" @click="openFile(f)">
+                    <span>{{ f.isDir ? '▸' : '·' }} {{ f.name }}</span>
+                    <span v-if="!f.isDir" class="dsh-plan-file-size">{{ formatSize(f.size) }}</span>
+                </button>
+            </div>
+            <p v-else-if="cwd" class="dsh-plan-empty">目录为空或暂不可读。</p>
             <p v-else class="dsh-plan-empty">会话激活后显示工作目录。</p>
             <button v-if="cwd" class="dsh-plan-link" @click="openDir">打开工作目录</button>
         </section>
@@ -62,7 +79,7 @@ import {
     getAgentPanelDataFor,
     getAgentState,
 } from '../../util/agentState';
-import { openDshPath } from '../../../dsh/renderer/dshClient';
+import { getDshFiles, openDshPath } from '../../../dsh/renderer/dshClient';
 import store from '../../../store';
 import AgentTaskProgressMessageContent from '../../../wfc/messages/agentTaskProgressMessageContent';
 import {AgentGoalMessageContent} from '../../../wfc/messages/agentMessageContents';
@@ -72,9 +89,11 @@ export default {
     props: {
         conversation: { type: Object, default: null },
         robotId: { type: String, default: '' },
+        robots: { type: Array, default: () => [] },
+        selectedRobotId: { type: String, default: '' },
     },
     data() {
-        return { panel: null, state: null, metrics: null };
+        return { panel: null, state: null, metrics: null, files: [], width: Number(localStorage.getItem('dsh-plan-width')) || 286, resizing: false };
     },
     computed: {
         cwd() { return (this.panel && this.panel.cwd) || ''; },
@@ -128,6 +147,7 @@ export default {
     },
     beforeUnmount() {
         if (this.timer) clearInterval(this.timer);
+        this.stopResize();
     },
     methods: {
         async load() {
@@ -144,13 +164,50 @@ export default {
                 this.panel = panel;
                 this.state = state;
                 this.metrics = metrics;
+                const dir = panel && panel.cwd;
+                if (dir) {
+                    getDshFiles(dir).then(list => { this.files = list || []; }).catch(() => { this.files = []; });
+                } else {
+                    this.files = [];
+                }
             } catch (e) { /* ignore */ }
         },
         taskStatus(status) {
             return ({ pending: '待执行', running: '进行中', completed: '完成', failed: '失败', cancelled: '取消' })[status] || status || '';
         },
+        startResize(e) {
+            this.resizing = true;
+            this._resizeStartX = e.clientX;
+            this._resizeStartWidth = this.width;
+            document.addEventListener('mousemove', this.onResize);
+            document.addEventListener('mouseup', this.stopResize);
+        },
+        onResize(e) {
+            if (!this.resizing) return;
+            const next = this._resizeStartWidth + (this._resizeStartX - e.clientX);
+            this.width = Math.max(240, Math.min(480, next));
+        },
+        stopResize() {
+            if (!this.resizing) return;
+            this.resizing = false;
+            document.removeEventListener('mousemove', this.onResize);
+            document.removeEventListener('mouseup', this.stopResize);
+            try { localStorage.setItem('dsh-plan-width', String(this.width)); } catch (e) { /* ignore */ }
+        },
         async openDir() {
             if (this.cwd) await openDshPath(this.cwd);
+        },
+        async openFile(f) {
+            if (f && f.path) await openDshPath(f.path);
+        },
+        shortId(id) {
+            return id && id.length > 16 ? id.slice(0, 8) + '…' + id.slice(-5) : (id || '');
+        },
+        formatSize(bytes) {
+            if (!bytes) return '';
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1024 / 1024).toFixed(1) + ' MB';
         },
     },
 };
@@ -158,11 +215,13 @@ export default {
 
 <style scoped>
 .dsh-plan-sidebar {
-    width: 286px; flex: 0 0 286px; height: 100%; overflow-y: auto;
+    position: relative; height: 100%; overflow-y: auto;
     border-left: 1px solid var(--border-separator, #eceef1);
     background: var(--background-primary, #fff);
     box-sizing: border-box; padding: 14px 14px 28px;
 }
+.dsh-plan-resizer { position: absolute; left: -3px; top: 0; bottom: 0; width: 6px; cursor: col-resize; z-index: 3; }
+.dsh-plan-resizer:hover { background: rgba(29, 78, 216, .12); }
 .dsh-plan-head {
     display: flex; align-items: center; justify-content: space-between;
     font-size: 12px; font-weight: 650; color: var(--text-secondary, #6b7280);
@@ -173,6 +232,8 @@ export default {
     border: 1px solid var(--border-color, #e5e6eb); background: transparent;
     border-radius: 5px; color: inherit; cursor: pointer; width: 24px; height: 22px;
 }
+.dsh-plan-robots { display: flex; flex-direction: column; gap: 4px; margin: 0 0 14px; font-size: 10px; color: #8a8f99; }
+.dsh-plan-robots select { width: 100%; border: 1px solid #e1e4e8; border-radius: 6px; padding: 4px 6px; font-size: 11px; background: #fff; color: #4b5563; }
 .dsh-plan-section { margin-bottom: 18px; }
 .dsh-plan-section h3 {
     margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
@@ -180,6 +241,11 @@ export default {
 }
 .dsh-plan-empty { margin: 0; font-size: 12px; line-height: 1.55; color: var(--text-secondary, #8a8f99); }
 .dsh-plan-path { font-size: 10px; color: var(--text-secondary, #8a8f99); word-break: break-all; margin: 0 0 6px; }
+.dsh-plan-files { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 6px; }
+.dsh-plan-file { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; border: 0; background: transparent; color: #4b5563; font-size: 11px; text-align: left; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
+.dsh-plan-file:hover { background: #f2f4f7; }
+.dsh-plan-file > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsh-plan-file-size { color: #9aa0a8; font-size: 9px; flex: 0 0 auto; }
 .dsh-plan-link { border: 0; background: transparent; color: #1d4ed8; font-size: 12px; padding: 0; cursor: pointer; }
 .dsh-plan-dl { display: grid; grid-template-columns: 42px 1fr; gap: 5px 6px; margin: 0; font-size: 11px; }
 .dsh-plan-dl dt { color: var(--text-secondary, #8a8f99); }

@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) 2020 WildFireChat. All rights reserved.
+ */
+
+import GroupType from './groupType.js';
+
+/*
+public String target;
+    public String name;
+    public String portrait;
+    public String owner;
+    public GroupType type;
+    public int memberCount;
+    public String extra;
+    public long updateDt
+    */
+
+class GroupInfo {
+    constructor() {
+        this.target = '';
+        this.name = '';
+        this.portrait = '';
+        this.owner = '';
+        this.type = GroupType.Normal;
+        this.memberCount = 0;
+        this.extra = '';
+        this.remark = '';
+        this.updateDt = 0;
+        this.memberUpdateDt = 0;
+
+        //0 正常；1 全局禁言
+        this.mute = 0;
+
+        //在group type为Restricted时，0 开放加入权限（群成员可以拉人，用户也可以主动加入）；1 只能群成员拉人入群；2 只能群管理拉人入群
+        this.joinType = 0;
+
+        //是否运行群中普通成员私聊。0 允许，1不允许
+        this.privateChat = 0;
+
+        //是否是超级群组，0 普通群组；1 超级群组。超级群组不支持服务器端删除。
+        this.superGroup = 0;
+
+        //群组是否被解散，0 没有被解散；1 已经被解散。
+        this.deleted = 0;
+
+        //是否可以搜索到该群，功能暂未实现
+        this.searchable = undefined;
+
+        //是否可以查看群历史消息, 0 不允许，1允许。仅专业版有效
+        this.historyMessage = undefined;
+
+        //群最大成员数。仅专业版有效
+        this.maxMemberCount = undefined;
+    }
+}
+
+export default GroupInfo;
