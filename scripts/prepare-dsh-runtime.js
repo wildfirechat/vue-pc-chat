@@ -202,6 +202,14 @@ const nodeDest = path.join(dest, 'node', isWin ? 'node.exe' : path.join('bin', '
 fs.mkdirSync(path.dirname(nodeDest), { recursive: true });
 fs.copyFileSync(nodeBinary, nodeDest);
 if (!isWin) fs.chmodSync(nodeDest, 0o755);
+// 复制后立即验证目标平台可执行，避免把空文件/错误架构的 node 打进安装包。
+try {
+    const out = execFileSync(nodeDest, ['-v'], { encoding: 'utf8', timeout: 5000 }).trim();
+    if (!nodeVersionOk(out)) fail(`copied node is too old: ${out} (${nodeDest})`);
+    console.log(`[prepare-dsh-runtime] verified node ${out}: ${nodeDest}`);
+} catch (e) {
+    fail(`copied node is not runnable on this platform: ${nodeDest}: ${e.message}`);
+}
 
 console.log(`[prepare-dsh-runtime] copying dsh from ${dshSource}`);
 const dshDest = path.join(dest, 'dsh');

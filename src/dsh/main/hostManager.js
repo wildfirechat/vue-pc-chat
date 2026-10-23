@@ -306,8 +306,9 @@ export default class DshHostManager {
             child.stdout.on('data', data => this._appendLog(`[stdout] ${String(data).trimEnd()}`));
             child.stderr.on('data', data => this._appendLog(`[stderr] ${String(data).trimEnd()}`));
             child.on('error', err => {
-                this._appendLog(`spawn error: ${err && err.message}`);
-                this._emit({ state: 'error', lastError: err && err.message ? err.message : String(err) });
+                const detail = err && err.message ? err.message : String(err);
+                this._appendLog(`spawn error: ${detail} command=${command} args=${args.join(' ')}`);
+                this._emit({ state: 'error', lastError: `${detail} (command=${command})` });
             });
             child.on('exit', (code, signal) => {
                 this._appendLog(`exited code=${code} signal=${signal}`);
