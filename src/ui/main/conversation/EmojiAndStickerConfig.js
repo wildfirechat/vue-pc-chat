@@ -176,6 +176,12 @@ export function config() {
 
     let emojis = [...emojisDefault, ...customStickers];
 
+    // 打开内置 tgs 贴纸包后，不再显示上面的动态表情，见 Config.ENABLE_TGS_STICKER
+    if (Config.ENABLE_TGS_STICKER) {
+        customCategories = customCategories.filter(c => !c.name.startsWith('Sticker'));
+        emojis = emojisDefault;
+    }
+
     return {
         // 显示那些类别的表情，比如：只包含 Peoples  类别时，那么将只显示默认表情里面，类别为 Peoples 的表情
         emojiCategories: customCategories,

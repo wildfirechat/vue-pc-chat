@@ -1,4 +1,5 @@
 import {stickerFormatFromPath} from "./stickerLoader";
+import Config from "../../../../config";
 
 /**
  * 内置贴纸包，放在 public/stickers/ 下，随安装包分发，不依赖网络。
@@ -39,6 +40,10 @@ export function loadedStickerPacks() {
 }
 
 export function loadStickerPacks() {
+    // 其他端暂不支持 tgs 贴纸，关闭时不加载，表情面板和输入联想里都没有贴纸包
+    if (!Config.ENABLE_TGS_STICKER) {
+        return Promise.resolve(loaded);
+    }
     if (!loading) {
         loading = doLoad().then(packs => {
             loaded = packs;

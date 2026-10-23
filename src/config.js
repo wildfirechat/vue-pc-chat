@@ -147,6 +147,10 @@ export default class Config {
     // 是否支持图文混排、文件文本混排，目前之后 pc 端支持，故默认关闭
     static ENABLE_MIX_MEDIA_MESSAGE = false;
 
+    // 是否显示内置 tgs 贴纸包（public/stickers/）。其他端暂不支持 tgs 贴纸，故默认关闭，此时表情面板显示原来的动态表情；
+    // 打开后表情面板显示 tgs 贴纸包，不再显示原来的动态表情
+    static ENABLE_TGS_STICKER = false;
+
     // 发送日志命令，当发送此文本消息时，会把协议栈日志发送到当前会话中，为空时关闭此功能。
     static SEND_LOG_COMMAND = '*#marslog#';
 
