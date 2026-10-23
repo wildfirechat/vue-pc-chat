@@ -880,7 +880,7 @@ export default {
 .dsh-tabs { flex-wrap: wrap; }
 .dsh-tab { flex: 1 0 80px; }
 .dsh-log {
-    margin: 0; padding: 14px; max-height: 520px; overflow: auto;
+    margin: 0; padding: 14px; height: max(180px, calc(100vh - 280px)); max-height: none; overflow: auto;
     background: #0f172a; color: #dbe4f0; border-radius: 10px;
     font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
     white-space: pre-wrap; word-break: break-all;

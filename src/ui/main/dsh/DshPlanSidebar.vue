@@ -216,7 +216,7 @@ export default {
 <style scoped>
 .dsh-plan-sidebar {
     position: relative; height: 100%; overflow-y: auto;
-    border-left: 1px solid var(--border-separator, #eceef1);
+    border-left: 1px solid var(--border-primary);
     background: var(--background-primary, #fff);
     box-sizing: border-box; padding: 14px 14px 28px;
 }

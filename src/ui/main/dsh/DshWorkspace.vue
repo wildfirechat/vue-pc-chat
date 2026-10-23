@@ -538,7 +538,7 @@ export default {
 .dsh-sidebar-btn:disabled { opacity: .45; cursor: default; }
 .dsh-sidebar-btn.active { background: #eef4ff; color: #1d4ed8; }
 .dsh-workspace-main { flex: 1; min-height: 0; display: flex; }
-.dsh-session-column { flex: 0 0 var(--list-panel-width); width: var(--list-panel-width); min-width: var(--list-panel-width); max-width: var(--list-panel-width); display: flex; flex-direction: column; border-right: 1px solid var(--border-separator, #eceef1); background: #fafbfc; box-sizing: border-box; }
+.dsh-session-column { flex: 0 0 var(--list-panel-width); width: var(--list-panel-width); min-width: var(--list-panel-width); max-width: var(--list-panel-width); display: flex; flex-direction: column; border-right: 1px solid var(--border-primary); background: #fafbfc; box-sizing: border-box; }
 
 .dsh-new-session {
     margin: 10px 12px 6px; height: 34px; border: 1px solid #d7dce3;

@@ -109,6 +109,8 @@ function resolveDshSource() {
     const candidates = [
         path.join(root, 'build', 'vendor', '@deepseek-ai', 'dsh'),
         path.join(root, 'build', '.dsh-deps', 'node_modules', '@deepseek-ai', 'dsh'),
+        // 已经 prepare 过的 runtime：重复打包时直接复用，避免再次 npm install。
+        path.join(root, 'build', 'dsh-runtime', 'dsh'),
     ];
     for (const candidate of candidates) {
         if (fs.existsSync(path.join(candidate, 'lib', 'bin.js'))) return candidate;
@@ -154,8 +156,13 @@ fs.copyFileSync(nodeBinary, nodeDest);
 if (!isWin) fs.chmodSync(nodeDest, 0o755);
 
 console.log(`[prepare-dsh-runtime] copying dsh from ${dshSource}`);
-copyDir(dshSource, path.join(dest, 'dsh'));
-console.log(`[prepare-dsh-runtime] materialized ${materializeSymlinks(path.join(dest, 'dsh'))} symlinks in dsh`);
+const dshDest = path.join(dest, 'dsh');
+if (path.resolve(dshSource) === path.resolve(dshDest)) {
+    console.log(`[prepare-dsh-runtime] reusing existing dsh: ${dshDest}`);
+} else {
+    copyDir(dshSource, dshDest);
+    console.log(`[prepare-dsh-runtime] materialized ${materializeSymlinks(dshDest)} symlinks in dsh`);
+}
 console.log(`[prepare-dsh-runtime] copying profile from ${profileSource}`);
 const profileDest = path.join(dest, 'profile');
 copyDir(profileSource, profileDest);
