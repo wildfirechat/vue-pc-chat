@@ -104,6 +104,12 @@ function nodeVersionOk(version) {
     return major > 22 || (major === 22 && minor >= 19) || major >= 24;
 }
 
+function runNpm(args) {
+    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+    // Windows 的 .cmd 不能直接 spawn，必须通过 shell 执行。
+    execFileSync(npm, args, { stdio: 'inherit', shell: process.platform === 'win32' });
+}
+
 function resolveDshSource() {
     if (process.env.DSH_SOURCE) return process.env.DSH_SOURCE;
     const candidates = [
@@ -120,9 +126,8 @@ function resolveDshSource() {
     const version = process.env.DSH_VERSION || '0.2.0-rc.2';
     console.log(`[prepare-dsh-runtime] installing @deepseek-ai/dsh@${version} into build/.dsh-deps`);
     fs.mkdirSync(depsDir, { recursive: true });
-    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
     try {
-        execFileSync(npm, ['install', '--prefix', depsDir, '--no-save', '--no-package-lock', '--engine-strict=false', `@deepseek-ai/dsh@${version}`], { stdio: 'inherit' });
+        runNpm(['install', '--prefix', depsDir, '--no-save', '--no-package-lock', '--engine-strict=false', `@deepseek-ai/dsh@${version}`]);
     } catch (e) {
         fail(`cannot install @deepseek-ai/dsh@${version}: ${e.message}`);
     }
@@ -166,11 +171,10 @@ function resolveNodeBinary() {
     // 用 npm 把带平台二进制的 node 包装到 build/.node-cache，再取其中的 node。
     const cache = path.join(root, 'build', '.node-cache');
     const version = process.env.DSH_NODE_VERSION || '22.23.3';
-    const npm = isWin ? 'npm.cmd' : 'npm';
     console.log(`[prepare-dsh-runtime] installing node@${version} into build/.node-cache`);
     fs.mkdirSync(cache, { recursive: true });
     try {
-        execFileSync(npm, ['install', '--prefix', cache, '--no-save', '--no-package-lock', `node@${version}`], { stdio: 'inherit' });
+        runNpm(['install', '--prefix', cache, '--no-save', '--no-package-lock', `node@${version}`]);
     } catch (e) {
         fail(`cannot install node@${version}: ${e.message}\nSet DSH_NODE_BINARY to a Node >=22.19 binary.`);
     }
