@@ -128,8 +128,14 @@ export default {
             return !!(this.ai && this.ai.apiKey) || !!(this.ai && this.ai.configured);
         },
     },
+    created() {
+        window.addEventListener('dsh-provision-updated', this.load);
+    },
     mounted() {
         this.load();
+    },
+    beforeUnmount() {
+        window.removeEventListener('dsh-provision-updated', this.load);
     },
     methods: {
         emptyForm() {

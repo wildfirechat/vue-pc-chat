@@ -11,7 +11,7 @@
                         </div>
                     </div>
                 </div>
-                <button class="dsh-new-session" :disabled="creating" @click="newSessionCurrent">
+                <button class="dsh-new-session" :disabled="creating || !canCreate" @click="newSessionCurrent">
                     <span>＋</span> 新会话
                 </button>
                 <button class="dsh-plugin-entry" :class="{active: showPlugins}" @click="openPluginView">
@@ -44,7 +44,7 @@
                             </button>
                             <button v-if="ws.path" class="dsh-ws-add" title="重命名工作区" @click="renameWorkspace(ws)">✎</button>
                             <button v-if="ws.path" class="dsh-ws-add" title="打开工作目录" @click="openWorkspaceDir(ws)">↗</button>
-                            <button class="dsh-ws-add" title="在这个工作区新建会话" @click="createSession(ws)">＋</button>
+                            <button class="dsh-ws-add" title="在这个工作区新建会话" :disabled="!canCreate" @click="createSession(ws)">＋</button>
                         </div>
                         <div v-if="expandedWorkspaceKey === ws.key" class="dsh-session-list">
                             <div v-for="s in ws.sessions" :key="s.groupId"
@@ -111,7 +111,7 @@
                             <input v-model="emptyPrompt" type="text"
                                    placeholder="按 Enter 新建会话"
                                    @keyup.enter="createSessionFromEmpty"/>
-                            <button title="新建会话" :disabled="creating" @click="createSessionFromEmpty">↑</button>
+                            <button title="新建会话" :disabled="creating || !canCreate" @click="createSessionFromEmpty">↑</button>
                         </div>
                         <p class="dsh-welcome-hint">没有工作区？先在左侧新建一个工作区。</p>
                     </div>
@@ -143,7 +143,7 @@
                 <p class="dsh-modal-tip">目录必须在机器人允许的工作区内；不存在时机器人会提示。</p>
                 <div class="dsh-modal-actions">
                     <button class="dsh-top-btn ghost" :disabled="creating" @click="showCreate = false">取消</button>
-                    <button class="dsh-top-btn" :disabled="creating" @click="createWorkspace">
+                    <button class="dsh-top-btn" :disabled="creating || !canCreate" @click="createWorkspace">
                         {{ creating ? '正在创建…' : '创建工作区' }}
                     </button>
                 </div>
@@ -159,8 +159,9 @@ import DshPlugins from './DshPlugins.vue';
 import store from '../../../store';
 import wfc from '../../../wfc/client/wfc';
 import Conversation from '../../../wfc/model/conversation';
-import TextMessageContent from '../../../wfc/messages/textMessageContent';
 import ModifyGroupInfoType from '../../../wfc/model/modifyGroupInfoType';
+import AgentCommandMessageContent from '../../../wfc/messages/agentCommandMessageContent';
+import ConnectionStatus from '../../../wfc/client/connectionStatus';
 import { getDshStatus, getDshWorkspaces, openDshPath, pickDshDirectory } from '../../../dsh/renderer/dshClient';
 import { dshState, localRobotId } from '../../../dsh/renderer/state';
 import { getAgentPanelDataFor, getAgentState } from '../../util/agentState';
@@ -175,6 +176,7 @@ export default {
             workspaces: [],
             workspacePaths: {},
             workspaceAliases: {},
+            lastRobotId: '',
             selectedGroupId: '',
             selectedRobotId: '',
             showDetail: false,
@@ -245,6 +247,20 @@ export default {
             const ai = (dshState.provision && dshState.provision.ai) || {};
             return ai.model ? `${ai.model}${ai.reasoningEffort ? ' · ' + ai.reasoningEffort : ''}` : '未配置模型';
         },
+        imConnected() {
+            return wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusConnected
+                || wfc.getConnectionStatus() === ConnectionStatus.ConnectionStatusReceiveing;
+        },
+        gatewayState() {
+            const g = (this.hostStatus && this.hostStatus.gateway) || {};
+            return g.connected ? 'connected' : (g.state || 'unknown');
+        },
+        canCreate() {
+            return !!this.localRobotId
+                && this.imConnected
+                && this.hostStatus.state === 'running'
+                && this.gatewayState !== 'disconnected';
+        },
     },
     created() {
         this.workspaceAliases = this.loadWorkspaceAliases();
@@ -271,6 +287,16 @@ export default {
         },
         async load() {
             const robotId = this.localRobotId;
+            if (robotId !== this.lastRobotId) {
+                this.lastRobotId = robotId;
+                this.workspaces = [];
+                this.selectedGroupId = '';
+                this.selectedRobotId = '';
+                this.expandedWorkspaceKey = '';
+                this.emptyWorkspaceKey = '';
+                this.showPlugins = false;
+                store.setCurrentConversation(null);
+            }
             if (!robotId) { this.workspaces = []; return; }
             let list = [];
             try { list = wfc.getConversationList([1], [2]) || []; } catch (e) { list = []; }
@@ -368,6 +394,7 @@ export default {
             this.showPlugins = true;
         },
         newSessionCurrent() {
+            if (!this.ensureCreateReady()) return;
             if (!this.currentWorkspace) {
                 this.showCreate = true;
                 return;
@@ -375,6 +402,7 @@ export default {
             this.createSession(this.currentWorkspace);
         },
         createSessionFromEmpty() {
+            if (!this.ensureCreateReady()) return;
             const ws = this.workspaces.find(w => w.key === this.emptyWorkspaceKey);
             const title = (this.emptyPrompt || '').trim();
             if (ws) this.createSession(ws, title);
@@ -400,12 +428,32 @@ export default {
         shortId(id) {
             return id && id.length > 18 ? id.slice(0, 8) + '…' + id.slice(-6) : (id || '');
         },
-        async sendControlCommand(text) {
+        ensureCreateReady() {
+            if (!this.localRobotId) {
+                this.$notify({ title: '无法新建会话', text: '机器人尚未开通', type: 'error' });
+                return false;
+            }
+            if (!this.imConnected) {
+                this.$notify({ title: '无法新建会话', text: 'IM 未连接，请检查网络后重试', type: 'error' });
+                return false;
+            }
+            if (this.hostStatus.state !== 'running') {
+                this.$notify({ title: '无法新建会话', text: 'DSH Host 未运行，请先在设置页启动 Host', type: 'error' });
+                return false;
+            }
+            if (this.gatewayState === 'disconnected') {
+                this.$notify({ title: '无法新建会话', text: '机器人网关离线，请检查 Host 日志', type: 'error' });
+                return false;
+            }
+            return true;
+        },
+        async sendCreateCommand(path, name) {
             const robotId = this.localRobotId;
             if (!robotId) throw new Error('机器人未开通');
             const conv = new Conversation(0, robotId, 0);
+            const content = new AgentCommandMessageContent('create', undefined, Date.now(), robotId, undefined, path, name);
             await new Promise((resolve, reject) => {
-                wfc.sendConversationMessage(conv, new TextMessageContent(text), [], null, null,
+                wfc.sendConversationMessage(conv, content, [], null, null,
                     () => resolve(), (e) => reject(e));
             });
         },
@@ -432,12 +480,12 @@ export default {
             if (result && result.ok && result.path) this.newWorkspacePath = result.path;
         },
         async createWorkspace() {
-            if (this.creating) return;
+            if (this.creating || !this.ensureCreateReady()) return;
             this.creating = true;
             const before = new Set(this.workspaces.flatMap(ws => ws.sessions.map(s => s.groupId)));
             try {
                 const path = this.newWorkspacePath || 'auto';
-                await this.sendControlCommand(`/create ${path}`);
+                await this.sendCreateCommand(path, this.newWorkspaceName.trim());
                 this.showCreate = false;
                 this.newWorkspacePath = '';
                 const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
@@ -496,7 +544,7 @@ export default {
             if (ws && ws.path) await openDshPath(ws.path);
         },
         async createSession(ws, title = '') {
-            if (this.creating) return;
+            if (this.creating || !this.ensureCreateReady()) return;
             let path = ws.path || (ws.sessions[0] && ws.sessions[0].path) || '';
             if (!path && ws.sessions[0]) {
                 const panel = getAgentPanelDataFor(ws.sessions[0].conversation, this.localRobotId);
@@ -506,7 +554,7 @@ export default {
             this.creating = true;
             const before = new Set(this.workspaces.flatMap(w => w.sessions.map(s => s.groupId)));
             try {
-                await this.sendControlCommand(`/create ${path}`);
+                await this.sendCreateCommand(path, this.newWorkspaceName.trim());
                 const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
                 if (found && title) await this.applyGroupName(found, title);
                 if (found) {
