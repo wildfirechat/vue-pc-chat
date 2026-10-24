@@ -13,21 +13,31 @@ export default class DshProvisionStore {
     }
 
     _load() {
-        try {
-            if (!fs.existsSync(this.file)) return {};
-            const raw = fs.readFileSync(this.file);
-            let text;
-            if (safeStorage.isEncryptionAvailable()) {
-                text = safeStorage.decryptString(raw);
-            } else {
-                text = raw.toString('utf8');
-            }
-            const parsed = JSON.parse(text);
-            return parsed && typeof parsed === 'object' ? parsed : {};
-        } catch (e) {
-            console.warn('[dsh] load provision cache failed', e.message);
-            return {};
+        if (!fs.existsSync(this.file)) return {};
+        let raw;
+        try { raw = fs.readFileSync(this.file); } catch (e) { return {}; }
+        const texts = [];
+        if (safeStorage.isEncryptionAvailable()) {
+            try { texts.push(safeStorage.decryptString(raw)); } catch (e) { /* 旧平台/明文缓存 */ }
         }
+        texts.push(raw.toString('utf8'));
+        for (const text of texts) {
+            try {
+                const parsed = JSON.parse(text);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch (e) { /* try next */ }
+        }
+        // 跨平台复制过来的 safeStorage 缓存无法解密。不要反复读取乱码，
+        // 保留一份 .corrupt-* 供诊断，然后从空缓存开始。
+        try {
+            const backup = `${this.file}.corrupt-${Date.now()}`;
+            fs.renameSync(this.file, backup);
+            console.warn(`[dsh] provision cache is not valid JSON or cannot be decrypted; moved to ${backup}`);
+        } catch (e) {
+            try { fs.unlinkSync(this.file); } catch (e2) { /* ignore */ }
+            console.warn('[dsh] provision cache is invalid; removed');
+        }
+        return {};
     }
 
     _persist() {

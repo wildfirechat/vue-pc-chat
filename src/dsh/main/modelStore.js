@@ -15,18 +15,29 @@ export default class DshModelStore {
     }
 
     _load() {
-        try {
-            if (!fs.existsSync(this.file)) return {};
-            const raw = fs.readFileSync(this.file);
-            const text = safeStorage.isEncryptionAvailable()
-                ? safeStorage.decryptString(raw)
-                : raw.toString('utf8');
-            const parsed = JSON.parse(text);
-            return parsed && typeof parsed === 'object' ? parsed : {};
-        } catch (e) {
-            console.warn('[dsh] load model config failed', e && e.message);
-            return {};
+        if (!fs.existsSync(this.file)) return {};
+        let raw;
+        try { raw = fs.readFileSync(this.file); } catch (e) { return {}; }
+        const texts = [];
+        if (safeStorage.isEncryptionAvailable()) {
+            try { texts.push(safeStorage.decryptString(raw)); } catch (e) { /* 旧平台/明文缓存 */ }
         }
+        texts.push(raw.toString('utf8'));
+        for (const text of texts) {
+            try {
+                const parsed = JSON.parse(text);
+                if (parsed && typeof parsed === 'object') return parsed;
+            } catch (e) { /* try next */ }
+        }
+        try {
+            const backup = `${this.file}.corrupt-${Date.now()}`;
+            fs.renameSync(this.file, backup);
+            console.warn(`[dsh] model config is not valid JSON or cannot be decrypted; moved to ${backup}`);
+        } catch (e) {
+            try { fs.unlinkSync(this.file); } catch (e2) { /* ignore */ }
+            console.warn('[dsh] model config is invalid; removed');
+        }
+        return {};
     }
 
     _persist() {
