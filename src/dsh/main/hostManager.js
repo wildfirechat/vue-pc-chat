@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
+import { spawn, execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import { app, shell } from 'electron';
 
@@ -267,6 +267,7 @@ export default class DshHostManager {
             WF_ROBOT_SECRET: robot.robotSecret || '',
             WF_OWNER_USER_ID: robot.owner || '',
             WF_DSH_HOST_ID: this.hostId,
+            WF_PARENT_PID: String(process.pid),
             WF_DSH_TAGS: process.env.WF_DSH_TAGS || '',
             WF_DSH_DISPLAY_NAME: robot.displayName || '',
             WF_AI_BASE_URL: (provision.ai && provision.ai.baseUrl) || '',
@@ -346,9 +347,16 @@ export default class DshHostManager {
         const child = this.child;
         this.child = null;
         if (child && !child.killed) {
-            try {
-                child.kill('SIGTERM');
-            } catch (e) { /* ignore */ }
+            if (process.platform === 'win32' && child.pid) {
+                // Windows 上 child.kill 只杀直接进程；DSH 可能还有子进程。
+                try {
+                    execFileSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore', timeout: 5000 });
+                } catch (e) { /* process may already be gone */ }
+            } else {
+                try {
+                    child.kill('SIGTERM');
+                } catch (e) { /* ignore */ }
+            }
             await new Promise(resolve => {
                 const timer = setTimeout(() => {
                     try { child.kill('SIGKILL'); } catch (e) { /* ignore */ }

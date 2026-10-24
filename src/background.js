@@ -1840,16 +1840,31 @@ app.on('ready', () => {
 //     }
 // })
 
-app.on('before-quit', () => {
+let dshQuitCleanupStarted = false;
+app.on('before-quit', async event => {
     // Fix issues #14
     forceQuit = true;
-    dshHostManager.stop().catch(e => console.log('[dsh] stop on quit failed', e));
+    const status = dshHostManager.getStatus();
+    const dshAlive = status && status.state !== 'stopped' && status.state !== 'crashed';
+    if (dshAlive && !dshQuitCleanupStarted) {
+        event.preventDefault();
+        dshQuitCleanupStarted = true;
+        try {
+            await Promise.race([
+                dshHostManager.stop(),
+                new Promise(resolve => setTimeout(resolve, 6000)),
+            ]);
+        } catch (e) {
+            console.log('[dsh] stop on quit failed', e);
+        }
+        app.quit();
+        return;
+    }
 
-    if (!tray) return;
-    // if (!isOsx) {
-    tray.destroy();
-    tray = null;
-    // }
+    if (tray) {
+        tray.destroy();
+        tray = null;
+    }
 });
 app.on('activate', e => {
     if (!mainWindow.isVisible()) {
