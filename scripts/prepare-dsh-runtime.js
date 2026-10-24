@@ -202,6 +202,13 @@ function runNpm(args, extraEnv = {}) {
     });
 }
 
+function dshSourceComplete(dir) {
+    if (!fs.existsSync(path.join(dir, 'lib', 'bin.js'))) return false;
+    if (fs.existsSync(path.join(dir, 'node_modules', '@deepseek-ai', 'dsh-app-boot'))) return true;
+    const parentModules = path.dirname(path.dirname(dir));
+    return fs.existsSync(path.join(parentModules, '@deepseek-ai', 'dsh-app-boot'));
+}
+
 function resolveDshSource() {
     if (process.env.DSH_SOURCE) return process.env.DSH_SOURCE;
     const candidates = [
@@ -211,7 +218,10 @@ function resolveDshSource() {
         path.join(root, 'build', 'dsh-runtime', 'dsh'),
     ];
     for (const candidate of candidates) {
-        if (fs.existsSync(path.join(candidate, 'lib', 'bin.js'))) return candidate;
+        if (dshSourceComplete(candidate)) return candidate;
+        if (fs.existsSync(path.join(candidate, 'lib', 'bin.js'))) {
+            console.warn(`[prepare-dsh-runtime] skip incomplete dsh source (missing dsh-app-boot): ${candidate}`);
+        }
     }
     // 不要求全局安装 dsh：在构建目录临时 npm install，产物随包分发。
     const depsDir = path.join(root, 'build', '.dsh-deps');
@@ -224,7 +234,7 @@ function resolveDshSource() {
         fail(`cannot install @deepseek-ai/dsh@${version}: ${e.message}`);
     }
     const installed = path.join(depsDir, 'node_modules', '@deepseek-ai', 'dsh');
-    if (!fs.existsSync(path.join(installed, 'lib', 'bin.js'))) fail(`installed dsh not found: ${installed}`);
+    if (!dshSourceComplete(installed)) fail(`installed dsh is incomplete (missing lib/bin.js or dsh-app-boot): ${installed}`);
     return installed;
 }
 
@@ -318,6 +328,9 @@ if (path.resolve(dshSource) === path.resolve(dshDest)) {
 }
 const depCount = copySiblingDshDependencies(dshSource, dshDest);
 if (depCount) console.log(`[prepare-dsh-runtime] copied ${depCount} sibling dsh dependencies`);
+if (!dshSourceComplete(dshDest)) {
+    fail(`bundled dsh is incomplete (missing @deepseek-ai/dsh-app-boot): ${dshDest}`);
+}
 console.log(`[prepare-dsh-runtime] copying profile from ${profileSource}`);
 const profileDest = path.join(dest, 'profile');
 copyDir(profileSource, profileDest);
