@@ -109,7 +109,6 @@ export default class DshProvisionStore {
                 reasoningEffort: ai.reasoningEffort,
                 maxTokens: ai.maxTokens,
                 contextWindow: ai.contextWindow,
-                models: ai.models || [],
                 configured: !!ai.apiKey,
             },
         };
