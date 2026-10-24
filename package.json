@@ -18,6 +18,7 @@
     "dev": "cross-env BROWSER=none node scripts/validate.js && node scripts/del.js ./marswrapper.node && node scripts/copy-proto.js && vue-cli-service electron:serve --disable-background-timer-throttling",
     "validate": "node scripts/validate.js",
     "prepare-dsh-runtime": "node scripts/prepare-dsh-runtime.js",
+    "download-node": "node scripts/download-node.js",
     "electron:dev": "cross-env BROWSER=none vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",

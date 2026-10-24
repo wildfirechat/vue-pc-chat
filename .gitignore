@@ -47,3 +47,6 @@ crash.log
 
 # 构建 Node 缓存
 /build/.node-cache
+
+# 官方 Node 下载缓存
+/build/official-node

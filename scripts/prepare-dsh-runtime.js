@@ -209,6 +209,7 @@ function findNodeBinary(root, depth = 0) {
 function resolveNodeBinary() {
     const candidates = [
         process.env.DSH_NODE_BINARY,
+        isWin ? path.join(root, 'build', 'official-node', 'node.exe') : path.join(root, 'build', 'official-node', 'bin', 'node'),
         isWin ? path.join(dest, 'node', 'node.exe') : path.join(dest, 'node', 'bin', 'node'),
         process.execPath,
     ].filter(Boolean);
