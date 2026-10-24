@@ -24,7 +24,7 @@
                 <dt>模型</dt><dd class="mono">{{ serverModel.model }}</dd>
                 <dt>推理等级</dt><dd>{{ serverModel.reasoningEffort || '-' }}</dd>
                 <dt>Max Tokens</dt><dd>{{ serverModel.maxTokens || '-' }}</dd>
-                <dt>Context Window</dt><dd>{{ serverModel.contextWindow || 131072 }}</dd>
+                <dt>Context Window</dt><dd>{{ serverModel.contextWindow || 1048576 }}</dd>
             </dl>
         </div>
 

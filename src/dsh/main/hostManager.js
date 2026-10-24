@@ -154,7 +154,7 @@ export default class DshHostManager {
                 model: ai.model,
                 reasoningEffort: ai.reasoningEffort,
                 maxTokens: ai.maxTokens,
-                contextWindow: Number(ai.contextWindow) || 131072,
+                contextWindow: Number(ai.contextWindow) || 1048576,
             });
         }
         (userModels || []).forEach((m, index) => {
