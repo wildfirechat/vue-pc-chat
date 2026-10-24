@@ -1560,6 +1560,13 @@ function validateUserModel(input, requireKey) {
     if (!model) throw new Error('请填写模型 ID');
     if (requireKey && !apiKey) throw new Error('请填写 API Key');
     const providerId = normalizeProviderId(input.providerId, name);
+    const maxTokens = Number(input.maxTokens) || 8192;
+    const contextWindow = Number(input.contextWindow) || 131072;
+    if (maxTokens <= 0) throw new Error('Max Tokens 必须大于 0');
+    if (contextWindow <= 0) throw new Error('Context Window 必须大于 0');
+    if (maxTokens >= contextWindow) {
+        throw new Error(`Max Tokens (${maxTokens}) 必须小于 Context Window (${contextWindow})`);
+    }
     return {
         providerId,
         name,
@@ -1567,8 +1574,8 @@ function validateUserModel(input, requireKey) {
         model,
         apiKey,
         reasoningEffort: String(input.reasoningEffort || '').trim(),
-        maxTokens: Number(input.maxTokens) || 8192,
-        contextWindow: Number(input.contextWindow) || 131072,
+        maxTokens,
+        contextWindow,
     };
 }
 

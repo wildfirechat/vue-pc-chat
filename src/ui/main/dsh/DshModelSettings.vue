@@ -23,6 +23,8 @@
                 <dt>Base URL</dt><dd class="mono">{{ serverModel.baseUrl || '-' }}</dd>
                 <dt>模型</dt><dd class="mono">{{ serverModel.model }}</dd>
                 <dt>推理等级</dt><dd>{{ serverModel.reasoningEffort || '-' }}</dd>
+                <dt>Max Tokens</dt><dd>{{ serverModel.maxTokens || '-' }}</dd>
+                <dt>Context Window</dt><dd>{{ serverModel.contextWindow || 131072 }}</dd>
             </dl>
         </div>
 
@@ -54,6 +56,7 @@
                     <dt>模型</dt><dd class="mono">{{ m.model }}</dd>
                     <dt>API Key</dt><dd class="mono">{{ m.apiKeyPreview || (m.hasApiKey ? '已配置' : '-') }}</dd>
                     <dt>推理等级</dt><dd>{{ m.reasoningEffort || '-' }}</dd>
+                    <dt>Max Tokens / Context</dt><dd>{{ m.maxTokens || 8192 }} / {{ m.contextWindow || 131072 }}</dd>
                 </dl>
             </div>
         </div>
