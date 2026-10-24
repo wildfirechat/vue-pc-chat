@@ -202,11 +202,44 @@ function runNpm(args, extraEnv = {}) {
     });
 }
 
+function nativeAddonPackage() {
+    const platform = process.platform;
+    const arch = process.arch;
+    if (platform === 'win32') return `node-addon-require-builtin-win32-${arch}-msvc`;
+    if (platform === 'darwin') return `node-addon-require-builtin-darwin-${arch}`;
+    // Linux 先按 glibc 处理；musl 环境可显式设置 DSH_NATIVE_PACKAGE。
+    return process.env.DSH_NATIVE_PACKAGE || `node-addon-require-builtin-linux-${arch}-gnu`;
+}
+
+function hasNativeAddon(dir) {
+    const nativeName = nativeAddonPackage();
+    if (fs.existsSync(path.join(dir, 'node_modules', nativeName))) return true;
+    const parentModules = path.dirname(path.dirname(dir));
+    return fs.existsSync(path.join(parentModules, nativeName));
+}
+
+function ensureNativeAddon(depsDir) {
+    const nativeName = nativeAddonPackage();
+    const installed = path.join(depsDir, 'node_modules', nativeName);
+    if (fs.existsSync(installed)) return;
+    const requireBuiltin = path.join(depsDir, 'node_modules', 'node-addon-require-builtin', 'package.json');
+    let version = '0.1.9';
+    try {
+        const pkg = JSON.parse(fs.readFileSync(requireBuiltin, 'utf8'));
+        version = (pkg.optionalDependencies && pkg.optionalDependencies[nativeName]) || version;
+    } catch (e) { /* use fallback */ }
+    console.log(`[prepare-dsh-runtime] installing native addon ${nativeName}@${version}`);
+    runNpm(['install', '--prefix', depsDir, '--no-save', '--no-package-lock', '--include=optional', `${nativeName}@${version}`]);
+    if (!fs.existsSync(installed)) fail(`native addon not installed: ${nativeName}`);
+}
+
 function dshSourceComplete(dir) {
     if (!fs.existsSync(path.join(dir, 'lib', 'bin.js'))) return false;
-    if (fs.existsSync(path.join(dir, 'node_modules', '@deepseek-ai', 'dsh-app-boot'))) return true;
-    const parentModules = path.dirname(path.dirname(dir));
-    return fs.existsSync(path.join(parentModules, '@deepseek-ai', 'dsh-app-boot'));
+    if (!fs.existsSync(path.join(dir, 'node_modules', '@deepseek-ai', 'dsh-app-boot'))) {
+        const parentModules = path.dirname(path.dirname(dir));
+        if (!fs.existsSync(path.join(parentModules, '@deepseek-ai', 'dsh-app-boot'))) return false;
+    }
+    return hasNativeAddon(dir);
 }
 
 function resolveDshSource() {
@@ -229,12 +262,13 @@ function resolveDshSource() {
     console.log(`[prepare-dsh-runtime] installing @deepseek-ai/dsh@${version} into build/.dsh-deps`);
     fs.mkdirSync(depsDir, { recursive: true });
     try {
-        runNpm(['install', '--prefix', depsDir, '--no-save', '--no-package-lock', '--engine-strict=false', `@deepseek-ai/dsh@${version}`]);
+        runNpm(['install', '--prefix', depsDir, '--no-save', '--no-package-lock', '--engine-strict=false', '--include=optional', `@deepseek-ai/dsh@${version}`]);
     } catch (e) {
         fail(`cannot install @deepseek-ai/dsh@${version}: ${e.message}`);
     }
     const installed = path.join(depsDir, 'node_modules', '@deepseek-ai', 'dsh');
-    if (!dshSourceComplete(installed)) fail(`installed dsh is incomplete (missing lib/bin.js or dsh-app-boot): ${installed}`);
+    ensureNativeAddon(depsDir);
+    if (!dshSourceComplete(installed)) fail(`installed dsh is incomplete (missing lib/bin.js, dsh-app-boot or native addon): ${installed}`);
     return installed;
 }
 
@@ -329,7 +363,7 @@ if (path.resolve(dshSource) === path.resolve(dshDest)) {
 const depCount = copySiblingDshDependencies(dshSource, dshDest);
 if (depCount) console.log(`[prepare-dsh-runtime] copied ${depCount} sibling dsh dependencies`);
 if (!dshSourceComplete(dshDest)) {
-    fail(`bundled dsh is incomplete (missing @deepseek-ai/dsh-app-boot): ${dshDest}`);
+    fail(`bundled dsh is incomplete (missing @deepseek-ai/dsh-app-boot or native addon ${nativeAddonPackage()}): ${dshDest}`);
 }
 console.log(`[prepare-dsh-runtime] copying profile from ${profileSource}`);
 const profileDest = path.join(dest, 'profile');
