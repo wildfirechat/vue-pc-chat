@@ -78,6 +78,45 @@ function fail(message) {
     process.exit(1);
 }
 
+function copySiblingDshDependencies(dshSource, dshDest) {
+    // npm install 的 @deepseek-ai/dsh 依赖通常被 hoist 到父级 node_modules；
+    // 只复制 dsh 包目录会漏掉 dsh-app-boot 等依赖。这里把兄弟包补进
+    // dsh/node_modules，保持运行时自包含。
+    const packageDir = path.resolve(dshSource);
+    const parent = path.dirname(packageDir);
+    const nodeModules = path.basename(parent) === '@deepseek-ai' ? path.dirname(parent) : parent;
+    if (path.basename(nodeModules) !== 'node_modules' || !fs.existsSync(nodeModules)) return 0;
+
+    const targetRoot = path.join(dshDest, 'node_modules');
+    fs.mkdirSync(targetRoot, { recursive: true });
+    let copied = 0;
+    for (const entry of fs.readdirSync(nodeModules, { withFileTypes: true })) {
+        if (!entry.isDirectory() || entry.name === '.bin') continue;
+        if (entry.name.startsWith('@')) {
+            const scopeSrc = path.join(nodeModules, entry.name);
+            const scopeDest = path.join(targetRoot, entry.name);
+            fs.mkdirSync(scopeDest, { recursive: true });
+            for (const sub of fs.readdirSync(scopeSrc, { withFileTypes: true })) {
+                if (!sub.isDirectory()) continue;
+                if (entry.name === '@deepseek-ai' && sub.name === 'dsh') continue;
+                const src = path.join(scopeSrc, sub.name);
+                const dest = path.join(scopeDest, sub.name);
+                if (!fs.existsSync(dest)) {
+                    copyDir(src, dest);
+                    copied += 1;
+                }
+            }
+        } else {
+            const dest = path.join(targetRoot, entry.name);
+            if (!fs.existsSync(dest)) {
+                copyDir(path.join(nodeModules, entry.name), dest);
+                copied += 1;
+            }
+        }
+    }
+    return copied;
+}
+
 function copyDir(from, to) {
     fs.rmSync(to, { recursive: true, force: true });
     fs.mkdirSync(path.dirname(to), { recursive: true });
@@ -277,6 +316,8 @@ if (path.resolve(dshSource) === path.resolve(dshDest)) {
     copyDir(dshSource, dshDest);
     console.log(`[prepare-dsh-runtime] materialized ${materializeSymlinks(dshDest)} symlinks in dsh`);
 }
+const depCount = copySiblingDshDependencies(dshSource, dshDest);
+if (depCount) console.log(`[prepare-dsh-runtime] copied ${depCount} sibling dsh dependencies`);
 console.log(`[prepare-dsh-runtime] copying profile from ${profileSource}`);
 const profileDest = path.join(dest, 'profile');
 copyDir(profileSource, profileDest);
