@@ -190,6 +190,14 @@ export class WfcManager {
     }
 
     /**
+     * 设置重新加入群时是否清除该群的历史消息。
+     * @param {boolean} clear true 清除；false 保留
+     */
+    setClrMsgWhenJoinGrp(clear) {
+        impl.setClrMsgWhenJoinGrp(clear);
+    }
+
+    /**
      * 连接服务器
      * @param {string} userId 用户id
      * @param {string} token 用户token，生成token时，所使用的clientId，一定要通过{@link getClientId}获取
