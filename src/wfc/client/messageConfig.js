@@ -302,7 +302,7 @@ export default class MessageConfig {
         },
         {
             name: 'modifyGroupExtraNotification',
-            flag: PersistFlag.Persist,
+            flag: PersistFlag.No_Persist,
             type: MessageContentType.ModifyGroupExtra_Notification,
             contentClazz: ModifyGroupExtraNotification,
         },

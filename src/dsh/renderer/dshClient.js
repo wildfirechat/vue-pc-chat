@@ -146,6 +146,11 @@ export async function getDshAiAgentStats(userId) {
     return ipcRenderer.invoke(IpcEventType.DSH_AI_AGENT_STATS, userId);
 }
 
+export async function generateDshTitle(userId, text) {
+    if (!isElectron()) return { ok: false, error: '仅支持 Electron' };
+    return ipcRenderer.invoke(IpcEventType.DSH_GENERATE_TITLE, { userId, text });
+}
+
 export async function renameDshRobot(userId, displayName) {
     if (!isElectron()) return { ok: false, error: '仅支持 Electron' };
     const result = await ipcRenderer.invoke(IpcEventType.DSH_RENAME_ROBOT, { userId, displayName });

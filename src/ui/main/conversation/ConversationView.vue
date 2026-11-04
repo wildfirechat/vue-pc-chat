@@ -13,7 +13,12 @@
         <div v-else class="conversation-container">
             <header>
                 <div class="title-container">
-                    <div>
+                    <div class="title-leading">
+                        <button v-if="dshMode && dshSidebarCollapsed" class="dsh-sidebar-expand"
+                                title="展开侧边栏" @click.stop="$emit('expand-dsh-sidebar')">
+                            <i class="icon-ion-ios-arrow-forward"></i>
+                        </button>
+                        <div>
                         <h1 ref="titleEl" class="single-line" @click.stop="toggleConversationInfo">{{ conversationTitle }}
                             <span v-if="agentState && !agentAiOffline" class="agent-title-badge" :class="agentStateClass">{{ agentStateText }}</span>
                             <button v-if="agentState && agentState.state === 'running' && !agentAiOffline"
@@ -29,6 +34,7 @@
                             <template v-else>{{ conversationStatusLine }}</template>
                         </p>
                         <p v-if="isExternalDomainSingleConversation" class="single-line domain-desc">{{ domainName }}</p>
+                        </div>
                     </div>
                     <div
                         v-bind:style="{marginTop:(sharedMiscState.isElectronWindowsOrLinux || sharedMiscState.isOhos) ?  '30px' : '0'}"
@@ -254,6 +260,10 @@ export default {
     },
     props: {
         dshMode: {
+            type: Boolean,
+            default: false,
+        },
+        dshSidebarCollapsed: {
             type: Boolean,
             default: false,
         },
@@ -1407,6 +1417,30 @@ export default {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+.title-leading {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+}
+.title-leading > div { min-width: 0; }
+.dsh-sidebar-expand {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary, #6b7280);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.dsh-sidebar-expand:hover { background: var(--background-item-hover, #f2f3f5); color: var(--text-primary, #1f2329); }
+.dsh-sidebar-expand i { font-size: 18px; }
 
 .title-container {
     width: 100%;

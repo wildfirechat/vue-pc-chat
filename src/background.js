@@ -1778,6 +1778,18 @@ ipcMain.handle(IPCEventType.DSH_AI_AGENT_STATS, async (event, userId) => {
     }
 });
 
+ipcMain.handle(IPCEventType.DSH_GENERATE_TITLE, async (event, args = {}) => {
+    try {
+        const userId = args.userId;
+        const text = args.text;
+        if (!userId || !text) throw new Error('参数不完整');
+        const title = await dshAiAgentService.generateTitle(userId, text);
+        return { ok: true, title };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
 ipcMain.handle(IPCEventType.DSH_RENAME_ROBOT, async (event, args = {}) => {
     try {
         const userId = args.userId;

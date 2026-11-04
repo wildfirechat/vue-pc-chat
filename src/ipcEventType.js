@@ -47,6 +47,7 @@ const IpcEventType = {
     DSH_AI_AGENT_CLEAR: 'dsh-ai-agent-clear',
     DSH_AI_AGENT_STATS: 'dsh-ai-agent-stats',
     DSH_RENAME_ROBOT: 'dsh-rename-robot',
+    DSH_GENERATE_TITLE: 'dsh-generate-title',
     DSH_ADD_MODEL: 'dsh-add-model',
     DSH_UPDATE_MODEL: 'dsh-update-model',
     DSH_DELETE_MODEL: 'dsh-delete-model',

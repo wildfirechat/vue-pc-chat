@@ -385,6 +385,11 @@
                     <DshModelSettings :ai="ai"/>
                 </section>
 
+                <!-- 插件 -->
+                <section v-else-if="activeTab === 'plugins'" class="dsh-section">
+                    <DshPlugins embedded/>
+                </section>
+
                 <!-- 路由 -->
                 <section v-else-if="activeTab === 'routing'" class="dsh-section">
                     <div class="dsh-section-head">
@@ -485,10 +490,11 @@ import Conversation from "../../wfc/model/conversation";
 import TextMessageContent from "../../wfc/messages/textMessageContent";
 import ModifyGroupInfoType from "../../wfc/model/modifyGroupInfoType";
 import DshModelSettings from "./dsh/DshModelSettings.vue";
+import DshPlugins from "./dsh/DshPlugins.vue";
 
 export default {
     name: 'AI',
-    components: { DshModelSettings },
+    components: { DshModelSettings, DshPlugins },
     computed: {
         aiPortalUrl() {
             return Config.AI_PORTAL_URL;
@@ -593,6 +599,7 @@ export default {
                 { id: 'aiAgent', label: 'AI 服务' },
                 { id: 'permissions', label: '权限' },
                 { id: 'models', label: '模型' },
+                { id: 'plugins', label: '插件' },
                 { id: 'routing', label: '路由' },
                 { id: 'logs', label: '日志' },
                 { id: 'diagnostics', label: '诊断' },
@@ -711,6 +718,11 @@ export default {
                 const result = await renameDshRobot(wfc.getUserId(), displayName);
                 if (!result || !result.ok) throw new Error((result && result.error) || '修改失败');
                 if (result.provision) this.provision = result.provision;
+                // Force-refresh the IM user cache so the robot name updates in
+                // conversations/sidebars instead of waiting for a later sync.
+                const robotId = (result.provision && result.provision.robot && result.provision.robot.robotId)
+                    || (this.robot && this.robot.robotId);
+                if (robotId) wfc.getUserInfo(robotId, true);
                 this.robotNameEditing = false;
                 this.robotNameDraft = '';
                 this.$notify({ title: '机器人显示名已修改', text: displayName, type: 'success' });

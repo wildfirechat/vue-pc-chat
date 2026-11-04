@@ -1,5 +1,5 @@
 <template>
-    <section class="dsh-plugins">
+    <section class="dsh-plugins" :class="{ 'dsh-plugins-embedded': embedded }">
         <header class="dsh-plugins-head">
             <div>
                 <h1>插件</h1>
@@ -41,6 +41,9 @@ import { getDshPlugins, openDshPath } from '../../../dsh/renderer/dshClient';
 
 export default {
     name: 'DshPlugins',
+    props: {
+        embedded: { type: Boolean, default: false },
+    },
     data() {
         return { plugins: [], profileDir: '' };
     },
@@ -64,6 +67,7 @@ export default {
 
 <style scoped>
 .dsh-plugins { flex: 1; overflow-y: auto; padding: 22px 26px 40px; background: #fff; box-sizing: border-box; }
+.dsh-plugins.dsh-plugins-embedded { flex: none; overflow: visible; padding: 0; background: transparent; }
 .dsh-plugins-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .dsh-plugins-head h1 { margin: 0 0 3px; font-size: 18px; }
 .dsh-plugins-head p { margin: 0; font-size: 12px; color: #8a8f99; }

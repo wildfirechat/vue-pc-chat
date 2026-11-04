@@ -259,6 +259,38 @@ export default class DshAiAgentService {
         return response.data;
     }
 
+    /** Ask the effective model for a short session title (same model as chat). */
+    async generateTitle(userId, text) {
+        const record = this.records[userId];
+        if (!record || !record.config || !record.config.apiKey || !record.config.model || !record.serverUrl) {
+            throw new Error('AI 服务尚未开通');
+        }
+        const system = [
+            'Create a concise title for an AI coding-assistant session from the supplied human message.',
+            'Return only the title on one line, in plain text of natural language, with no quotes, prefix, explanation, Markdown, XML, or terminal control codes. No code is allowed.',
+            'Use the language of the message.',
+            'Aim for about 5 words in non-CJK languages or 10 CJK characters.',
+        ].join('\n');
+        const response = await axios.post(`${record.serverUrl.replace(/\/+$/, '')}/v1/chat/completions`, {
+            model: record.config.model,
+            messages: [
+                { role: 'system', content: system },
+                { role: 'user', content: `Generate the session title from this JSON array of human messages:\n${JSON.stringify([{ text }])}` },
+            ],
+            max_tokens: 64,
+            temperature: 0.2,
+            stream: false,
+        }, {
+            timeout: 60000,
+            httpsAgent: this.httpsAgent,
+            proxy: false,
+            headers: { Authorization: `Bearer ${record.config.apiKey}` },
+        });
+        const choice = response.data && response.data.choices && response.data.choices[0];
+        const content = choice && choice.message && choice.message.content;
+        return typeof content === 'string' ? content : '';
+    }
+
     get(userId) {
         return this.records[userId] || null;
     }
