@@ -2,7 +2,7 @@ import DshProvisionStore from './provisionStore';
 
 /**
  * 机器人 provision 缓存。真正的创建/复用逻辑在 AI Agent 服务：
- * 客户端用 AI session 调 {aiAgent.serverUrl}/robot/provision，成功后将
+ * 客户端用 AI session 调 {serverUrl}/provision，成功后将
  * robot + AI 配置缓存到主进程。
  */
 export default class DshProvisionService {

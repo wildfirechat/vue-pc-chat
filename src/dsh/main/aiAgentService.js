@@ -123,7 +123,7 @@ export default class DshAiAgentService {
             throw new Error(`AI 服务开通失败：${message}`);
         }
         const data = response.data || {};
-        if (!data.config || !data.config.baseUrl || !data.config.apiKey) {
+        if (!data.config || !data.config.apiKey) {
             throw new Error('AI 服务开通失败：返回缺少 AI 配置');
         }
         // A missing robot is a partial success: keep the AI config so model /
@@ -134,7 +134,7 @@ export default class DshAiAgentService {
         this.records[userId] = {
             serverUrl: base,
             configVersion: data.configVersion || '',
-            config: this._configFrom(data.config),
+            config: this._configFrom(data.config, base),
             updatedAt: Date.now(),
         };
         this._persist();
@@ -144,10 +144,11 @@ export default class DshAiAgentService {
         };
     }
 
-    _configFrom(cfg) {
+    _configFrom(cfg, serverUrl) {
         const c = cfg || {};
+        const base = String(serverUrl || '').replace(/\/+$/, '');
         return {
-            baseUrl: c.baseUrl,
+            baseUrl: base ? base + '/v1' : '',
             apiKey: c.apiKey,
             expiresAt: Number(c.expiresAt) || 0,
             model: c.model || '',
@@ -194,7 +195,7 @@ export default class DshAiAgentService {
                 return { ok: true, unchanged: true, configVersion: record.configVersion || '' };
             }
             const data = response.data || {};
-            if (!data.config || !data.config.baseUrl || !data.config.apiKey) {
+            if (!data.config || !data.config.apiKey) {
                 return { ok: false, error: 'AI 服务返回缺少 AI 配置' };
             }
             const nextVersion = data.configVersion || '';
@@ -202,7 +203,7 @@ export default class DshAiAgentService {
             this.records[userId] = {
                 ...record,
                 configVersion: nextVersion,
-                config: this._configFrom(data.config),
+                config: this._configFrom(data.config, record.serverUrl),
                 updatedAt: Date.now(),
             };
             this._persist();
