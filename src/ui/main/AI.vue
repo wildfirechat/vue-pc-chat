@@ -653,6 +653,7 @@ export default {
             if (id === 'routing') this.loadRouting();
             if (id === 'aiAgent') this.loadAiAgent();
             if (id === 'permissions') this.loadAudit();
+            if (id === 'models') this.refreshProvision(true);
         },
         async loadLog() {
             this.logLoading = true;

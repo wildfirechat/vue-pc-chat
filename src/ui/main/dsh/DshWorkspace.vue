@@ -67,7 +67,7 @@
                                 <span class="dsh-session-name">{{ s.name }}<span v-if="s.robots && s.robots.length > 1" class="dsh-multi-badge">{{ s.robots.length }}B</span></span>
                                 <span class="dsh-session-side">
                                     <span v-if="s.unread" class="dsh-session-unread">{{ s.unread > 99 ? '99+' : s.unread }}</span>
-                                    <span class="dsh-session-time">{{ s.time || '' }}</span>
+                                    <span v-else class="dsh-session-time">{{ sessionTimeText(s) }}</span>
                                 </span>
                                 <div class="dsh-row-actions">
                                     <button class="dsh-row-action" title="更多" @click.stop="sessionMore(s)">
@@ -196,6 +196,9 @@ export default {
             autoTitlePending: {},
             autoTitleSeq: {},
             stateRefreshTimer: null,
+            receiveRefreshTimer: null,
+            nowTick: Date.now(),
+            nowTimer: null,
             sidebarWidth: 300,
             sidebarCollapsed: false,
             resizingSidebar: false,
@@ -272,8 +275,10 @@ export default {
         this.workspaceAliases = this.loadWorkspaceAliases();
         this.autoTitled = this.loadAutoTitled();
         this.loadSidebarState();
+        this.nowTimer = setInterval(() => { this.nowTick = Date.now(); }, 30000);
         wfc.eventEmitter.on(EventType.SendMessage, this.onDshMessageSent);
         wfc.eventEmitter.on(EventType.ConversationInfoUpdate, this.onDshConversationInfoUpdate);
+        wfc.eventEmitter.on(EventType.ReceiveMessage, this.onDshReceiveMessage);
         wfc.eventEmitter.on(EventType.SettingUpdate, this.onDshSettingUpdate);
         window.addEventListener('dsh-provision-updated', this.load);
         try { wfc.eventEmitter.on('groupInfosUpdate', this.load); } catch (e) { /* ignore */ }
@@ -293,9 +298,12 @@ export default {
         document.removeEventListener('click', this.closeRowMenus);
         wfc.eventEmitter.off(EventType.SendMessage, this.onDshMessageSent);
         wfc.eventEmitter.off(EventType.ConversationInfoUpdate, this.onDshConversationInfoUpdate);
+        wfc.eventEmitter.off(EventType.ReceiveMessage, this.onDshReceiveMessage);
         wfc.eventEmitter.off(EventType.SettingUpdate, this.onDshSettingUpdate);
         if (this.statusTimer) clearInterval(this.statusTimer);
         if (this.stateRefreshTimer) clearTimeout(this.stateRefreshTimer);
+        if (this.receiveRefreshTimer) clearTimeout(this.receiveRefreshTimer);
+        if (this.nowTimer) clearInterval(this.nowTimer);
         if (this.resizingSidebar) {
             document.removeEventListener('mousemove', this.onSidebarResize);
             document.removeEventListener('mouseup', this.stopSidebarResize);
@@ -352,12 +360,7 @@ export default {
                 const wsEntry = byWs.get(key);
                 const sessionAt = Number(info.timestamp || 0);
                 if (sessionAt > (wsEntry.sortAt || 0)) wsEntry.sortAt = sessionAt;
-                const uc = info.unreadCount;
-                const unread = uc
-                    ? (Number(uc.unread) || 0)
-                        + (Number(uc.unreadMention) || 0)
-                        + (Number(uc.unreadMentionAll) || 0)
-                    : (Number(info._unread) || 0);
+                const unread = this.unreadFor(conv, info);
                 wsEntry.sessions.push({
                     groupId: conv.target,
                     name: (groupInfo && groupInfo.name) || conv.target,
@@ -584,7 +587,7 @@ export default {
                 const saved = Number(localStorage.getItem('dsh-sidebar-width'));
                 const maxWidth = this.sidebarMaxWidth();
                 if (Number.isFinite(saved) && saved > 0) {
-                    this.sidebarWidth = Math.max(240, Math.min(maxWidth, saved));
+                    this.sidebarWidth = Math.max(220, Math.min(maxWidth, saved));
                 }
                 this.sidebarCollapsed = localStorage.getItem('dsh-sidebar-collapsed') === '1';
             } catch (e) { /* ignore */ }
@@ -604,7 +607,7 @@ export default {
         onSidebarResize(e) {
             if (!this.resizingSidebar) return;
             const next = this.resizeStartWidth + e.clientX - this.resizeStartX;
-            this.sidebarWidth = Math.max(240, Math.min(this.sidebarMaxWidth(), next));
+            this.sidebarWidth = Math.max(220, Math.min(this.sidebarMaxWidth(), next));
         },
         stopSidebarResize() {
             if (!this.resizingSidebar) return;
@@ -630,6 +633,19 @@ export default {
             this.sidebarCollapsed = false;
             this.persistSidebarState();
         },
+        sessionTimeText(s) {
+            if (!s) return '';
+            if (this.isRunning(s)) return '刚刚';
+            const ts = Number(s.sortAt) || 0;
+            if (!ts) return s.time || '';
+            // Read nowTick so the 30s timer actually triggers a re-render.
+            const now = Number(this.nowTick) || Date.now();
+            const diff = Math.max(0, now - ts);
+            if (diff < 3 * 60 * 1000) return '刚刚';
+            if (diff < 60 * 60 * 1000) return Math.floor(diff / 60000) + '分';
+            if (diff < 24 * 60 * 60 * 1000) return Math.floor(diff / 3600000) + '小时';
+            return Math.floor(diff / 86400000) + '天';
+        },
         isRunning(s) {
             return !!(s && s.state && s.state.state === 'running');
         },
@@ -643,6 +659,39 @@ export default {
                 if (s) return s;
             }
             return null;
+        },
+        onDshReceiveMessage(message) {
+            const conv = message && message.conversation;
+            if (!conv || conv.type !== 1 || conv.line !== 2) return;
+            const s = this.findSession(conv.target);
+            if (s) {
+                // The store's ReceiveMessage handler has already updated
+                // conversationInfoList._unread; reflect it immediately.
+                this.$nextTick(() => {
+                    const current = this.findSession(conv.target);
+                    if (current) current.unread = this.unreadFor(conv, null);
+                });
+            }
+            // Debounced reload updates preview/time/order as well.
+            clearTimeout(this.receiveRefreshTimer);
+            this.receiveRefreshTimer = setTimeout(() => this.load(), 300);
+        },
+        unreadFor(conv, info) {
+            // The message list/store keeps the authoritative _unread count;
+            // wfc.getConversationList can return a separate raw object without
+            // it (or with stale unreadCount), which used to reset the badge.
+            try {
+                const list = store.state.conversation.conversationInfoList || [];
+                const ci = list.find(x => x && x.conversation && x.conversation.equal(conv));
+                if (ci && ci._unread != null) return Number(ci._unread) || 0;
+            } catch (e) { /* ignore */ }
+            const uc = info && info.unreadCount;
+            if (uc) {
+                return (Number(uc.unread) || 0)
+                    + (Number(uc.unreadMention) || 0)
+                    + (Number(uc.unreadMentionAll) || 0);
+            }
+            return Number(info && info._unread) || 0;
         },
         onDshConversationInfoUpdate(info) {
             if (!info || !info.conversation) return;
@@ -906,7 +955,7 @@ export default {
 .dsh-multi-badge { margin-left: 4px; padding: 0 4px; border-radius: 999px; background: #eef2f7; color: #64748b; font-size: 9px; font-weight: 500; }
 .dsh-session-side { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; }
 .dsh-session-time { font-size: 10px; line-height: 16px; color: #a0a5ad; }
-.dsh-session-row:hover .dsh-session-time, .dsh-session-row.menu-open .dsh-session-time, .dsh-session-row:focus-within .dsh-session-time { display: none; }
+.dsh-session-row:hover .dsh-session-side, .dsh-session-row.menu-open .dsh-session-side, .dsh-session-row:focus-within .dsh-session-side { display: none; }
 .dsh-session-unread { min-width: 14px; height: 14px; padding: 0 4px; border-radius: 999px; background: #e5484d; color: #fff; font-size: 9px; line-height: 14px; text-align: center; }
 .dsh-chat-column { flex: 1; min-width: 0; display: flex; flex-direction: column; background: #fff; }
 .dsh-detail-toggle { width: 26px; height: 24px; border: 1px solid #e1e4e8; border-radius: 5px; background: #fff; color: #6b7280; cursor: pointer; font-size: 14px; line-height: 1; }

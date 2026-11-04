@@ -12,10 +12,16 @@
             <div class="dsh-model-card-head">
                 <div>
                     <strong>{{ serverModel.model }}</strong>
-                    <span class="dsh-model-badge">服务端默认 · 不可修改</span>
+                    <span class="dsh-model-badge">服务端模型 · 不可修改</span>
                 </div>
                 <span class="dsh-model-state" :class="{missing: !serverConfigured}">
                     {{ serverStateText }}
+                </span>
+            </div>
+            <div v-if="serverModels.length > 1" class="dsh-model-server-list">
+                <span v-for="(m, i) in serverModels" :key="m" class="dsh-model-server-item" :class="{ default: i === 0 }">
+                    <span class="mono">{{ m }}</span>
+                    <span v-if="i === 0" class="dsh-model-badge default">默认</span>
                 </span>
             </div>
             <dl class="dsh-model-dl">
@@ -128,6 +134,17 @@ export default {
             const ai = this.ai || {};
             return ai.model && ai.baseUrl ? ai : null;
         },
+        serverModels() {
+            const ai = this.ai || {};
+            const out = [];
+            const add = (value) => {
+                const model = String(value || '').trim();
+                if (model && !out.includes(model)) out.push(model);
+            };
+            add(ai.model);
+            (Array.isArray(ai.allowedModels) ? ai.allowedModels : []).forEach(add);
+            return out;
+        },
         serverConfigured() {
             return !!(this.ai && this.ai.configured === true);
         },
@@ -214,6 +231,9 @@ export default {
 .dsh-model-head p { margin: 0; font-size: 12px; color: #8a8f99; }
 .dsh-model-card { border: 1px solid #e5e6eb; border-radius: 10px; padding: 14px; background: #fafbfc; }
 .dsh-model-card.server { border-color: #b8c9f5; background: #f5f8ff; }
+.dsh-model-server-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.dsh-model-server-item { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; background: #fff; border: 1px solid #d7e2f7; font-size: 11px; color: #1f2329; }
+.dsh-model-server-item.default { border-color: #b8d9c3; background: #f3fbf5; }
 .dsh-model-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .dsh-model-card-head > div:first-child { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .dsh-model-card-head strong { font-size: 14px; }
