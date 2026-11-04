@@ -3,7 +3,7 @@ import path from 'path';
 import { safeStorage } from 'electron';
 
 /**
- * 加密缓存 /robot/provision 返回的机器人凭据与 AI 配置。
+ * 加密缓存 AI Agent 服务 /provision 返回的机器人凭据与 AI 配置。
  * 缓存按 userId 分区，Renderer 永远拿不到 secret。
  */
 export default class DshProvisionStore {
@@ -42,15 +42,16 @@ export default class DshProvisionStore {
 
     _persist() {
         try {
+            if (!safeStorage.isEncryptionAvailable()) {
+                // robotSecret is a long-lived credential; never write it as
+                // plaintext. Re-provisioning after restart is the safe fallback.
+                console.warn('[dsh] safeStorage unavailable; refusing to persist robot credentials');
+                try { if (fs.existsSync(this.file)) fs.unlinkSync(this.file); } catch (e) { /* ignore */ }
+                return;
+            }
             fs.mkdirSync(path.dirname(this.file), { recursive: true });
             const text = JSON.stringify(this.records);
-            let data;
-            if (safeStorage.isEncryptionAvailable()) {
-                data = safeStorage.encryptString(text);
-            } else {
-                console.warn('[dsh] safeStorage unavailable; provisioning cache will be stored with file permissions only');
-                data = Buffer.from(text, 'utf8');
-            }
+            const data = safeStorage.encryptString(text);
             fs.writeFileSync(this.file, data, { mode: 0o600 });
             try { fs.chmodSync(this.file, 0o600); } catch (e) { /* ignore */ }
         } catch (e) {
@@ -92,16 +93,19 @@ export default class DshProvisionStore {
         const ai = provision.ai || {};
         return {
             cached: !!cached,
+            updatedAt: provision.updatedAt || 0,
             configVersion: provision.configVersion,
             features: provision.features,
             robot: {
                 robotId: robot.robotId,
                 gatewayUrl: robot.gatewayUrl,
-                imServerUrl: robot.imServerUrl,
                 owner: robot.owner,
                 displayName: robot.displayName,
                 portrait: robot.portrait,
             },
+            aiAgent: provision.aiAgent && provision.aiAgent.serverUrl
+                ? { serverUrl: provision.aiAgent.serverUrl }
+                : undefined,
             ai: {
                 provider: ai.provider,
                 baseUrl: ai.baseUrl,
@@ -109,7 +113,10 @@ export default class DshProvisionStore {
                 reasoningEffort: ai.reasoningEffort,
                 maxTokens: ai.maxTokens,
                 contextWindow: ai.contextWindow,
-                configured: !!ai.apiKey,
+                allowedModels: ai.allowedModels || [],
+                expiresAt: ai.expiresAt,
+                enabled: ai.enabled !== false,
+                configured: ai.configured === true,
             },
         };
     }

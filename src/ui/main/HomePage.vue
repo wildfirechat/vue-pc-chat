@@ -188,12 +188,29 @@ export default {
     methods: {
         async maybeProvisionDsh() {
             if (this.dshProvisionStarted || !this.sharedMiscState.isElectron || !this.sharedContactState.selfUserInfo) return;
+            const status = wfc.getConnectionStatus();
+            if (status !== ConnectionStatus.ConnectionStatusConnected
+                && status !== ConnectionStatus.ConnectionStatusReceiveing) return;
             this.dshProvisionStarted = true;
             try {
                 await provisionDsh(false);
             } catch (e) {
                 this.dshProvisionStarted = false;
                 console.warn('[dsh] auto provision failed', e && e.message ? e.message : e);
+            }
+        },
+        /**
+         * AI 代理 token 续期：provision 内部只在 token 即将过期时才请求服务端；
+         * 凭据变化会重启 Host（background.js 比较 baseUrl/apiKey/secret）。
+         */
+        async refreshDshToken() {
+            if (!this.sharedMiscState.isElectron || !this.sharedContactState.selfUserInfo) return;
+            try {
+                // Force a fresh /provision so a rotated clientKey and its
+                // keyIssuedAt/expiresAt are picked up by the Host.
+                await provisionDsh(true);
+            } catch (e) {
+                console.warn('[dsh] token refresh failed', e && e.message ? e.message : e);
             }
         },
 
@@ -330,6 +347,15 @@ export default {
         },
 
         onConnectionStatusChange(status) {
+            if (status === ConnectionStatus.ConnectionStatusConnected) {
+                this.dshProvisionStarted = false;
+                this.maybeProvisionDsh();
+                return;
+            }
+            if (status === ConnectionStatus.ConnectionStatusUnconnected
+                || status === ConnectionStatus.ConnectionStatusConnecting) {
+                this.dshProvisionStarted = false;
+            }
             if (status === ConnectionStatus.ConnectionStatusRejected
                 || status === ConnectionStatus.ConnectionStatusLogout
                 || status === ConnectionStatus.ConnectionStatusSecretKeyMismatch
@@ -374,10 +400,6 @@ export default {
                 this.voipTransformOrigin = '5% 95%';
             }
         },
-    },
-
-    mounted() {
-        this.maybeProvisionDsh();
     },
 
     computed: {
@@ -444,6 +466,8 @@ export default {
     },
 
     mounted() {
+        this.maybeProvisionDsh();
+        this.dshTokenTimer = setInterval(() => this.refreshDshToken(), 30 * 60 * 1000);
         if (!isElectron()) {
             this.$eventBus.$on('conference-slider-opened', () => { this.conferenceSliderOpen = true; });
             this.$eventBus.$on('conference-slider-closed', () => { this.conferenceSliderOpen = false; });
@@ -484,6 +508,7 @@ export default {
         }
     },
     unmounted() {
+        if (this.dshTokenTimer) { clearInterval(this.dshTokenTimer); this.dshTokenTimer = null; }
         if (!isElectron()) {
             this.$eventBus.$off('conference-slider-opened');
             this.$eventBus.$off('conference-slider-closed');

@@ -1,69 +1,44 @@
-import axios from 'axios';
 import DshProvisionStore from './provisionStore';
 
 /**
- * 调应用服务 /robot/provision，并把完整凭据缓存到主进程。
+ * 机器人 provision 缓存。真正的创建/复用逻辑在 AI Agent 服务：
+ * 客户端用 AI session 调 {aiAgent.serverUrl}/robot/provision，成功后将
+ * robot + AI 配置缓存到主进程。
  */
 export default class DshProvisionService {
-    constructor({ userDataPath, httpsAgent }) {
+    constructor({ userDataPath }) {
         this.store = new DshProvisionStore(userDataPath);
-        this.httpsAgent = httpsAgent;
     }
 
     getCached(userId) {
         const record = this.store.get(userId);
         if (!record) return null;
+        const publicView = DshProvisionStore.publicView(record.provision, true);
+        if (publicView) publicView.updatedAt = record.updatedAt || publicView.updatedAt || 0;
         return {
-            publicView: DshProvisionStore.publicView(record.provision, true),
+            publicView,
             full: record.provision,
         };
     }
 
-    async provision({ userId, appServerUrl, authToken, clientId, platform, forceRefresh }) {
+    async provision({ userId, aiAgentService, serverUrl, authCode, clientId, platform, forceRefresh }) {
         if (!userId) throw new Error('missing userId');
-        if (!appServerUrl) throw new Error('missing appServerUrl');
-
-        // 有缓存时优先复用（离线/应用服务不可用时也能启动 Host）。
-        if (!forceRefresh) {
-            const cached = this.getCached(userId);
-            if (cached) return cached;
-        }
-        if (!authToken) throw new Error('missing authToken');
-
-        const base = String(appServerUrl).replace(/\/+$/, '');
-        const url = `${base}/robot/provision`;
-        const body = {
-            clientId: clientId || '',
-            platform: platform || 4,
-            forceRefresh: !!forceRefresh,
-        };
-        let response;
+        const cached = this.getCached(userId);
+        if (cached && !forceRefresh) return cached;
+        if (!aiAgentService) throw new Error('AI Agent 服务未初始化');
+        let provision;
         try {
-            response = await axios.post(url, body, {
-                timeout: 20000,
-                headers: {
-                    'Content-Type': 'application/json',
-                    authToken,
-                },
-                httpsAgent: this.httpsAgent,
-                proxy: false,
+            provision = await aiAgentService.provision({
+                userId,
+                serverUrl,
+                authCode,
+                forceRefresh: !!forceRefresh,
             });
         } catch (e) {
-            const message = e && e.response && e.response.data && e.response.data.message
-                ? e.response.data.message
-                : (e && e.message ? e.message : 'provision request failed');
-            throw new Error(`机器人开通失败：${message}`);
+            if (cached) return cached;
+            throw e;
         }
-
-        const data = response && response.data;
-        if (!data || data.code !== 0 || !data.result) {
-            throw new Error(`机器人开通失败：${(data && data.message) || 'invalid response'}`);
-        }
-        const provision = data.result;
-        if (!provision.robot || !provision.robot.robotId || !provision.robot.robotSecret) {
-            throw new Error('机器人开通失败：返回缺少 robotId/robotSecret');
-        }
-        this.store.put(userId, provision, base);
+        this.store.put(userId, provision, (provision.aiAgent && provision.aiAgent.serverUrl) || '');
         return {
             publicView: DshProvisionStore.publicView(provision, false),
             full: provision,

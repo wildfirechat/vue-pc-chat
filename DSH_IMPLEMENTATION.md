@@ -5,31 +5,36 @@
 
 ## 1. 已完成
 
+### 权限体系（本轮）
+
+- 插件新增 `access.privateOwnerOnly`、`interaction.approvalOwnerOnly`、`security.allowGuestTurns`；默认值保持旧行为，桌面端宿主显式注入严格值。
+- 私聊仅 owner/管理员；未注册群继续静默忽略；`/stop` 仅任务发起人/群创建者/owner 可执行；`/allow` 增加群创建者权限。
+- 群内审批：guest 发起的敏感工具调用默认由机器人 owner 审批，审批卡片带 `requestedBy`/`approver`，客户端隐藏非审批人的按钮。
+- 宿主强制 `DSH_PERMISSION_MODE=workspace-write`，不继承宿主机权限模式；`dsh-runtime.json` 去除 secret/apiKey。
+- DSH 会话详情侧栏新增 Permissions 徽标；设置页新增「权限」Tab；审批卡片展示发起人/审批人。
+- 新增权限审计：插件写 `$DSH_HOME/wildfire-audit.jsonl`（0600、2MB 轮转），记录准入拒绝、管理命令、权限变更、审批请求/结果/超时、越权作答；Host `getAudit` + IPC `dsh-get-audit`，设置页展示最近 80 条。
+- 详见 `DSH_PERMISSIONS.md`。
+
 ### 应用服务（`../im-app_server`）
 
-- `POST /robot/provision`
-  - Shiro 登录态校验（`authToken` header）。
-  - 按用户开通/复用机器人：先 `UserAdmin.getUserRobots(userId)` 取该用户第一个机器人；列表为空才 `createRobot`。不做全局机器人复用。
-  - 创建参考 BotFather：`robot_<userId>_<6位随机数>`，`name=robotId`，`displayName=<用户昵称> 的机器人`；不设置 callback。
-  - IM 查询失败时，有本地缓存则降级；否则报错，避免重复创建。
-  - 返回 `robotId/robotSecret/gatewayUrl/imServerUrl/ai/features`。
-  - `gatewayUrl` 支持 `ws://` / `wss://`，由配置 `robot.gateway_url` 决定。
-  - 应用服务不记录用户↔机器人绑定；每次 provision 调 `getUserRobots` 取第一个，空列表才创建。
-  - `forceRefresh=true` 时重新拉取并增加 configVersion。
-- 新增文件：
-  - `jpa/UserRobot.java`、`jpa/UserRobotRepository.java`
-  - `pojo/RobotProvisionRequest.java`、`pojo/RobotProvisionResponse.java`
-  - `robot/RobotProvisionController.java`、`robot/RobotProvisionService.java`、
-    `robot/RobotProvisionException.java`
-- 配置：
-  - `config/application.properties`、`config/im.properties`、`src/main/resources/application.properties`
-  - 关键项：`robot.gateway_url`、`robot.callback_url`（留空则推导为 `http://<gateway-host>:8885/robot/recvmsg`）、`im.robot_api_url`、`ai.*`。
+- 已移除模型 Provider 配置、全局 AI key、`/ai/**` 代理、`AiTokenService`/`AiProxyController`。
+- 已移除 `/robot/provision`、机器人开通服务、机器人 DTO、机器人网关/IM 机器人配置。
+- 应用服务只保留 IM 登录、好友/群组/消息等业务能力，不再感知 DSH 机器人或 AI Agent。
+
+### 独立 AI Agent 服务（`../ai-agent-server`）
+
+- 新增 Java 8+ / Spring Boot 2.7 服务（推荐 JDK 17）：IM authCode + 机器人开通、用户/全局配置（用户优先、全局回退）、OpenAI 兼容中转、SSE 透传、token 计量/费用/预算/日限额、审计、JPA 数据库、双端口管理后台、Shiro 权限。
+- 客户端设置页新增「AI 服务」Tab：填写服务地址，连接时通过 IM SDK `wfc.getAuthCode('admin', 2, host)` 自动获取 authCode；主进程只加密保存客户端 Key 和 AI 配置，自动重启 Host 注入服务地址/Key/模型。
+- 机器人开通也移到 AI 服务：`POST /provision`（IM authCode 鉴权）创建/复用 IM 机器人、设置好友和网关回调，并在同一响应返回 AI 配置；客户端用返回的 robot + config 启动 Host。
+- 客户端 AI 服务地址默认在 `src/config.js` 的 `Config.AI_AGENT_SERVER`（当前 `http://192.168.1.87:8090`），也可在「AI 服务」页覆盖并保存到 safeStorage；authCode 不落盘，由 IM SDK 获取。
+- IM 连接状态变为 `ConnectionStatusConnected` 后，`HomePage` 自动调用 `provisionDsh()` 完成 `/provision`，无需手工点击；登录用户信息到达时也会补触发一次。
+- `DSH_AI_AGENT_STATUS/LOGIN/SET_SERVER/CLEAR` IPC；`dsh-ai-agent.enc` 使用 safeStorage 加密；Renderer 只拿脱敏视图。
 
 ### Electron PC 客户端
 
 - Main 进程新增：
   - `src/dsh/main/provisionStore.js`：`safeStorage` 加密缓存，按 userId 分区。
-  - `src/dsh/main/provisionService.js`：调 `/robot/provision`，缓存完整凭据；返回脱敏视图。
+  - `src/dsh/main/provisionService.js`：缓存 AI 服务返回的 robot 凭据；实际 `/provision` 由 AI 服务执行。
   - `src/dsh/main/hostManager.js`：启动/停止/重启 DSH Host 子进程；生成 `dsh-runtime-patch.yml`（gateway/robot/workspace/AI provider）；日志；自动重启。
   - `src/background.js`：初始化服务、IPC、退出/登出停止 Host。
   - `src/ipcEventType.js`：DSH IPC 事件。
@@ -60,6 +65,8 @@
 - 新增 IPC：`DSH_GET_WORKSPACES`、`DSH_OPEN_PATH`、`DSH_PICK_DIRECTORY`，以及 Host 的 gateway/routing/log 读取。
 - 规划侧栏读取 scope31 panel/state/metrics，并从 208 task card / goal 消息提取任务；完整 plan 快照仍需插件补数据源。
 - 侧栏新增机器人切换（多机器人群，远程 plan 有数据时只读展示）和 Files 文件列表（cwd 下前 30 项，可打开）。
+- 侧栏新增 Permissions：文件沙箱/审批策略徽标，进入会话时发 207 query 拉取 type=3 面板数据。
+- 设置页新增「权限」Tab：默认策略、角色边界、会话级命令说明；非本机 ws:// 网关显示未加密警告。
 - DSH 左侧新增「插件」入口：展示 runtime/profile 插件清单，支持打开插件目录；安装/卸载/启停尚未接。
 - 只展开当前工作区；新增整行「新会话」；空状态输入框回车在新会话时作为群名；设置固定左下角。
 - 会话行支持重命名，工作区支持打开目录。
@@ -116,6 +123,24 @@
 
 ## 2. 构建验证
 
+本轮（权限体系）验证：
+
+```bash
+cd ../robot-gateway/dsh-plugin.js && npm run build          # tsc 通过
+cd vue-pc-chat && npx vue-cli-service build                  # renderer 通过
+CSC_IDENTITY_AUTO_DISCOVERY=false npx vue-cli-service electron:build --dir  # 主进程/打包通过
+npm run prepare-dsh-runtime                                  # 621MB，内置新插件
+```
+
+- `build/dsh-runtime` 冒烟：用假 gateway（`ws://127.0.0.1:1`）+ 权限 overlay 启动，日志出现 `plugin loaded` / `approval answerer registered`，随后按预期重连失败，无配置解析错误。
+- 打包产物 `dist_electron/mac-arm64/野火IM.app/Contents/Resources/dsh-runtime` 含 `VERSION` 与新插件 `dist`。
+- 权限单测（Node 直接导入 `dist/access.js`）：owner 私聊通过、陌生人拒绝、legacy 默认保持放行。
+- 审批/审计单测（Node 直接导入 `dist/interactive.js` / `dist/audit.js`）：guest 不能审批自己发起的写操作、owner 可以；`approval.requested` / `interaction.denied` / `approval.decided` 均落审计；JSONL 权限 0600。
+- 后端 `mvn test` / `mvn -DskipTests package` 通过，`target/app-0.75.jar` 生成；应用服务已无机器人/AI 代码。
+- AI Agent 服务 `mvn test` 9 个用例通过（JPA 配置优先级/加密、IM authCode 自动建用户、客户端 Key 轮换、Shiro 登录/CSRF/权限、合并 `/provision`、代理计量、IM Admin mock 机器人开通）。
+
+历史验证：
+
 ```bash
 # PC renderer
 cd vue-pc-chat
@@ -137,7 +162,7 @@ npm run build
 
 应用服务没有 Maven wrapper jar / 系统 mvn，使用 `javac` 对新文件做了编译验证；完整 Spring Boot 启动需要部署环境的 Maven/依赖。
 
-另外对 macOS 打包产物做了启动冒烟：应用窗口/主进程正常启动，未因 DSH 初始化崩溃；由于本机默认应用服务没有 `/robot/provision`，日志中出现一次预期的 `机器人开通失败：No message available`。
+另外对 macOS 打包产物做了启动冒烟：应用窗口/主进程正常启动，未因 DSH 初始化崩溃；未配置 AI 服务时 provision 会提示先连接 AI 服务。
 
 **自包含 runtime 冒烟已通过**：用 `DSH_DEV_PROVISION` 指向假 provision 启动打包后的 app，日志显示：
 
@@ -176,16 +201,15 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npx vue-cli-service electron:build --dir
 
 ## 3. 联调前置
 
-1. 应用服务配置：
+1. AI Agent 服务配置：
    ```properties
-   robot.gateway_url=ws://your-gateway:8884/robot/gateway
-   robot.callback_url=http://your-gateway:8885/robot/recvmsg
-   im.robot_api_url=http://your-im:80
-   ai.base_url=...
-   ai.api_key=...
-   ai.model=...
+   IM_ADMIN_URL=http://your-im:80
+   IM_ADMIN_SECRET=...
+   ROBOT_GATEWAY_URL=ws://your-gateway:8884/robot/gateway
+   ROBOT_CALLBACK_URL=http://your-gateway:8885/robot/recvmsg
+   PUBLIC_BASE_URL=https://ai.example.com
    ```
-2. IM Admin API 可用（`im.admin_url`/`im.admin_secret`）。
+2. IM Admin API 可用（`IM_ADMIN_URL`/`IM_ADMIN_SECRET`），AI 服务能访问。
 3. 本机安装 DSH 22.19+，并准备 `wildfire` profile（含 `@wildfirechat/dsh-wildfire` 插件）。
 4. 将本仓库 `dsh-plugin.js` 重新 build/pack/安装到 profile，确保使用新代码。
 5. 启动 PC 客户端并登录，观察 `userData/logs/dsh-host.log` 与 DSH 日志。
@@ -199,11 +223,11 @@ CSC_IDENTITY_AUTO_DISCOVERY=false npx vue-cli-service electron:build --dir
 5. **工作区聚合**：AI 页按 workspace 分组；主 IM 会话列表增加了 workspace 筛选 chips + 每个会话的 workspace/多机器人徽标，未插入虚拟列表分组标题。
 6. **DSH profile 依赖**：Host 默认使用 `DSH_PROFILE=wildfire` 和 `~/.dsh`；生产需要固定 profile 并随包分发。
 7. **端到端未跑**：没有真实 gateway/机器人凭据，未验证 provision → Host → gateway → 群消息全链路。
-8. **应用服务完整编译**：需要在有 Maven 的环境跑 `./mvnw package`，当前只做了 javac 编译验证。
+8. **机器人开通端到端未跑**：AI 服务的 IM Admin 机器人接口已用 mock 单测验证，但还没有真实 IM/gateway 凭据做 provision → Host → 群消息全链路。
 
 ## 5. 建议的明早验证顺序
 
-1. 启动/部署 `im-app_server`，登录 PC 客户端，确认 `/robot/provision` 返回 robot + gatewayUrl。
+1. 启动/部署 `im-app_server`、`ai-agent-server`，在客户端「AI 服务」填写地址并连接（authCode 自动获取），确认 AI 服务 `/provision` 返回 robot + config，Host 正常启动。
 2. 看 `userData/dsh-host.log` 是否出现 `starting: dsh ...`，机器人是否在 IM 在线。
 3. 在 line2 群发消息，确认机器人回复；`/create` 建群后确认群 `extra.wfds.robots` 写入。
 4. 再邀请第二个机器人进群，确认 guest 210 上报、owner `extra` 合并、无 @ 时 owner 回复/指派、@ 时目标回复。

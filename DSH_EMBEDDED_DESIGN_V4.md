@@ -133,7 +133,6 @@ Body: { clientId, platform, forceRefresh, configVersion }
     "robotId": "robot_ab12cd34ef56",
     "robotSecret": "******",
     "gatewayUrl": "wss://gateway.example.com/robot/gateway",
-    "imServerUrl": "https://im.example.com",
     "owner": "userId",
     "displayName": "DSH 助手"
   },
@@ -162,7 +161,6 @@ Body: { clientId, platform, forceRefresh, configVersion }
 - 必须是完整 URL（含 `/robot/gateway` 路径）；
 - 客户端校验 scheme/host；`ws://` 非 localhost 时 UI 提示“非加密连接”；
 - gateway URL 变化时，Host 重启并重连；
-- `imServerUrl` 仍保留，用于 server-sdk 应急 fallback / 管理操作。
 
 ### 2.3 缓存
 

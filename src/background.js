@@ -35,6 +35,8 @@ import {init as initProtoMain} from "./wfc/proto/proto_main";
 import createProtocol from "./createProtocol";
 import { autoUpdater } from 'electron-updater';
 import DshProvisionService from './dsh/main/provisionService';
+import DshProvisionStore from './dsh/main/provisionStore';
+import DshAiAgentService from './dsh/main/aiAgentService';
 import DshHostManager from './dsh/main/hostManager';
 import DshModelStore from './dsh/main/modelStore';
 
@@ -72,6 +74,9 @@ const selfSignedHttpsAgent = createHttpsAgent(selfSignedCerts.certificates);
 // ===================== 内置 DSH 运行时 =====================
 // 消息链路走 gateway + dsh-plugin；主进程只负责开通、加密缓存与 Host 生命周期。
 const dshProvisionService = new DshProvisionService({
+    userDataPath: app.getPath('userData'),
+});
+const dshAiAgentService = new DshAiAgentService({
     userDataPath: app.getPath('userData'),
     httpsAgent: selfSignedHttpsAgent,
 });
@@ -1469,6 +1474,46 @@ function readDevProvision() {
     }
 }
 
+/**
+ * 独立 AI Agent 服务：IM authCode → 机器人 + AI 配置（服务地址/客户端 Key/模型）。
+ * 返回值只用于主进程注入 Host，Renderer 拿不到客户端 Key。
+ */
+async function resolveAiAgentConfig(userId) {
+    return dshAiAgentService.resolve(userId);
+}
+
+function rememberAiAgentServer(userId, provision) {
+    const url = provision && provision.aiAgent && provision.aiAgent.serverUrl;
+    if (!url) return;
+    try {
+        dshAiAgentService.rememberServer(userId, url);
+    } catch (e) {
+        console.log('[ai-agent] remember public url failed', e && e.message ? e.message : e);
+    }
+}
+
+function applyAiAgentConfig(provision, cfg) {
+    if (!provision || !cfg || !cfg.baseUrl || !cfg.apiKey) return provision;
+    return {
+        ...provision,
+        ai: {
+            provider: 'openai-compatible',
+            baseUrl: cfg.baseUrl,
+            apiKey: cfg.apiKey,
+            model: cfg.model || '',
+            reasoningEffort: cfg.reasoningEffort || '',
+            maxTokens: cfg.maxTokens,
+            contextWindow: cfg.contextWindow,
+            allowedModels: Array.isArray(cfg.allowedModels) ? cfg.allowedModels : [],
+            expiresAt: cfg.expiresAt || 0,
+            enabled: cfg.enabled !== false,
+            configured: cfg.configured === true,
+            source: cfg.source || {},
+        },
+        aiAgent: { serverUrl: cfg.serverUrl || '', userId: cfg.userId || '' },
+    };
+}
+
 function devPublicView(provision) {
     if (!provision) return provision;
     return {
@@ -1481,22 +1526,43 @@ function devPublicView(provision) {
 // ===================== 内置 DSH IPC =====================
 ipcMain.handle(IPCEventType.DSH_PROVISION, async (event, args = {}) => {
     try {
-        const { userId, appServerUrl, authToken, clientId, platform, forceRefresh } = args;
+        const { userId, serverUrl, authCode, clientId, platform, forceRefresh } = args;
         const dev = readDevProvision();
-        const result = dev
+        let result = dev
             ? { full: dev, publicView: devPublicView(dev) }
             : await dshProvisionService.provision({
                 userId,
-                appServerUrl,
-                authToken,
+                aiAgentService: dshAiAgentService,
+                serverUrl,
+                authCode,
                 clientId,
                 platform,
                 forceRefresh,
             });
+        // AI 服务返回机器人 + 配置；authCode 由 IM SDK 自动获取。
+        rememberAiAgentServer(userId, result.full);
+        const agentConfig = await resolveAiAgentConfig(userId);
+        if (agentConfig) {
+            result.full = applyAiAgentConfig(result.full, agentConfig);
+            result.publicView = DshProvisionStore.publicView(result.full, result.publicView.cached);
+            result.publicView.aiAgent = dshAiAgentService.publicView(userId);
+        }
         let hostStatus = dshHostManager.getStatus();
         const sameRobot = hostStatus && hostStatus.robotId === result.full.robot.robotId;
         const alive = hostStatus && (hostStatus.state === 'running' || hostStatus.state === 'starting');
-        if (!(sameRobot && alive && !forceRefresh)) {
+        // token/secret 变化（例如 AI 代理 token 续期）必须重启 Host 才能注入新 env。
+        const previous = dshHostManager.provision || {};
+        const prevAi = previous.ai || {};
+        const nextAi = result.full.ai || {};
+        const sameCredentials =
+            previous.robot && nextAi && prevAi.baseUrl === nextAi.baseUrl &&
+            prevAi.apiKey === nextAi.apiKey &&
+            (prevAi.model || '') === (nextAi.model || '') &&
+            (prevAi.reasoningEffort || '') === (nextAi.reasoningEffort || '') &&
+            Number(prevAi.maxTokens || 0) === Number(nextAi.maxTokens || 0) &&
+            Number(prevAi.contextWindow || 0) === Number(nextAi.contextWindow || 0) &&
+            (previous.robot.robotSecret || '') === (result.full.robot.robotSecret || '');
+        if (!(sameRobot && alive && sameCredentials)) {
             try {
                 hostStatus = await dshHostManager.start(result.full, false, dshModelStore.get(userId));
             } catch (e) {
@@ -1518,10 +1584,17 @@ ipcMain.handle(IPCEventType.DSH_PROVISION, async (event, args = {}) => {
 ipcMain.handle(IPCEventType.DSH_GET_CACHED, async (event, userId) => {
     try {
         const dev = readDevProvision();
-        const cached = dev
+        let cached = dev
             ? { full: dev, publicView: devPublicView(dev) }
             : dshProvisionService.getCached(userId);
         if (!cached) return { ok: false, error: 'no cached provision' };
+        rememberAiAgentServer(userId, cached.full);
+        const agentConfig = await resolveAiAgentConfig(userId);
+        if (agentConfig) {
+            cached.full = applyAiAgentConfig(cached.full, agentConfig);
+            cached.publicView = DshProvisionStore.publicView(cached.full, cached.publicView.cached);
+            cached.publicView.aiAgent = dshAiAgentService.publicView(userId);
+        }
         let hostStatus = dshHostManager.getStatus();
         const sameRobot = hostStatus && hostStatus.robotId === cached.full.robot.robotId;
         const alive = hostStatus && (hostStatus.state === 'running' || hostStatus.state === 'starting');
@@ -1560,8 +1633,8 @@ function validateUserModel(input, requireKey) {
     if (!model) throw new Error('请填写模型 ID');
     if (requireKey && !apiKey) throw new Error('请填写 API Key');
     const providerId = normalizeProviderId(input.providerId, name);
-    const maxTokens = Number(input.maxTokens) || 8192;
-    const contextWindow = Number(input.contextWindow) || 131072;
+    const maxTokens = Number(input.maxTokens) || 393216;
+    const contextWindow = Number(input.contextWindow) || 1048576;
     if (maxTokens <= 0) throw new Error('Max Tokens 必须大于 0');
     if (contextWindow <= 0) throw new Error('Context Window 必须大于 0');
     if (maxTokens >= contextWindow) {
@@ -1592,61 +1665,143 @@ async function restartHostWithModels(userId) {
     return { models: DshModelStore.publicView(models), hostStatus };
 }
 
-ipcMain.handle(IPCEventType.DSH_GET_MODELS, (event, userId) => {
-    return DshModelStore.publicView(dshModelStore.get(userId));
+ipcMain.handle(IPCEventType.DSH_AI_AGENT_STATUS, (event, userId) => {
+    return { ok: true, view: dshAiAgentService.publicView(userId) };
 });
 
-ipcMain.handle(IPCEventType.DSH_ADD_MODEL, async (event, args = {}) => {
+ipcMain.handle(IPCEventType.DSH_AI_AGENT_LOGIN, async (event, args = {}) => {
     try {
-        const { userId } = args;
+        const { userId, serverUrl, authCode } = args;
         if (!userId) throw new Error('未登录');
-        const input = validateUserModel(args.model, true);
-        const models = dshModelStore.get(userId);
-        if (models.some(m => (m.providerId || '') === input.providerId)) {
-            throw new Error(`Provider ID "${input.providerId}" 已存在`);
+        const result = await dshProvisionService.provision({
+            userId,
+            aiAgentService: dshAiAgentService,
+            serverUrl,
+            authCode,
+            forceRefresh: true,
+        });
+        const full = result && result.full;
+        if (!full) throw new Error('AI 服务未返回机器人配置');
+        const next = applyAiAgentConfig(full, dshAiAgentService.resolve(userId));
+        let hostStatus = dshHostManager.getStatus();
+        try {
+            hostStatus = await dshHostManager.start(next, false, dshModelStore.get(userId));
+        } catch (e) {
+            console.log('[ai-agent] restart host failed', e.message);
         }
-        const item = { ...input, id: randomUUID(), createdAt: Date.now() };
-        models.push(item);
-        dshModelStore.save(userId, models);
-        const result = await restartHostWithModels(userId);
-        return { ok: true, ...result };
+        return {
+            ok: true,
+            provision: DshProvisionStore.publicView(next, false),
+            hostStatus,
+            view: dshAiAgentService.publicView(userId),
+        };
     } catch (e) {
         return { ok: false, error: e && e.message ? e.message : String(e) };
     }
 });
 
-ipcMain.handle(IPCEventType.DSH_UPDATE_MODEL, async (event, args = {}) => {
+ipcMain.handle(IPCEventType.DSH_AI_AGENT_STATS, async (event, userId) => {
     try {
-        const { userId, id } = args;
-        if (!userId || !id) throw new Error('参数不完整');
-        const models = dshModelStore.get(userId);
-        const index = models.findIndex(m => m.id === id);
-        if (index < 0) throw new Error('模型不存在');
-        const input = validateUserModel(args.model, false);
-        if (models.some((m, i) => i !== index && (m.providerId || '') === input.providerId)) {
-            throw new Error(`Provider ID "${input.providerId}" 已存在`);
-        }
-        if (!input.apiKey) input.apiKey = models[index].apiKey || '';
-        if (!input.apiKey) throw new Error('请填写 API Key');
-        models[index] = { ...models[index], ...input };
-        dshModelStore.save(userId, models);
-        const result = await restartHostWithModels(userId);
-        return { ok: true, ...result };
+        return { ok: true, stats: await dshAiAgentService.stats(userId) };
     } catch (e) {
         return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_AI_AGENT_SET_SERVER, (event, args = {}) => {
+    try {
+        const { userId, serverUrl } = args;
+        if (!userId) throw new Error('未登录');
+        const result = dshAiAgentService.rememberServer(userId, serverUrl, true);
+        return { ...result, view: dshAiAgentService.publicView(userId) };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_AI_AGENT_CLEAR, async (event, userId) => {
+    try {
+        dshAiAgentService.clear(userId);
+        const cached = dshProvisionService.getCached(userId);
+        if (cached && cached.full) {
+            const withoutAi = { ...cached.full };
+            delete withoutAi.ai;
+            try { await dshHostManager.start(withoutAi, false, dshModelStore.get(userId)); } catch (e) { /* ignore */ }
+        }
+        return { ok: true, view: null, hostStatus: dshHostManager.getStatus() };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_GET_MODELS, (event, userId) => {
+    return DshModelStore.publicView(dshModelStore.get(userId));
+});
+
+function modelError(e) {
+    return { ok: false, error: e && e.message ? e.message : String(e) };
+}
+
+ipcMain.handle(IPCEventType.DSH_ADD_MODEL, async (event, args = {}) => {
+    try {
+        const { userId, model } = args;
+        if (!userId) throw new Error('未登录');
+        const value = validateUserModel(model, true);
+        const existing = dshModelStore.get(userId);
+        if (existing.some(m => m.providerId === value.providerId)) {
+            throw new Error(`Provider ID "${value.providerId}" 已存在`);
+        }
+        const record = {
+            ...value,
+            id: `m_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            createdAt: Date.now(),
+        };
+        dshModelStore.save(userId, [...existing, record]);
+        const state = await restartHostWithModels(userId);
+        return { ok: true, models: state.models, hostStatus: state.hostStatus };
+    } catch (e) {
+        return modelError(e);
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_UPDATE_MODEL, async (event, args = {}) => {
+    try {
+        const { userId, id, model } = args;
+        if (!userId) throw new Error('未登录');
+        const existing = dshModelStore.get(userId);
+        const current = existing.find(m => m.id === id);
+        if (!current) throw new Error('模型不存在');
+        const value = validateUserModel({
+            ...model,
+            apiKey: String((model && model.apiKey) || '').trim() || current.apiKey,
+        }, true);
+        if (existing.some(m => m.id !== id && m.providerId === value.providerId)) {
+            throw new Error(`Provider ID "${value.providerId}" 已存在`);
+        }
+        const updated = {
+            ...current,
+            ...value,
+            id,
+            createdAt: current.createdAt || Date.now(),
+        };
+        dshModelStore.save(userId, existing.map(m => m.id === id ? updated : m));
+        const state = await restartHostWithModels(userId);
+        return { ok: true, models: state.models, hostStatus: state.hostStatus };
+    } catch (e) {
+        return modelError(e);
     }
 });
 
 ipcMain.handle(IPCEventType.DSH_DELETE_MODEL, async (event, args = {}) => {
     try {
         const { userId, id } = args;
-        if (!userId || !id) throw new Error('参数不完整');
-        const models = dshModelStore.get(userId).filter(m => m.id !== id);
-        dshModelStore.save(userId, models);
-        const result = await restartHostWithModels(userId);
-        return { ok: true, ...result };
+        if (!userId) throw new Error('未登录');
+        const existing = dshModelStore.get(userId);
+        dshModelStore.save(userId, existing.filter(m => m.id !== id));
+        const state = await restartHostWithModels(userId);
+        return { ok: true, models: state.models, hostStatus: state.hostStatus };
     } catch (e) {
-        return { ok: false, error: e && e.message ? e.message : String(e) };
+        return modelError(e);
     }
 });
 
@@ -1660,6 +1815,10 @@ ipcMain.handle(IPCEventType.DSH_GET_LOG, (event, maxLines) => {
 
 ipcMain.handle(IPCEventType.DSH_GET_ROUTING, (event, limit) => {
     return dshHostManager.getRouting(limit || 100);
+});
+
+ipcMain.handle(IPCEventType.DSH_GET_AUDIT, (event, limit) => {
+    return dshHostManager.getAudit(limit || 100);
 });
 
 ipcMain.handle(IPCEventType.DSH_GET_WORKSPACES, () => {

@@ -3,9 +3,9 @@
         <div class="dsh-model-head">
             <div>
                 <h2>模型配置</h2>
-                <p>服务端下发的默认模型只读；可以添加更多 OpenAI-compatible 模型。</p>
+                <p>服务端默认模型经过 AI 服务中转；自定义模型直连 Provider，不经过服务端认证、配额和计费。</p>
             </div>
-            <button class="dsh-btn primary" @click="openAdd">＋ 添加模型</button>
+            <button class="dsh-btn primary" @click="openAdd">＋ 添加自定义模型</button>
         </div>
 
         <div v-if="serverModel" class="dsh-model-card server">
@@ -30,11 +30,11 @@
 
         <div v-else class="dsh-model-warning">
             <strong>服务端没有下发可用的模型配置</strong>
-            <p>请添加至少一个自定义模型；第一个自定义模型会作为默认模型。</p>
+            <p>可以让管理员在 AI 服务后台配置默认模型，也可以添加自定义模型直连使用。</p>
         </div>
         <div v-if="serverModel && !serverConfigured" class="dsh-model-warning">
             <strong>服务端默认模型缺少 API Key</strong>
-            <p>默认模型不可修改；请添加一个自定义模型，DSH 会用它作为默认。</p>
+            <p>默认模型不可修改；可以补齐服务端 Key，或添加自定义模型直连。</p>
         </div>
 
         <div v-if="models.length" class="dsh-model-list">
@@ -56,11 +56,11 @@
                     <dt>模型</dt><dd class="mono">{{ m.model }}</dd>
                     <dt>API Key</dt><dd class="mono">{{ m.apiKeyPreview || (m.hasApiKey ? '已配置' : '-') }}</dd>
                     <dt>推理等级</dt><dd>{{ m.reasoningEffort || '-' }}</dd>
-                    <dt>Max Tokens / Context</dt><dd>{{ m.maxTokens || 8192 }} / {{ m.contextWindow || 131072 }}</dd>
+                    <dt>Max Tokens / Context</dt><dd>{{ m.maxTokens || 393216 }} / {{ m.contextWindow || 1048576 }}</dd>
                 </dl>
             </div>
         </div>
-        <div v-else-if="serverModel" class="dsh-model-empty">暂无自定义模型。可以添加其他模型，在会话里用 <code>/model</code> 切换。</div>
+        <div v-else-if="serverModel" class="dsh-model-empty">暂无自定义模型。可添加其他 OpenAI-compatible 模型，在会话里用 <code>/model</code> 切换。</div>
 
         <div v-if="showForm" class="dsh-modal-mask" @click.self="showForm = false">
             <div class="dsh-modal">
@@ -128,7 +128,7 @@ export default {
             return ai.model && ai.baseUrl ? ai : null;
         },
         serverConfigured() {
-            return !!(this.ai && this.ai.apiKey) || !!(this.ai && this.ai.configured);
+            return !!(this.ai && this.ai.configured === true);
         },
     },
     created() {
@@ -144,7 +144,7 @@ export default {
         emptyForm() {
             return {
                 name: '', providerId: '', baseUrl: '', model: '', apiKey: '',
-                reasoningEffort: '', maxTokens: 8192, contextWindow: 131072,
+                reasoningEffort: '', maxTokens: 393216, contextWindow: 1048576,
             };
         },
         async load() {
@@ -160,8 +160,8 @@ export default {
             this.editing = m;
             this.form = {
                 name: m.name, providerId: m.providerId || '', baseUrl: m.baseUrl, model: m.model, apiKey: '',
-                reasoningEffort: m.reasoningEffort || '', maxTokens: m.maxTokens || 8192,
-                contextWindow: m.contextWindow || 131072,
+                reasoningEffort: m.reasoningEffort || '', maxTokens: m.maxTokens || 393216,
+                contextWindow: m.contextWindow || 1048576,
             };
             this.formError = '';
             this.showForm = true;

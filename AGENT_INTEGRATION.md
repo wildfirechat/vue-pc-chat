@@ -11,7 +11,7 @@
 | `src/wfc/messages/agentCommandMessageContent.js` / `agentTaskProgressMessageContent.js` | 207 面板指令 / 208 任务进度 |
 | `src/wfc/client/messageConfig.js` | 消息注册表：注册全部 Agent 内容类（200-209） |
 | `src/ui/main/conversation/message/content/AgentQuestionContentView.vue` | 提问卡片：选项作答（单题点击即答；多题本地暂存、全部答完才可提交）；`intent.kind === 'plan-review'` 计划全文折叠 + 批准主按钮 |
-| `src/ui/main/conversation/message/content/AgentApprovalContentView.vue` | 审批卡片：同意/拒绝按钮 |
+| `src/ui/main/conversation/message/content/AgentApprovalContentView.vue` | 审批卡片：同意/拒绝按钮；显示发起人/审批人，非审批人隐藏按钮 |
 | `src/ui/main/conversation/message/content/AgentGoalContentView.vue` | 目标卡片（phase 彩色徽标 + 已执行轮数） |
 | `src/ui/main/conversation/message/MessageContentContainerView.vue` | 200-206 分支接线 |
 | `src/ui/util/agentState.js` | scope=31 会话状态读取 + `agentConversationKind` 门控（单聊机器人 `userInfo.type===1` / 群 extra 带 `{"dsh":true}`） |

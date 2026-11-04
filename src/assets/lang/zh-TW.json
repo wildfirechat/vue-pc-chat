@@ -346,7 +346,10 @@
       "approved": "已同意",
       "rejected": "已拒絕",
       "custom_placeholder": "或輸入自訂回答…",
-      "pending_tip": "尚有題目未作答"
+      "pending_tip": "尚有題目未作答",
+      "requested_by": "發起人",
+      "approver": "審批人",
+      "approver_only": "僅 {0} 可審批"
     },
     "plan": {
       "toggle": "檢視計畫詳情"

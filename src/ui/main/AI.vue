@@ -37,7 +37,16 @@
             <div v-if="error" class="dsh-error">
                 <strong>DSH 暂不可用</strong>
                 <p>{{ error }}</p>
-                <button class="dsh-btn primary" :disabled="loading" @click="refreshProvision">重试开通</button>
+                <div class="dsh-actions">
+                    <button class="dsh-btn primary" :disabled="loading" @click="refreshProvision">重试开通</button>
+                    <button class="dsh-btn" @click="openAiAgentSettings">配置 AI 服务</button>
+                </div>
+            </div>
+
+            <div v-if="insecureGateway" class="dsh-warn">
+                <strong>网关使用未加密连接</strong>
+                <p class="mono">{{ robot.gatewayUrl }}</p>
+                <p>生产环境请改用 <code>wss://</code>；<code>ws://</code> 仅建议用于本机或可信内网。</p>
             </div>
 
             <div v-if="hostError && !error" class="dsh-error">
@@ -78,6 +87,37 @@
                             <span class="dsh-stat-sub">{{ ai.reasoningEffort || '默认' }} · {{ ai.configured ? '已配置' : '未配置' }}</span>
                         </div>
                     </div>
+
+                    <section class="dsh-card dsh-my-stats" v-if="myStats">
+                        <div class="dsh-card-head">
+                            <h2>我的用量</h2>
+                            <button class="dsh-link-btn" :disabled="statsLoading" @click="loadMyStats">
+                                {{ statsLoading ? '刷新中…' : '刷新' }}
+                            </button>
+                        </div>
+                        <div class="dsh-overview-grid">
+                            <div class="dsh-stat">
+                                <span class="dsh-stat-label">今日请求</span>
+                                <strong>{{ myStats.today.requests || 0 }}</strong>
+                                <span class="dsh-stat-sub">{{ myStats.today.errors || 0 }} 个错误 · {{ myStats.today.avgLatencyMs || 0 }} ms</span>
+                            </div>
+                            <div class="dsh-stat">
+                                <span class="dsh-stat-label">今日 Tokens</span>
+                                <strong>{{ myStats.today.totalTokens || 0 }}</strong>
+                                <span class="dsh-stat-sub">缓存 {{ myStats.today.cachedInputTokens || 0 }} · 输出 {{ myStats.today.outputTokens || 0 }}</span>
+                            </div>
+                            <div class="dsh-stat">
+                                <span class="dsh-stat-label">今日费用</span>
+                                <strong>{{ formatCost(myStats.today.cost) }}</strong>
+                                <span class="dsh-stat-sub">本月 {{ formatCost(myStats.month.cost) }}</span>
+                            </div>
+                            <div class="dsh-stat">
+                                <span class="dsh-stat-label">额度</span>
+                                <strong>{{ quotaText(myStats.quota) }}</strong>
+                                <span class="dsh-stat-sub">今日剩余 {{ myStats.quota.dailyRemaining < 0 ? '不限' : myStats.quota.dailyRemaining }}</span>
+                            </div>
+                        </div>
+                    </section>
 
                     <section class="dsh-card">
                         <div class="dsh-card-head">
@@ -200,7 +240,6 @@
                             <dt>显示名</dt><dd>{{ robot.displayName || 'DSH 助手' }}</dd>
                             <dt>Owner</dt><dd class="mono">{{ robot.owner || '-' }}</dd>
                             <dt>Gateway</dt><dd class="mono">{{ robot.gatewayUrl || '-' }}</dd>
-                            <dt>IM 地址</dt><dd class="mono">{{ robot.imServerUrl || '-' }}</dd>
                             <dt>Gateway 状态</dt><dd>{{ gatewayText }}</dd>
                         </dl>
                     </section>
@@ -211,8 +250,134 @@
                             <dt>模型</dt><dd>{{ ai.model || '-' }}</dd>
                             <dt>推理等级</dt><dd>{{ ai.reasoningEffort || '-' }}</dd>
                             <dt>AI 配置</dt><dd>{{ ai.configured ? '已配置' : '未配置' }}</dd>
+                            <dt>AI 凭证</dt>
+                            <dd :class="{ 'dsh-token-expired': aiTokenExpired }">
+                                {{ ai.expiresAt ? ('代理 token，' + formatTime(ai.expiresAt) + ' 到期') : '服务端直连 key' }}
+                            </dd>
                         </dl>
                     </section>
+                </section>
+
+                <!-- AI 服务 -->
+                <section v-else-if="activeTab === 'aiAgent'" class="dsh-section">
+                    <div class="dsh-section-head">
+                        <div>
+                            <h2>AI Agent 服务</h2>
+                            <p class="dsh-muted">独立 AI 网关：authCode 登录后返回本机 DSH 使用的服务地址、客户端 Key 与模型。</p>
+                        </div>
+                    </div>
+
+                    <section v-if="aiAgentView" class="dsh-card">
+                        <div class="dsh-card-head">
+                            <h2>{{ aiAgentView.configured ? '当前连接' : '已保存的服务地址' }}</h2>
+                            <span class="dsh-perm-pill" :class="aiAgentView.configured ? 'safe' : 'warn'">
+                                {{ aiAgentView.configured ? '已配置' : '待配置' }}
+                            </span>
+                        </div>
+                        <dl>
+                            <dt>服务地址</dt><dd class="mono">{{ aiAgentView.serverUrl || '-' }}</dd>
+                            <dt>用户</dt><dd>{{ aiAgentView.user && aiAgentView.user.name || '-' }}</dd>
+                            <dt>模型</dt><dd class="mono">{{ aiAgentView.model || '-' }}</dd>
+                            <dt>客户端 Key</dt><dd class="mono">{{ aiAgentView.apiKeyMasked || '-' }}</dd>
+                            <dt>配置来源</dt>
+                            <dd>
+                                模型 {{ aiAgentView.source && aiAgentView.source.model || '-' }} ·
+                                Key {{ aiAgentView.source && aiAgentView.source.providerApiKey || '-' }}
+                            </dd>
+                            <dt>凭证到期</dt>
+                            <dd :class="{ 'dsh-token-expired': aiAgentView.expiresAt && aiAgentView.expiresAt < Date.now() }">
+                                {{ aiAgentView.expiresAt ? formatTime(aiAgentView.expiresAt) : '-' }}
+                            </dd>
+                        </dl>
+                        <div class="dsh-actions">
+                            <button class="dsh-btn" :disabled="aiAgentLoading" @click="loadAiAgent">刷新</button>
+                            <button class="dsh-btn ghost" @click="disconnectAiAgent">清除本机配置</button>
+                        </div>
+                    </section>
+
+                    <section class="dsh-card">
+                        <h2>{{ aiAgentView ? '重新连接 / 切换服务' : '连接 AI Agent 服务' }}</h2>
+                        <div class="dsh-agent-form">
+                            <label>
+                                <span>服务地址</span>
+                                <input v-model.trim="aiAgentServerUrl" placeholder="https://ai.example.com" autocomplete="off">
+                            </label>
+                            <button class="dsh-btn ghost" :disabled="aiAgentLoading || !aiAgentServerUrl" @click="saveAiAgentServer">保存地址</button>
+                            <button class="dsh-btn primary" :disabled="aiAgentLoading || !aiAgentServerUrl" @click="connectAiAgent">
+                                {{ aiAgentLoading ? '连接中…' : '连接并应用' }}
+                            </button>
+                        </div>
+                        <p class="dsh-muted" style="margin-top: 10px;">
+                            连接时客户端通过 IM SDK 自动获取 authCode，无需手动填写；AI 服务用 IM Admin 校验后按 IM userId 自动绑定用户。连接后客户端 Key 保存在主进程加密缓存，DSH Host 会自动重启并注入新配置。
+                        </p>
+                    </section>
+                </section>
+
+                <!-- 权限 -->
+                <section v-else-if="activeTab === 'permissions'" class="dsh-section">
+                    <div class="dsh-section-head">
+                        <div>
+                            <h2>权限</h2>
+                            <p class="dsh-muted">应用注入的默认策略；会话内可单独切换沙箱与审批。</p>
+                        </div>
+                    </div>
+                    <div v-if="!permissions" class="dsh-empty-card">
+                        <strong>Host 尚未启动</strong>
+                        <p>Host 运行后会在这里显示实际生效的权限策略。</p>
+                    </div>
+                    <template v-else>
+                        <section class="dsh-card">
+                            <h2>默认策略</h2>
+                            <dl>
+                                <dt>文件沙箱</dt>
+                                <dd><span class="dsh-perm-pill" :class="sandboxClass">{{ sandboxLabel }}</span></dd>
+                                <dt>工具审批</dt><dd>{{ approvalLabel }}</dd>
+                                <dt>私聊</dt>
+                                <dd>{{ permissions.privateOwnerOnly ? '仅 owner / 管理员' : '所有能添加机器人的人' }}</dd>
+                                <dt>群内审批</dt>
+                                <dd>{{ permissions.approvalOwnerOnly ? '敏感操作由机器人 owner 审批' : '由任务发起人审批' }}</dd>
+                                <dt>成员发起任务</dt>
+                                <dd>{{ permissions.allowGuestTurns ? '允许（群成员可对话）' : '仅 owner / 管理员' }}</dd>
+                                <dt>未注册群</dt><dd>忽略（只服务本机创建的 DSH 群）</dd>
+                                <dt>管理员</dt>
+                                <dd class="mono">{{ (permissions.adminUsers || []).join(', ') || '-' }}</dd>
+                                <dt>工作区根</dt>
+                                <dd class="mono">{{ permissions.workspaceRoot || '-' }}</dd>
+                            </dl>
+                        </section>
+                        <section class="dsh-card">
+                            <h2>会话级权限</h2>
+                            <p class="dsh-muted">在会话输入框的 AI 面板中切换，或直接发送命令（仅群创建者/管理员）：</p>
+                            <ul class="dsh-perm-list">
+                                <li><code>/sandbox read-only</code><span>只读，不修改文件</span></li>
+                                <li><code>/sandbox workspace-write</code><span>仅可写当前工作区（默认）</span></li>
+                                <li><code>/sandbox danger-full-access</code><span>不限制文件写入，谨慎使用</span></li>
+                                <li><code>/approval ask</code><span>需要审批的操作弹卡片（默认）</span></li>
+                                <li><code>/approval never</code><span>不弹卡片，需要审批的操作直接拒绝</span></li>
+                            </ul>
+                        </section>
+                        <section class="dsh-card">
+                            <div class="dsh-card-head">
+                                <h2>最近权限事件</h2>
+                                <button class="dsh-btn" :disabled="auditLoading" @click="loadAudit">刷新</button>
+                            </div>
+                            <div v-if="!auditRecords.length" class="dsh-empty">
+                                暂无记录。准入拒绝、管理命令、审批与权限变更会写入本机审计日志（dsh-home/wildfire-audit.jsonl）。
+                            </div>
+                            <ul v-else class="dsh-audit-list">
+                                <li v-for="(e, i) in auditRecords" :key="e.ts + '-' + i">
+                                    <span class="dsh-audit-kind" :class="auditClass(e.kind)">{{ auditKindText(e.kind) }}</span>
+                                    <div class="dsh-audit-main">
+                                        <div class="dsh-audit-title">
+                                            <span class="mono">{{ auditName(e.actor) }}</span>
+                                            <span class="dsh-muted">{{ formatTime(e.ts) }}</span>
+                                        </div>
+                                        <p class="dsh-audit-desc">{{ auditText(e) }}</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </section>
+                    </template>
                 </section>
 
                 <!-- 模型 -->
@@ -299,17 +464,24 @@
 <script>
 import Config from "../../config";
 import {
+    clearDshAiAgent,
     clearDshProvision,
+    getDshAiAgent,
+    getDshAiAgentStats,
+    getDshAudit,
     getDshLog,
     getDshRouting,
     getDshStatus,
     isDshSupported,
+    loginDshAiAgent,
+    setDshAiAgentServer,
     onDshStatus,
     openDshLog,
     provisionDsh,
     restartDsh,
 } from "../../dsh/renderer/dshClient";
 import wfc from "../../wfc/client/wfc";
+import { agentRobotName } from "../util/agentState";
 import store from "../../store";
 import Conversation from "../../wfc/model/conversation";
 import TextMessageContent from "../../wfc/messages/textMessageContent";
@@ -357,11 +529,48 @@ export default {
             if (g.state === 'unknown') return '未知';
             return '离线';
         },
+        insecureGateway() {
+            const url = this.robot.gatewayUrl || '';
+            if (!url.startsWith('ws://')) return false;
+            try {
+                const host = new URL(url).hostname;
+                return !['localhost', '127.0.0.1', '::1', '[::1]'].includes(host);
+            } catch (e) {
+                return true;
+            }
+        },
         workspaceCount() {
             return this.workspaceGroups.length;
         },
         groupCount() {
             return this.workspaceGroups.reduce((n, ws) => n + ws.groups.length, 0);
+        },
+        permissions() {
+            return (this.hostStatus && this.hostStatus.permissions) || null;
+        },
+        aiTokenExpired() {
+            return !!(this.ai && this.ai.expiresAt && Number(this.ai.expiresAt) < Date.now());
+        },
+        aiAgentView() {
+            return (this.aiAgent && this.aiAgent.view) || null;
+        },
+        sandboxLabel() {
+            const v = this.permissions && this.permissions.sandbox;
+            return ({
+                'read-only': '只读',
+                'workspace-write': '仅工作区可写',
+                'danger-full-access': '完全放开',
+            })[v] || v || '-';
+        },
+        sandboxClass() {
+            const v = this.permissions && this.permissions.sandbox;
+            if (v === 'danger-full-access') return 'danger';
+            if (v === 'workspace-write') return 'warn';
+            return 'safe';
+        },
+        approvalLabel() {
+            const v = this.permissions && this.permissions.approval;
+            return v === 'ask' ? '每次询问' : v === 'never' ? '不询问（直接拒绝）' : (v || '-');
         },
         recentGroups() {
             return this.workspaceGroups
@@ -377,6 +586,8 @@ export default {
                 { id: 'workspaces', label: '工作区', count: this.workspaceCount },
                 { id: 'groups', label: '群组', count: this.groupCount },
                 { id: 'robot', label: '机器人' },
+                { id: 'aiAgent', label: 'AI 服务' },
+                { id: 'permissions', label: '权限' },
                 { id: 'models', label: '模型' },
                 { id: 'routing', label: '路由' },
                 { id: 'logs', label: '日志' },
@@ -396,9 +607,16 @@ export default {
             creatingSession: false,
             activeTab: 'overview',
             logText: '',
+            aiAgent: null,
+            myStats: null,
+            statsLoading: false,
+            aiAgentServerUrl: Config.getAiAgentServer() || '',
+            aiAgentLoading: false,
             routingRecords: [],
+            auditRecords: [],
             logLoading: false,
             routingLoading: false,
+            auditLoading: false,
             statusTimer: null,
         };
     },
@@ -419,8 +637,11 @@ export default {
     methods: {
         selectTab(id) {
             this.activeTab = id;
+            if (id === 'overview') this.loadMyStats();
             if (id === 'logs') this.loadLog();
             if (id === 'routing') this.loadRouting();
+            if (id === 'aiAgent') this.loadAiAgent();
+            if (id === 'permissions') this.loadAudit();
         },
         async loadLog() {
             this.logLoading = true;
@@ -434,6 +655,138 @@ export default {
         },
         routeActionText(action) {
             return ({ assign: '指派', reply: '自己回', mention: '@ 指定', none: '静默', ignore: '忽略' })[action] || action || '-';
+        },
+        openAiAgentSettings() {
+            this.error = '';
+            this.activeTab = 'aiAgent';
+            this.loadAiAgent();
+        },
+        async loadMyStats() {
+            if (!isDshSupported() || !wfc.getUserId()) return;
+            this.statsLoading = true;
+            try {
+                const result = await getDshAiAgentStats(wfc.getUserId());
+                this.myStats = result && result.ok ? result.stats : null;
+            } catch (e) {
+                this.myStats = null;
+            } finally {
+                this.statsLoading = false;
+            }
+        },
+        formatCost(value) {
+            return '$' + (Number(value) || 0).toFixed(6);
+        },
+        quotaText(quota) {
+            if (!quota) return '-';
+            if (quota.monthlyBudgetUsd > 0) return '$' + Math.max(0, quota.monthRemainingUsd).toFixed(2);
+            if (quota.dailyRequestLimit > 0) return Math.max(0, quota.dailyRemaining) + ' 次';
+            return '不限';
+        },
+        async loadAiAgent() {
+            try {
+                const result = await getDshAiAgent(wfc.getUserId());
+                this.aiAgent = result && result.ok ? result : null;
+                const view = this.aiAgentView;
+                const hinted = this.provision && this.provision.aiAgent;
+                if (!this.aiAgentServerUrl && view && view.serverUrl) this.aiAgentServerUrl = view.serverUrl;
+                if (!this.aiAgentServerUrl && hinted && hinted.serverUrl) this.aiAgentServerUrl = hinted.serverUrl;
+            } catch (e) {
+                this.aiAgent = null;
+            }
+        },
+        async saveAiAgentServer() {
+            if (!this.aiAgentServerUrl) return;
+            try {
+                const result = await setDshAiAgentServer(wfc.getUserId(), this.aiAgentServerUrl);
+                if (!result || !result.ok) throw new Error((result && result.error) || '保存失败');
+                await this.loadAiAgent();
+                this.$notify({ title: 'AI 服务地址已保存', text: '点击「连接并应用」后会自动获取 IM authCode', type: 'success' });
+            } catch (e) {
+                this.$notify({ title: '保存失败', text: e.message || String(e), type: 'error' });
+            }
+        },
+        async connectAiAgent() {
+            if (this.aiAgentLoading) return;
+            this.aiAgentLoading = true;
+            try {
+                const result = await loginDshAiAgent(wfc.getUserId(), this.aiAgentServerUrl);
+                if (!result || !result.ok) throw new Error((result && result.error) || '连接失败');
+                if (result.provision) this.provision = result.provision;
+                await this.loadAiAgent();
+                this.hostStatus = result.hostStatus || (await getDshStatus()) || {};
+                if (result.provisionError) {
+                    this.$notify({ title: 'AI 已连接，但机器人开通失败', text: result.provisionError, type: 'error' });
+                } else {
+                    this.$notify({ title: 'AI 服务已连接', text: '机器人已开通，DSH Host 已应用该服务配置', type: 'success' });
+                }
+            } catch (e) {
+                this.$notify({ title: 'AI 服务连接失败', text: e.message || String(e), type: 'error' });
+            } finally {
+                this.aiAgentLoading = false;
+            }
+        },
+        async disconnectAiAgent() {
+            if (!window.confirm('清除本机保存的 AI 服务地址、session 与客户端 Key？DSH 将没有可用模型，需要重新连接。')) return;
+            try {
+                await clearDshAiAgent(wfc.getUserId());
+                this.aiAgent = null;
+                this.hostStatus = (await getDshStatus()) || {};
+                this.$notify({ title: '已清除 AI 服务配置', type: 'success' });
+            } catch (e) {
+                this.$notify({ title: '清除失败', text: e.message || String(e), type: 'error' });
+            }
+        },
+        async loadAudit() {
+            this.auditLoading = true;
+            try { this.auditRecords = await getDshAudit(80); } catch (e) { this.auditRecords = []; }
+            finally { this.auditLoading = false; }
+        },
+        auditKindText(kind) {
+            return ({
+                'admission.denied': '准入拒绝',
+                'command.executed': '管理命令',
+                'command.denied': '命令拒绝',
+                'permission.changed': '权限变更',
+                'approval.requested': '审批请求',
+                'approval.decided': '审批结果',
+                'approval.timeout': '审批超时',
+                'interaction.denied': '越权作答',
+            })[kind] || kind || '-';
+        },
+        auditClass(kind) {
+            if (kind === 'admission.denied' || kind === 'command.denied' || kind === 'interaction.denied' || kind === 'approval.timeout') return 'audit-danger';
+            if (kind === 'permission.changed' || kind === 'approval.requested') return 'audit-warn';
+            return 'audit-ok';
+        },
+        auditName(uid) {
+            return uid ? agentRobotName(String(uid)) : '-';
+        },
+        auditText(e) {
+            if (!e) return '-';
+            const bits = [];
+            if (e.command) bits.push(`/${e.command}${e.arg ? ' ' + e.arg : ''}`);
+            if (e.toolName) bits.push(`工具 ${e.toolName}`);
+            if (e.outcome) bits.push(e.outcome === 'allowed-once' ? '同意' : '拒绝');
+            if (e.policy) bits.push(`审批 ${e.policy === 'ask' ? '每次询问' : e.policy === 'never' ? '不询问' : e.policy}`);
+            if (e.approval && !e.policy) bits.push(`审批 ${e.approval === 'ask' ? '每次询问' : e.approval === 'never' ? '不询问' : e.approval}`);
+            if (e.sandbox) bits.push(`沙箱 ${({ 'read-only': '只读', 'workspace-write': '工作区可写', 'danger-full-access': '完全访问' })[e.sandbox] || e.sandbox}`);
+            if (e.preset) bits.push(`预设 ${e.preset}`);
+            if (e.requestedBy && e.approver && e.requestedBy !== e.approver) {
+                bits.push(`发起人 ${this.auditName(e.requestedBy)} / 审批人 ${this.auditName(e.approver)}`);
+            }
+            if (e.reason) {
+                const reasonText = ({
+                    'private-owner-only': '私聊非 owner',
+                    whitelist: '白名单拒绝',
+                    'not-creator-or-admin': '非群创建者/管理员',
+                    'not-owner-or-admin': '非 owner/管理员',
+                    'not-turn-owner-or-admin': '非任务发起人',
+                    'panel-authorization': '面板权限不足',
+                })[e.reason] || e.reason;
+                bits.push(`原因 ${reasonText}`);
+            }
+            if (e.target) bits.push(`会话 ${this.shortGroup(e.target)}`);
+            return bits.join(' · ') || '-';
         },
         shortGroup(id) {
             if (!id) return '-';
@@ -461,9 +814,14 @@ export default {
                     return;
                 }
                 this.provision = result.provision;
+                if (!this.aiAgentServerUrl && result.provision && result.provision.aiAgent && result.provision.aiAgent.serverUrl) {
+                    this.aiAgentServerUrl = result.provision.aiAgent.serverUrl;
+                }
                 this.hostStatus = result.hostStatus || (await getDshStatus()) || {};
                 this.lastUpdated = new Date().toLocaleString();
                 this.loadWorkspaces();
+                this.loadAiAgent();
+                this.loadMyStats();
             } catch (e) {
                 this.error = e && e.message ? e.message : String(e);
             } finally {
@@ -689,6 +1047,40 @@ export default {
 
 .dsh-card dt { color: var(--text-secondary, #8a8f99); }
 .dsh-card dd { margin: 0; word-break: break-all; }
+.dsh-perm-pill {
+    display: inline-block; padding: 2px 9px; border-radius: 999px;
+    font-size: 11px; background: #eef2f7; color: #475569;
+}
+.dsh-perm-pill.safe { background: #e8f5ec; color: #1a7f37; }
+.dsh-perm-pill.warn { background: #fff4e5; color: #a15c00; }
+.dsh-perm-pill.danger { background: #fdecec; color: #b42318; }
+.dsh-perm-list { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.dsh-perm-list li { display: flex; gap: 10px; align-items: baseline; font-size: 12px; color: var(--text-secondary, #6b7280); }
+.dsh-agent-form { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.dsh-agent-form label { display: flex; flex-direction: column; gap: 4px; flex: 1 1 220px; }
+.dsh-agent-form label span { font-size: 11px; color: var(--text-secondary, #8a8f99); }
+.dsh-agent-form input {
+    height: 34px; border: 1px solid var(--border-color, #e5e6eb); border-radius: 7px;
+    padding: 0 10px; font-size: 12px; background: #fff; color: var(--text-primary, #1f2329);
+}
+.dsh-agent-form input:focus { outline: none; border-color: #9db4e8; }
+.dsh-perm-list code {
+    flex: 0 0 250px; font-size: 11px; color: var(--text-primary, #1f2329);
+    background: var(--background-primary, #fff); border: 1px solid var(--border-color, #e5e6eb);
+    border-radius: 4px; padding: 2px 6px;
+}
+.dsh-audit-list { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+.dsh-audit-list li { display: flex; gap: 10px; align-items: flex-start; }
+.dsh-audit-kind {
+    flex: 0 0 auto; font-size: 10px; padding: 2px 7px; border-radius: 999px;
+    background: #eef2f7; color: #475569; margin-top: 1px;
+}
+.dsh-audit-kind.audit-danger { background: #fdecec; color: #b42318; }
+.dsh-audit-kind.audit-warn { background: #fff4e5; color: #a15c00; }
+.dsh-audit-kind.audit-ok { background: #e8f5ec; color: #1a7f37; }
+.dsh-audit-main { min-width: 0; flex: 1; }
+.dsh-audit-title { display: flex; justify-content: space-between; gap: 10px; font-size: 11px; }
+.dsh-audit-desc { margin: 2px 0 0; font-size: 11px; line-height: 1.5; color: var(--text-secondary, #6b7280); word-break: break-word; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 
 .dsh-actions {
@@ -722,6 +1114,17 @@ export default {
 }
 
 .dsh-error p { margin: 6px 0 12px; color: #7a271a; font-size: 13px; }
+.dsh-warn {
+    border: 1px solid #f0c987;
+    background: #fffaf0;
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: #8a4b00;
+    margin-bottom: 16px;
+}
+.dsh-warn p { margin: 4px 0 0; font-size: 12px; color: #8a5a1a; }
+.dsh-warn code { background: #fff; border: 1px solid #eadcc2; border-radius: 3px; padding: 0 3px; }
+.dsh-token-expired { color: #b42318; }
 .dsh-loading, .dsh-updated { font-size: 12px; color: var(--text-secondary, #8a8f99); margin-top: 10px; }
 .dsh-empty { font-size: 13px; color: var(--text-secondary, #8a8f99); }
 .dsh-workspace { margin-bottom: 12px; }

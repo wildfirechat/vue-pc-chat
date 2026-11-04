@@ -42,11 +42,15 @@ export default class DshModelStore {
 
     _persist() {
         try {
+            if (!safeStorage.isEncryptionAvailable()) {
+                // Never persist a custom-provider API key as plaintext.
+                console.warn('[dsh] safeStorage unavailable; refusing to persist custom model credentials');
+                try { if (fs.existsSync(this.file)) fs.unlinkSync(this.file); } catch (e) { /* ignore */ }
+                return;
+            }
             fs.mkdirSync(path.dirname(this.file), { recursive: true });
             const text = JSON.stringify(this.records);
-            const data = safeStorage.isEncryptionAvailable()
-                ? safeStorage.encryptString(text)
-                : Buffer.from(text, 'utf8');
+            const data = safeStorage.encryptString(text);
             fs.writeFileSync(this.file, data, { mode: 0o600 });
             try { fs.chmodSync(this.file, 0o600); } catch (e) { /* ignore */ }
         } catch (e) {
@@ -74,8 +78,8 @@ export default class DshModelStore {
             baseUrl: m.baseUrl,
             model: m.model,
             reasoningEffort: m.reasoningEffort || '',
-            maxTokens: m.maxTokens || 8192,
-            contextWindow: m.contextWindow || 131072,
+            maxTokens: m.maxTokens || 393216,
+            contextWindow: m.contextWindow || 1048576,
             hasApiKey: !!m.apiKey,
             apiKeyPreview: m.apiKey ? `••••${String(m.apiKey).slice(-4)}` : '',
             createdAt: m.createdAt,

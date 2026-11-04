@@ -23,6 +23,7 @@ export default class DshHostManager {
         this.logPath = path.join(userDataPath, 'logs', 'dsh-host.log');
         this.dshHome = process.env.WF_DSH_HOME || path.join(userDataPath, 'dsh-home');
         this.logStream = null;
+        this.permissions = null;
         this.status = {
             state: 'stopped',
             pid: null,
@@ -34,6 +35,7 @@ export default class DshHostManager {
             logPath: this.logPath,
             restarts: 0,
             hostId: this.hostId,
+            permissions: null,
         };
         this.stopping = false;
         this.restartTimer = null;
@@ -138,50 +140,52 @@ export default class DshHostManager {
         } catch (e) { /* ignore */ }
     }
 
+    _customEnvName(providerId) {
+        return 'WF_AI_CUSTOM_' + String(providerId || '')
+            .toUpperCase().replace(/[^A-Z0-9]/g, '_').replace(/_+/g, '_') + '_KEY';
+    }
+
     _writeOverlay(provision, userModels = []) {
         const robot = provision.robot || {};
         const workspaceRoot = path.join(this.userDataPath, 'dsh-workspaces');
         try { fs.mkdirSync(workspaceRoot, { recursive: true }); } catch (e) { /* ignore */ }
         const ai = provision.ai || {};
-        const providers = [];
-        if (ai.baseUrl && ai.model && ai.apiKey) {
-            providers.push({
-                id: 'default',
-                displayName: 'DSH (server default)',
-                baseUrl: ai.baseUrl,
-                apiKey: ai.apiKey,
-                apiKeyEnv: 'WF_AI_API_KEY',
-                model: ai.model,
-                reasoningEffort: ai.reasoningEffort,
-                maxTokens: ai.maxTokens,
-                contextWindow: Number(ai.contextWindow) || 1048576,
-            });
-        }
-        (userModels || []).forEach((m, index) => {
-            if (!m || !m.baseUrl || !m.model || !m.apiKey) return;
-            providers.push({
-                id: m.providerId || `custom${index + 1}`,
-                displayName: m.name || `自定义模型 ${index + 1}`,
-                baseUrl: m.baseUrl,
-                apiKey: m.apiKey,
-                apiKeyEnv: `WF_USER_AI_KEY_${index}`,
-                model: m.model,
-                reasoningEffort: m.reasoningEffort,
-                maxTokens: m.maxTokens,
-                contextWindow: m.contextWindow,
-            });
-        });
+        // All model traffic must go through the backend relay so the server can
+        // authenticate, meter and enforce per-user quotas. User-supplied
+        // providers are intentionally ignored here.
+        const modelIds = [];
+        const addModel = (id) => {
+            const text = String(id || '').trim();
+            if (text && !modelIds.includes(text)) modelIds.push(text);
+        };
+        addModel(ai.model);
+        (Array.isArray(ai.allowedModels) ? ai.allowedModels : []).forEach(addModel);
+        const aiUsable = !!(ai.baseUrl && ai.apiKey && ai.enabled === true
+            && ai.configured === true && modelIds.length);
 
         const lines = [
             '- id: wildfire',
             '  config:',
             `    gatewayUrl: ${JSON.stringify(robot.gatewayUrl || '')}`,
             `    robotId: ${JSON.stringify(robot.robotId || '')}`,
-            `    robotSecret: ${JSON.stringify(robot.robotSecret || '')}`,
+            // 不把 robotSecret 写进磁盘 YAML：插件从环境变量读取。
+            '    robotSecretEnv: "WF_ROBOT_SECRET"',
             '    workspace:',
             `      root: ${JSON.stringify(workspaceRoot)}`,
+            '      allowCwdCommand: true',
+            '    model:',
+            '      allowModelCommand: true',
             '    session:',
             '      preset: standard',
+            // 权限默认值：个人机器人只服务 owner；群成员可对话，但危险工具
+            // 必须由 owner 审批；群内管理命令仅创建者/管理员可执行。
+            '    access:',
+            `      adminUsers: ${JSON.stringify(robot.owner ? [robot.owner] : [])}`,
+            '      privateOwnerOnly: true',
+            '    interaction:',
+            '      approvalOwnerOnly: true',
+            '    security:',
+            '      allowGuestTurns: true',
             // 本应用只使用 provision / 用户添加的 OpenAI-compatible provider；
             // 关闭 dsh 内置 DeepSeek 路由，避免 /model 里出现没有凭据的
             // deepseek-flash / deepseek-v4-pro 两个不可用模型。
@@ -190,31 +194,98 @@ export default class DshHostManager {
             '- id: llm-deepseek-account',
             '  disabled: true',
         ];
-        if (providers.length) {
-            lines.push('- id: llm-pi-ai', "  name: '@deepseek-ai/dsh-llm-pi-ai'", '  config:', '    providers:');
-            for (const p of providers) {
-                lines.push(
-                    `      ${p.id}:`,
-                    `        displayName: ${JSON.stringify(p.displayName)}`,
-                    '        api: openai-completions',
-                    `        baseURL: ${JSON.stringify(p.baseUrl)}`,
-                    `        apiKeyEnv: ${p.apiKeyEnv}`,
-                    '        models:',
-                    `          - id: ${JSON.stringify(p.model)}`,
-                    `            name: ${JSON.stringify(p.model)}`,
-                    `            contextWindow: ${Number(p.contextWindow) || 131072}`,
-                    `            maxTokens: ${Number(p.maxTokens) || 8192}`,
-                    p.reasoningEffort ? `            reasoningEfforts: { ${JSON.stringify(p.reasoningEffort)}: ${JSON.stringify(p.reasoningEffort)} }` : null,
-                    '            input: [ text, image ]',
-                );
+        this.permissions = {
+            sandbox: 'workspace-write',
+            approval: 'ask',
+            privateOwnerOnly: true,
+            approvalOwnerOnly: true,
+            allowGuestTurns: true,
+            adminUsers: robot.owner ? [robot.owner] : [],
+            workspaceRoot,
+            unknownGroups: 'ignored',
+        };
+        this.status.permissions = this.permissions;
+        // Direct user-defined providers. They intentionally bypass the AI
+        // relay: no clientKey, quota, billing or audit is applied to them.
+        const customProviders = [];
+        const customByProvider = new Map();
+        for (const m of (Array.isArray(userModels) ? userModels : [])) {
+            if (!m || !m.baseUrl || !m.model || !m.apiKey) continue;
+            const providerId = String(m.providerId || '').trim().toLowerCase();
+            if (!providerId || providerId === 'default' || !/^[a-z0-9][a-z0-9_-]*$/.test(providerId)) continue;
+            let provider = customByProvider.get(providerId);
+            if (!provider) {
+                provider = { providerId, name: m.name || providerId, models: [] };
+                customByProvider.set(providerId, provider);
+                customProviders.push(provider);
             }
-            const def = providers[0];
+            if (!provider.models.some(x => x.model === m.model)) {
+                provider.models.push(m);
+            }
+        }
+
+        if (aiUsable || customProviders.length) {
+            lines.push(
+                '- id: llm-pi-ai',
+                "  name: '@deepseek-ai/dsh-llm-pi-ai'",
+                '  config:',
+                '    providers:',
+            );
+            if (aiUsable) {
+                lines.push(
+                    '      default:',
+                    '        displayName: "DSH (server relay)"',
+                    '        api: openai-completions',
+                    `        baseURL: ${JSON.stringify(ai.baseUrl)}`,
+                    '        apiKeyEnv: "WF_AI_API_KEY"',
+                    '        models:',
+                );
+                for (const id of modelIds) {
+                    lines.push(
+                        `          - id: ${JSON.stringify(id)}`,
+                        `            name: ${JSON.stringify(id)}`,
+                        `            contextWindow: ${Number(ai.contextWindow) || 1048576}`,
+                        `            maxTokens: ${Number(ai.maxTokens) || 8192}`,
+                        ai.reasoningEffort
+                            ? `            reasoningEfforts: { ${JSON.stringify(ai.reasoningEffort)}: ${JSON.stringify(ai.reasoningEffort)} }`
+                            : null,
+                        '            input: [ text, image ]',
+                    );
+                }
+            }
+            for (const provider of customProviders) {
+                lines.push(
+                    `      ${provider.providerId}:`,
+                    `        displayName: ${JSON.stringify(provider.name)}`,
+                    '        api: openai-completions',
+                    `        baseURL: ${JSON.stringify(provider.models[0].baseUrl)}`,
+                    `        apiKeyEnv: "${this._customEnvName(provider.providerId)}"`,
+                    '        models:',
+                );
+                for (const m of provider.models) {
+                    lines.push(
+                        `          - id: ${JSON.stringify(m.model)}`,
+                        `            name: ${JSON.stringify(m.name || m.model)}`,
+                        `            contextWindow: ${Number(m.contextWindow) || 1048576}`,
+                        `            maxTokens: ${Number(m.maxTokens) || 393216}`,
+                        m.reasoningEffort
+                            ? `            reasoningEfforts: { ${JSON.stringify(m.reasoningEffort)}: ${JSON.stringify(m.reasoningEffort)} }`
+                            : null,
+                        '            input: [ text, image ]',
+                    );
+                }
+            }
+            const defaultProvider = aiUsable ? 'default' : customProviders[0].providerId;
+            const defaultModel = aiUsable
+                ? (ai.model || modelIds[0])
+                : customProviders[0].models[0].model;
+            const defaultReasoning = aiUsable ? ai.reasoningEffort : customProviders[0].models[0].reasoningEffort;
             lines.push(
                 '- id: agent-default-model',
                 '  config:',
-                `    provider: ${JSON.stringify(def.id)}`,
-                `    model: ${JSON.stringify(def.model)}`,
-                def.reasoningEffort ? `    reasoningEffort: ${JSON.stringify(def.reasoningEffort)}` : null,
+                `    provider: ${JSON.stringify(defaultProvider)}`,
+                `    model: ${JSON.stringify(defaultModel)}`,
+                defaultReasoning ? `    reasoningEffort: ${JSON.stringify(defaultReasoning)}` : null,
             );
         }
         lines.push('');
@@ -227,10 +298,15 @@ export default class DshHostManager {
     }
 
     _writeRuntimeJson(provision) {
+        const robot = { ...(provision.robot || {}) };
+        const ai = { ...(provision.ai || {}) };
+        delete robot.robotSecret;
+        delete ai.apiKey;
         const runtime = {
-            robot: provision.robot || {},
-            ai: provision.ai || {},
+            robot,
+            ai,
             features: provision.features || {},
+            permissions: this.permissions,
             hostId: this.hostId,
             updatedAt: Date.now(),
         };
@@ -274,11 +350,16 @@ export default class DshHostManager {
             WF_AI_API_KEY: (provision.ai && provision.ai.apiKey) || '',
             WF_AI_MODEL: (provision.ai && provision.ai.model) || '',
         };
-        (this.userModels || []).forEach((m, index) => {
-            env[`WF_USER_AI_KEY_${index}`] = m.apiKey || '';
-        });
+        for (const m of (Array.isArray(this.userModels) ? this.userModels : [])) {
+            if (m && m.apiKey && m.providerId) {
+                env[this._customEnvName(m.providerId)] = m.apiKey;
+            }
+        }
         env.DSH_HOME = process.env.WF_DSH_HOME || bundledHome;
         env.DSH_PROFILE = profile;
+        // 强制桌面端默认权限：不继承构建机/宿主机的 DSH 权限模式（例如
+        // 用户全局设了 danger-full-access，不能悄悄带进本应用）。
+        env.DSH_PERMISSION_MODE = 'workspace-write';
         // 不继承宿主机的 DeepSeek 凭据；内置 deepseek-official 路由也已禁用。
         delete env.DEEPSEEK_API_KEY;
 
@@ -395,7 +476,12 @@ export default class DshHostManager {
     }
 
     getStatus() {
-        return { ...this.status, gateway: this._readGatewayStatus(), dshHome: this.dshHome };
+        return {
+            ...this.status,
+            gateway: this._readGatewayStatus(),
+            permissions: this.permissions,
+            dshHome: this.dshHome,
+        };
     }
 
     getLogTail(maxLines = 300) {
@@ -497,6 +583,20 @@ export default class DshHostManager {
             if (!fs.existsSync(file)) return [];
             const lines = fs.readFileSync(file, 'utf8').trim().split(/\r?\n/).filter(Boolean);
             return lines.slice(-Math.max(1, limit)).map(line => {
+                try { return JSON.parse(line); } catch (e) { return null; }
+            }).filter(Boolean).reverse();
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /** Permission audit trail written by the plugin (newest first). */
+    getAudit(limit = 100) {
+        try {
+            const file = path.join(this.dshHome, 'wildfire-audit.jsonl');
+            if (!fs.existsSync(file)) return [];
+            const lines = fs.readFileSync(file, 'utf8').trim().split(/\r?\n/).filter(Boolean);
+            return lines.slice(-Math.max(1, Math.min(500, limit))).map(line => {
                 try { return JSON.parse(line); } catch (e) { return null; }
             }).filter(Boolean).reverse();
         } catch (e) {

@@ -347,7 +347,10 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "custom_placeholder": "Or type a custom answer…",
-      "pending_tip": "Some questions remain unanswered"
+      "pending_tip": "Some questions remain unanswered",
+      "requested_by": "Requested by",
+      "approver": "Approver",
+      "approver_only": "Only {0} can decide"
     },
     "plan": {
       "toggle": "View plan details"

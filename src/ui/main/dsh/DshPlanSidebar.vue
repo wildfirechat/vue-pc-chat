@@ -59,6 +59,20 @@
         </section>
 
         <section class="dsh-plan-section">
+            <h3>Permissions</h3>
+            <div class="dsh-perm-row">
+                <span>文件</span>
+                <span class="dsh-perm-badge" :class="sandboxClass">{{ sandboxLabel }}</span>
+            </div>
+            <div class="dsh-perm-row">
+                <span>审批</span>
+                <span class="dsh-perm-badge" :class="approvalClass">{{ approvalLabel }}</span>
+            </div>
+            <p v-if="!sandbox && !approval" class="dsh-plan-empty">会话激活后显示。</p>
+            <p class="dsh-plan-empty dsh-perm-note">仅群创建者/管理员可修改；敏感操作按审批策略弹卡片。</p>
+        </section>
+
+        <section class="dsh-plan-section">
             <h3>Context</h3>
             <dl class="dsh-plan-dl">
                 <dt>模型</dt><dd>{{ model || '-' }}</dd>
@@ -81,6 +95,8 @@ import {
 } from '../../util/agentState';
 import { getDshFiles, openDshPath } from '../../../dsh/renderer/dshClient';
 import store from '../../../store';
+import wfc from '../../../wfc/client/wfc';
+import AgentCommandMessageContent from '../../../wfc/messages/agentCommandMessageContent';
 import AgentTaskProgressMessageContent from '../../../wfc/messages/agentTaskProgressMessageContent';
 import {AgentGoalMessageContent} from '../../../wfc/messages/agentMessageContents';
 
@@ -93,13 +109,44 @@ export default {
         selectedRobotId: { type: String, default: '' },
     },
     data() {
-        return { panel: null, state: null, metrics: null, files: [], width: Number(localStorage.getItem('dsh-plan-width')) || 286, resizing: false };
+        return { panel: null, state: null, metrics: null, files: [], width: Number(localStorage.getItem('dsh-plan-width')) || 286, resizing: false, _panelRequestKey: '' };
     },
     computed: {
         cwd() { return (this.panel && this.panel.cwd) || ''; },
         model() { return (this.panel && this.panel.model) || ''; },
         effort() { return (this.panel && this.panel.effort) || ''; },
         preset() { return (this.panel && this.panel.preset) || ''; },
+        sandbox() {
+            const s = this.panel && this.panel.sandbox;
+            return (s && s.current) || '';
+        },
+        sandboxLabel() {
+            return ({
+                'read-only': '只读',
+                'workspace-write': '工作区可写',
+                'danger-full-access': '完全访问',
+            })[this.sandbox] || this.sandbox || '未激活';
+        },
+        sandboxClass() {
+            if (this.sandbox === 'danger-full-access') return 'danger';
+            if (this.sandbox === 'workspace-write') return 'warn';
+            if (this.sandbox === 'read-only') return 'safe';
+            return 'muted';
+        },
+        approval() {
+            const a = this.panel && this.panel.approval;
+            return (a && a.current) || '';
+        },
+        approvalLabel() {
+            if (this.approval === 'ask') return '每次询问';
+            if (this.approval === 'never') return '不询问（直接拒绝）';
+            return this.approval || '未激活';
+        },
+        approvalClass() {
+            if (this.approval === 'ask') return 'safe';
+            if (this.approval === 'never') return 'warn';
+            return 'muted';
+        },
         shortSession() {
             const id = (this.panel && this.panel.sessionId) || '';
             return id.length > 18 ? id.slice(0, 8) + '…' + id.slice(-6) : id;
@@ -139,8 +186,8 @@ export default {
         },
     },
     watch: {
-        conversation: { immediate: true, handler() { this.load(); } },
-        robotId() { this.load(); },
+        conversation: { immediate: true, handler() { this._panelRequestKey = ''; this.load(); } },
+        robotId() { this._panelRequestKey = ''; this.load(); },
     },
     mounted() {
         this.timer = setInterval(() => this.load(), 5000);
@@ -150,11 +197,23 @@ export default {
         this.stopResize();
     },
     methods: {
+        /** 207 组合查询：让插件写 scope=31 type=3（沙箱/审批/模型/计划）。每个会话只发一次。 */
+        requestPanel() {
+            if (!this.conversation || !this.conversation.target) return;
+            const key = `${this.conversation.type}-${this.conversation.line}-${this.conversation.target}-${this.robotId || ''}`;
+            if (this._panelRequestKey === key) return;
+            this._panelRequestKey = key;
+            try {
+                const content = new AgentCommandMessageContent('query', '', Date.now() % 100000, this.robotId || undefined);
+                wfc.sendConversationMessage(this.conversation, content);
+            } catch (e) { /* 面板查询失败不影响其它信息展示 */ }
+        },
         async load() {
             if (!this.conversation || !this.conversation.target) {
                 this.panel = null; this.state = null; this.metrics = null;
                 return;
             }
+            this.requestPanel();
             try {
                 const [panel, state, metrics] = await Promise.all([
                     Promise.resolve(getAgentPanelDataFor(this.conversation, this.robotId)),
@@ -240,6 +299,13 @@ export default {
     color: var(--text-secondary, #8a8f99);
 }
 .dsh-plan-empty { margin: 0; font-size: 12px; line-height: 1.55; color: var(--text-secondary, #8a8f99); }
+.dsh-perm-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; margin-bottom: 5px; color: var(--text-secondary, #6b7280); }
+.dsh-perm-badge { font-size: 10px; padding: 2px 7px; border-radius: 999px; background: #eef2f7; color: #475569; }
+.dsh-perm-badge.safe { background: #e8f5ec; color: #1a7f37; }
+.dsh-perm-badge.warn { background: #fff4e5; color: #a15c00; }
+.dsh-perm-badge.danger { background: #fdecec; color: #b42318; }
+.dsh-perm-badge.muted { background: #f2f3f5; color: #8a8f99; }
+.dsh-perm-note { margin-top: 4px; font-size: 10px; }
 .dsh-plan-path { font-size: 10px; color: var(--text-secondary, #8a8f99); word-break: break-all; margin: 0 0 6px; }
 .dsh-plan-files { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 6px; }
 .dsh-plan-file { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; border: 0; background: transparent; color: #4b5563; font-size: 11px; text-align: left; padding: 2px 4px; border-radius: 4px; cursor: pointer; }
