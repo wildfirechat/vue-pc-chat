@@ -31,6 +31,7 @@ const IpcEventType = {
     GET_SELF_SIGNED_CERT_FILES: 'get-self-signed-cert-files',
     // DSH 内置运行时
     DSH_PROVISION: 'dsh-provision',
+    DSH_SYNC_CONFIG: 'dsh-sync-config',
     DSH_GET_CACHED: 'dsh-get-cached',
     DSH_GET_STATUS: 'dsh-get-status',
     DSH_GET_LOG: 'dsh-get-log',
@@ -45,6 +46,7 @@ const IpcEventType = {
     DSH_AI_AGENT_SET_SERVER: 'dsh-ai-agent-set-server',
     DSH_AI_AGENT_CLEAR: 'dsh-ai-agent-clear',
     DSH_AI_AGENT_STATS: 'dsh-ai-agent-stats',
+    DSH_RENAME_ROBOT: 'dsh-rename-robot',
     DSH_ADD_MODEL: 'dsh-add-model',
     DSH_UPDATE_MODEL: 'dsh-update-model',
     DSH_DELETE_MODEL: 'dsh-delete-model',

@@ -45,6 +45,17 @@ export default class DshProvisionService {
         };
     }
 
+    renameRobot(userId, displayName) {
+        const record = this.store.get(userId);
+        if (!record || !record.provision || !record.provision.robot) return null;
+        record.provision.robot.displayName = displayName;
+        this.store.put(userId, record.provision, record.appServerUrl || '');
+        return {
+            publicView: DshProvisionStore.publicView(record.provision, true),
+            full: record.provision,
+        };
+    }
+
     clear(userId) {
         this.store.clear(userId);
     }

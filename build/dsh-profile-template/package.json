@@ -2,7 +2,7 @@
   "name": "dsh-profile-wildfire",
   "private": true,
   "dependencies": {
-    "@wildfirechat/dsh-wildfire": "0.2.0"
+    "@wildfirechat/dsh-wildfire": "0.2.2"
   },
   "dsh": {
     "profile": {

@@ -123,31 +123,18 @@ export default class DshAiAgentService {
             throw new Error(`AI 服务开通失败：${message}`);
         }
         const data = response.data || {};
-        if (!data.robot || !data.robot.robotId || !data.robot.robotSecret) {
-            throw new Error('AI 服务开通失败：返回缺少 robotId/robotSecret');
-        }
         if (!data.config || !data.config.baseUrl || !data.config.apiKey) {
             throw new Error('AI 服务开通失败：返回缺少 AI 配置');
         }
+        // A missing robot is a partial success: keep the AI config so model /
+        // quota changes still reach the client, and let the caller report the
+        // robot error without restarting the Host.
         // Only switch the active server after a successful /provision.
         this.rememberServer(userId, base, true);
         this.records[userId] = {
             serverUrl: base,
-            config: {
-                baseUrl: data.config.baseUrl,
-                apiKey: data.config.apiKey,
-                expiresAt: Number(data.config.expiresAt) || 0,
-                model: data.config.model || '',
-                reasoningEffort: data.config.reasoningEffort || '',
-                maxTokens: data.config.maxTokens,
-                contextWindow: data.config.contextWindow,
-                allowedModels: data.config.allowedModels || [],
-                source: data.config.source || {},
-                enabled: data.config.enabled !== false,
-                configured: data.config.configured === true,
-                userName: data.config.user?.name || '',
-                userId: data.config.user?.id || '',
-            },
+            configVersion: data.configVersion || '',
+            config: this._configFrom(data.config),
             updatedAt: Date.now(),
         };
         this._persist();
@@ -155,6 +142,84 @@ export default class DshAiAgentService {
             ...data,
             aiAgent: data.aiAgent || { serverUrl: base },
         };
+    }
+
+    _configFrom(cfg) {
+        const c = cfg || {};
+        return {
+            baseUrl: c.baseUrl,
+            apiKey: c.apiKey,
+            expiresAt: Number(c.expiresAt) || 0,
+            model: c.model || '',
+            reasoningEffort: c.reasoningEffort || '',
+            maxTokens: c.maxTokens,
+            contextWindow: c.contextWindow,
+            allowedModels: c.allowedModels || [],
+            source: c.source || {},
+            enabled: c.enabled !== false,
+            configured: c.configured === true,
+            userName: c.user?.name || '',
+            userId: c.user?.id || '',
+        };
+    }
+
+    /**
+     * Cheap config refresh (GET /api/me/config). No IM call and no key rotation:
+     * only the server-side config is merged into the cached record.
+     *
+     * Resolves to { ok, changed, unchanged, needsReprovision, disabled, status }.
+     */
+    async fetchConfig(userId, { etag } = {}) {
+        const record = this.records[userId];
+        if (!record || !record.config || !record.config.apiKey || !record.serverUrl) {
+            return { ok: false, needsReprovision: true, error: 'AI 服务尚未开通' };
+        }
+        // Refresh before the key actually expires instead of waiting for a 401.
+        const expiresAt = Number(record.config.expiresAt) || 0;
+        if (expiresAt && expiresAt - Date.now() < 10 * 60 * 1000) {
+            return { ok: false, needsReprovision: true, error: '客户端 Key 即将过期' };
+        }
+        const url = `${record.serverUrl.replace(/\/+$/, '')}/api/me/config`;
+        const headers = { Authorization: `Bearer ${record.config.apiKey}` };
+        if (etag) headers['If-None-Match'] = etag;
+        try {
+            const response = await axios.get(url, {
+                timeout: 15000,
+                httpsAgent: this.httpsAgent,
+                proxy: false,
+                headers,
+                validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
+            });
+            if (response.status === 304) {
+                return { ok: true, unchanged: true, configVersion: record.configVersion || '' };
+            }
+            const data = response.data || {};
+            if (!data.config || !data.config.baseUrl || !data.config.apiKey) {
+                return { ok: false, error: 'AI 服务返回缺少 AI 配置' };
+            }
+            const nextVersion = data.configVersion || '';
+            const changed = nextVersion !== (record.configVersion || '');
+            this.records[userId] = {
+                ...record,
+                configVersion: nextVersion,
+                config: this._configFrom(data.config),
+                updatedAt: Date.now(),
+            };
+            this._persist();
+            return { ok: true, changed, configVersion: nextVersion };
+        } catch (e) {
+            const status = e.response?.status;
+            const message = e.response?.data?.error?.message || e.message || '配置刷新失败';
+            return {
+                ok: false,
+                status,
+                error: message,
+                // 401: key rotated/expired; 404/405: server too old for this
+                // endpoint, fall back to /provision.
+                needsReprovision: status === 401 || status === 404 || status === 405,
+                disabled: status === 403,
+            };
+        }
     }
 
     /** 返回可注入 Host 的 AI 配置；provision 时刷新。 */
@@ -178,6 +243,22 @@ export default class DshAiAgentService {
         return response.data;
     }
 
+    async renameRobot(userId, displayName) {
+        const record = this.records[userId];
+        if (!record || !record.config || !record.config.apiKey || !record.serverUrl) {
+            throw new Error('AI 服务尚未开通');
+        }
+        const response = await axios.post(`${record.serverUrl.replace(/\/+$/, '')}/api/me/robot/rename`,
+            { displayName },
+            {
+                timeout: 15000,
+                httpsAgent: this.httpsAgent,
+                proxy: false,
+                headers: { Authorization: `Bearer ${record.config.apiKey}` },
+            });
+        return response.data;
+    }
+
     get(userId) {
         return this.records[userId] || null;
     }
@@ -190,6 +271,7 @@ export default class DshAiAgentService {
             serverUrl: record.pendingServerUrl || record.serverUrl,
             activeServerUrl: record.serverUrl,
             pendingServerUrl: record.pendingServerUrl || '',
+            configVersion: record.configVersion || '',
             updatedAt: record.updatedAt || 0,
             user: { name: c.userName || '', id: c.userId || '' },
             enabled: c.enabled !== false,

@@ -74,7 +74,7 @@
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home/conference'}"></i>
                             </div>
                         </li>
-                        <li v-if="aiPortalUrl || sharedMiscState.isElectron">
+                        <li v-if="showDshEntry">
                             <div class="i-button-wrapper" @click="go2AI">
                                 <i class="icon-ion-android-sunny"
                                    v-bind:class="{ active: this.$router.currentRoute.value.path === '/home/dsh' || this.$router.currentRoute.value.path === '/home/ai'}"></i>
@@ -82,9 +82,7 @@
                             </div>
                         </li>
                         <li>
-                            <div class="i-button-wrapper"
-                                 v-show="this.$router.currentRoute.value.path !== '/home/ai'"
-                                 @click="go2Setting">
+                            <div class="i-button-wrapper" @click="go2Setting">
                                 <i class="icon-ion-android-settings"
                                    v-bind:class="{active : this.$router.currentRoute.value.path === '/home/setting'}"></i>
                             </div>
@@ -163,7 +161,7 @@ import AI from "./AI.vue";
 import Config from "../../config";
 import BackupView from '../../backup/BackupView.vue'
 import SubWindowHost from "./SubWindowHost.vue";
-import { provisionDsh } from "../../dsh/renderer/dshClient";
+import { provisionDsh, syncDshConfig, getDshAiAgent } from "../../dsh/renderer/dshClient";
 
 var avenginkitSetuped = false;
 export default {
@@ -181,11 +179,37 @@ export default {
             conferenceMinimized: false,
             conferenceMinimizing: false,
             dshProvisionStarted: false,
+            hasAiAgentServer: !!Config.getAiAgentServer(),
+            lastDshSyncAt: 0,
+            dshDisabledNotifiedAt: 0,
             voipTransformOrigin: '5% 95%',
         };
     },
 
     methods: {
+        async refreshDshAvailability() {
+            if (!this.sharedMiscState.isElectron) {
+                this.hasAiAgentServer = false;
+                return;
+            }
+            if (Config.getAiAgentServer()) {
+                this.hasAiAgentServer = true;
+                return;
+            }
+            const userId = wfc.getUserId();
+            if (!userId) {
+                this.hasAiAgentServer = false;
+                return;
+            }
+            try {
+                const result = await getDshAiAgent(userId);
+                if (wfc.getUserId() !== userId) return; // stale after logout/switch
+                const view = result && result.ok ? result.view : null;
+                this.hasAiAgentServer = !!(view && (view.serverUrl || view.activeServerUrl));
+            } catch (e) {
+                this.hasAiAgentServer = false;
+            }
+        },
         async maybeProvisionDsh() {
             if (this.dshProvisionStarted || !this.sharedMiscState.isElectron || !this.sharedContactState.selfUserInfo) return;
             const status = wfc.getConnectionStatus();
@@ -200,18 +224,33 @@ export default {
             }
         },
         /**
-         * AI 代理 token 续期：provision 内部只在 token 即将过期时才请求服务端；
-         * 凭据变化会重启 Host（background.js 比较 baseUrl/apiKey/secret）。
+         * 每 5 分钟的廉价配置同步：GET /api/me/config（不需要 IM authCode）。
+         * 服务端模型/白名单/开关变化会在这里被发现并重启 Host；401 时由
+         * syncDshConfig 内部触发一次强制 /provision。
          */
-        async refreshDshToken() {
+        async refreshDshConfig() {
             if (!this.sharedMiscState.isElectron || !this.sharedContactState.selfUserInfo) return;
+            if (Date.now() - this.lastDshSyncAt < 60 * 1000) return; // 焦点/重连去重
+            this.lastDshSyncAt = Date.now();
             try {
-                // Force a fresh /provision so a rotated clientKey and its
-                // keyIssuedAt/expiresAt are picked up by the Host.
-                await provisionDsh(true);
+                const result = await syncDshConfig();
+                if (result && result.disabled) this.notifyDshDisabled();
             } catch (e) {
-                console.warn('[dsh] token refresh failed', e && e.message ? e.message : e);
+                console.warn('[dsh] config sync failed', e && e.message ? e.message : e);
             }
+        },
+        notifyDshDisabled() {
+            const now = Date.now();
+            if (now - this.dshDisabledNotifiedAt < 60 * 60 * 1000) return;
+            this.dshDisabledNotifiedAt = now;
+            this.$notify({
+                title: 'AI 服务已停用',
+                text: '管理员已停用你的 AI 服务，请联系管理员。',
+                type: 'error',
+            });
+        },
+        onDshWindowFocus() {
+            this.refreshDshConfig();
         },
 
         onConferenceStart(pos, event) {
@@ -350,6 +389,8 @@ export default {
             if (status === ConnectionStatus.ConnectionStatusConnected) {
                 this.dshProvisionStarted = false;
                 this.maybeProvisionDsh();
+                this.refreshDshConfig();
+                this.refreshDshAvailability();
                 return;
             }
             if (status === ConnectionStatus.ConnectionStatusUnconnected
@@ -387,10 +428,12 @@ export default {
         'sharedContactState.selfUserInfo'(newVal) {
             if (!newVal) {
                 this.dshProvisionStarted = false;
+                this.refreshDshAvailability();
                 return;
             }
             this.dshProvisionStarted = false;
             this.maybeProvisionDsh();
+            this.refreshDshAvailability();
         },
         'sharedMiscState.isVoipOngoing'(newVal) {
             if (!newVal) {
@@ -403,6 +446,10 @@ export default {
     },
 
     computed: {
+        showDshEntry() {
+            if (!this.sharedMiscState.isElectron) return !!this.aiPortalUrl;
+            return this.hasAiAgentServer || !!Config.getAiAgentServer();
+        },
         aiPortalUrl() {
             return Config.AI_PORTAL_URL
         },
@@ -467,7 +514,11 @@ export default {
 
     mounted() {
         this.maybeProvisionDsh();
-        this.dshTokenTimer = setInterval(() => this.refreshDshToken(), 30 * 60 * 1000);
+        this.refreshDshAvailability();
+        this.dshTokenTimer = setInterval(() => this.refreshDshConfig(), 5 * 60 * 1000);
+        window.addEventListener('focus', this.onDshWindowFocus);
+        window.addEventListener('dsh-ai-agent-server-changed', this.refreshDshAvailability);
+        window.addEventListener('dsh-provision-updated', this.refreshDshAvailability);
         if (!isElectron()) {
             this.$eventBus.$on('conference-slider-opened', () => { this.conferenceSliderOpen = true; });
             this.$eventBus.$on('conference-slider-closed', () => { this.conferenceSliderOpen = false; });
@@ -509,6 +560,9 @@ export default {
     },
     unmounted() {
         if (this.dshTokenTimer) { clearInterval(this.dshTokenTimer); this.dshTokenTimer = null; }
+        window.removeEventListener('focus', this.onDshWindowFocus);
+        window.removeEventListener('dsh-ai-agent-server-changed', this.refreshDshAvailability);
+        window.removeEventListener('dsh-provision-updated', this.refreshDshAvailability);
         if (!isElectron()) {
             this.$eventBus.$off('conference-slider-opened');
             this.$eventBus.$off('conference-slider-closed');

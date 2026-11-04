@@ -1523,6 +1523,22 @@ function devPublicView(provision) {
     };
 }
 
+/**
+ * Any change that must restart the Host: credentials, model catalog, model
+ * whitelist, enabled/configured state and the robot gateway.
+ */
+function provisionFingerprint(provision) {
+    const ai = (provision && provision.ai) || {};
+    const robot = (provision && provision.robot) || {};
+    return [
+        ai.baseUrl, ai.apiKey, ai.model, ai.reasoningEffort,
+        Number(ai.maxTokens || 0), Number(ai.contextWindow || 0),
+        Array.isArray(ai.allowedModels) ? ai.allowedModels.join(',') : '',
+        ai.enabled === true, ai.configured === true,
+        robot.robotId, robot.robotSecret, robot.gatewayUrl,
+    ].map((v) => String(v == null ? '' : v)).join('\u0001');
+}
+
 // ===================== 内置 DSH IPC =====================
 ipcMain.handle(IPCEventType.DSH_PROVISION, async (event, args = {}) => {
     try {
@@ -1548,21 +1564,21 @@ ipcMain.handle(IPCEventType.DSH_PROVISION, async (event, args = {}) => {
             result.publicView.aiAgent = dshAiAgentService.publicView(userId);
         }
         let hostStatus = dshHostManager.getStatus();
+        if (!result.full.robot || !result.full.robot.robotId) {
+            // AI config was refreshed but the robot is unavailable. Do not
+            // touch the running Host; surface the problem to the UI instead.
+            return {
+                ok: true,
+                provision: result.publicView,
+                hostStatus,
+                robotError: result.full.robotError || '机器人开通失败',
+            };
+        }
         const sameRobot = hostStatus && hostStatus.robotId === result.full.robot.robotId;
         const alive = hostStatus && (hostStatus.state === 'running' || hostStatus.state === 'starting');
-        // token/secret 变化（例如 AI 代理 token 续期）必须重启 Host 才能注入新 env。
-        const previous = dshHostManager.provision || {};
-        const prevAi = previous.ai || {};
-        const nextAi = result.full.ai || {};
-        const sameCredentials =
-            previous.robot && nextAi && prevAi.baseUrl === nextAi.baseUrl &&
-            prevAi.apiKey === nextAi.apiKey &&
-            (prevAi.model || '') === (nextAi.model || '') &&
-            (prevAi.reasoningEffort || '') === (nextAi.reasoningEffort || '') &&
-            Number(prevAi.maxTokens || 0) === Number(nextAi.maxTokens || 0) &&
-            Number(prevAi.contextWindow || 0) === Number(nextAi.contextWindow || 0) &&
-            (previous.robot.robotSecret || '') === (result.full.robot.robotSecret || '');
-        if (!(sameRobot && alive && sameCredentials)) {
+        // token/secret/模型目录/白名单/开关变化都必须重启 Host 才能生效。
+        const sameConfig = provisionFingerprint(dshHostManager.provision) === provisionFingerprint(result.full);
+        if (!(sameRobot && alive && sameConfig)) {
             try {
                 hostStatus = await dshHostManager.start(result.full, false, dshModelStore.get(userId));
             } catch (e) {
@@ -1596,12 +1612,66 @@ ipcMain.handle(IPCEventType.DSH_GET_CACHED, async (event, userId) => {
             cached.publicView.aiAgent = dshAiAgentService.publicView(userId);
         }
         let hostStatus = dshHostManager.getStatus();
+        if (!cached.full.robot || !cached.full.robot.robotId) {
+            return {
+                ok: true,
+                provision: cached.publicView,
+                hostStatus,
+                robotError: cached.full.robotError || '机器人不可用',
+            };
+        }
         const sameRobot = hostStatus && hostStatus.robotId === cached.full.robot.robotId;
         const alive = hostStatus && (hostStatus.state === 'running' || hostStatus.state === 'starting');
-        if (!(sameRobot && alive)) {
+        const sameConfig = provisionFingerprint(dshHostManager.provision) === provisionFingerprint(cached.full);
+        if (!(sameRobot && alive && sameConfig)) {
             try { hostStatus = await dshHostManager.start(cached.full, false, dshModelStore.get(userId)); } catch (e) { hostStatus = dshHostManager.getStatus(); }
         }
         return { ok: true, provision: cached.publicView, hostStatus };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+/**
+ * Cheap config sync (GET /api/me/config). Merges the server config into the
+ * cache and restarts the Host only when the effective provision changed.
+ */
+ipcMain.handle(IPCEventType.DSH_SYNC_CONFIG, async (event, userId) => {
+    try {
+        if (!userId) throw new Error('未登录');
+        const record = dshAiAgentService.get(userId);
+        if (!record || !record.config) {
+            return { ok: false, needsReprovision: true, error: 'AI 服务尚未开通' };
+        }
+        const fetched = await dshAiAgentService.fetchConfig(userId, { etag: record.configVersion });
+        if (!fetched.ok) return fetched;
+        if (fetched.unchanged) {
+            return { ok: true, unchanged: true, configVersion: fetched.configVersion, hostStatus: dshHostManager.getStatus() };
+        }
+        const cached = dshProvisionService.getCached(userId);
+        if (!cached || !cached.full) {
+            return { ok: true, changed: true, needsReprovision: true, configVersion: fetched.configVersion };
+        }
+        const full = applyAiAgentConfig(cached.full, dshAiAgentService.resolve(userId));
+        full.configVersion = fetched.configVersion || full.configVersion;
+        let hostStatus = dshHostManager.getStatus();
+        const alive = hostStatus && ['running', 'starting', 'restarting', 'crashed'].includes(hostStatus.state);
+        if (alive && full.robot && full.robot.robotId
+            && provisionFingerprint(dshHostManager.provision) !== provisionFingerprint(full)) {
+            try {
+                hostStatus = await dshHostManager.start(full, false, dshModelStore.get(userId));
+            } catch (e) {
+                console.log('[dsh] restart after config sync failed', e && e.message ? e.message : e);
+                hostStatus = dshHostManager.getStatus();
+            }
+        }
+        return {
+            ok: true,
+            changed: true,
+            configVersion: fetched.configVersion,
+            provision: DshProvisionStore.publicView(full, false),
+            hostStatus,
+        };
     } catch (e) {
         return { ok: false, error: e && e.message ? e.message : String(e) };
     }
@@ -1703,6 +1773,23 @@ ipcMain.handle(IPCEventType.DSH_AI_AGENT_LOGIN, async (event, args = {}) => {
 ipcMain.handle(IPCEventType.DSH_AI_AGENT_STATS, async (event, userId) => {
     try {
         return { ok: true, stats: await dshAiAgentService.stats(userId) };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_RENAME_ROBOT, async (event, args = {}) => {
+    try {
+        const userId = args.userId;
+        const displayName = args.displayName;
+        if (!userId) throw new Error('未登录');
+        const result = await dshAiAgentService.renameRobot(userId, displayName);
+        const saved = result && result.displayName ? result.displayName : displayName;
+        const updated = dshProvisionService.renameRobot(userId, saved);
+        if (dshHostManager.provision && dshHostManager.provision.robot) {
+            dshHostManager.provision.robot.displayName = saved;
+        }
+        return { ok: true, displayName: saved, provision: updated ? updated.publicView : null };
     } catch (e) {
         return { ok: false, error: e && e.message ? e.message : String(e) };
     }

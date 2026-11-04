@@ -2,7 +2,7 @@ import { ipcRenderer, isElectron } from '../../platform';
 import Config from '../../config';
 import wfc from '../../wfc/client/wfc';
 import IpcEventType from '../../ipcEventType';
-import { setDshProvision, setDshHostStatus } from './state';
+import { setDshProvision, setDshHostStatus, dshState } from './state';
 
 export function isDshSupported() {
     return isElectron();
@@ -29,10 +29,18 @@ export async function provisionDsh(forceRefresh = false) {
     if (!userId) throw new Error('未登录');
     const cached = await ipcRenderer.invoke(IpcEventType.DSH_GET_CACHED, userId);
     if (!forceRefresh && cached && cached.ok && cached.provision) {
-        setDshProvision(cached.provision);
-        setDshHostStatus(cached.hostStatus);
-        try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
-        return cached;
+        // A cached client key can expire while the app is closed. Refresh on
+        // startup when it is missing or close to expiring; 0 means the server
+        // has no TTL, so rely on the periodic config sync instead.
+        const ai = cached.provision.ai || {};
+        const expiresAt = Number(ai.expiresAt) || 0;
+        const fresh = !expiresAt || expiresAt - Date.now() > 24 * 60 * 60 * 1000;
+        if (fresh) {
+            setDshProvision(cached.provision);
+            setDshHostStatus(cached.hostStatus);
+            try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
+            return cached;
+        }
     }
     const status = await ipcRenderer.invoke(IpcEventType.DSH_AI_AGENT_STATUS, userId);
     const serverUrl = (status && status.view && status.view.serverUrl)
@@ -55,6 +63,42 @@ export async function provisionDsh(forceRefresh = false) {
         try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
     }
     return result;
+}
+
+let lastRecoveryAt = 0;
+
+/**
+ * Periodic, authCode-free config refresh. Detects server-side model / quota /
+ * whitelist changes and recovers from a rotated client key (401) by doing one
+ * forced /provision, with a cooldown to avoid loops.
+ */
+export async function syncDshConfig() {
+    if (!isElectron()) return { ok: false, error: '仅支持 Electron' };
+    const userId = wfc.getUserId();
+    if (!userId) return { ok: false, error: '未登录' };
+    const result = await ipcRenderer.invoke(IpcEventType.DSH_SYNC_CONFIG, userId);
+    if (result && result.ok && result.provision) {
+        setDshProvision(result.provision);
+        setDshHostStatus(result.hostStatus);
+        try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
+        return result;
+    }
+    if (result && result.disabled) {
+        // The server rejected the key because the admin stopped this user.
+        // Reflect it locally so the UI shows "已停用" instead of "已配置".
+        const prev = dshState.provision;
+        if (prev) {
+            setDshProvision({ ...prev, ai: { ...(prev.ai || {}), enabled: false } });
+            try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
+        }
+        return result;
+    }
+    if (result && result.needsReprovision && Date.now() - lastRecoveryAt > 5 * 60 * 1000) {
+        lastRecoveryAt = Date.now();
+        try { return await provisionDsh(true); }
+        catch (e) { return { ok: false, error: e && e.message ? e.message : String(e), needsReprovision: true }; }
+    }
+    return result || { ok: false, error: '配置同步失败' };
 }
 
 export async function getDshStatus() {
@@ -92,6 +136,7 @@ export async function loginDshAiAgent(userId, serverUrl) {
         setDshProvision(result.provision);
         setDshHostStatus(result.hostStatus);
         try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
+        try { window.dispatchEvent(new Event('dsh-ai-agent-server-changed')); } catch (e) { /* ignore */ }
     }
     return result;
 }
@@ -101,9 +146,23 @@ export async function getDshAiAgentStats(userId) {
     return ipcRenderer.invoke(IpcEventType.DSH_AI_AGENT_STATS, userId);
 }
 
+export async function renameDshRobot(userId, displayName) {
+    if (!isElectron()) return { ok: false, error: '仅支持 Electron' };
+    const result = await ipcRenderer.invoke(IpcEventType.DSH_RENAME_ROBOT, { userId, displayName });
+    if (result && result.ok && result.provision) {
+        setDshProvision(result.provision);
+        try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
+    }
+    return result;
+}
+
 export async function setDshAiAgentServer(userId, serverUrl) {
     if (!isElectron()) return { ok: false, error: '仅支持 Electron' };
-    return ipcRenderer.invoke(IpcEventType.DSH_AI_AGENT_SET_SERVER, { userId, serverUrl });
+    const result = await ipcRenderer.invoke(IpcEventType.DSH_AI_AGENT_SET_SERVER, { userId, serverUrl });
+    if (result && result.ok) {
+        try { window.dispatchEvent(new Event('dsh-ai-agent-server-changed')); } catch (e) { /* ignore */ }
+    }
+    return result;
 }
 
 export async function clearDshAiAgent(userId) {
@@ -113,6 +172,7 @@ export async function clearDshAiAgent(userId) {
         setDshProvision(null);
         setDshHostStatus(result.hostStatus);
         try { window.dispatchEvent(new Event('dsh-provision-updated')); } catch (e) { /* ignore */ }
+        try { window.dispatchEvent(new Event('dsh-ai-agent-server-changed')); } catch (e) { /* ignore */ }
     }
     return result;
 }

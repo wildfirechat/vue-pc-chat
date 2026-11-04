@@ -173,7 +173,7 @@ function sanitizeProfile(profileDest) {
     const packageFile = path.join(profileDest, 'package.json');
     let pkg = {};
     try { pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8')); } catch (e) { pkg = {}; }
-    pkg.dependencies = { '@wildfirechat/dsh-wildfire': '0.2.0' };
+    pkg.dependencies = { '@wildfirechat/dsh-wildfire': '0.2.2' };
     fs.writeFileSync(packageFile, JSON.stringify(pkg, null, 2) + '\n');
 
     // pnpm 的 store/lock 元数据会记录构建机路径；扁平 node_modules 已足够运行。

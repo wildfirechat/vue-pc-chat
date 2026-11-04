@@ -15,7 +15,7 @@
                     <span class="dsh-model-badge">服务端默认 · 不可修改</span>
                 </div>
                 <span class="dsh-model-state" :class="{missing: !serverConfigured}">
-                    {{ serverConfigured ? '已配置' : '缺少 API Key' }}
+                    {{ serverStateText }}
                 </span>
             </div>
             <dl class="dsh-model-dl">
@@ -33,8 +33,9 @@
             <p>可以让管理员在 AI 服务后台配置默认模型，也可以添加自定义模型直连使用。</p>
         </div>
         <div v-if="serverModel && !serverConfigured" class="dsh-model-warning">
-            <strong>服务端默认模型缺少 API Key</strong>
-            <p>默认模型不可修改；可以补齐服务端 Key，或添加自定义模型直连。</p>
+            <strong>{{ ai && ai.enabled === false ? 'AI 服务已被管理员停用' : '服务端默认模型缺少 API Key' }}</strong>
+            <p v-if="ai && ai.enabled === false">请联系管理员恢复账号后再试。</p>
+            <p v-else>默认模型不可修改；可以补齐服务端 Key，或添加自定义模型直连。</p>
         </div>
 
         <div v-if="models.length" class="dsh-model-list">
@@ -129,6 +130,10 @@ export default {
         },
         serverConfigured() {
             return !!(this.ai && this.ai.configured === true);
+        },
+        serverStateText() {
+            if (this.ai && this.ai.enabled === false) return '已停用';
+            return this.serverConfigured ? '已配置' : '缺少 API Key';
         },
     },
     created() {

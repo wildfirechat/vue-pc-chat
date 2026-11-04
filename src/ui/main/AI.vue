@@ -22,24 +22,12 @@
                 </div>
             </header>
 
-            <div class="dsh-quick-actions">
-                <button class="dsh-btn primary" :disabled="!robot.robotId" @click="openRobotChat">
-                    打开单聊机器人
-                </button>
-                <button class="dsh-btn" :disabled="!robot.robotId || creatingSession" @click="createNewSession">
-                    {{ creatingSession ? '正在创建…' : '创建新会话' }}
-                </button>
-                <button class="dsh-btn ghost" :disabled="loading || !robot.robotId" @click="restartHost">
-                    重启 Host
-                </button>
-            </div>
-
             <div v-if="error" class="dsh-error">
                 <strong>DSH 暂不可用</strong>
                 <p>{{ error }}</p>
                 <div class="dsh-actions">
-                    <button class="dsh-btn primary" :disabled="loading" @click="refreshProvision">重试开通</button>
-                    <button class="dsh-btn" @click="openAiAgentSettings">配置 AI 服务</button>
+                    <button class="dsh-btn primary" :disabled="loading" @click="refreshProvision(true)">重试开通</button>
+                    <button class="dsh-btn" @click="openAiAgentSettings">查看 AI 服务</button>
                 </div>
             </div>
 
@@ -68,6 +56,7 @@
                     </button>
                 </nav>
 
+                <div class="dsh-content" :class="{ 'dsh-content-logs': activeTab === 'logs' }">
                 <!-- 概览 -->
                 <section v-if="activeTab === 'overview'" class="dsh-section">
                     <div class="dsh-overview-grid">
@@ -109,12 +98,22 @@
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">今日费用</span>
                                 <strong>{{ formatCost(myStats.today.cost) }}</strong>
-                                <span class="dsh-stat-sub">本月 {{ formatCost(myStats.month.cost) }}</span>
+                                <span class="dsh-stat-sub">按人民币单价</span>
                             </div>
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">额度</span>
                                 <strong>{{ quotaText(myStats.quota) }}</strong>
                                 <span class="dsh-stat-sub">今日剩余 {{ myStats.quota.dailyRemaining < 0 ? '不限' : myStats.quota.dailyRemaining }}</span>
+                            </div>
+                            <div class="dsh-stat">
+                                <span class="dsh-stat-label">本月 Tokens</span>
+                                <strong>{{ myStats.month.totalTokens || 0 }}</strong>
+                                <span class="dsh-stat-sub">输入 {{ myStats.month.inputTokens || 0 }} · 输出 {{ myStats.month.outputTokens || 0 }}</span>
+                            </div>
+                            <div class="dsh-stat">
+                                <span class="dsh-stat-label">本月费用</span>
+                                <strong>{{ formatCost(myStats.month.cost) }}</strong>
+                                <span class="dsh-stat-sub">按服务器本月统计</span>
                             </div>
                         </div>
                     </section>
@@ -237,7 +236,21 @@
                                 <button v-if="robot.robotId" class="dsh-mini-btn" @click="copyRobotId">复制</button>
                                 <button v-if="robot.robotId" class="dsh-mini-btn" @click="openRobotChat">打开单聊</button>
                             </dd>
-                            <dt>显示名</dt><dd>{{ robot.displayName || 'DSH 助手' }}</dd>
+                            <dt>显示名</dt>
+                            <dd>
+                                <template v-if="robotNameEditing">
+                                    <input v-model.trim="robotNameDraft" class="dsh-inline-input" maxlength="64"
+                                           @keyup.enter="saveRobotName" @keyup.esc="cancelRenameRobot">
+                                    <button class="dsh-mini-btn" :disabled="robotNameSaving" @click="saveRobotName">
+                                        {{ robotNameSaving ? '保存中…' : '保存' }}
+                                    </button>
+                                    <button class="dsh-mini-btn" :disabled="robotNameSaving" @click="cancelRenameRobot">取消</button>
+                                </template>
+                                <template v-else>
+                                    {{ robot.displayName || 'DSH 助手' }}
+                                    <button v-if="robot.robotId" class="dsh-mini-btn" @click="startRenameRobot">修改</button>
+                                </template>
+                            </dd>
                             <dt>Owner</dt><dd class="mono">{{ robot.owner || '-' }}</dd>
                             <dt>Gateway</dt><dd class="mono">{{ robot.gatewayUrl || '-' }}</dd>
                             <dt>Gateway 状态</dt><dd>{{ gatewayText }}</dd>
@@ -249,7 +262,7 @@
                             <dt>Provider</dt><dd>{{ ai.provider || '-' }}</dd>
                             <dt>模型</dt><dd>{{ ai.model || '-' }}</dd>
                             <dt>推理等级</dt><dd>{{ ai.reasoningEffort || '-' }}</dd>
-                            <dt>AI 配置</dt><dd>{{ ai.configured ? '已配置' : '未配置' }}</dd>
+                            <dt>AI 配置</dt><dd>{{ aiStateText }}</dd>
                             <dt>AI 凭证</dt>
                             <dd :class="{ 'dsh-token-expired': aiTokenExpired }">
                                 {{ ai.expiresAt ? ('代理 token，' + formatTime(ai.expiresAt) + ' 到期') : '服务端直连 key' }}
@@ -263,7 +276,7 @@
                     <div class="dsh-section-head">
                         <div>
                             <h2>AI Agent 服务</h2>
-                            <p class="dsh-muted">独立 AI 网关：authCode 登录后返回本机 DSH 使用的服务地址、客户端 Key 与模型。</p>
+                            <p class="dsh-muted">独立 AI 网关：服务地址由部署配置提供，此处只读，展示当前连接、客户端 Key 与模型。</p>
                         </div>
                     </div>
 
@@ -290,27 +303,14 @@
                             </dd>
                         </dl>
                         <div class="dsh-actions">
-                            <button class="dsh-btn" :disabled="aiAgentLoading" @click="loadAiAgent">刷新</button>
-                            <button class="dsh-btn ghost" @click="disconnectAiAgent">清除本机配置</button>
+                            <button class="dsh-btn" @click="loadAiAgent">刷新</button>
                         </div>
                     </section>
+                    <div v-else class="dsh-empty-card">
+                        <strong>尚未连接 AI 服务</strong>
+                        <p>服务地址由部署配置提供，无法在此修改；配置完成后重新登录或刷新即可。</p>
+                    </div>
 
-                    <section class="dsh-card">
-                        <h2>{{ aiAgentView ? '重新连接 / 切换服务' : '连接 AI Agent 服务' }}</h2>
-                        <div class="dsh-agent-form">
-                            <label>
-                                <span>服务地址</span>
-                                <input v-model.trim="aiAgentServerUrl" placeholder="https://ai.example.com" autocomplete="off">
-                            </label>
-                            <button class="dsh-btn ghost" :disabled="aiAgentLoading || !aiAgentServerUrl" @click="saveAiAgentServer">保存地址</button>
-                            <button class="dsh-btn primary" :disabled="aiAgentLoading || !aiAgentServerUrl" @click="connectAiAgent">
-                                {{ aiAgentLoading ? '连接中…' : '连接并应用' }}
-                            </button>
-                        </div>
-                        <p class="dsh-muted" style="margin-top: 10px;">
-                            连接时客户端通过 IM SDK 自动获取 authCode，无需手动填写；AI 服务用 IM Admin 校验后按 IM userId 自动绑定用户。连接后客户端 Key 保存在主进程加密缓存，DSH Host 会自动重启并注入新配置。
-                        </p>
-                    </section>
                 </section>
 
                 <!-- 权限 -->
@@ -455,7 +455,7 @@
                 </section>
 
                 <p v-if="loading" class="dsh-loading">正在处理…</p>
-                <p v-if="lastUpdated" class="dsh-updated">更新于 {{ lastUpdated }}</p>
+                </div>
             </template>
         </div>
     </div>
@@ -464,7 +464,6 @@
 <script>
 import Config from "../../config";
 import {
-    clearDshAiAgent,
     clearDshProvision,
     getDshAiAgent,
     getDshAiAgentStats,
@@ -472,9 +471,8 @@ import {
     getDshLog,
     getDshRouting,
     getDshStatus,
+    renameDshRobot,
     isDshSupported,
-    loginDshAiAgent,
-    setDshAiAgentServer,
     onDshStatus,
     openDshLog,
     provisionDsh,
@@ -514,6 +512,12 @@ export default {
         },
         ai() {
             return (this.provision && this.provision.ai) || {};
+        },
+        aiStateText() {
+            const ai = this.ai;
+            if (!ai || (!ai.baseUrl && !ai.model)) return '未配置';
+            if (ai.enabled === false) return '已停用';
+            return ai.configured ? '已配置' : '未配置';
         },
         hostError() {
             const s = this.hostStatus || {};
@@ -601,17 +605,17 @@ export default {
             hostStatus: {},
             loading: false,
             error: '',
-            lastUpdated: '',
             offStatus: null,
             workspaceGroups: [],
             creatingSession: false,
             activeTab: 'overview',
             logText: '',
             aiAgent: null,
+            robotNameEditing: false,
+            robotNameDraft: '',
+            robotNameSaving: false,
             myStats: null,
             statsLoading: false,
-            aiAgentServerUrl: Config.getAiAgentServer() || '',
-            aiAgentLoading: false,
             routingRecords: [],
             auditRecords: [],
             logLoading: false,
@@ -674,66 +678,54 @@ export default {
             }
         },
         formatCost(value) {
-            return '$' + (Number(value) || 0).toFixed(6);
+            return '¥' + (Number(value) || 0).toFixed(6);
         },
         quotaText(quota) {
             if (!quota) return '-';
-            if (quota.monthlyBudgetUsd > 0) return '$' + Math.max(0, quota.monthRemainingUsd).toFixed(2);
+            if (quota.monthlyBudgetCny > 0) return '¥' + Math.max(0, quota.monthRemainingCny).toFixed(2);
             if (quota.dailyRequestLimit > 0) return Math.max(0, quota.dailyRemaining) + ' 次';
             return '不限';
+        },
+        startRenameRobot() {
+            this.robotNameDraft = this.robot.displayName || 'DSH 助手';
+            this.robotNameEditing = true;
+        },
+        cancelRenameRobot() {
+            if (this.robotNameSaving) return;
+            this.robotNameEditing = false;
+            this.robotNameDraft = '';
+        },
+        async saveRobotName() {
+            if (this.robotNameSaving) return;
+            const displayName = (this.robotNameDraft || '').trim();
+            if (!displayName) {
+                this.$notify({ title: '显示名不能为空', type: 'error' });
+                return;
+            }
+            if (displayName.length > 64) {
+                this.$notify({ title: '显示名过长', text: '最多 64 个字符', type: 'error' });
+                return;
+            }
+            this.robotNameSaving = true;
+            try {
+                const result = await renameDshRobot(wfc.getUserId(), displayName);
+                if (!result || !result.ok) throw new Error((result && result.error) || '修改失败');
+                if (result.provision) this.provision = result.provision;
+                this.robotNameEditing = false;
+                this.robotNameDraft = '';
+                this.$notify({ title: '机器人显示名已修改', text: displayName, type: 'success' });
+            } catch (e) {
+                this.$notify({ title: '修改失败', text: e.message || String(e), type: 'error' });
+            } finally {
+                this.robotNameSaving = false;
+            }
         },
         async loadAiAgent() {
             try {
                 const result = await getDshAiAgent(wfc.getUserId());
                 this.aiAgent = result && result.ok ? result : null;
-                const view = this.aiAgentView;
-                const hinted = this.provision && this.provision.aiAgent;
-                if (!this.aiAgentServerUrl && view && view.serverUrl) this.aiAgentServerUrl = view.serverUrl;
-                if (!this.aiAgentServerUrl && hinted && hinted.serverUrl) this.aiAgentServerUrl = hinted.serverUrl;
             } catch (e) {
                 this.aiAgent = null;
-            }
-        },
-        async saveAiAgentServer() {
-            if (!this.aiAgentServerUrl) return;
-            try {
-                const result = await setDshAiAgentServer(wfc.getUserId(), this.aiAgentServerUrl);
-                if (!result || !result.ok) throw new Error((result && result.error) || '保存失败');
-                await this.loadAiAgent();
-                this.$notify({ title: 'AI 服务地址已保存', text: '点击「连接并应用」后会自动获取 IM authCode', type: 'success' });
-            } catch (e) {
-                this.$notify({ title: '保存失败', text: e.message || String(e), type: 'error' });
-            }
-        },
-        async connectAiAgent() {
-            if (this.aiAgentLoading) return;
-            this.aiAgentLoading = true;
-            try {
-                const result = await loginDshAiAgent(wfc.getUserId(), this.aiAgentServerUrl);
-                if (!result || !result.ok) throw new Error((result && result.error) || '连接失败');
-                if (result.provision) this.provision = result.provision;
-                await this.loadAiAgent();
-                this.hostStatus = result.hostStatus || (await getDshStatus()) || {};
-                if (result.provisionError) {
-                    this.$notify({ title: 'AI 已连接，但机器人开通失败', text: result.provisionError, type: 'error' });
-                } else {
-                    this.$notify({ title: 'AI 服务已连接', text: '机器人已开通，DSH Host 已应用该服务配置', type: 'success' });
-                }
-            } catch (e) {
-                this.$notify({ title: 'AI 服务连接失败', text: e.message || String(e), type: 'error' });
-            } finally {
-                this.aiAgentLoading = false;
-            }
-        },
-        async disconnectAiAgent() {
-            if (!window.confirm('清除本机保存的 AI 服务地址、session 与客户端 Key？DSH 将没有可用模型，需要重新连接。')) return;
-            try {
-                await clearDshAiAgent(wfc.getUserId());
-                this.aiAgent = null;
-                this.hostStatus = (await getDshStatus()) || {};
-                this.$notify({ title: '已清除 AI 服务配置', type: 'success' });
-            } catch (e) {
-                this.$notify({ title: '清除失败', text: e.message || String(e), type: 'error' });
             }
         },
         async loadAudit() {
@@ -814,11 +806,10 @@ export default {
                     return;
                 }
                 this.provision = result.provision;
-                if (!this.aiAgentServerUrl && result.provision && result.provision.aiAgent && result.provision.aiAgent.serverUrl) {
-                    this.aiAgentServerUrl = result.provision.aiAgent.serverUrl;
+                if (result.robotError) {
+                    this.$notify({ title: 'AI 配置已更新，但机器人开通失败', text: result.robotError, type: 'error' });
                 }
                 this.hostStatus = result.hostStatus || (await getDshStatus()) || {};
-                this.lastUpdated = new Date().toLocaleString();
                 this.loadWorkspaces();
                 this.loadAiAgent();
                 this.loadMyStats();
@@ -986,18 +977,54 @@ export default {
     box-sizing: border-box;
     width: 100%;
     height: 100%;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 28px 32px 40px;
     background: var(--background-primary, #fff);
     color: var(--text-primary, #1f2329);
+}
+
+.dsh-inline-input {
+    width: 180px; box-sizing: border-box; margin-right: 6px; padding: 4px 8px;
+    border: 1px solid var(--border-color, #e5e6eb); border-radius: 6px;
+    background: var(--background-primary, #fff); color: inherit; font-size: 13px;
+}
+.dsh-inline-input:focus { outline: none; border-color: #1d4ed8; }
+
+.dsh-header, .dsh-tabs { flex: 0 0 auto; }
+.dsh-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.dsh-content.dsh-content-logs {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.dsh-content-logs > .dsh-section {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+.dsh-content-logs .dsh-section-head { flex: 0 0 auto; }
+.dsh-content-logs .dsh-log {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    max-height: none;
 }
 
 .dsh-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
     margin-bottom: 20px;
 }
+.dsh-header > div:first-child { min-width: 0; }
 
 .dsh-header h1 {
     margin: 0;
@@ -1125,7 +1152,7 @@ export default {
 .dsh-warn p { margin: 4px 0 0; font-size: 12px; color: #8a5a1a; }
 .dsh-warn code { background: #fff; border: 1px solid #eadcc2; border-radius: 3px; padding: 0 3px; }
 .dsh-token-expired { color: #b42318; }
-.dsh-loading, .dsh-updated { font-size: 12px; color: var(--text-secondary, #8a8f99); margin-top: 10px; }
+.dsh-loading { font-size: 12px; color: var(--text-secondary, #8a8f99); margin-top: 10px; }
 .dsh-empty { font-size: 13px; color: var(--text-secondary, #8a8f99); }
 .dsh-workspace { margin-bottom: 12px; }
 .dsh-workspace-title { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
@@ -1150,13 +1177,7 @@ export default {
     background: #eef0f3;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-.dsh-quick-actions {
-    display: flex;
-    gap: 8px;
-    margin: 0 0 16px;
-}
-
-.dsh-header-right { display: flex; align-items: center; gap: 8px; }
+.dsh-header-right { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex: 0 0 auto; flex-wrap: wrap; }
 .dsh-icon-btn {
     width: 28px; height: 28px; border-radius: 50%;
     border: 1px solid var(--border-color, #e5e6eb);
@@ -1166,9 +1187,6 @@ export default {
 .dsh-eyebrow {
     font-size: 10px; letter-spacing: .12em; font-weight: 700;
     color: #1d4ed8; margin-bottom: 2px;
-}
-.dsh-quick-actions {
-    display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px;
 }
 .dsh-btn.ghost { background: transparent; color: var(--text-secondary, #6b7280); }
 .dsh-tabs {
@@ -1251,7 +1269,6 @@ export default {
 @media (max-width: 720px) {
     .dsh-panel { padding: 18px 16px 32px; }
     .dsh-overview-grid { grid-template-columns: 1fr; }
-    .dsh-quick-actions .dsh-btn { flex: 1; }
 }
 
 .dsh-group-card {
@@ -1287,6 +1304,7 @@ export default {
     background: #0f172a; color: #dbe4f0; border-radius: 10px;
     font: 11px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
     white-space: pre-wrap; word-break: break-all;
+    user-select: text; -webkit-user-select: text; cursor: text;
 }
 .dsh-route-row {
     display: flex; gap: 10px; padding: 12px 14px;
