@@ -92,8 +92,8 @@
                             </div>
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">今日 Tokens</span>
-                                <strong>{{ myStats.today.totalTokens || 0 }}</strong>
-                                <span class="dsh-stat-sub">缓存 {{ myStats.today.cachedInputTokens || 0 }} · 输出 {{ myStats.today.outputTokens || 0 }}</span>
+                                <strong>{{ formatToken(myStats.today.totalTokens) }}</strong>
+                                <span class="dsh-stat-sub">缓存 {{ formatToken(myStats.today.cachedInputTokens) }} · 输出 {{ formatToken(myStats.today.outputTokens) }}</span>
                             </div>
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">今日费用</span>
@@ -107,8 +107,8 @@
                             </div>
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">本月 Tokens</span>
-                                <strong>{{ myStats.month.totalTokens || 0 }}</strong>
-                                <span class="dsh-stat-sub">输入 {{ myStats.month.inputTokens || 0 }} · 输出 {{ myStats.month.outputTokens || 0 }}</span>
+                                <strong>{{ formatToken(myStats.month.totalTokens) }}</strong>
+                                <span class="dsh-stat-sub">输入 {{ formatToken(myStats.month.inputTokens) }} · 输出 {{ formatToken(myStats.month.outputTokens) }}</span>
                             </div>
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">本月费用</span>
@@ -121,7 +121,6 @@
                     <section class="dsh-card">
                         <div class="dsh-card-head">
                             <h2>最近会话</h2>
-                            <button class="dsh-link-btn" @click="activeTab = 'workspaces'">查看全部</button>
                         </div>
                         <div v-if="!recentGroups.length" class="dsh-empty">
                             还没有工作区群。点击上方「创建新会话」，机器人会自动建群。
@@ -148,81 +147,6 @@
                             <button class="dsh-btn" @click="activeTab = 'robot'">详情</button>
                         </div>
                     </section>
-                </section>
-
-                <!-- 工作区 -->
-                <section v-else-if="activeTab === 'workspaces'" class="dsh-section">
-                    <div class="dsh-section-head">
-                        <div>
-                            <h2>工作区 / 群会话</h2>
-                            <p class="dsh-muted">一个工作区可对应多个群；群就是会话。</p>
-                        </div>
-                        <button class="dsh-btn primary" :disabled="!robot.robotId || creatingSession" @click="createNewSession">
-                            新建会话
-                        </button>
-                    </div>
-                    <div v-if="!workspaceGroups.length" class="dsh-empty-card">
-                        <strong>还没有工作区群</strong>
-                        <p>点击「新建会话」，机器人会在单聊里回复新群 ID；进群即可开始。</p>
-                        <button class="dsh-btn primary" :disabled="!robot.robotId || creatingSession" @click="createNewSession">
-                            创建新会话
-                        </button>
-                    </div>
-                    <div v-for="ws in workspaceGroups" :key="ws.key" class="dsh-workspace">
-                        <div class="dsh-workspace-title">
-                            <div>
-                                <span class="dsh-workspace-name">{{ ws.name }}</span>
-                                <span class="dsh-workspace-meta">{{ ws.groups.length }} 个会话</span>
-                            </div>
-                            <button class="dsh-link-btn" @click="openGroup(ws.groups[0])">打开第一个</button>
-                        </div>
-                        <ul class="dsh-group-list dsh-group-list-card">
-                            <li v-for="g in ws.groups" :key="g.groupId" @click="openGroup(g)">
-                                <div class="dsh-group-main">
-                                    <span class="dsh-group-name">{{ g.name || g.groupId }}</span>
-                                    <span class="mono dsh-group-id">{{ g.groupId }}</span>
-                                </div>
-                                <span class="dsh-group-badge" v-if="g.remote">远程</span>
-                                <span class="dsh-group-arrow">›</span>
-                            </li>
-                        </ul>
-                    </div>
-                </section>
-
-                <!-- 群组 -->
-                <section v-else-if="activeTab === 'groups'" class="dsh-section">
-                    <div v-if="!allGroups.length" class="dsh-empty-card">
-                        <strong>还没有群组</strong>
-                        <p>创建新会话后，机器人会建立 line2 工作区群。</p>
-                    </div>
-                    <div v-for="g in allGroups" :key="g.groupId" class="dsh-group-card">
-                        <div class="dsh-group-card-head">
-                            <div>
-                                <strong>{{ g.name || g.groupId }}</strong>
-                                <span class="dsh-group-badge">{{ g.memberCount || '-' }} 人</span>
-                            </div>
-                            <div class="dsh-summary-actions">
-                                <button class="dsh-link-btn" @click="openGroup(g)">打开</button>
-                                <button class="dsh-link-btn" @click="renameGroup(g)">重命名</button>
-                            </div>
-                        </div>
-                        <p class="mono dsh-group-id">{{ g.groupId }}</p>
-                        <div class="dsh-meta-row">
-                            <span class="dsh-meta-pill">工作区 {{ g.workspaceName }}</span>
-                            <span class="dsh-meta-pill">line 2</span>
-                            <span class="dsh-meta-pill">rev {{ g.rev || '-' }}</span>
-                            <span class="dsh-meta-pill">broker {{ g.broker || '-' }}</span>
-                        </div>
-                        <div class="dsh-robot-list">
-                            <div v-for="r in g.robots" :key="r.robotId" class="dsh-robot-row">
-                                <span class="dsh-robot-dot" :class="{local: r.local}"></span>
-                                <span class="mono">{{ r.robotId }}</span>
-                                <span class="dsh-meta-pill">{{ r.role || 'member' }}</span>
-                                <span v-if="r.sessionId" class="mono dsh-session-id">{{ r.sessionId }}</span>
-                                <span class="dsh-remote-label">{{ r.local ? '本机' : '远程' }}</span>
-                            </div>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- 机器人 -->
@@ -587,14 +511,9 @@ export default {
                 .flatMap(ws => ws.groups.map(g => ({ ...g, workspaceName: ws.name })))
                 .slice(0, 5);
         },
-        allGroups() {
-            return this.workspaceGroups.flatMap(ws => ws.groups.map(g => ({ ...g, workspaceName: ws.name })));
-        },
         tabs() {
             return [
                 { id: 'overview', label: '概览' },
-                { id: 'workspaces', label: '工作区', count: this.workspaceCount },
-                { id: 'groups', label: '群组', count: this.groupCount },
                 { id: 'robot', label: '机器人' },
                 { id: 'aiAgent', label: 'AI 服务' },
                 { id: 'permissions', label: '权限' },
@@ -686,7 +605,23 @@ export default {
             }
         },
         formatCost(value) {
-            return '¥' + (Number(value) || 0).toFixed(6);
+            return '¥' + (Number(value) || 0).toFixed(2);
+        },
+        formatToken(value) {
+            const n = Number(value) || 0;
+            const abs = Math.abs(n);
+            if (abs < 10000) return n.toLocaleString('zh-CN');
+            const units = [[1e12, '万亿'], [1e8, '亿'], [1e4, '万']];
+            for (const [base, unit] of units) {
+                if (abs >= base) {
+                    const text = (n / base).toFixed(2).replace(/\.?0+$/, '');
+                    if (unit === '万' && Number(text) >= 10000) {
+                        return (n / 1e8).toFixed(2).replace(/\.?0+$/, '') + '亿';
+                    }
+                    return text + unit;
+                }
+            }
+            return n.toLocaleString('zh-CN');
         },
         quotaText(quota) {
             if (!quota) return '-';
