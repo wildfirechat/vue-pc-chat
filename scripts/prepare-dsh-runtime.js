@@ -159,6 +159,10 @@ function sanitizeProfile(profileDest) {
     fs.writeFileSync(path.join(profileDest, 'cordis.patch.yml'), `- insert:
     - id: tool-ask-user
       name: '@deepseek-ai/dsh-tool-ask-user'
+    - id: tool-present
+      name: '@deepseek-ai/dsh-tool-present'
+      config:
+        maxFiles: 8
     - id: wildfire
       name: '@wildfirechat/dsh-wildfire'
       config:
@@ -363,8 +367,13 @@ if (!fs.existsSync(path.join(profileSource, 'cordis.patch.yml'))) {
 fs.mkdirSync(dest, { recursive: true });
 const nodeDest = path.join(dest, 'node', isWin ? 'node.exe' : path.join('bin', 'node'));
 fs.mkdirSync(path.dirname(nodeDest), { recursive: true });
-fs.copyFileSync(nodeBinary, nodeDest);
-if (!isWin) fs.chmodSync(nodeDest, 0o755);
+// Write then rename: the previous runtime node may still be executing (DSH Host
+// is a child of the running app). Copying over the same inode can make the next
+// exec fail with SIGKILL; rename gives the new file a fresh inode.
+const nodeTmp = `${nodeDest}.tmp-${process.pid}`;
+fs.copyFileSync(nodeBinary, nodeTmp);
+if (!isWin) fs.chmodSync(nodeTmp, 0o755);
+fs.renameSync(nodeTmp, nodeDest);
 // 复制后立即验证目标平台可执行，避免把空文件/错误架构的 node 打进安装包。
 assertNodeBinaryForPlatform(nodeDest);
 try {

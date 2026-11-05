@@ -1,6 +1,10 @@
 - insert:
     - id: tool-ask-user
       name: '@deepseek-ai/dsh-tool-ask-user'
+    - id: tool-present
+      name: '@deepseek-ai/dsh-tool-present'
+      config:
+        maxFiles: 8
     - id: wildfire
       name: '@wildfirechat/dsh-wildfire'
       config:
