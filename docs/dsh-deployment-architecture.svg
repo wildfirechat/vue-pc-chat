@@ -1,0 +1,299 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1300" viewBox="0 0 1800 1300" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Segoe UI',sans-serif">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+  </marker>
+  <marker id="arrow-start" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M 10 0 L 0 5 L 10 10 z" fill="#475569"/>
+  </marker>
+  <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.08"/>
+  </filter>
+</defs>
+<rect x="0" y="0" width="1800" height="1300" fill="#f6f8fc"/>
+<line x1="0" y1="0" x2="0" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="40" y1="0" x2="40" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="80" y1="0" x2="80" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="120" y1="0" x2="120" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="160" y1="0" x2="160" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="200" y1="0" x2="200" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="240" y1="0" x2="240" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="280" y1="0" x2="280" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="320" y1="0" x2="320" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="360" y1="0" x2="360" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="400" y1="0" x2="400" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="440" y1="0" x2="440" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="480" y1="0" x2="480" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="520" y1="0" x2="520" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="560" y1="0" x2="560" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="600" y1="0" x2="600" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="640" y1="0" x2="640" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="680" y1="0" x2="680" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="720" y1="0" x2="720" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="760" y1="0" x2="760" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="800" y1="0" x2="800" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="840" y1="0" x2="840" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="880" y1="0" x2="880" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="920" y1="0" x2="920" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="960" y1="0" x2="960" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1000" y1="0" x2="1000" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1040" y1="0" x2="1040" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1080" y1="0" x2="1080" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1120" y1="0" x2="1120" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1160" y1="0" x2="1160" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1200" y1="0" x2="1200" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1240" y1="0" x2="1240" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1280" y1="0" x2="1280" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1320" y1="0" x2="1320" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1360" y1="0" x2="1360" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1400" y1="0" x2="1400" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1440" y1="0" x2="1440" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1480" y1="0" x2="1480" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1520" y1="0" x2="1520" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1560" y1="0" x2="1560" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1600" y1="0" x2="1600" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1640" y1="0" x2="1640" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1680" y1="0" x2="1680" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1720" y1="0" x2="1720" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="1760" y1="0" x2="1760" y2="1300" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="0" x2="1800" y2="0" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="40" x2="1800" y2="40" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="80" x2="1800" y2="80" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="120" x2="1800" y2="120" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="160" x2="1800" y2="160" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="200" x2="1800" y2="200" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="240" x2="1800" y2="240" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="280" x2="1800" y2="280" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="320" x2="1800" y2="320" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="360" x2="1800" y2="360" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="400" x2="1800" y2="400" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="440" x2="1800" y2="440" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="480" x2="1800" y2="480" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="520" x2="1800" y2="520" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="560" x2="1800" y2="560" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="600" x2="1800" y2="600" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="640" x2="1800" y2="640" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="680" x2="1800" y2="680" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="720" x2="1800" y2="720" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="760" x2="1800" y2="760" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="800" x2="1800" y2="800" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="840" x2="1800" y2="840" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="880" x2="1800" y2="880" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="920" x2="1800" y2="920" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="960" x2="1800" y2="960" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1000" x2="1800" y2="1000" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1040" x2="1800" y2="1040" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1080" x2="1800" y2="1080" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1120" x2="1800" y2="1120" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1160" x2="1800" y2="1160" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1200" x2="1800" y2="1200" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1240" x2="1800" y2="1240" stroke="#eef2f7" stroke-width="1"/>
+<line x1="0" y1="1280" x2="1800" y2="1280" stroke="#eef2f7" stroke-width="1"/>
+<text x="40" y="38" font-size="26" font-weight="800" fill="#0f172a" text-anchor="start">Wildfire DSH 部署 / 组件架构</text>
+<text x="40" y="64" font-size="13" font-weight="500" fill="#64748b" text-anchor="start">实线 = 运行时流量    虚线 = 开通 / 配置关系    编号对应底部关系表</text>
+<rect x="30" y="95" width="570" height="920" rx="18" fill="#f8fbff" stroke="#bfdbfe" stroke-width="1.6" stroke-dasharray="7 6"/>
+<text x="48" y="123" font-size="15" font-weight="800" fill="#334155" letter-spacing="0.5">客户端 / 边缘</text>
+<rect x="620" y="95" width="500" height="920" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="7 6"/>
+<text x="638" y="123" font-size="15" font-weight="800" fill="#334155" letter-spacing="0.5">IM / 网关</text>
+<rect x="1160" y="95" width="610" height="920" rx="18" fill="#f6fffb" stroke="#a7f3d0" stroke-width="1.6" stroke-dasharray="7 6"/>
+<text x="1180" y="1004" font-size="15" font-weight="800" fill="#334155" text-anchor="start">云端 / Agent Backend（ai-agent-server）</text>
+<rect x="60" y="145" width="180" height="60" rx="10" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4"/>
+<text x="73" y="169" font-size="15" font-weight="700" fill="#0f172a">终端用户 / IM 用户</text>
+<text x="73" y="189" font-size="11.5" fill="#475569">登录、群聊、与机器人对话</text>
+<rect x="50" y="235" width="530" height="560" rx="18" fill="#f8fbff" stroke="#93c5fd" stroke-width="1.6" stroke-dasharray="7 6"/>
+<text x="68" y="263" font-size="15" font-weight="800" fill="#334155" letter-spacing="0.5">PC 客户端（Electron）</text>
+<rect x="80" y="285" width="200" height="75" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+<text x="93" y="309" font-size="15" font-weight="700" fill="#0f172a">Renderer UI</text>
+<text x="93" y="329" font-size="11.5" fill="#475569">DSH 工作区 / 会话</text>
+<text x="93" y="345" font-size="11.5" fill="#475569">AI 设置 / 模型 / 插件</text>
+<rect x="320" y="285" width="230" height="75" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+<text x="333" y="309" font-size="15" font-weight="700" fill="#0f172a">Electron Main</text>
+<text x="333" y="329" font-size="11.5" fill="#475569">Provision / IPC</text>
+<text x="333" y="345" font-size="11.5" fill="#475569">Host 管理 / 模型配置</text>
+<rect x="80" y="400" width="480" height="260" rx="18" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1.6" stroke-dasharray="7 6"/>
+<text x="98" y="428" font-size="15" font-weight="800" fill="#334155" letter-spacing="0.5">DSH Host / Agent Runtime</text>
+<rect x="110" y="450" width="200" height="65" rx="10" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1.4"/>
+<text x="123" y="474" font-size="15" font-weight="700" fill="#0f172a">wildfire 插件</text>
+<text x="123" y="494" font-size="11.5" fill="#475569">IM 机器人 WS 连接</text>
+<rect x="330" y="450" width="190" height="65" rx="10" fill="#e0e7ff" stroke="#a5b4fc" stroke-width="1.4"/>
+<text x="343" y="474" font-size="15" font-weight="700" fill="#0f172a">llm-pi-ai 插件</text>
+<text x="343" y="494" font-size="11.5" fill="#475569">OpenAI Provider</text>
+<rect x="110" y="540" width="410" height="70" rx="10" fill="#eef2ff" stroke="#a5b4fc" stroke-width="1.4"/>
+<text x="123" y="564" font-size="15" font-weight="700" fill="#0f172a">工具 / 工作区 / 会话 / 审批</text>
+<text x="123" y="584" font-size="11.5" fill="#475569">本地执行环境，运行 Agent 任务</text>
+<rect x="80" y="700" width="200" height="60" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+<text x="93" y="724" font-size="15" font-weight="700" fill="#0f172a">客户端 IM SDK</text>
+<text x="93" y="744" font-size="11.5" fill="#475569">登录 / 群 / 消息</text>
+<rect x="320" y="700" width="230" height="60" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.4"/>
+<text x="333" y="724" font-size="15" font-weight="700" fill="#0f172a">本地加密存储</text>
+<text x="333" y="744" font-size="11.5" fill="#475569">provision / 模型 / 工作区</text>
+<rect x="640" y="145" width="460" height="350" rx="18" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="7 6"/>
+<text x="658" y="173" font-size="15" font-weight="800" fill="#334155" letter-spacing="0.5">Wildfire IM Server</text>
+<rect x="665" y="195" width="190" height="65" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="678" y="219" font-size="15" font-weight="700" fill="#0f172a">IM 客户端协议</text>
+<text x="678" y="239" font-size="11.5" fill="#475569">登录 / 群 / 消息</text>
+<rect x="875" y="195" width="190" height="65" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="888" y="219" font-size="15" font-weight="700" fill="#0f172a">IM 管理 API :18080</text>
+<text x="888" y="239" font-size="11.5" fill="#475569">authCode / 机器人</text>
+<rect x="665" y="285" width="190" height="65" rx="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="678" y="309" font-size="15" font-weight="700" fill="#0f172a">IM 机器人 API :80</text>
+<text x="678" y="329" font-size="11.5" fill="#475569">callback / 显示名</text>
+<rect x="875" y="285" width="190" height="65" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="888" y="309" font-size="15" font-weight="700" fill="#0f172a">机器人用户 / 群</text>
+<text x="888" y="329" font-size="11.5" fill="#475569">会话 = 群</text>
+<rect x="665" y="370" width="400" height="65" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.4"/>
+<text x="678" y="394" font-size="15" font-weight="700" fill="#0f172a">消息回调 /robot/recvmsg</text>
+<text x="678" y="414" font-size="11.5" fill="#475569">IM → Robot Gateway</text>
+<rect x="640" y="570" width="460" height="340" rx="18" fill="#ffffff" stroke="#67e8f9" stroke-width="1.6" stroke-dasharray="7 6"/>
+<text x="658" y="598" font-size="15" font-weight="800" fill="#334155" letter-spacing="0.5">Robot Gateway</text>
+<rect x="665" y="620" width="190" height="65" rx="10" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.4"/>
+<text x="678" y="644" font-size="15" font-weight="700" fill="#0f172a">HTTP :8885</text>
+<text x="678" y="664" font-size="11.5" fill="#475569">/robot/recvmsg</text>
+<rect x="875" y="620" width="190" height="65" rx="10" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.4"/>
+<text x="888" y="644" font-size="15" font-weight="700" fill="#0f172a">WebSocket :8884</text>
+<text x="888" y="664" font-size="11.5" fill="#475569">/robot/gateway</text>
+<rect x="665" y="710" width="400" height="70" rx="10" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.4"/>
+<text x="678" y="734" font-size="15" font-weight="700" fill="#0f172a">BotFather / 注册表 / 群管理</text>
+<text x="678" y="754" font-size="11.5" fill="#475569">机器人 ↔ 工作区 / 会话映射</text>
+<rect x="665" y="800" width="400" height="60" rx="10" fill="#ecfeff" stroke="#67e8f9" stroke-width="1.4"/>
+<text x="678" y="824" font-size="15" font-weight="700" fill="#0f172a">消息转发</text>
+<text x="678" y="844" font-size="11.5" fill="#475569">IM 消息 ↔ WebSocket 客户端</text>
+<rect x="1400" y="145" width="240" height="60" rx="10" fill="#fff7ed" stroke="#fdba74" stroke-width="1.4"/>
+<text x="1413" y="169" font-size="15" font-weight="700" fill="#0f172a">管理员浏览器</text>
+<text x="1413" y="189" font-size="11.5" fill="#475569">全局模型 / 用户 / 用量 / 审计</text>
+<rect x="1180" y="235" width="570" height="460" rx="18" fill="#f6fffb" stroke="#6ee7b7" stroke-width="1.6" stroke-dasharray="7 6"/>
+<rect x="1210" y="285" width="260" height="100" rx="10" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.4"/>
+<text x="1223" y="309" font-size="15" font-weight="700" fill="#0f172a">Client API :8090</text>
+<text x="1223" y="329" font-size="11.5" fill="#475569">/provision  /api/me/*</text>
+<text x="1223" y="345" font-size="11.5" fill="#475569">/v1/chat/completions</text>
+<rect x="1500" y="285" width="230" height="100" rx="10" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.4"/>
+<text x="1513" y="309" font-size="15" font-weight="700" fill="#0f172a">Admin API :8091</text>
+<text x="1513" y="329" font-size="11.5" fill="#475569">Shiro / CSRF</text>
+<text x="1513" y="345" font-size="11.5" fill="#475569">管理后台静态页</text>
+<rect x="1210" y="410" width="520" height="85" rx="10" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.4"/>
+<text x="1223" y="434" font-size="15" font-weight="700" fill="#0f172a">Services</text>
+<text x="1223" y="454" font-size="11.5" fill="#475569">Auth / RobotProvision / ClientConfig / Proxy / Stats</text>
+<text x="1223" y="470" font-size="11.5" fill="#475569">模型选择 / 配额 / 预算 / 计量</text>
+<rect x="1210" y="520" width="520" height="75" rx="10" fill="#ecfdf5" stroke="#6ee7b7" stroke-width="1.4"/>
+<text x="1223" y="544" font-size="15" font-weight="700" fill="#0f172a">Store / Crypto / Metrics</text>
+<text x="1223" y="564" font-size="11.5" fill="#475569">JPA / Provider Key 加密 / 进程指标</text>
+<rect x="1190" y="745" width="230" height="80" rx="10" fill="#fefce8" stroke="#fde047" stroke-width="1.4"/>
+<text x="1203" y="769" font-size="15" font-weight="700" fill="#0f172a">MySQL</text>
+<text x="1203" y="789" font-size="11.5" fill="#475569">ai_users / ai_global_config</text>
+<text x="1203" y="805" font-size="11.5" fill="#475569">ai_usage / ai_audit</text>
+<rect x="1450" y="745" width="270" height="80" rx="10" fill="#fdf2f8" stroke="#f9a8d4" stroke-width="1.4"/>
+<text x="1463" y="769" font-size="15" font-weight="700" fill="#0f172a">LLM Provider</text>
+<text x="1463" y="789" font-size="11.5" fill="#475569">OpenAI-compatible</text>
+<text x="1463" y="805" font-size="11.5" fill="#475569">DeepSeek 等</text>
+<rect x="1450" y="850" width="270" height="70" rx="10" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.4"/>
+<text x="1463" y="874" font-size="15" font-weight="700" fill="#0f172a">自定义模型 Provider</text>
+<text x="1463" y="894" font-size="11.5" fill="#475569">用户直连（可选）</text>
+<path d="M 230,205 L 230,285" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="230" cy="244" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="230" y="247.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">1</text>
+<path d="M 280,322 L 320,322" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<circle cx="300" cy="310" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="300" y="313.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">2</text>
+<path d="M 430,360 L 430,400" fill="none" stroke="#94a3b8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<circle cx="430" cy="380" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="430" y="383.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">3</text>
+<path d="M 550,315 L 590,315 L 590,70 L 1250,70 L 1250,285" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="820" cy="70" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="820" y="73.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">4</text>
+<path d="M 550,335 L 596,335 L 596,80 L 1350,80 L 1350,285" fill="none" stroke="#94a3b8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<circle cx="870" cy="80" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="870" y="83.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">5</text>
+<path d="M 520,470 L 600,470 L 600,90 L 1300,90 L 1300,285" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="920" cy="90" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="920" y="93.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">6</text>
+<path d="M 510,485 L 608,485 L 608,705 L 950,705 L 950,685" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="680" cy="705" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="680" y="708.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">7</text>
+<path d="M 180,760 L 180,780 L 604,780 L 604,230 L 665,230" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)" marker-start="url(#arrow-start)"/>
+<circle cx="604" cy="600" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="604" y="603.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">8</text>
+<path d="M 1210,310 L 1135,310 L 1135,230 L 1065,230" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="1135" cy="270" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="1135" y="273.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">9</text>
+<path d="M 1210,360 L 1135,360 L 1135,320 L 1065,320" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="1135" cy="340" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="1135" y="343.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">10</text>
+<path d="M 750,435 L 750,620" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="750" cy="530" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="750" y="533.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">11</text>
+<path d="M 1065,650 L 1070,650 L 1070,360 L 760,360 L 760,350" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="1070" cy="500" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="1070" y="503.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">12</text>
+<path d="M 1300,595 L 1300,745" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="1300" cy="670" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="1300" y="673.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">13</text>
+<path d="M 1500,205 L 1500,285" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="1500" cy="245" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="1500" y="248.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">14</text>
+<path d="M 1730,450 L 1755,450 L 1755,780 L 1720,780" fill="none" stroke="#475569" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<circle cx="1755" cy="600" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="1755" y="603.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">15</text>
+<path d="M 520,565 L 1110,565 L 1110,890 L 1450,890" fill="none" stroke="#94a3b8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<circle cx="1110" cy="760" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="1110" y="763.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">16</text>
+<path d="M 550,350 L 560,350 L 560,730 L 550,730" fill="none" stroke="#94a3b8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<circle cx="560" cy="620" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="560" y="623.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">17</text>
+<path d="M 315,610 L 315,700" fill="none" stroke="#94a3b8" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<circle cx="315" cy="660" r="10.5" fill="#0f172a" stroke="#ffffff" stroke-width="1.6"/>
+<text x="315" y="663.6" text-anchor="middle" font-size="10.5" font-weight="800" fill="#ffffff">17</text>
+<rect x="30" y="1035" width="1740" height="235" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+<text x="50" y="1060" font-size="15" font-weight="800" fill="#0f172a" text-anchor="start">关系说明</text>
+<text x="160" y="1060" font-size="12" font-weight="400" fill="#64748b" text-anchor="start">实线 = 运行时流量；虚线 = 开通 / 配置；编号对应图中圆圈</text>
+<circle cx="65" cy="1084" r="9" fill="#0f172a"/>
+<text x="65" y="1088" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">1</text>
+<text x="83" y="1088" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">终端用户 → PC 客户端 Renderer（登录 / 群聊）</text>
+<circle cx="65" cy="1104" r="9" fill="#0f172a"/>
+<text x="65" y="1108" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">2</text>
+<text x="83" y="1108" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Renderer ⇄ Electron Main（IPC）</text>
+<circle cx="65" cy="1124" r="9" fill="#0f172a"/>
+<text x="65" y="1128" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">3</text>
+<text x="83" y="1128" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Electron Main → DSH Host（spawn / 配置 overlay）</text>
+<circle cx="65" cy="1144" r="9" fill="#0f172a"/>
+<text x="65" y="1148" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">4</text>
+<text x="83" y="1148" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">PC Main → Agent Backend /provision（IM authCode；返回 robot / clientKey / 模型）</text>
+<circle cx="65" cy="1164" r="9" fill="#0f172a"/>
+<text x="65" y="1168" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">5</text>
+<text x="83" y="1168" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">PC Main → Agent Backend /api/me/*（config / stats / rename）</text>
+<circle cx="65" cy="1184" r="9" fill="#0f172a"/>
+<text x="65" y="1188" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">6</text>
+<text x="83" y="1188" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">DSH llm 插件 → Agent Backend /v1/chat/completions（clientKey）</text>
+<circle cx="65" cy="1204" r="9" fill="#0f172a"/>
+<text x="65" y="1208" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">7</text>
+<text x="83" y="1208" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">DSH wildfire 插件 ⇄ Robot Gateway :8884 /robot/gateway（WS）</text>
+<circle cx="65" cy="1224" r="9" fill="#0f172a"/>
+<text x="65" y="1228" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">8</text>
+<text x="83" y="1228" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">客户端 IM SDK ⇄ IM Server（IM 登录 / 群 / 消息）</text>
+<circle cx="65" cy="1244" r="9" fill="#0f172a"/>
+<text x="65" y="1248" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">9</text>
+<text x="83" y="1248" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Agent Backend → IM 管理 API :18080（authCode / 机器人 / 好友）</text>
+<circle cx="940" cy="1084" r="9" fill="#0f172a"/>
+<text x="940" y="1088" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">10</text>
+<text x="958" y="1088" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Agent Backend → IM 机器人 API :80（设置 callback / 显示名）</text>
+<circle cx="940" cy="1104" r="9" fill="#0f172a"/>
+<text x="940" y="1108" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">11</text>
+<text x="958" y="1108" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">IM Server → Robot Gateway :8885 /robot/recvmsg（消息回调）</text>
+<circle cx="940" cy="1124" r="9" fill="#0f172a"/>
+<text x="940" y="1128" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">12</text>
+<text x="958" y="1128" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Robot Gateway → IM Server（发消息 / 建群 / 销毁群）</text>
+<circle cx="940" cy="1144" r="9" fill="#0f172a"/>
+<text x="940" y="1148" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">13</text>
+<text x="958" y="1148" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Agent Backend → MySQL（JPA：用户 / 配置 / 用量 / 审计）</text>
+<circle cx="940" cy="1164" r="9" fill="#0f172a"/>
+<text x="940" y="1168" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">14</text>
+<text x="958" y="1168" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">管理员浏览器 → Agent Backend 管理 API :8091（Shiro / CSRF）</text>
+<circle cx="940" cy="1184" r="9" fill="#0f172a"/>
+<text x="940" y="1188" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">15</text>
+<text x="958" y="1188" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Agent Backend → LLM Provider（OpenAI-compatible /chat/completions）</text>
+<circle cx="940" cy="1204" r="9" fill="#0f172a"/>
+<text x="940" y="1208" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">16</text>
+<text x="958" y="1208" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">DSH Host → 自定义模型 Provider（可选直连，绕过中转）</text>
+<circle cx="940" cy="1224" r="9" fill="#0f172a"/>
+<text x="940" y="1228" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">17</text>
+<text x="958" y="1228" font-size="11.2" font-weight="400" fill="#334155" text-anchor="start">Main / DSH Host → 本地加密存储 / 工作区</text>
+</svg>
