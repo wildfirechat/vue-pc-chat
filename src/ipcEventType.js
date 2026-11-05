@@ -40,6 +40,8 @@ const IpcEventType = {
     DSH_GET_WORKSPACES: 'dsh-get-workspaces',
     DSH_GET_PLUGINS: 'dsh-get-plugins',
     DSH_LIST_FILES: 'dsh-list-files',
+    DSH_LIST_DIRECTORY: 'dsh-list-directory',
+    DSH_READ_FILE: 'dsh-read-file',
     DSH_GET_MODELS: 'dsh-get-models',
     DSH_AI_AGENT_STATUS: 'dsh-ai-agent-status',
     DSH_AI_AGENT_LOGIN: 'dsh-ai-agent-login',

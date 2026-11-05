@@ -1932,6 +1932,14 @@ ipcMain.handle(IPCEventType.DSH_LIST_FILES, (event, dir) => {
     return dshHostManager.listFiles(dir || '');
 });
 
+ipcMain.handle(IPCEventType.DSH_LIST_DIRECTORY, (event, dir) => {
+    return dshHostManager.listDirectory(dir || '');
+});
+
+ipcMain.handle(IPCEventType.DSH_READ_FILE, (event, filePath) => {
+    return dshHostManager.readFile(filePath || '');
+});
+
 ipcMain.handle(IPCEventType.DSH_PICK_DIRECTORY, async () => {
     try {
         const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];

@@ -517,6 +517,83 @@ export default class DshHostManager {
         }
     }
 
+    /** List all entries in a workspace directory (lazy file-tree browsing). */
+    listDirectory(dir) {
+        try {
+            if (!dir || !fs.existsSync(dir)) return [];
+            return fs.readdirSync(dir, { withFileTypes: true })
+                .map(entry => {
+                    const full = path.join(dir, entry.name);
+                    let size = 0;
+                    let mtime = 0;
+                    try {
+                        const st = fs.statSync(full);
+                        size = st.size;
+                        mtime = st.mtimeMs;
+                    } catch (e) { /* ignore */ }
+                    return {
+                        name: entry.name,
+                        path: full,
+                        isDir: entry.isDirectory(),
+                        size,
+                        mtime,
+                    };
+                })
+                .sort((a, b) => (a.isDir === b.isDir ? a.name.localeCompare(b.name) : (a.isDir ? -1 : 1)));
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /** Read a workspace file for the preview panel (text / image / binary). */
+    readFile(filePath) {
+        try {
+            if (!filePath) return { ok: false, error: 'missing path' };
+            const st = fs.statSync(filePath);
+            if (!st.isFile()) return { ok: false, error: '不是普通文件' };
+            const ext = path.extname(filePath).slice(1).toLowerCase();
+            const imageMimes = {
+                png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
+                webp: 'image/webp', bmp: 'image/bmp', ico: 'image/x-icon', avif: 'image/avif',
+            };
+            const maxTextBytes = 1024 * 1024;
+            const maxImageBytes = 10 * 1024 * 1024;
+            if (imageMimes[ext]) {
+                if (st.size > maxImageBytes) return { ok: false, error: '图片过大，无法预览' };
+                const data = fs.readFileSync(filePath);
+                return {
+                    ok: true,
+                    kind: 'image',
+                    mime: imageMimes[ext],
+                    dataUrl: `data:${imageMimes[ext]};base64,${data.toString('base64')}`,
+                    size: st.size,
+                };
+            }
+            const readSize = Math.min(st.size, maxTextBytes);
+            const fd = fs.openSync(filePath, 'r');
+            const buf = Buffer.alloc(readSize);
+            let bytes = 0;
+            try {
+                bytes = fs.readSync(fd, buf, 0, readSize, 0);
+            } finally {
+                fs.closeSync(fd);
+            }
+            const data = buf.subarray(0, bytes);
+            if (data.includes(0)) {
+                return { ok: true, kind: 'binary', size: st.size };
+            }
+            return {
+                ok: true,
+                kind: 'text',
+                content: data.toString('utf8'),
+                size: st.size,
+                truncated: st.size > maxTextBytes,
+            };
+        } catch (e) {
+            return { ok: false, error: e && e.message ? e.message : String(e) };
+        }
+    }
+
     getPlugins() {
         const profileDir = path.join(this.dshHome, 'profiles', 'wildfire');
         const plugins = [];

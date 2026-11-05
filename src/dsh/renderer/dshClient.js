@@ -204,6 +204,26 @@ export async function getDshFiles(dir) {
     return ipcRenderer.invoke(IpcEventType.DSH_LIST_FILES, dir);
 }
 
+/** List one directory for the workspace file browser (no 30-entry cap). */
+export async function getDshDirectory(dir) {
+    if (!isElectron() || !dir) return [];
+    try {
+        return await ipcRenderer.invoke(IpcEventType.DSH_LIST_DIRECTORY, dir);
+    } catch (e) {
+        return [];
+    }
+}
+
+/** Read a workspace file for the file previewer. */
+export async function readDshFile(filePath) {
+    if (!isElectron() || !filePath) return { ok: false, error: 'missing path' };
+    try {
+        return await ipcRenderer.invoke(IpcEventType.DSH_READ_FILE, filePath);
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+}
+
 export async function getDshPlugins() {
     if (!isElectron()) return { plugins: [], profileDir: '' };
     return ipcRenderer.invoke(IpcEventType.DSH_GET_PLUGINS);

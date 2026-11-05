@@ -99,7 +99,7 @@
                 <template v-if="selectedSession">
                     <ConversationView class="dsh-embedded-chat" :dsh-mode="true"
                                       :dsh-sidebar-collapsed="sidebarCollapsed"
-                                      @toggle-dsh-detail="showDetail = !showDetail"
+                                      @toggle-dsh-file="showFilePreviewer = !showFilePreviewer"
                                       @expand-dsh-sidebar="expandSidebar"/>
                 </template>
                 <div v-else class="dsh-chat-empty">
@@ -120,11 +120,11 @@
                 </div>
             </main>
 
-            <DshPlanSidebar v-if="selectedSession && showDetail"
-                            :conversation="selectedConversation" :robot-id="selectedRobotId"
-                            :robots="selectedRobots" :selected-robot-id="selectedRobotId"
-                            @select-robot="selectedRobotId = $event"
-                            @close="showDetail = false"/>
+            <DshFilePreviewer v-if="selectedSession && showFilePreviewer"
+                              :conversation="selectedConversation"
+                              :robot-id="selectedRobotId"
+                              :session-path="selectedWorkspacePath"
+                              @close="showFilePreviewer = false"/>
         </div>
 
         <div v-if="showCreate" class="dsh-modal-mask" @click.self="showCreate = false">
@@ -158,7 +158,7 @@
 import ConversationView from '../conversation/ConversationView.vue';
 import EventType from '../../../wfc/client/wfcEvent';
 import TextMessageContent from '../../../wfc/messages/textMessageContent';
-import DshPlanSidebar from './DshPlanSidebar.vue';
+import DshFilePreviewer from './DshFilePreviewer.vue';
 import store from '../../../store';
 import wfc from '../../../wfc/client/wfc';
 import Conversation from '../../../wfc/model/conversation';
@@ -171,7 +171,7 @@ import { getAgentPanelDataFor, getAgentState } from '../../util/agentState';
 
 export default {
     name: 'DshWorkspace',
-    components: { ConversationView, DshPlanSidebar },
+    components: { ConversationView, DshFilePreviewer },
     data() {
         return {
             hostStatus: {},
@@ -182,7 +182,7 @@ export default {
             lastRobotId: '',
             selectedGroupId: '',
             selectedRobotId: '',
-            showDetail: false,
+            showFilePreviewer: false,
             expandedWorkspaceKey: '',
             showSearch: false,
             filterMode: 'all',
@@ -249,6 +249,12 @@ export default {
             const s = this.selectedSession;
             if (!s || !s.robots) return [];
             return s.robots;
+        },
+        selectedWorkspacePath() {
+            if (this.selectedSession && this.selectedSession.path) return this.selectedSession.path;
+            const ws = this.currentWorkspace;
+            if (ws && ws.path) return ws.path;
+            return (this.hostStatus && this.hostStatus.permissions && this.hostStatus.permissions.workspaceRoot) || '';
         },
         currentWorkspace() {
             if (this.selectedSession) {
@@ -779,7 +785,7 @@ export default {
         deleteSession(s) {
             this.sessionMenuId = '';
             if (!s || !s.groupId) return;
-            const ok = window.confirm('删除会话会解散该群组并删除该工作区目录，且不可恢复。确定删除？');
+            const ok = window.confirm('删除会话会解散该群组并销毁会话，工作区目录和文件会保留。确定删除？');
             if (!ok) return;
             const conversation = s.conversation || new Conversation(1, s.groupId, 2);
             const content = new AgentCommandMessageContent('set', '/destroy', Date.now() % 100000,
@@ -788,7 +794,7 @@ export default {
                 if (this.selectedGroupId === s.groupId) {
                     this.selectedGroupId = '';
                     this.selectedRobotId = '';
-                    this.showDetail = false;
+                    this.showFilePreviewer = false;
                     store.setCurrentConversation(null);
                 }
                 for (const ws of this.workspaces) {
@@ -917,7 +923,7 @@ export default {
 .dsh-ws-block { margin-bottom: 2px; }
 .dsh-ws-head { position: relative; display: flex; align-items: center; height: 34px; border-radius: 8px; padding: 0 6px 0 0; color: #1f2329; }
 .dsh-ws-head:hover, .dsh-ws-head.menu-open { background: #f2f3f5; }
-.dsh-ws-toggle { display: flex; align-items: center; justify-content: flex-start; gap: 6px; flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: inherit; font-size: 15px; font-weight: 500; line-height: 20px; padding: 0; cursor: pointer; text-align: left; }
+.dsh-ws-toggle { display: flex; align-items: center; justify-content: flex-start; gap: 6px; flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: inherit; font-size: 16px; font-weight: 500; line-height: 20px; padding: 0; cursor: pointer; text-align: left; }
 .dsh-ws-slot { width: 18px; height: 20px; display: inline-flex; align-items: center; justify-content: flex-start; flex: 0 0 auto; color: #8a8f99; font-size: 16px; }
 .dsh-ws-folder { display: inline-flex; color: #fff; -webkit-text-stroke: .8px #a0a5ad; }
 .dsh-ws-chevron { display: none; font-size: 12px; transition: transform .15s; }
