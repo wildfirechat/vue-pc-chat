@@ -31,7 +31,7 @@ export default class Config {
     // 默认的app server使用端口是8888，注意端口号别忘记了。
     // 上线建议使用https，使用https更安全。
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
-    static APP_SERVER = 'https://im.lgdg.cc/app';
+    static APP_SERVER = 'https://aiwork-im.lgdg.cc/app';
 
     // APP SERVER 备选地址，双网环境下使用
     static APP_BACKUP_SERVER = null;
@@ -75,7 +75,7 @@ export default class Config {
 
     // 组织结构服务地址，如果没有部署组织结构服务，或者不需要组织结构的话，可置为 null
     // 组织结构项目：https://github.com/wildfirechat/organization-platform 或 https://gitee.com/wfchat/organization-platform
-    static ORGANIZATION_SERVER = 'https://im.lgdg.cc/org';
+    static ORGANIZATION_SERVER = 'https://aiwork-im.lgdg.cc/org';
 
     // 组织结构服务备选地址，双网环境下使用
     static ORGANIZATION_BACKUP_SERVER = null;
@@ -130,7 +130,7 @@ export default class Config {
 
     static SECRET_CHAT_MEDIA_DECODE_SERVER_PORT = 7982;
     // 如果不支持工作台，将其置空即可
-    static OPEN_PLATFORM_WORK_SPACE_URL = 'https://im.lgdg.cc/open/work.html';
+    static OPEN_PLATFORM_WORK_SPACE_URL = 'https://aiwork-im.lgdg.cc/open/work.html';
 
     // 工作台备选地址，双网环境下使用
     static OPEN_PLATFORM_WORK_SPACE_BACKUP_URL = null;
@@ -317,7 +317,7 @@ export default class Config {
      */
     static stickerBaseUrl() {
         // 动态表情的 baseUrl，一定要求以 / 结尾
-        let stickerBaseUrl = 'https://im.lgdg.cc/web-static/sticker/';   // 纯内网：由 NG 托管（/web-static/sticker/）
+        let stickerBaseUrl = 'https://aiwork-im.lgdg.cc/web-static/sticker/';   // 纯内网：由 NG 托管（/web-static/sticker/）
         // 实例代码
         // 双网环境时，将动态表情地址切换到备选网络
         // if (Config.isUseBackupAddress()) {
