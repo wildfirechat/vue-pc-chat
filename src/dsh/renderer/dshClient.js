@@ -224,6 +224,20 @@ export async function readDshFile(filePath) {
     }
 }
 
+/**
+ * 运行时模型目录（provider/model + 支持的推理等级），供「新会话」页选择。
+ * 与 dsh-runtime-patch.yml 同源；宿主未启动时为空数组。
+ */
+export async function getDshModelCatalog() {
+    if (!isElectron()) return [];
+    try {
+        const list = await ipcRenderer.invoke(IpcEventType.DSH_MODEL_CATALOG);
+        return Array.isArray(list) ? list : [];
+    } catch (e) {
+        return [];
+    }
+}
+
 export async function getDshPlugins() {
     if (!isElectron()) return { plugins: [], profileDir: '' };
     return ipcRenderer.invoke(IpcEventType.DSH_GET_PLUGINS);

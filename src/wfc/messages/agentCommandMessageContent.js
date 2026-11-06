@@ -1,8 +1,10 @@
 /*
  * AGENT_Command (207)：AI 面板静默指令消息（用户→机器人）。
  * 透明消息（Transparent）：不存储、不计未读、不在消息流显示（digest 为空）。
- * content = JSON.stringify({op: "query"|"set"|"sessions"|"switch", cmd?, seq?, robotId?, sessionId?})
+ * content = JSON.stringify({op: "query"|"set"|"sessions"|"switch"|"create", cmd?, seq?, robotId?, sessionId?})
  *   op=sessions：请求最近会话列表（209 应答）；op=switch：切换到 sessionId 指定的历史会话
+ *   op=create：新建 DSH 工作区群；可带 model/effort/sandbox/preset 作为新会话的
+ *   初始配置（插件在首条消息前写入会话级覆盖）
  */
 
 import MessageContent from './messageContent'
@@ -16,8 +18,12 @@ export default class AgentCommandMessageContent extends MessageContent {
     sessionId; // op=switch 时的目标历史会话 id
     path; // op=create 时的工作区目录（auto 或绝对路径）
     name; // op=create 时的会话/群名称
+    model; // op=create 时的初始模型（provider/model，空=部署默认）
+    effort; // op=create 时的初始推理等级
+    sandbox; // op=create 时的初始沙箱权限模式
+    preset; // op=create 时的初始 agent preset
 
-    constructor(op, cmd, seq, robotId, sessionId, path = '', name = '') {
+    constructor(op, cmd, seq, robotId, sessionId, path = '', name = '', options = null) {
         super(MessageContentType.AGENT_COMMAND);
         this.op = op;
         this.cmd = cmd;
@@ -26,6 +32,11 @@ export default class AgentCommandMessageContent extends MessageContent {
         this.sessionId = sessionId;
         this.path = path;
         this.name = name;
+        const opts = options || {};
+        this.model = opts.model || '';
+        this.effort = opts.effort || '';
+        this.sandbox = opts.sandbox || '';
+        this.preset = opts.preset || '';
     }
 
     digest() {
@@ -39,6 +50,10 @@ export default class AgentCommandMessageContent extends MessageContent {
         if (this.sessionId) data.sessionId = this.sessionId;
         if (this.path) data.path = this.path;
         if (this.name) data.name = this.name;
+        if (this.model) data.model = this.model;
+        if (this.effort) data.effort = this.effort;
+        if (this.sandbox) data.sandbox = this.sandbox;
+        if (this.preset) data.preset = this.preset;
         payload.content = JSON.stringify(data);
         payload.searchableContent = '';
         return payload;
@@ -55,6 +70,10 @@ export default class AgentCommandMessageContent extends MessageContent {
             this.sessionId = d.sessionId;
             this.path = d.path;
             this.name = d.name;
+            this.model = d.model;
+            this.effort = d.effort;
+            this.sandbox = d.sandbox;
+            this.preset = d.preset;
         } catch (e) {
             // 非 JSON 内容忽略
         }

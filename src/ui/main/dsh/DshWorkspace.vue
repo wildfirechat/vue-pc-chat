@@ -117,14 +117,41 @@
                                       class="dsh-draft-input" rows="4"
                                       placeholder="例如：检查登录接口的报错日志并修复"
                                       @keydown="onDraftKeydown"></textarea>
-                            <div class="dsh-draft-bar">
-                                <label class="dsh-draft-ws" title="新会话所在的工作区">
-                                    <i class="icon-ion-folder"></i>
+                            <div class="dsh-draft-options">
+                                <label class="dsh-draft-opt" title="新会话所在的工作区">
+                                    <span>工作区</span>
                                     <select v-model="draft.workspaceKey" :disabled="draft.submitting">
-                                        <option value="">自动分配新目录（新工作区）</option>
+                                        <option value="">自动分配新目录</option>
                                         <option v-for="ws in workspaces" :key="ws.key" :value="ws.key">{{ ws.name }}</option>
                                     </select>
                                 </label>
+                                <label class="dsh-draft-opt" title="该会话使用的模型">
+                                    <span>模型</span>
+                                    <select v-model="draft.model" :disabled="draft.submitting || !draftModelOptions.length"
+                                            @change="onDraftModelChange">
+                                        <option v-if="!draftModelOptions.length" value="">部署默认</option>
+                                        <option v-for="m in draftModelOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+                                    </select>
+                                </label>
+                                <label class="dsh-draft-opt" title="思考（推理）等级；模型未声明等级时不可选">
+                                    <span>思考等级</span>
+                                    <select v-model="draft.effort" :disabled="draft.submitting || !draftEffortOptions.length">
+                                        <option v-if="!draftEffortOptions.length" value="">默认</option>
+                                        <option v-for="e in draftEffortOptions" :key="e" :value="e">{{ effortLabel(e) }}</option>
+                                    </select>
+                                </label>
+                                <label class="dsh-draft-opt" title="沙箱权限；与权限预设同名时同时对齐审批策略">
+                                    <span>权限</span>
+                                    <select v-model="draft.sandbox" :disabled="draft.submitting">
+                                        <option v-for="s in sandboxOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
+                                    </select>
+                                </label>
+                                <label class="dsh-draft-opt muted" title="当前 profile 未加载 agent preset 服务（dsh-base），无法选择预设">
+                                    <span>Agent 预设</span>
+                                    <select disabled><option value="">当前版本不支持</option></select>
+                                </label>
+                            </div>
+                            <div class="dsh-draft-bar">
                                 <span class="dsh-draft-hint">Enter 发送 · Shift+Enter 换行</span>
                                 <button class="dsh-draft-send" :disabled="draft.submitting || !draft.text.trim()" @click="submitDraft">
                                     {{ draft.submitting ? '创建中…' : '发送' }}
@@ -204,7 +231,7 @@ import Conversation from '../../../wfc/model/conversation';
 import ModifyGroupInfoType from '../../../wfc/model/modifyGroupInfoType';
 import AgentCommandMessageContent from '../../../wfc/messages/agentCommandMessageContent';
 import ConnectionStatus from '../../../wfc/client/connectionStatus';
-import { getDshStatus, getDshWorkspaces, openDshPath, pickDshDirectory, generateDshTitle } from '../../../dsh/renderer/dshClient';
+import { getDshStatus, getDshWorkspaces, openDshPath, pickDshDirectory, generateDshTitle, getDshModelCatalog } from '../../../dsh/renderer/dshClient';
 import { dshState, localRobotId } from '../../../dsh/renderer/state';
 import { getAgentPanelDataFor, getAgentState } from '../../util/agentState';
 
@@ -230,6 +257,12 @@ export default {
             newWorkspacePath: '',
             newWorkspaceName: '',
             draft: null,
+            draftCatalog: [],
+            sandboxOptions: [
+                { value: 'workspace-write', label: '工作区可写' },
+                { value: 'read-only', label: '只读' },
+                { value: 'danger-full-access', label: '完全访问' },
+            ],
             sessionMenuId: '',
             workspaceMenuKey: '',
             autoTitled: {},
@@ -289,6 +322,17 @@ export default {
             const s = this.selectedSession;
             if (!s || !s.robots) return [];
             return s.robots;
+        },
+        draftModelOptions() {
+            return this.draftCatalog.map(m => ({
+                value: `${m.provider}/${m.id}`,
+                label: this.modelOptionLabel(m),
+            }));
+        },
+        draftEffortOptions() {
+            if (!this.draft) return [];
+            const selected = this.draftCatalog.find(m => `${m.provider}/${m.id}` === this.draft.model);
+            return selected && Array.isArray(selected.efforts) ? selected.efforts : [];
         },
         selectedWorkspacePath() {
             if (this.selectedSession && this.selectedSession.path) return this.selectedSession.path;
@@ -481,11 +525,19 @@ export default {
             this.workspaceMenuKey = '';
             this.showFilePreviewer = false;
             if (ws) this.expandedWorkspaceKey = ws.key;
+            const perm = (this.hostStatus && this.hostStatus.permissions
+                && this.hostStatus.permissions.sandbox) || 'workspace-write';
             this.draft = {
                 text: '',
                 workspaceKey: ws ? ws.key : '',
                 submitting: false,
+                // 模型/等级等默认值来自运行时目录（loadDraftCatalog），宿主未启动时留空
+                model: '',
+                effort: '',
+                sandbox: perm,
+                preset: '',
             };
+            this.loadDraftCatalog();
             this.selectedGroupId = '';
             this.selectedRobotId = '';
             store.setCurrentConversation(null);
@@ -505,6 +557,42 @@ export default {
             if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
             e.preventDefault();
             this.submitDraft();
+        },
+        async loadDraftCatalog() {
+            const list = await getDshModelCatalog();
+            this.draftCatalog = Array.isArray(list) ? list : [];
+            const draft = this.draft;
+            if (!draft || draft.model) return;
+            const def = this.draftCatalog.find(m => m.isDefault) || this.draftCatalog[0];
+            if (def) {
+                draft.model = `${def.provider}/${def.id}`;
+                draft.effort = def.defaultEffort || (def.efforts && def.efforts[0]) || '';
+            }
+        },
+        onDraftModelChange() {
+            const draft = this.draft;
+            if (!draft) return;
+            const selected = this.draftCatalog.find(m => `${m.provider}/${m.id}` === draft.model);
+            draft.effort = selected
+                ? (selected.defaultEffort || (selected.efforts && selected.efforts[0]) || '')
+                : '';
+        },
+        effortLabel(level) {
+            const labels = {
+                minimal: '极低（minimal）',
+                low: '低（low）',
+                medium: '中（medium）',
+                high: '高（high）',
+                xhigh: '很高（xhigh）',
+                max: '最高（max）',
+            };
+            return labels[level] || level;
+        },
+        modelOptionLabel(model) {
+            const base = model.provider === 'default'
+                ? String(model.name || model.id)
+                : `${model.name || model.id}（${model.provider}/${model.id}）`;
+            return model.isDefault ? `${base} · 默认` : base;
         },
         async submitDraft() {
             const draft = this.draft;
@@ -528,7 +616,12 @@ export default {
             draft.submitting = true;
             const before = new Set(this.workspaces.flatMap(w => w.sessions.map(s => s.groupId)));
             try {
-                await this.sendCreateCommand(path, this.fallbackTitle(text) || '新会话');
+                await this.sendCreateCommand(path, this.fallbackTitle(text) || '新会话', {
+                    model: draft.model,
+                    effort: draft.effort,
+                    sandbox: draft.sandbox,
+                    preset: draft.preset,
+                });
                 const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
                 if (!found) {
                     draft.submitting = false;
@@ -591,11 +684,11 @@ export default {
             }
             return true;
         },
-        async sendCreateCommand(path, name) {
+        async sendCreateCommand(path, name, options = null) {
             const robotId = this.localRobotId;
             if (!robotId) throw new Error('机器人未开通');
             const conv = new Conversation(0, robotId, 0);
-            const content = new AgentCommandMessageContent('create', undefined, Date.now(), robotId, undefined, path, name);
+            const content = new AgentCommandMessageContent('create', undefined, Date.now(), robotId, undefined, path, name, options);
             await new Promise((resolve, reject) => {
                 wfc.sendConversationMessage(conv, content, [], null, null,
                     () => resolve(), (e) => reject(e));
@@ -1021,13 +1114,20 @@ export default {
     font-family: inherit; font-size: 14px; line-height: 1.6; color: #1f2329; box-sizing: border-box;
 }
 .dsh-draft-input::placeholder { color: #a8adb5; }
-.dsh-draft-bar { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid #f1f2f4; }
-.dsh-draft-ws { display: inline-flex; align-items: center; gap: 5px; min-width: 0; color: #4b5563; font-size: 12px; }
-.dsh-draft-ws i { font-size: 14px; color: #8a8f99; }
-.dsh-draft-ws select {
-    max-width: 220px; padding: 4px 6px; border: 1px solid #e1e4e8; border-radius: 7px;
-    background: #fafbfc; color: #1f2329; font-size: 12px; outline: none;
+.dsh-draft-options {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+    padding: 8px 2px; border-top: 1px solid #f1f2f4;
 }
+.dsh-draft-opt { display: inline-flex; align-items: center; gap: 5px; min-width: 0; color: #6b7280; font-size: 12px; }
+.dsh-draft-opt > span { white-space: nowrap; }
+.dsh-draft-opt select {
+    max-width: 210px; padding: 4px 6px; border: 1px solid #e1e4e8; border-radius: 7px;
+    background: #fafbfc; color: #1f2329; font-size: 12px; outline: none; cursor: pointer;
+}
+.dsh-draft-opt select:disabled { opacity: .6; cursor: default; }
+.dsh-draft-opt.muted { color: #a8adb5; }
+.dsh-draft-opt.muted select { color: #a8adb5; }
+.dsh-draft-bar { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid #f1f2f4; }
 .dsh-draft-hint { margin-left: auto; color: #a8adb5; font-size: 11px; white-space: nowrap; }
 .dsh-draft-send {
     height: 30px; padding: 0 16px; border: 0; border-radius: 8px; background: #1d4ed8;

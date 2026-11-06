@@ -18,6 +18,9 @@ export default class DshHostManager {
         this.child = null;
         this.provision = null;
         this.userModels = [];
+        // 最近一次写入 dsh-runtime-patch.yml 时生成的模型目录（与宿主实际加载
+        // 的一致）；渲染进程用它渲染「新会话」的模型 / 推理等级选择。
+        this.modelCatalog = [];
         this.hostId = this._loadHostId();
         this.overlayPath = null;
         this.logPath = path.join(userDataPath, 'logs', 'dsh-host.log');
@@ -145,6 +148,35 @@ export default class DshHostManager {
             .toUpperCase().replace(/[^A-Z0-9]/g, '_').replace(/_+/g, '_') + '_KEY';
     }
 
+    /**
+     * 模型可选的推理等级。dsh 只提供模型在 `reasoningEfforts` 里声明过的等级，
+     * 之前只声明部署默认值（如 high），所以面板里永远只有一个选项。这里声明
+     * 常用三档（low/medium/high）+ 部署默认值，让客户端可以按会话选择；
+     * 默认值仍是部署配置，用户不选时行为不变。
+     */
+    _effortLevels(configured) {
+        const value = String(configured || '').trim();
+        if (!value) return [];
+        const order = ['minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
+        const levels = ['low', 'medium', 'high'];
+        if (!levels.includes(value)) levels.push(value);
+        return levels.sort((a, b) => order.indexOf(a) - order.indexOf(b));
+    }
+
+    /** `reasoningEfforts` 的 YAML 行内映射（等级 → 供应商侧写法，同名）。 */
+    _effortYaml(configured) {
+        const levels = this._effortLevels(configured);
+        return `{ ${levels.map((l) => `${JSON.stringify(l)}: ${JSON.stringify(l)}`).join(', ')} }`;
+    }
+
+    /**
+     * 「新会话」可选的模型目录（与 dsh-runtime-patch.yml 同源）。宿主未启动时
+     * 返回空数组，客户端会退回只显示默认模型。
+     */
+    modelCatalogData() {
+        return Array.isArray(this.modelCatalog) ? this.modelCatalog : [];
+    }
+
     _writeOverlay(provision, userModels = []) {
         const robot = provision.robot || {};
         const workspaceRoot = path.join(this.userDataPath, 'dsh-workspaces');
@@ -247,7 +279,7 @@ export default class DshHostManager {
                         `            contextWindow: ${Number(ai.contextWindow) || 1048576}`,
                         `            maxTokens: ${Number(ai.maxTokens) || 8192}`,
                         ai.reasoningEffort
-                            ? `            reasoningEfforts: { ${JSON.stringify(ai.reasoningEffort)}: ${JSON.stringify(ai.reasoningEffort)} }`
+                            ? `            reasoningEfforts: ${this._effortYaml(ai.reasoningEffort)}`
                             : null,
                         '            input: [ text, image ]',
                     );
@@ -269,7 +301,7 @@ export default class DshHostManager {
                         `            contextWindow: ${Number(m.contextWindow) || 1048576}`,
                         `            maxTokens: ${Number(m.maxTokens) || 393216}`,
                         m.reasoningEffort
-                            ? `            reasoningEfforts: { ${JSON.stringify(m.reasoningEffort)}: ${JSON.stringify(m.reasoningEffort)} }`
+                            ? `            reasoningEfforts: ${this._effortYaml(m.reasoningEffort)}`
                             : null,
                         '            input: [ text, image ]',
                     );
@@ -288,6 +320,38 @@ export default class DshHostManager {
                 defaultReasoning ? `    reasoningEffort: ${JSON.stringify(defaultReasoning)}` : null,
             );
         }
+        // 与上面写出的 provider/models 同源：客户端「新会话」据此渲染模型与
+        // 推理等级选择（用运行时真实的 provider/model id）。
+        const defProvider = aiUsable ? 'default' : (customProviders[0] ? customProviders[0].providerId : '');
+        const defModel = aiUsable
+            ? (ai.model || modelIds[0] || '')
+            : (customProviders[0] ? customProviders[0].models[0].model : '');
+        const catalog = [];
+        if (aiUsable) {
+            for (const id of modelIds) {
+                catalog.push({
+                    provider: 'default',
+                    id,
+                    name: id,
+                    efforts: this._effortLevels(ai.reasoningEffort),
+                    defaultEffort: String(ai.reasoningEffort || ''),
+                    isDefault: defProvider === 'default' && defModel === id,
+                });
+            }
+        }
+        for (const provider of customProviders) {
+            for (const m of provider.models) {
+                catalog.push({
+                    provider: provider.providerId,
+                    id: m.model,
+                    name: m.name || m.model,
+                    efforts: this._effortLevels(m.reasoningEffort),
+                    defaultEffort: String(m.reasoningEffort || ''),
+                    isDefault: defProvider === provider.providerId && defModel === m.model,
+                });
+            }
+        }
+        this.modelCatalog = catalog;
         lines.push('');
         const overlay = lines.join('\n');
         const file = path.join(this.userDataPath, 'dsh-runtime-patch.yml');

@@ -1932,6 +1932,10 @@ ipcMain.handle(IPCEventType.DSH_LIST_FILES, (event, dir) => {
     return dshHostManager.listFiles(dir || '');
 });
 
+ipcMain.handle(IPCEventType.DSH_MODEL_CATALOG, () => {
+    return dshHostManager.modelCatalogData();
+});
+
 ipcMain.handle(IPCEventType.DSH_LIST_DIRECTORY, (event, dir) => {
     return dshHostManager.listDirectory(dir || '');
 });
