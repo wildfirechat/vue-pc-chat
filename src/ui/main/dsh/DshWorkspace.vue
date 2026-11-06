@@ -117,45 +117,92 @@
                                       class="dsh-draft-input" rows="4"
                                       placeholder="例如：检查登录接口的报错日志并修复"
                                       @keydown="onDraftKeydown"></textarea>
-                            <div class="dsh-draft-options">
-                                <label class="dsh-draft-opt" title="新会话所在的工作区">
-                                    <span>工作区</span>
-                                    <select v-model="draft.workspaceKey" :disabled="draft.submitting">
-                                        <option value="">自动分配新目录</option>
-                                        <option v-for="ws in workspaces" :key="ws.key" :value="ws.key">{{ ws.name }}</option>
-                                    </select>
-                                </label>
-                                <label class="dsh-draft-opt" title="该会话使用的模型">
-                                    <span>模型</span>
-                                    <select v-model="draft.model" :disabled="draft.submitting || !draftModelOptions.length"
-                                            @change="onDraftModelChange">
-                                        <option v-if="!draftModelOptions.length" value="">部署默认</option>
-                                        <option v-for="m in draftModelOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
-                                    </select>
-                                </label>
-                                <label class="dsh-draft-opt" title="思考（推理）等级；模型未声明等级时不可选">
-                                    <span>思考等级</span>
-                                    <select v-model="draft.effort" :disabled="draft.submitting || !draftEffortOptions.length">
-                                        <option v-if="!draftEffortOptions.length" value="">默认</option>
-                                        <option v-for="e in draftEffortOptions" :key="e" :value="e">{{ effortLabel(e) }}</option>
-                                    </select>
-                                </label>
-                                <label class="dsh-draft-opt" title="沙箱权限；与权限预设同名时同时对齐审批策略">
-                                    <span>权限</span>
-                                    <select v-model="draft.sandbox" :disabled="draft.submitting">
-                                        <option v-for="s in sandboxOptions" :key="s.value" :value="s.value">{{ s.label }}</option>
-                                    </select>
-                                </label>
-                                <label class="dsh-draft-opt muted" title="当前 profile 未加载 agent preset 服务（dsh-base），无法选择预设">
-                                    <span>Agent 预设</span>
-                                    <select disabled><option value="">当前版本不支持</option></select>
-                                </label>
-                            </div>
-                            <div class="dsh-draft-bar">
-                                <span class="dsh-draft-hint">Enter 发送 · Shift+Enter 换行</span>
-                                <button class="dsh-draft-send" :disabled="draft.submitting || !draft.text.trim()" @click="submitDraft">
-                                    {{ draft.submitting ? '创建中…' : '发送' }}
-                                </button>
+                            <div class="dsh-draft-toolbar">
+                                <div class="dsh-draft-tools-left">
+                                    <div class="dsh-chip-wrap">
+                                        <button class="dsh-chip" title="新会话所在的工作区" @click.stop="toggleDraftMenu('workspace')">
+                                            <i class="icon-ion-folder"></i>
+                                            <span>{{ draftWorkspaceLabel }}</span>
+                                            <i class="icon-ion-chevron-down dsh-chip-caret"></i>
+                                        </button>
+                                        <div v-if="draftMenu === 'workspace'" class="dsh-pop" @click.stop>
+                                            <button class="dsh-pop-item" :class="{active: !draft.workspaceKey}"
+                                                    @click="pickDraftWorkspace('')">
+                                                <span>自动分配新目录</span>
+                                                <i v-if="!draft.workspaceKey" class="icon-ion-checkmark"></i>
+                                            </button>
+                                            <button v-for="ws in workspaces" :key="ws.key" class="dsh-pop-item"
+                                                    :class="{active: draft.workspaceKey === ws.key}"
+                                                    @click="pickDraftWorkspace(ws.key)">
+                                                <span>{{ ws.name }}</span>
+                                                <i v-if="draft.workspaceKey === ws.key" class="icon-ion-checkmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="dsh-chip-wrap">
+                                        <button class="dsh-chip" :disabled="!draftPresetOptions.length"
+                                                :title="draftPresetOptions.length ? 'Agent 预设（能力档位）' : '当前 profile 未启用 agent preset 模式，暂不可选'"
+                                                @click.stop="draftPresetOptions.length && toggleDraftMenu('preset')">
+                                            <i class="icon-ion-cube"></i>
+                                            <span>{{ draftPresetLabel }}</span>
+                                            <i class="icon-ion-chevron-down dsh-chip-caret"></i>
+                                        </button>
+                                        <div v-if="draftMenu === 'preset'" class="dsh-pop" @click.stop>
+                                            <button v-for="p in draftPresetOptions" :key="p.value" class="dsh-pop-item"
+                                                    :class="{active: draft.preset === p.value}"
+                                                    @click="pickDraftPreset(p.value)">
+                                                <span>{{ p.label }}</span>
+                                                <i v-if="draft.preset === p.value" class="icon-ion-checkmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dsh-draft-tools-right">
+                                    <div class="dsh-chip-wrap">
+                                        <button class="dsh-chip" title="沙箱权限；与权限预设同名时同时对齐审批策略"
+                                                @click.stop="toggleDraftMenu('permission')">
+                                            <i class="icon-ion-android-lock"></i>
+                                            <span>{{ draftPermissionLabel }}</span>
+                                            <i class="icon-ion-chevron-down dsh-chip-caret"></i>
+                                        </button>
+                                        <div v-if="draftMenu === 'permission'" class="dsh-pop dsh-pop-right" @click.stop>
+                                            <button v-for="s in sandboxOptions" :key="s.value" class="dsh-pop-item"
+                                                    :class="{active: draft.sandbox === s.value}"
+                                                    @click="pickDraftPermission(s.value)">
+                                                <span>{{ s.label }}</span>
+                                                <i v-if="draft.sandbox === s.value" class="icon-ion-checkmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="dsh-chip-wrap">
+                                        <button class="dsh-chip dsh-chip-model" :disabled="!draftModelOptions.length"
+                                                title="模型与思考等级" @click.stop="toggleDraftMenu('model')">
+                                            <span>{{ draftModelLabel }}</span>
+                                            <i class="icon-ion-chevron-down dsh-chip-caret"></i>
+                                        </button>
+                                        <div v-if="draftMenu === 'model'" class="dsh-pop dsh-pop-right dsh-pop-model" @click.stop>
+                                            <div class="dsh-pop-title">模型</div>
+                                            <button v-for="m in draftModelOptions" :key="m.value" class="dsh-pop-item"
+                                                    :class="{active: draft.model === m.value}" @click="pickDraftModel(m.value)">
+                                                <span>{{ m.label }}</span>
+                                                <i v-if="draft.model === m.value" class="icon-ion-checkmark"></i>
+                                            </button>
+                                            <div class="dsh-pop-sep"></div>
+                                            <div class="dsh-pop-title">思考等级</div>
+                                            <button v-for="e in draftEffortOptions" :key="e" class="dsh-pop-item"
+                                                    :class="{active: draft.effort === e}" @click="pickDraftEffort(e)">
+                                                <span>{{ effortLabel(e) }}</span>
+                                                <i v-if="draft.effort === e" class="icon-ion-checkmark"></i>
+                                            </button>
+                                            <p v-if="!draftEffortOptions.length" class="dsh-pop-empty">当前模型未声明思考等级</p>
+                                        </div>
+                                    </div>
+                                    <button class="dsh-send-btn" :disabled="draft.submitting || !draft.text.trim()"
+                                            :title="draft.submitting ? '正在创建会话…' : '发送（Enter）'" @click="submitDraft">
+                                        <i v-if="!draft.submitting" class="icon-ion-ios-arrow-up"></i>
+                                        <span v-else class="dsh-send-spinner"></span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <button class="dsh-draft-cancel" :disabled="draft.submitting" @click="closeDraft">取消</button>
@@ -257,7 +304,9 @@ export default {
             newWorkspacePath: '',
             newWorkspaceName: '',
             draft: null,
+            draftMenu: '',
             draftCatalog: [],
+            draftPresets: [],
             sandboxOptions: [
                 { value: 'workspace-write', label: '工作区可写' },
                 { value: 'read-only', label: '只读' },
@@ -323,6 +372,32 @@ export default {
             if (!s || !s.robots) return [];
             return s.robots;
         },
+        draftPresetOptions() {
+            return this.draftPresets.map(p => ({ value: p.value, label: p.label }));
+        },
+        draftWorkspaceLabel() {
+            if (!this.draft) return '';
+            const ws = this.workspaces.find(w => w.key === this.draft.workspaceKey);
+            return ws ? ws.name : '自动分配';
+        },
+        draftPermissionLabel() {
+            const value = this.draft ? this.draft.sandbox : '';
+            const hit = this.sandboxOptions.find(o => o.value === value);
+            return hit ? hit.label : '权限';
+        },
+        draftModelLabel() {
+            const draft = this.draft;
+            if (!draft) return '';
+            const model = this.draftCatalog.find(m => `${m.provider}/${m.id}` === draft.model);
+            if (!model) return '模型';
+            const name = String(model.name || model.id);
+            return draft.effort ? `${name} · ${this.effortShort(draft.effort)}` : name;
+        },
+        draftPresetLabel() {
+            const value = this.draft ? this.draft.preset : '';
+            const hit = this.draftPresetOptions.find(p => p.value === value);
+            return hit ? hit.label : 'Agent 预设';
+        },
         draftModelOptions() {
             return this.draftCatalog.map(m => ({
                 value: `${m.provider}/${m.id}`,
@@ -376,6 +451,7 @@ export default {
     mounted() {
         this.loadPaths().then(() => this.load());
         document.addEventListener('click', this.closeRowMenus);
+        document.addEventListener('click', this.closeDraftMenu);
         this.statusTimer = setInterval(async () => {
             try { this.hostStatus = (await getDshStatus()) || {}; } catch (e) { /* ignore */ }
             try { await this.refreshStates(); } catch (e) { /* ignore */ }
@@ -386,6 +462,7 @@ export default {
     },
     beforeUnmount() {
         document.removeEventListener('click', this.closeRowMenus);
+        document.removeEventListener('click', this.closeDraftMenu);
         wfc.eventEmitter.off(EventType.SendMessage, this.onDshMessageSent);
         wfc.eventEmitter.off(EventType.ConversationInfoUpdate, this.onDshConversationInfoUpdate);
         wfc.eventEmitter.off(EventType.ReceiveMessage, this.onDshReceiveMessage);
@@ -524,6 +601,7 @@ export default {
             this.sessionMenuId = '';
             this.workspaceMenuKey = '';
             this.showFilePreviewer = false;
+            this.draftMenu = '';
             if (ws) this.expandedWorkspaceKey = ws.key;
             const perm = (this.hostStatus && this.hostStatus.permissions
                 && this.hostStatus.permissions.sandbox) || 'workspace-write';
@@ -552,6 +630,7 @@ export default {
         closeDraft() {
             if (this.draft && this.draft.submitting) return;
             this.draft = null;
+            this.draftMenu = '';
         },
         onDraftKeydown(e) {
             if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
@@ -568,6 +647,44 @@ export default {
                 draft.model = `${def.provider}/${def.id}`;
                 draft.effort = def.defaultEffort || (def.efforts && def.efforts[0]) || '';
             }
+        },
+        toggleDraftMenu(menu) {
+            this.draftMenu = this.draftMenu === menu ? '' : menu;
+        },
+        closeDraftMenu() {
+            this.draftMenu = '';
+        },
+        pickDraftWorkspace(key) {
+            if (this.draft) this.draft.workspaceKey = key;
+            this.draftMenu = '';
+        },
+        pickDraftPreset(id) {
+            if (this.draft) this.draft.preset = id;
+            this.draftMenu = '';
+        },
+        pickDraftPermission(value) {
+            if (this.draft) this.draft.sandbox = value;
+            this.draftMenu = '';
+        },
+        pickDraftModel(value) {
+            if (!this.draft) return;
+            this.draft.model = value;
+            this.onDraftModelChange();
+            // 弹层不关闭：模型和思考等级在同一面板里分别设置
+        },
+        pickDraftEffort(level) {
+            if (this.draft) this.draft.effort = level;
+            this.draftMenu = '';
+        },
+        effortShort(level) {
+            return ({
+                minimal: '极低',
+                low: '低',
+                medium: '中',
+                high: '高',
+                xhigh: '很高',
+                max: '最高',
+            })[level] || level;
         },
         onDraftModelChange() {
             const draft = this.draft;
@@ -603,6 +720,7 @@ export default {
                 return;
             }
             if (!this.ensureCreateReady()) return;
+            this.draftMenu = '';
             const ws = this.workspaces.find(w => w.key === draft.workspaceKey) || null;
             let path = '';
             if (ws) {
@@ -1114,26 +1232,59 @@ export default {
     font-family: inherit; font-size: 14px; line-height: 1.6; color: #1f2329; box-sizing: border-box;
 }
 .dsh-draft-input::placeholder { color: #a8adb5; }
-.dsh-draft-options {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
-    padding: 8px 2px; border-top: 1px solid #f1f2f4;
+.dsh-draft-toolbar {
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 0 0; border-top: 1px solid #f1f2f4;
 }
-.dsh-draft-opt { display: inline-flex; align-items: center; gap: 5px; min-width: 0; color: #6b7280; font-size: 12px; }
-.dsh-draft-opt > span { white-space: nowrap; }
-.dsh-draft-opt select {
-    max-width: 210px; padding: 4px 6px; border: 1px solid #e1e4e8; border-radius: 7px;
-    background: #fafbfc; color: #1f2329; font-size: 12px; outline: none; cursor: pointer;
+.dsh-draft-tools-left, .dsh-draft-tools-right { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.dsh-draft-tools-right { margin-left: auto; }
+.dsh-chip-wrap { position: relative; min-width: 0; }
+.dsh-chip {
+    display: inline-flex; align-items: center; gap: 5px; max-width: 260px; height: 30px;
+    padding: 0 8px; border: 0; border-radius: 8px; background: transparent;
+    color: #4b5563; font-size: 12px; cursor: pointer;
 }
-.dsh-draft-opt select:disabled { opacity: .6; cursor: default; }
-.dsh-draft-opt.muted { color: #a8adb5; }
-.dsh-draft-opt.muted select { color: #a8adb5; }
-.dsh-draft-bar { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid #f1f2f4; }
-.dsh-draft-hint { margin-left: auto; color: #a8adb5; font-size: 11px; white-space: nowrap; }
-.dsh-draft-send {
-    height: 30px; padding: 0 16px; border: 0; border-radius: 8px; background: #1d4ed8;
-    color: #fff; font-size: 13px; font-weight: 500; cursor: pointer;
+.dsh-chip:hover { background: #f2f3f5; color: #1f2329; }
+.dsh-chip:disabled { opacity: .5; cursor: default; }
+.dsh-chip:disabled:hover { background: transparent; color: #4b5563; }
+.dsh-chip > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsh-chip i { flex: 0 0 auto; font-size: 14px; color: #8a8f99; }
+.dsh-chip .dsh-chip-caret { font-size: 11px; }
+.dsh-chip-model { color: #1f2329; font-weight: 500; }
+.dsh-pop {
+    position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 40;
+    min-width: 200px; max-width: 320px; max-height: 320px; overflow-y: auto;
+    padding: 5px; background: #fff; border: 1px solid #e5e6e8; border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, .14);
 }
-.dsh-draft-send:disabled { opacity: .45; cursor: default; }
+.dsh-pop-right { left: auto; right: 0; }
+.dsh-pop-model { min-width: 280px; }
+.dsh-pop-title { padding: 5px 8px 3px; color: #8a8f99; font-size: 11px; }
+.dsh-pop-sep { height: 1px; margin: 4px; background: #f0f1f3; }
+.dsh-pop-item {
+    width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 7px 8px; border: 0; border-radius: 7px; background: transparent;
+    color: #1f2329; font-size: 12px; text-align: left; cursor: pointer;
+}
+.dsh-pop-item:hover { background: #f5f6f8; }
+.dsh-pop-item.active { color: #1d4ed8; }
+.dsh-pop-item > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dsh-pop-item i { flex: 0 0 auto; font-size: 13px; color: #1d4ed8; }
+.dsh-pop-empty { margin: 4px 8px 6px; color: #a8adb5; font-size: 11px; }
+.dsh-send-btn {
+    width: 34px; height: 34px; margin-left: 4px; flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 0; border-radius: 50%; background: #1d4ed8; color: #fff; cursor: pointer;
+}
+.dsh-send-btn i { font-size: 18px; }
+.dsh-send-btn:hover { background: #1e40af; }
+.dsh-send-btn:disabled { background: #e5e7eb; color: #9aa0a8; cursor: default; }
+.dsh-send-spinner {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .45); border-top-color: #fff;
+    animation: dsh-spin .8s linear infinite;
+}
+@keyframes dsh-spin { to { transform: rotate(360deg); } }
 .dsh-draft-cancel { padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; color: #8a8f99; font-size: 12px; cursor: pointer; }
 .dsh-draft-cancel:hover { background: #f2f3f5; color: #1f2329; }
 
