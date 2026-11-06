@@ -14,7 +14,7 @@
                         <i class="icon-ion-ios-arrow-back"></i>
                     </button>
                 </div>
-                <button class="dsh-new-session" :disabled="creating || !canCreate" @click="newSessionCurrent">
+                <button class="dsh-new-session" :disabled="creating" @click="newSessionCurrent">
                     <i class="icon-ion-android-add"></i><span>新会话</span>
                 </button>
                 <div class="dsh-ws-section-head">
@@ -50,7 +50,7 @@
                                 </button>
                             </div>
                             <div v-if="workspaceMenuKey === ws.key" class="dsh-row-menu" @click.stop>
-                                <button :disabled="!canCreate" @click="workspaceMenuKey = ''; createSession(ws)">新建会话</button>
+                                <button @click="workspaceMenuKey = ''; openDraft(ws)">新建会话</button>
                                 <button v-if="ws.path" @click="workspaceMenuKey = ''; renameWorkspace(ws)">重命名工作区</button>
                                 <button v-if="ws.path" @click="workspaceMenuKey = ''; openWorkspaceDir(ws)">打开工作目录</button>
                             </div>
@@ -96,7 +96,45 @@
                  title="拖动调整侧边栏宽度" @mousedown.prevent="startSidebarResize"></div>
 
             <main class="dsh-chat-column">
-                <template v-if="selectedSession">
+                <div v-if="draft" class="dsh-draft">
+                    <div class="dsh-chat-empty-top">
+                        <div class="dsh-chat-empty-top-left">
+                            <button v-if="sidebarCollapsed" class="dsh-sidebar-expand" title="展开侧边栏" @click="expandSidebar">
+                                <i class="icon-ion-ios-arrow-forward"></i>
+                            </button>
+                            <span>新会话</span>
+                        </div>
+                        <span class="dsh-empty-status">{{ draft.submitting ? '正在创建会话…' : (hostStatus.state === 'running' ? '发送后才会创建会话' : 'Agent 未启动') }}</span>
+                    </div>
+                    <div class="dsh-draft-body">
+                        <div class="dsh-draft-hero">
+                            <div class="dsh-empty-hint-mark">✦</div>
+                            <h2>开始一个新会话</h2>
+                            <p>描述你想让 DSH 做什么。只有发送第一条消息后，才会创建会话和工作区群。</p>
+                        </div>
+                        <div class="dsh-draft-composer">
+                            <textarea ref="draftInput" v-model="draft.text" :disabled="draft.submitting"
+                                      class="dsh-draft-input" rows="4"
+                                      placeholder="例如：检查登录接口的报错日志并修复"
+                                      @keydown="onDraftKeydown"></textarea>
+                            <div class="dsh-draft-bar">
+                                <label class="dsh-draft-ws" title="新会话所在的工作区">
+                                    <i class="icon-ion-folder"></i>
+                                    <select v-model="draft.workspaceKey" :disabled="draft.submitting">
+                                        <option value="">自动分配新目录（新工作区）</option>
+                                        <option v-for="ws in workspaces" :key="ws.key" :value="ws.key">{{ ws.name }}</option>
+                                    </select>
+                                </label>
+                                <span class="dsh-draft-hint">Enter 发送 · Shift+Enter 换行</span>
+                                <button class="dsh-draft-send" :disabled="draft.submitting || !draft.text.trim()" @click="submitDraft">
+                                    {{ draft.submitting ? '创建中…' : '发送' }}
+                                </button>
+                            </div>
+                        </div>
+                        <button class="dsh-draft-cancel" :disabled="draft.submitting" @click="closeDraft">取消</button>
+                    </div>
+                </div>
+                <template v-else-if="selectedSession">
                     <ConversationView class="dsh-embedded-chat" :dsh-mode="true"
                                       :dsh-sidebar-collapsed="sidebarCollapsed"
                                       @toggle-dsh-file="showFilePreviewer = !showFilePreviewer"
@@ -116,6 +154,7 @@
                         <div class="dsh-empty-hint-mark">◈</div>
                         <h2>创建工作区或选择一个会话</h2>
                         <p>从左侧新建工作区，或点击已有会话开始。</p>
+                        <button class="dsh-top-btn" @click="openDraft(currentWorkspace)">新会话</button>
                     </div>
                 </div>
             </main>
@@ -190,6 +229,7 @@ export default {
             showCreate: false,
             newWorkspacePath: '',
             newWorkspaceName: '',
+            draft: null,
             sessionMenuId: '',
             workspaceMenuKey: '',
             autoTitled: {},
@@ -331,6 +371,7 @@ export default {
                 this.selectedGroupId = '';
                 this.selectedRobotId = '';
                 this.expandedWorkspaceKey = '';
+                this.draft = null;
                 store.setCurrentConversation(null);
             }
             if (!robotId) { this.workspaces = []; return; }
@@ -382,7 +423,9 @@ export default {
             }
             this.workspaces = [...byWs.values()];
             await this.refreshStates();
-            const wanted = (this.$route && this.$route.query && this.$route.query.session) || this.selectedGroupId;
+            const wanted = this.draft
+                ? ''
+                : ((this.$route && this.$route.query && this.$route.query.session) || this.selectedGroupId);
             let target = null;
             for (const ws of this.workspaces) {
                 target = ws.sessions.find(s => s.groupId === wanted) || target;
@@ -409,6 +452,7 @@ export default {
         },
         selectSession(s, updateRoute = true) {
             if (!s) return;
+            this.draft = null;
             this.selectedGroupId = s.groupId;
             this.selectedRobotId = this.localRobotId;
             this.sessionMenuId = '';
@@ -430,12 +474,83 @@ export default {
             this.sortMode = this.sortMode === 'recent' ? 'name' : 'recent';
         },
         newSessionCurrent() {
-            if (!this.ensureCreateReady()) return;
-            if (!this.currentWorkspace) {
-                this.showCreate = true;
+            this.openDraft(this.currentWorkspace);
+        },
+        openDraft(ws) {
+            this.sessionMenuId = '';
+            this.workspaceMenuKey = '';
+            this.showFilePreviewer = false;
+            if (ws) this.expandedWorkspaceKey = ws.key;
+            this.draft = {
+                text: '',
+                workspaceKey: ws ? ws.key : '',
+                submitting: false,
+            };
+            this.selectedGroupId = '';
+            this.selectedRobotId = '';
+            store.setCurrentConversation(null);
+            // 草稿不属于任何会话：清掉路由里的 session，避免 load() 把旧会话重新选中。
+            if (this.$route && this.$route.path === '/home/dsh' && this.$route.query.session) {
+                this.$router.replace({ path: '/home/dsh' }).catch(() => {});
+            }
+            this.$nextTick(() => {
+                if (this.$refs.draftInput) this.$refs.draftInput.focus();
+            });
+        },
+        closeDraft() {
+            if (this.draft && this.draft.submitting) return;
+            this.draft = null;
+        },
+        onDraftKeydown(e) {
+            if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+            e.preventDefault();
+            this.submitDraft();
+        },
+        async submitDraft() {
+            const draft = this.draft;
+            if (!draft || draft.submitting) return;
+            const text = String(draft.text || '').trim();
+            if (!text) {
+                if (this.$refs.draftInput) this.$refs.draftInput.focus();
                 return;
             }
-            this.createSession(this.currentWorkspace);
+            if (!this.ensureCreateReady()) return;
+            const ws = this.workspaces.find(w => w.key === draft.workspaceKey) || null;
+            let path = '';
+            if (ws) {
+                path = ws.path || (ws.sessions[0] && ws.sessions[0].path) || '';
+                if (!path && ws.sessions[0]) {
+                    const panel = getAgentPanelDataFor(ws.sessions[0].conversation, this.localRobotId);
+                    path = (panel && panel.cwd) || '';
+                }
+            }
+            if (!path) path = 'auto';
+            draft.submitting = true;
+            const before = new Set(this.workspaces.flatMap(w => w.sessions.map(s => s.groupId)));
+            try {
+                await this.sendCreateCommand(path, this.fallbackTitle(text) || '新会话');
+                const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
+                if (!found) {
+                    draft.submitting = false;
+                    this.$notify({ title: '未检测到新会话', text: '创建请求已发送，请打开机器人单聊查看结果（目录无效/等待确认时会提示）。', type: 'info' });
+                    return;
+                }
+                // waitForNewGroup 会选中新会话并清掉草稿，这里把第一条消息发进去。
+                try {
+                    await this.sendTextMessage(found.conversation, text);
+                } catch (e) {
+                    this.$notify({ title: '会话已创建，但首条消息发送失败', text: (e && e.message) || '请重新输入后发送', type: 'error' });
+                }
+            } catch (e) {
+                if (this.draft) this.draft.submitting = false;
+                this.$notify({ title: '创建会话失败', text: (e && e.message) || '请确认机器人在线', type: 'error' });
+            }
+        },
+        sendTextMessage(conversation, text) {
+            return new Promise((resolve, reject) => {
+                wfc.sendConversationMessage(conversation, new TextMessageContent(text), [], null, null,
+                    () => resolve(), (e) => reject(e));
+            });
         },
         loadWorkspaceAliases() {
             try { return JSON.parse(localStorage.getItem('dsh-workspace-aliases') || '{}') || {}; } catch (e) { return {}; }
@@ -827,29 +942,6 @@ export default {
         async openWorkspaceDir(ws) {
             if (ws && ws.path) await openDshPath(ws.path);
         },
-        async createSession(ws) {
-            if (this.creating || !this.ensureCreateReady()) return;
-            let path = ws.path || (ws.sessions[0] && ws.sessions[0].path) || '';
-            if (!path && ws.sessions[0]) {
-                const panel = getAgentPanelDataFor(ws.sessions[0].conversation, this.localRobotId);
-                path = (panel && panel.cwd) || '';
-            }
-            if (!path) path = 'auto';
-            this.creating = true;
-            const before = new Set(this.workspaces.flatMap(w => w.sessions.map(s => s.groupId)));
-            try {
-                await this.sendCreateCommand(path, '新会话');
-                const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
-                if (found) {
-                    this.$notify({ title: '会话已创建', type: 'success' });
-                }
-                else this.$notify({ title: '未检测到新会话', text: '创建请求已发送，请打开机器人单聊查看结果（目录无效/等待确认时会提示）。', type: 'info' });
-            } catch (e) {
-                this.$notify({ title: '创建会话失败', text: (e && e.message) || '请确认机器人在线', type: 'error' });
-            } finally {
-                this.creating = false;
-            }
-        },
     },
 };
 </script>
@@ -913,6 +1005,37 @@ export default {
 }
 .dsh-empty-hint h2 { margin: 0; font-size: 18px; font-weight: 600; color: #1f2329; }
 .dsh-empty-hint p { margin: 0; font-size: 13px; color: #8a8f99; }
+.dsh-draft { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; background: var(--background-primary, #fff); }
+.dsh-draft-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 72px 24px 40px; box-sizing: border-box; overflow-y: auto; }
+.dsh-draft-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.dsh-draft-hero h2 { margin: 0; font-size: 20px; font-weight: 600; color: #1f2329; }
+.dsh-draft-hero p { margin: 0; max-width: 520px; font-size: 13px; line-height: 1.6; color: #8a8f99; }
+.dsh-draft-composer {
+    width: 100%; max-width: 720px; padding: 10px 12px; box-sizing: border-box;
+    border: 1px solid #e3e5e8; border-radius: 14px; background: #fff;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, .06);
+}
+.dsh-draft-input {
+    width: 100%; min-height: 92px; max-height: 40vh; padding: 4px 2px 8px;
+    border: 0; outline: none; resize: none; background: transparent;
+    font-family: inherit; font-size: 14px; line-height: 1.6; color: #1f2329; box-sizing: border-box;
+}
+.dsh-draft-input::placeholder { color: #a8adb5; }
+.dsh-draft-bar { display: flex; align-items: center; gap: 10px; padding-top: 8px; border-top: 1px solid #f1f2f4; }
+.dsh-draft-ws { display: inline-flex; align-items: center; gap: 5px; min-width: 0; color: #4b5563; font-size: 12px; }
+.dsh-draft-ws i { font-size: 14px; color: #8a8f99; }
+.dsh-draft-ws select {
+    max-width: 220px; padding: 4px 6px; border: 1px solid #e1e4e8; border-radius: 7px;
+    background: #fafbfc; color: #1f2329; font-size: 12px; outline: none;
+}
+.dsh-draft-hint { margin-left: auto; color: #a8adb5; font-size: 11px; white-space: nowrap; }
+.dsh-draft-send {
+    height: 30px; padding: 0 16px; border: 0; border-radius: 8px; background: #1d4ed8;
+    color: #fff; font-size: 13px; font-weight: 500; cursor: pointer;
+}
+.dsh-draft-send:disabled { opacity: .45; cursor: default; }
+.dsh-draft-cancel { padding: 4px 8px; border: 0; border-radius: 6px; background: transparent; color: #8a8f99; font-size: 12px; cursor: pointer; }
+.dsh-draft-cancel:hover { background: #f2f3f5; color: #1f2329; }
 
 .dsh-session-search { padding: 4px 8px 8px; }
 .dsh-session-search input { width: 100%; box-sizing: border-box; border: .5px solid #e1e4e8; border-radius: 8px; background: #fff; padding: 7px 9px; font-size: 13px; outline: none; }
