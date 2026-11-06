@@ -49,16 +49,17 @@ app.use(CoolLightBox)
         if (path === '/'/*login*/ || path.startsWith('/home') || href.indexOf('#') === -1) {
             // 全WSS模式设置，必须在wfc.init/connect之前调用
             // 使用websocket长连接，只有2026.9.11之后的服务才可以支持
-            // wfc.setUseWebsocket(true)
-            // // 使用TLS。域名连接走系统信任链校验公签证书；IP直连使用自签名证书。
-            // // 扫描证书目录（开发：build/certs，打包：resources/extraResources/certs）下所有
-            // // .crt/.pem/.cer/.der，支持多个域名/IP 各自的自签证书，支持一个文件里放多张证书。
-            // // 注意传给原生层的是证书【文件路径】不是证书内容，mars 原生层在主进程运行，路径要主进程可见。
-            // // 证书由主进程启动时加载并写成 PEM 文件（见 src/background.js），这里通过 IPC 同步取回文件路径。
-            // // 不要在渲染进程直接调用 loadSelfSignedCertificates()：没有输出目录时它返回空数组，
-            // // 协议栈会退回系统信任链校验，IP 直连的自签证书必然失败。
-            // const selfSignedCertFiles = ipcRenderer.sendSync(IPCEventType.GET_SELF_SIGNED_CERT_FILES) || []
-            // wfc.UseTls(false, selfSignedCertFiles)
+            // 本环境（AIPLUS POC）为全WSS单入口模式：仅对外暴露 443，客户端必须走 WSS + TLS
+            wfc.setUseWebsocket(true)
+            // 使用TLS。域名连接走系统信任链校验公签证书；IP直连使用自签名证书。
+            // 扫描证书目录（开发：build/certs，打包：resources/extraResources/certs）下所有
+            // .crt/.pem/.cer/.der，支持多个域名/IP 各自的自签证书，支持一个文件里放多张证书。
+            // 注意传给原生层的是证书【文件路径】不是证书内容，mars 原生层在主进程运行，路径要主进程可见。
+            // 证书由主进程启动时加载并写成 PEM 文件（见 src/background.js），这里通过 IPC 同步取回文件路径。
+            // 不要在渲染进程直接调用 loadSelfSignedCertificates()：没有输出目录时它返回空数组，
+            // 协议栈会退回系统信任链校验，IP 直连的自签证书必然失败。
+            const selfSignedCertFiles = ipcRenderer.sendSync(IPCEventType.GET_SELF_SIGNED_CERT_FILES) || []
+            wfc.UseTls(false, selfSignedCertFiles)
             // // 双网：备选网络地址。策略0为自动选择，主网络不可用时切换到备选网络
             // wfc.setBackupAddress('101.35.103.221', 443)
             // wfc.setBackupAddressStrategy(0)
