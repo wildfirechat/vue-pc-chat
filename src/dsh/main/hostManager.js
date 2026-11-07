@@ -24,12 +24,6 @@ export default class DshHostManager {
         // 的一致）；渲染进程用它渲染「新会话」的模型 / 推理等级选择。
         this.modelCatalog = [];
         this.settings = new SettingsStore(userDataPath);
-        this.presets = new PresetStore({
-            dshHome: this.dshHome,
-            runtimeRoot: '',
-            profileName: this.status.profile,
-            logger: { warn: (msg) => console.warn(msg) },
-        });
         this.hostId = this._loadHostId();
         this.overlayPath = null;
         this.logPath = path.join(userDataPath, 'logs', 'dsh-host.log');
@@ -52,6 +46,13 @@ export default class DshHostManager {
         this.stopping = false;
         this.restartTimer = null;
         this.restartAttempts = 0;
+        // 依赖 dshHome 与 status，必须在二者初始化之后创建。
+        this.presets = new PresetStore({
+            dshHome: this.dshHome,
+            runtimeRoot: '',
+            profileName: this.status.profile,
+            logger: { warn: (msg) => console.warn(msg) },
+        });
         this._ensureLogDir();
     }
 
