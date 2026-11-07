@@ -119,7 +119,11 @@ function download(url, dest, proxy) {
 
 function extract(archive, dest) {
     fs.mkdirSync(dest, { recursive: true });
-    execFileSync('tar', ['-xzf', archive, '-C', dest], { stdio: 'inherit' });
+    // Windows 上 GNU tar（Git Bash）不兼容盘符路径：-f 参数的冒号被当作远程
+    // 主机名，-C 的反斜杠路径也无法识别。改为在压缩包所在目录用相对路径调用。
+    const cwd = path.dirname(path.resolve(archive));
+    const relDest = path.relative(cwd, path.resolve(dest)) || '.';
+    execFileSync('tar', ['-xzf', path.basename(archive), '-C', relDest], { stdio: 'inherit', cwd });
 }
 
 function copyDir(src, dest) {
