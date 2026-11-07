@@ -17,13 +17,12 @@
  *
  * 构建机需要能访问 npm registry 与 GitHub（首次构建会下载约 250-300 MB，之后走缓存）。
  */
-import fs from 'fs';
-import path from 'path';
-import https from 'https';
-import { execFileSync } from 'child_process';
-import { fileURLToPath } from 'url';
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+// 用 CommonJS：仓库里没有 "type": "module"，Node 18 的构建机不会自动把 .js 当 ESM。
+const root = path.resolve(__dirname, '..');
 const isWin = process.platform === 'win32';
 const npmCmd = isWin ? 'npm.cmd' : 'npm';
 const PBS_TAG = '20261026';
