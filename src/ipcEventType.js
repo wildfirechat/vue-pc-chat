@@ -44,6 +44,8 @@ const IpcEventType = {
     DSH_READ_FILE: 'dsh-read-file',
     DSH_GET_MODELS: 'dsh-get-models',
     DSH_MODEL_CATALOG: 'dsh-model-catalog',
+    DSH_GET_LOCAL_SETTINGS: 'dsh-get-local-settings',
+    DSH_SET_ASR_SERVER: 'dsh-set-asr-server',
     DSH_PRESET_LIST: 'dsh-preset-list',
     DSH_PRESET_SAVE: 'dsh-preset-save',
     DSH_PRESET_DELETE: 'dsh-preset-delete',

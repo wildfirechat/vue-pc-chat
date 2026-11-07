@@ -31,6 +31,7 @@ const MAX_DESC = 300;
 /** 可选工具 → 组合行（全部是运行时已安装的官方插件）。 */
 export const PRESET_TOOLS = [
     { key: 'fs', label: '文件读写', hint: '读/写工作区文件' },
+    { key: 'edit', label: '精确编辑', hint: 'str_replace / 行插入（需配合文件读写）' },
     { key: 'search', label: '文件搜索', hint: '按文件名/内容搜索' },
     { key: 'bash', label: '命令执行', hint: 'shell（受会话沙箱与审批约束）' },
     { key: 'web', label: '网页搜索', hint: '联网搜索与抓取' },
@@ -42,6 +43,7 @@ export const PRESET_TOOLS = [
 
 const TOOL_ROWS = {
     fs: () => [{ id: 'tool-fs', name: '@deepseek-ai/dsh-tool-fs' }],
+    edit: () => [{ id: 'tool-str-replace-editor', name: '@deepseek-ai/dsh-tool-str-replace-editor' }],
     search: () => [{
         id: 'tool-fs-search',
         name: '@deepseek-ai/dsh-tool-fs-search',

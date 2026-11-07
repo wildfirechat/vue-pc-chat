@@ -4,6 +4,7 @@ import { spawn, execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import { app, shell } from 'electron';
 import PresetStore from './presetStore.js';
+import SettingsStore from './settingsStore.js';
 
 /**
  * 管理本机 DSH Host 子进程。
@@ -22,6 +23,7 @@ export default class DshHostManager {
         // 最近一次写入 dsh-runtime-patch.yml 时生成的模型目录（与宿主实际加载
         // 的一致）；渲染进程用它渲染「新会话」的模型 / 推理等级选择。
         this.modelCatalog = [];
+        this.settings = new SettingsStore(userDataPath);
         this.presets = new PresetStore({
             dshHome: this.dshHome,
             runtimeRoot: '',
@@ -248,6 +250,10 @@ export default class DshHostManager {
             '      allowCwdCommand: true',
             '    model:',
             '      allowModelCommand: true',
+            // 语音消息转文字：配置后插件先转写再交给 Agent（为空 = 关闭）。
+            (this.settings && this.settings.get().asrServer)
+                ? `    asrServer: ${JSON.stringify(this.settings.get().asrServer)}`
+                : null,
             '    session:',
             '      preset: standard',
             // 权限默认值：个人机器人只服务 owner；群成员可对话，但危险工具

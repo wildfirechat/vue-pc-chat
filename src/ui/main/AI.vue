@@ -235,6 +235,29 @@
                         <p>服务地址由部署配置提供，无法在此修改；配置完成后重新登录或刷新即可。</p>
                     </div>
 
+                    <section class="dsh-card">
+                        <div class="dsh-card-head">
+                            <h2>语音消息转文字</h2>
+                            <span class="dsh-perm-pill" :class="asrServer ? 'safe' : 'warn'">
+                                {{ asrServer ? '已开启' : '未开启' }}
+                            </span>
+                        </div>
+                        <p class="dsh-muted">
+                            群里的语音消息会先转成文字再交给 DSH；需要可用的 ASR 服务（例如 asr-api）。
+                            留空则关闭，语音消息按文件处理。
+                        </p>
+                        <label class="dsh-field">
+                            <span>ASR 服务地址</span>
+                            <input v-model.trim="asrServerDraft" placeholder="http://127.0.0.1:8300/asr"/>
+                        </label>
+                        <div class="dsh-actions">
+                            <button class="dsh-btn primary" :disabled="savingAsr" @click="saveAsr">
+                                {{ savingAsr ? '保存中…' : '保存并重启 Host' }}
+                            </button>
+                            <button class="dsh-btn" :disabled="savingAsr || !asrServer" @click="clearAsr">关闭</button>
+                        </div>
+                    </section>
+
                 </section>
 
                 <!-- 权限 -->
@@ -402,8 +425,10 @@ import {
     getDshAiAgent,
     getDshAiAgentStats,
     getDshAudit,
+    getDshLocalSettings,
     getDshLog,
     getDshRouting,
+    setDshAsrServer,
     getDshStatus,
     renameDshRobot,
     isDshSupported,
@@ -541,6 +566,9 @@ export default {
             offStatus: null,
             workspaceGroups: [],
             creatingSession: false,
+            asrServer: '',
+            asrServerDraft: '',
+            savingAsr: false,
             activeTab: 'overview',
             logText: '',
             aiAgent: null,
@@ -577,9 +605,46 @@ export default {
             if (id === 'overview') this.loadMyStats();
             if (id === 'logs') this.loadLog();
             if (id === 'routing') this.loadRouting();
-            if (id === 'aiAgent') this.loadAiAgent();
+            if (id === 'aiAgent') {
+                this.loadAiAgent();
+                this.loadAsrSettings();
+            }
             if (id === 'permissions') this.loadAudit();
             if (id === 'models') this.refreshProvision(true);
+        },
+        async loadAsrSettings() {
+            try {
+                const res = await getDshLocalSettings();
+                const server = (res && res.ok && res.settings && res.settings.asrServer) || '';
+                this.asrServer = server;
+                this.asrServerDraft = server;
+            } catch (e) {
+                this.asrServer = '';
+            }
+        },
+        async saveAsr() {
+            if (this.savingAsr) return;
+            this.savingAsr = true;
+            try {
+                const res = await setDshAsrServer(this.asrServerDraft || '');
+                if (!res || !res.ok) {
+                    this.$notify({ title: '保存失败', text: (res && res.error) || '', type: 'error' });
+                    return;
+                }
+                this.asrServer = (res.settings && res.settings.asrServer) || '';
+                this.asrServerDraft = this.asrServer;
+                this.$notify({
+                    title: this.asrServer ? '语音转文字已开启' : '语音转文字已关闭',
+                    text: this.asrServer ? '新消息生效' : '',
+                    type: 'success',
+                });
+            } finally {
+                this.savingAsr = false;
+            }
+        },
+        async clearAsr() {
+            this.asrServerDraft = '';
+            await this.saveAsr();
         },
         async loadLog() {
             this.logLoading = true;

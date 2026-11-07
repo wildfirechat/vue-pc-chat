@@ -347,3 +347,20 @@ export async function applyDshPresetImport(payload) {
 export async function addDshPresetSkills() {
     return ipcRenderer.invoke(IpcEventType.DSH_PRESET_ADD_SKILLS);
 }
+
+// ── 本地设置 ────────────────────────────────────────────────────────────────
+
+/** 读取本地设置（目前只有 asrServer）。 */
+export async function getDshLocalSettings() {
+    if (!isElectron()) return { ok: false, settings: { asrServer: '' } };
+    try {
+        return await ipcRenderer.invoke(IpcEventType.DSH_GET_LOCAL_SETTINGS);
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e), settings: { asrServer: '' } };
+    }
+}
+
+/** 保存语音转文字服务地址；Host 运行中会自动重启使其生效。 */
+export async function setDshAsrServer(url) {
+    return ipcRenderer.invoke(IpcEventType.DSH_SET_ASR_SERVER, url || '');
+}

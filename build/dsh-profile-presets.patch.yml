@@ -91,6 +91,9 @@
             disabled: !!js process.platform !== 'win32'
           - id: tool-fs
             name: '@deepseek-ai/dsh-tool-fs'
+          # 桌面客户端追加：更精细的编辑工具（view / create / str_replace / 行插入）
+          - id: tool-str-replace-editor
+            name: '@deepseek-ai/dsh-tool-str-replace-editor'
           - id: tool-fs-search
             name: '@deepseek-ai/dsh-tool-fs-search'
             config:
@@ -238,6 +241,9 @@
             disabled: !!js process.platform !== 'win32'
           - id: tool-fs
             name: '@deepseek-ai/dsh-tool-fs'
+          # 桌面客户端追加：更精细的编辑工具（view / create / str_replace / 行插入）
+          - id: tool-str-replace-editor
+            name: '@deepseek-ai/dsh-tool-str-replace-editor'
           - id: tool-fs-search
             name: '@deepseek-ai/dsh-tool-fs-search'
             config:
@@ -456,6 +462,9 @@
             disabled: !!js process.platform !== 'win32'
           - id: tool-fs
             name: '@deepseek-ai/dsh-tool-fs'
+          # 桌面客户端追加：更精细的编辑工具（view / create / str_replace / 行插入）
+          - id: tool-str-replace-editor
+            name: '@deepseek-ai/dsh-tool-str-replace-editor'
           - id: tool-fs-search
             name: '@deepseek-ai/dsh-tool-fs-search'
             config:
