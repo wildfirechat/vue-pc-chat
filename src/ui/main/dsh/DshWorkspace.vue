@@ -1,5 +1,5 @@
 <template>
-    <section class="dsh-workspace-page" :style="{ '--dsh-sidebar-width': sidebarWidth + 'px' }">
+    <section class="dsh-workspace-page" :class="{ 'with-window-controls': reserveWindowControls }" :style="{ '--dsh-sidebar-width': sidebarWidth + 'px' }">
         <div class="dsh-workspace-main">
             <aside class="dsh-session-column" v-show="!sidebarCollapsed">
                 <div class="dsh-sidebar-head">
@@ -332,6 +332,12 @@ export default {
         };
     },
     computed: {
+        reserveWindowControls() {
+            // Windows/Linux 主窗口右上角是自绘的最小化/最大化/关闭按钮，页面顶部右侧的内容
+            // （如新建会话/空状态的状态文字）需要让开，否则会显示在按钮下面。
+            const misc = store.state.misc;
+            return !!(misc.isElectron && (misc.isElectronWindowsOrLinux || misc.isOhos));
+        },
         localRobotId() {
             return localRobotId();
         },
@@ -1350,6 +1356,10 @@ export default {
 .dsh-embedded-chat :deep(.conversation-container) { height: 100%; }
 .dsh-chat-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #8a8f99; gap: 8px; position: relative; }
 .dsh-chat-empty-top { position: absolute; top: 0; left: 0; right: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 16px; border-bottom: 1px solid #f0f1f3; box-sizing: border-box; color: #4b5563; font-size: 13px; font-weight: 600; }
+/* Windows/Linux：右上角是自绘的窗口按钮，状态文字向左让开，避免重叠 */
+.dsh-workspace-page.with-window-controls .dsh-chat-empty-top {
+    padding-right: calc(12px + var(--window-controls-width, 0px));
+}
 .dsh-modal-mask { position: fixed; inset: 0; background: rgba(15, 23, 42, .28); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .dsh-modal { width: 460px; max-width: calc(100vw - 40px); background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 20px 60px rgba(15, 23, 42, .2); box-sizing: border-box; }
 .dsh-modal h2 { margin: 0 0 6px; font-size: 17px; }

@@ -122,6 +122,10 @@ export default {
         if (this.sharedMiscState.isElectronWindowsOrLinux) {
             root.style.setProperty('--main-border-radius', '0px')
             root.style.setProperty('--home-menu-padding-top', '0px')
+            // 主窗口在 Windows/Linux 下是无边框的，右上角由 ElectronWindowsControlButtonView
+            // 自绘最小化/最大化/关闭按钮（3 个 46px 宽的按钮，高 30px）。
+            // 页面中贴着窗口右上角的内容需要据此避让，否则会被按钮盖住而点不到。
+            root.style.setProperty('--window-controls-width', '138px')
         }
 
         if (isElectron() && process.platform === 'linux') {

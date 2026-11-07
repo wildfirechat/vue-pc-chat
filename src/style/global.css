@@ -81,6 +81,10 @@
     --conversation-item-height: calc(68px * var(--layout-scale-row)); /* 会话列表项高度 */
     --contact-item-height:      calc(50px * var(--layout-scale-row)); /* 联系人列表项高度 */
     --height-titlebar: 30px;  /* Electron 标题栏 */
+    /* Electron 自绘窗口按钮（最小化/最大化/关闭）占用的宽度。
+       Windows/Linux 主窗口无系统边框，按钮由页面右上角自绘，见 App.vue 中的赋值。
+       非 Windows/Linux 或 Web 端为 0，即不需要避让。 */
+    --window-controls-width: 0px;
 }
 
 * {

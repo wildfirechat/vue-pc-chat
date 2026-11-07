@@ -282,6 +282,10 @@ export default {
 }
 
 /*windows or linux*/
+/* 注意：这块按钮是绝对定位在窗口右上角、z-index 9999 的真实 DOM，会盖住其下方的页面内容，
+   点击也会被按钮吃掉。页面中贴着窗口右上角的内容（如顶部 tab 条）必须避让：
+   高度方向用 var(--height-titlebar)（30px），宽度方向用 var(--window-controls-width)（3 × 46px，
+   由 App.vue 在 Windows/Linux 下赋值）。 */
 #window-controls {
     position: absolute;
     right: 0;

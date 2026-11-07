@@ -1,6 +1,9 @@
 <template>
     <aside class="dsh-file-panel" :style="{ width: width + 'px', flexBasis: width + 'px' }">
         <div class="dsh-file-resizer" @mousedown.prevent="startResize"></div>
+        <!-- Windows/Linux：右上角是自绘的最小化/最大化/关闭按钮，先让出一条空白（同时可拖拽窗口），
+             否则紧贴窗口顶部的 tab 条会被按钮盖住，点击被按钮吃掉 -->
+        <div v-if="reserveWindowControls" class="dsh-file-titlebar-gap"></div>
 
         <div class="dsh-file-tabbar">
             <div class="dsh-file-tabs-scroll">
@@ -83,6 +86,7 @@ import { getAgentPanelDataFor } from '../../util/agentState';
 import { getDshDirectory, readDshFile, openDshPath } from '../../../dsh/renderer/dshClient';
 import AgentCommandMessageContent from '../../../wfc/messages/agentCommandMessageContent';
 import wfc from '../../../wfc/client/wfc';
+import store from '../../../store';
 
 const FILE_PANEL_WIDTH_KEY = 'dsh-file-panel-width';
 const DEFAULT_WIDTH = 420;
@@ -108,6 +112,13 @@ export default {
         };
     },
     computed: {
+        reserveWindowControls() {
+            // Windows/Linux 主窗口是无边框的，右上角由 ElectronWindowsControlButtonView 自绘
+            // 最小化/最大化/关闭按钮（绝对定位、z-index 9999、高度 30px）。本面板贴着窗口右边，
+            // tab 条正好落在按钮下面，点击会被按钮吃掉，所以需要把 tab 条整体下移让开。
+            const misc = store.state.misc;
+            return !!(misc.isElectron && (misc.isElectronWindowsOrLinux || misc.isOhos));
+        },
         cwd() {
             const panelCwd = this.panel && this.panel.cwd;
             return panelCwd || this.sessionPath || '';
@@ -351,6 +362,13 @@ export default {
     display: flex; align-items: stretch; flex: 0 0 38px;
     border-bottom: 1px solid var(--border-primary, #e5e6eb);
     background: #f8fafc; min-width: 0;
+}
+/* Windows/Linux：给自绘的窗口按钮（右上角，高 30px）让出位置，tab 从按钮下方开始 */
+.dsh-file-titlebar-gap {
+    flex: 0 0 var(--height-titlebar, 30px);
+    height: var(--height-titlebar, 30px);
+    background: #f8fafc;
+    -webkit-app-region: drag;
 }
 .dsh-file-tabs-scroll {
     display: flex; align-items: stretch; flex: 1 1 auto;
