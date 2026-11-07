@@ -320,6 +320,11 @@ function findNodeBinary(root, depth = 0) {
     for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
         const full = path.join(root, entry.name);
         if (entry.isFile() && (entry.name === 'node' || entry.name === 'node.exe')) {
+            // Windows 执行文件时会做扩展名解析：execFileSync('.../node') 实际运行的
+            // 是旁边的 node.exe。npm node 包里的占位文件 "This file intentionally
+            // left blank" 因此能通过 -v 检查，但复制出去的是 34 字节文本。
+            // 所以在 Windows 上要求文件本身必须是 PE 可执行文件。
+            if (isWin && peMachine(full) === null) continue;
             try {
                 const out = execFileSync(full, ['-v'], { encoding: 'utf8', timeout: 3000 }).trim();
                 if (nodeVersionOk(out)) return full;
