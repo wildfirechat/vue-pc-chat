@@ -300,3 +300,50 @@ export function onDshStatus(callback) {
     ipcRenderer.on(IpcEventType.DSH_STATUS_EVENT, listener);
     return () => ipcRenderer.off(IpcEventType.DSH_STATUS_EVENT, listener);
 }
+
+// ── 用户自定义 Agent 预设 ────────────────────────────────────────────────────
+
+/** 列出预设（内置 + 自建）与可选工具。 */
+export async function listDshPresets() {
+    if (!isElectron()) return { ok: false, error: '仅支持 Electron', items: [] };
+    try {
+        return await ipcRenderer.invoke(IpcEventType.DSH_PRESET_LIST);
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e), items: [] };
+    }
+}
+
+/** 新建或保存一个预设定义（id 已存在则覆盖）。 */
+export async function saveDshPreset(spec) {
+    return ipcRenderer.invoke(IpcEventType.DSH_PRESET_SAVE, spec);
+}
+
+/** 删除自建预设。 */
+export async function deleteDshPreset(id) {
+    return ipcRenderer.invoke(IpcEventType.DSH_PRESET_DELETE, id);
+}
+
+/** 设置默认预设（空字符串 = 不覆盖部署默认）。 */
+export async function setDshDefaultPreset(id) {
+    return ipcRenderer.invoke(IpcEventType.DSH_PRESET_SET_DEFAULT, id);
+}
+
+/** 导出为 .dshpreset.zip（主进程弹保存框）。 */
+export async function exportDshPreset(id) {
+    return ipcRenderer.invoke(IpcEventType.DSH_PRESET_EXPORT, id);
+}
+
+/** 选择并解析一个预设包，返回预览（不落盘）。 */
+export async function inspectDshPresetImport() {
+    return ipcRenderer.invoke(IpcEventType.DSH_PRESET_IMPORT);
+}
+
+/** 应用导入：{ file, id, overwrite, overwriteSkills }。 */
+export async function applyDshPresetImport(payload) {
+    return ipcRenderer.invoke(IpcEventType.DSH_PRESET_IMPORT_APPLY, payload);
+}
+
+/** 选择一个技能目录并安装到 $DSH_HOME/skills。 */
+export async function addDshPresetSkills() {
+    return ipcRenderer.invoke(IpcEventType.DSH_PRESET_ADD_SKILLS);
+}

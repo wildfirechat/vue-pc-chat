@@ -3,6 +3,7 @@ import path from 'path';
 import { spawn, execFileSync } from 'child_process';
 import { randomUUID } from 'crypto';
 import { app, shell } from 'electron';
+import PresetStore from './presetStore.js';
 
 /**
  * 管理本机 DSH Host 子进程。
@@ -21,6 +22,12 @@ export default class DshHostManager {
         // 最近一次写入 dsh-runtime-patch.yml 时生成的模型目录（与宿主实际加载
         // 的一致）；渲染进程用它渲染「新会话」的模型 / 推理等级选择。
         this.modelCatalog = [];
+        this.presets = new PresetStore({
+            dshHome: this.dshHome,
+            runtimeRoot: '',
+            profileName: this.status.profile,
+            logger: { warn: (msg) => console.warn(msg) },
+        });
         this.hostId = this._loadHostId();
         this.overlayPath = null;
         this.logPath = path.join(userDataPath, 'logs', 'dsh-host.log');
@@ -184,46 +191,17 @@ export default class DshHostManager {
         return '';
     }
 
-    /**
-     * profile 里声明的 agent preset（能力档位）。只有 profile 启用了 preset
-     * 模式（有 agent-preset-registry 行）才返回非空；行格式由
-     * enable-presets.mjs 生成：`- id: preset-xxx` + `name: ...dsh-agent-preset`
-     * + `config.id`（可选 `config.name`）。
-     */
+    /** profile 里声明的 agent preset（官方 + 用户自定义），来源于 PresetStore。 */
     _presetCatalog() {
-        const empty = { presets: [], defaultPreset: '' };
-        const file = this._profilePatchPath();
-        if (!file) return empty;
-        let text = '';
-        try { text = fs.readFileSync(file, 'utf8'); } catch (e) { return empty; }
-        if (!/- id:\s*['"]?agent-preset-registry/.test(text)) return empty;
-        const lines = text.split('\n');
-        const presets = [];
-        for (let i = 0; i < lines.length; i++) {
-            if (!/@deepseek-ai\/dsh-agent-preset['"]?\s*$/.test(lines[i])) continue;
-            let id = '';
-            let label = '';
-            for (let j = i + 1; j < lines.length && j < i + 8; j++) {
-                const line = lines[j];
-                if (/^\s*config:\s*$/.test(line)) continue;
-                if (!/^ {8}\S/.test(line)) break;
-                const idMatch = /^ {8}id:\s*(\S+)\s*$/.exec(line);
-                if (idMatch && !id) id = idMatch[1];
-                const nameMatch = /^ {8}name:\s*(.+?)\s*$/.exec(line);
-                if (nameMatch && !label) label = nameMatch[1].replace(/^['"]|['"]$/g, '');
-            }
-            if (id && !presets.some(p => p.value === id)) {
-                presets.push({ value: id, label: label || id });
-            }
+        try {
+            const data = this.presets.list();
+            return {
+                presets: data.items.map((it) => ({ value: it.id, label: it.name || it.id })),
+                defaultPreset: data.default || '',
+            };
+        } catch (e) {
+            return { presets: [], defaultPreset: '' };
         }
-        let defaultPreset = '';
-        const regIdx = text.indexOf('agent-preset-registry');
-        if (regIdx >= 0) {
-            const m = /default:\s*(\S+)/.exec(text.slice(regIdx, regIdx + 600));
-            if (m) defaultPreset = m[1];
-        }
-        if (!defaultPreset && presets.length) defaultPreset = presets[0].value;
-        return { presets, defaultPreset };
     }
 
     /**
@@ -461,6 +439,15 @@ export default class DshHostManager {
             throw new Error('bundled DSH profile missing or cannot be materialized');
         }
         this.dshHome = process.env.WF_DSH_HOME || bundledHome;
+        // 用户预设：profile 可能刚被升级重落盘，Host 启动前重新注入定义块。
+        this.presets.setDshHome(this.dshHome);
+        this.presets.setProfile(profile);
+        this.presets.runtimeRoot = this._runtimeRoot();
+        try {
+            this.presets.syncProfileBlock();
+        } catch (e) {
+            this._appendLog(`[preset] sync user presets failed: ${e?.message ?? e}`);
+        }
         const args = [...resolved.argsPrefix, '--profile', profile, '--patch', overlay];
         const robot = provision.robot || {};
         const env = {

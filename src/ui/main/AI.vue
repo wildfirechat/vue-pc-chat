@@ -309,6 +309,11 @@
                     <DshModelSettings :ai="ai"/>
                 </section>
 
+                <!-- Agent 预设 -->
+                <section v-else-if="activeTab === 'presets'" class="dsh-section">
+                    <DshPresets/>
+                </section>
+
                 <!-- 插件 -->
                 <section v-else-if="activeTab === 'plugins'" class="dsh-section">
                     <DshPlugins embedded/>
@@ -414,11 +419,12 @@ import Conversation from "../../wfc/model/conversation";
 import TextMessageContent from "../../wfc/messages/textMessageContent";
 import ModifyGroupInfoType from "../../wfc/model/modifyGroupInfoType";
 import DshModelSettings from "./dsh/DshModelSettings.vue";
+import DshPresets from "./dsh/DshPresets.vue";
 import DshPlugins from "./dsh/DshPlugins.vue";
 
 export default {
     name: 'AI',
-    components: { DshModelSettings, DshPlugins },
+    components: { DshModelSettings, DshPlugins, DshPresets },
     computed: {
         aiPortalUrl() {
             return Config.AI_PORTAL_URL;
@@ -518,6 +524,7 @@ export default {
                 { id: 'aiAgent', label: 'AI 服务' },
                 { id: 'permissions', label: '权限' },
                 { id: 'models', label: '模型' },
+                { id: 'presets', label: '预设' },
                 { id: 'plugins', label: '插件' },
                 { id: 'routing', label: '路由' },
                 { id: 'logs', label: '日志' },

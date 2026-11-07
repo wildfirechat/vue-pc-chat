@@ -1936,6 +1936,107 @@ ipcMain.handle(IPCEventType.DSH_MODEL_CATALOG, () => {
     return dshHostManager.modelCatalogData();
 });
 
+// ── 用户自定义 Agent 预设 ────────────────────────────────────────────────────
+ipcMain.handle(IPCEventType.DSH_PRESET_LIST, () => {
+    try {
+        return { ok: true, ...dshHostManager.presets.list() };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_SAVE, (event, spec) => {
+    try {
+        return { ok: true, ...dshHostManager.presets.saveSpec(spec) };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_DELETE, (event, id) => {
+    try {
+        return { ok: true, ...dshHostManager.presets.deleteSpec(String(id || '')) };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_SET_DEFAULT, (event, id) => {
+    try {
+        return { ok: true, ...dshHostManager.presets.setDefault(String(id || '')) };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_EXPORT, async (event, id) => {
+    try {
+        const list = dshHostManager.presets.list();
+        const item = list.items.find(x => x.id === id);
+        const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+        const result = await dialog.showSaveDialog(win, {
+            title: '导出 Agent 预设',
+            defaultPath: `预设-${(item && item.name) || id}.dshpreset.zip`,
+            filters: [{ name: 'DSH 预设包', extensions: ['zip'] }],
+        });
+        if (result.canceled || !result.filePath) return { ok: false, canceled: true };
+        const written = await dshHostManager.presets.exportPreset(id, result.filePath);
+        return { ok: true, ...written };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_IMPORT, async () => {
+    try {
+        const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+        const result = await dialog.showOpenDialog(win, {
+            title: '导入 Agent 预设包',
+            properties: ['openFile'],
+            filters: [{ name: 'DSH 预设包', extensions: ['zip'] }],
+        });
+        if (result.canceled || !result.filePaths || !result.filePaths.length) {
+            return { ok: false, canceled: true };
+        }
+        const preview = await dshHostManager.presets.inspectImport(result.filePaths[0]);
+        return { ok: true, preview };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_IMPORT_APPLY, async (event, payload) => {
+    try {
+        const data = payload || {};
+        const result = await dshHostManager.presets.applyImport({
+            file: data.file,
+            id: data.id,
+            overwrite: !!data.overwrite,
+            overwriteSkills: !!data.overwriteSkills,
+        });
+        return { ok: true, ...result };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_ADD_SKILLS, async () => {
+    try {
+        const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+        const result = await dialog.showOpenDialog(win, {
+            title: '选择技能目录（需包含 SKILL.md）',
+            properties: ['openDirectory'],
+        });
+        if (result.canceled || !result.filePaths || !result.filePaths.length) {
+            return { ok: false, canceled: true };
+        }
+        const name = dshHostManager.presets.addSkillFolder(result.filePaths[0]);
+        return { ok: true, name };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
 ipcMain.handle(IPCEventType.DSH_LIST_DIRECTORY, (event, dir) => {
     return dshHostManager.listDirectory(dir || '');
 });
