@@ -118,12 +118,30 @@ function download(url, dest, proxy) {
 }
 
 function extract(archive, dest) {
-    fs.mkdirSync(dest, { recursive: true });
+    const absDest = path.resolve(dest);
+    fs.mkdirSync(absDest, { recursive: true });
     // Windows 上 GNU tar（Git Bash）不兼容盘符路径：-f 参数的冒号被当作远程
-    // 主机名，-C 的反斜杠路径也无法识别。改为在压缩包所在目录用相对路径调用。
+    // 主机名，-C 的反斜杠路径也无法识别。改为在压缩包所在目录用相对路径调用，
+    // 并统一转成正斜杠（Windows 的 path.relative 返回反斜杠）。
     const cwd = path.dirname(path.resolve(archive));
-    const relDest = path.relative(cwd, path.resolve(dest)) || '.';
-    execFileSync('tar', ['-xzf', path.basename(archive), '-C', relDest], { stdio: 'inherit', cwd });
+    const relDest = (path.relative(cwd, absDest) || '.').split(path.sep).join('/');
+    if (!path.isAbsolute(relDest)) {
+        execFileSync('tar', ['-xzf', path.basename(archive), '-C', relDest], { stdio: 'inherit', cwd });
+        return;
+    }
+    // 跨盘符（例如压缩包在 C:、目标在 D:）：relative 会返回绝对路径，仍然带盘符。
+    // 把压缩包临时复制到目标父目录，用相对路径解压。
+    const parent = path.dirname(absDest);
+    const tmpArchive = path.join(parent, `.office-extract-${process.pid}.tgz`);
+    fs.copyFileSync(archive, tmpArchive);
+    try {
+        execFileSync('tar', ['-xzf', path.basename(tmpArchive), '-C', path.basename(absDest)], {
+            stdio: 'inherit',
+            cwd: parent,
+        });
+    } finally {
+        fs.rmSync(tmpArchive, { force: true });
+    }
 }
 
 function copyDir(src, dest) {
@@ -302,10 +320,11 @@ function installPythonPackages(primary, pythonRoot, site, py, proxy) {
         stdio: 'inherit',
         env: { ...process.env, ...proxyEnv(proxy), PYTHONDONTWRITEBYTECODE: '1' },
     });
-    const stripped = stripBytecode(pythonRoot);
-    if (stripped) log(`清理 ${stripped} 个 Python 字节码缓存（避免签名逐个处理 .pyc）`);
 
-    const version = execFileSync(py, ['-c', "import sys;print('%d.%d.%d' % sys.version_info[:3])"], { encoding: 'utf8' }).trim();
+    const version = execFileSync(py, ['-c', "import sys;print('%d.%d.%d' % sys.version_info[:3])"], {
+        encoding: 'utf8',
+        env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
+    }).trim();
     const packages = readPythonPackages(site);
     const manifest = {
         desktopVersion: readAppVersion(),
@@ -321,6 +340,10 @@ function installPythonPackages(primary, pythonRoot, site, py, proxy) {
         env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
     }).trim();
     if (probe !== 'ok') fail('Python Office 依赖导入校验失败');
+    // 放在所有 Python 调用之后：任何一次 python 启动（包括 -c 探针）都可能生成
+    // encodings 等 bootstrap 模块的 .pyc，最后统一清掉。
+    const stripped = stripBytecode(pythonRoot);
+    if (stripped) log(`清理 ${stripped} 个 Python 字节码缓存（避免签名逐个处理 .pyc）`);
     log(`Python 运行时就绪: ${version}, ${Object.keys(packages).length} 个包`);
     return { pythonRoot, py, site, version };
 }
