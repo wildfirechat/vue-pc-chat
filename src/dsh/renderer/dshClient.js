@@ -225,16 +225,23 @@ export async function readDshFile(filePath) {
 }
 
 /**
- * 运行时模型目录（provider/model + 支持的推理等级），供「新会话」页选择。
- * 与 dsh-runtime-patch.yml 同源；宿主未启动时为空数组。
+ * 「新会话」可选项：运行时模型目录（provider/model + 推理等级）与 profile 声明
+ * 的 agent preset。与 dsh-runtime-patch.yml / profile patch 同源；宿主未启动或
+ * profile 未启用 preset 模式时对应列表为空。
  */
 export async function getDshModelCatalog() {
-    if (!isElectron()) return [];
+    const empty = { models: [], presets: [], defaultPreset: '' };
+    if (!isElectron()) return empty;
     try {
-        const list = await ipcRenderer.invoke(IpcEventType.DSH_MODEL_CATALOG);
-        return Array.isArray(list) ? list : [];
+        const data = await ipcRenderer.invoke(IpcEventType.DSH_MODEL_CATALOG);
+        if (Array.isArray(data)) return { ...empty, models: data };
+        return {
+            models: Array.isArray(data && data.models) ? data.models : [],
+            presets: Array.isArray(data && data.presets) ? data.presets : [],
+            defaultPreset: (data && data.defaultPreset) || '',
+        };
     } catch (e) {
-        return [];
+        return empty;
     }
 }
 

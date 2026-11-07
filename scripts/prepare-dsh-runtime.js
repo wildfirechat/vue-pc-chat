@@ -154,15 +154,19 @@ function sanitizeProfile(profileDest) {
     }
     fs.rmSync(path.join(profileDest, '.plugin-manager'), { recursive: true, force: true });
 
-    // 只保留一个最小、无宿主机信息的 wildfire patch；真实 gateway/robot/workspace
-    // 与模型由 Host 的运行时 overlay 注入。
-    fs.writeFileSync(path.join(profileDest, 'cordis.patch.yml'), `- insert:
-    - id: tool-ask-user
-      name: '@deepseek-ai/dsh-tool-ask-user'
-    - id: tool-present
-      name: '@deepseek-ai/dsh-tool-present'
-      config:
-        maxFiles: 8
+    // agent preset 模式（能力档位）：build/dsh-profile-presets.patch.yml 由
+    // robot-gateway 的 scripts/enable-presets.mjs 生成，内容是「禁用 base 的
+    // agent 平面行 + agent-preset-registry + standard/ptc/minimal/cordis 声明」。
+    // 启用后工具由 preset 按会话挂载（base 全局层被禁用），所以不再顶层插入
+    // tool-ask-user / tool-present——标准预设已包含这两个工具，重复插入会撞名。
+    const presetsPatchFile = path.join(root, 'build', 'dsh-profile-presets.patch.yml');
+    let presetsPatch = '';
+    try {
+        presetsPatch = fs.readFileSync(presetsPatchFile, 'utf8').trimEnd();
+    } catch (e) {
+        presetsPatch = '';
+    }
+    const wildfireInsert = `- insert:
     - id: wildfire
       name: '@wildfirechat/dsh-wildfire'
       config:
@@ -171,7 +175,19 @@ function sanitizeProfile(profileDest) {
         robotSecret: ""
         workspace:
           root: "."
-`);
+`;
+    const patchBody = presetsPatch
+        ? `${presetsPatch}\n\n${wildfireInsert}`
+        : `- insert:
+    - id: tool-ask-user
+      name: '@deepseek-ai/dsh-tool-ask-user'
+    - id: tool-present
+      name: '@deepseek-ai/dsh-tool-present'
+      config:
+        maxFiles: 8
+${wildfireInsert}`;
+    // 真实 gateway/robot/workspace 与模型由 Host 的运行时 overlay 注入。
+    fs.writeFileSync(path.join(profileDest, 'cordis.patch.yml'), patchBody);
 
     // profile package.json 不再引用构建机的绝对 tgz 路径。
     const packageFile = path.join(profileDest, 'package.json');

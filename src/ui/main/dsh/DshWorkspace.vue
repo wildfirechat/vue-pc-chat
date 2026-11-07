@@ -638,10 +638,16 @@ export default {
             this.submitDraft();
         },
         async loadDraftCatalog() {
-            const list = await getDshModelCatalog();
-            this.draftCatalog = Array.isArray(list) ? list : [];
+            const catalog = await getDshModelCatalog();
+            const models = Array.isArray(catalog) ? catalog : ((catalog && catalog.models) || []);
+            const presets = Array.isArray(catalog) ? [] : ((catalog && catalog.presets) || []);
+            const defaultPreset = Array.isArray(catalog) ? '' : ((catalog && catalog.defaultPreset) || '');
+            this.draftCatalog = Array.isArray(models) ? models : [];
+            this.draftPresets = Array.isArray(presets) ? presets : [];
             const draft = this.draft;
-            if (!draft || draft.model) return;
+            if (!draft) return;
+            if (!draft.preset) draft.preset = defaultPreset;
+            if (draft.model) return;
             const def = this.draftCatalog.find(m => m.isDefault) || this.draftCatalog[0];
             if (def) {
                 draft.model = `${def.provider}/${def.id}`;

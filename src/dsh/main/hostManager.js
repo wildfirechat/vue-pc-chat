@@ -169,12 +169,75 @@ export default class DshHostManager {
         return `{ ${levels.map((l) => `${JSON.stringify(l)}: ${JSON.stringify(l)}`).join(', ')} }`;
     }
 
+    /** 当前生效的 profile patch（先找落盘副本，再退回内置模板）。 */
+    _profilePatchPath() {
+        const profile = (this.status && this.status.profile) || 'wildfire';
+        const candidates = [
+            path.join(this.dshHome, 'profiles', profile, 'cordis.patch.yml'),
+            path.join(this._runtimeRoot(), 'profile', 'cordis.patch.yml'),
+        ];
+        for (const file of candidates) {
+            try {
+                if (fs.existsSync(file)) return file;
+            } catch (e) { /* ignore */ }
+        }
+        return '';
+    }
+
     /**
-     * 「新会话」可选的模型目录（与 dsh-runtime-patch.yml 同源）。宿主未启动时
-     * 返回空数组，客户端会退回只显示默认模型。
+     * profile 里声明的 agent preset（能力档位）。只有 profile 启用了 preset
+     * 模式（有 agent-preset-registry 行）才返回非空；行格式由
+     * enable-presets.mjs 生成：`- id: preset-xxx` + `name: ...dsh-agent-preset`
+     * + `config.id`（可选 `config.name`）。
+     */
+    _presetCatalog() {
+        const empty = { presets: [], defaultPreset: '' };
+        const file = this._profilePatchPath();
+        if (!file) return empty;
+        let text = '';
+        try { text = fs.readFileSync(file, 'utf8'); } catch (e) { return empty; }
+        if (!/- id:\s*['"]?agent-preset-registry/.test(text)) return empty;
+        const lines = text.split('\n');
+        const presets = [];
+        for (let i = 0; i < lines.length; i++) {
+            if (!/@deepseek-ai\/dsh-agent-preset['"]?\s*$/.test(lines[i])) continue;
+            let id = '';
+            let label = '';
+            for (let j = i + 1; j < lines.length && j < i + 8; j++) {
+                const line = lines[j];
+                if (/^\s*config:\s*$/.test(line)) continue;
+                if (!/^ {8}\S/.test(line)) break;
+                const idMatch = /^ {8}id:\s*(\S+)\s*$/.exec(line);
+                if (idMatch && !id) id = idMatch[1];
+                const nameMatch = /^ {8}name:\s*(.+?)\s*$/.exec(line);
+                if (nameMatch && !label) label = nameMatch[1].replace(/^['"]|['"]$/g, '');
+            }
+            if (id && !presets.some(p => p.value === id)) {
+                presets.push({ value: id, label: label || id });
+            }
+        }
+        let defaultPreset = '';
+        const regIdx = text.indexOf('agent-preset-registry');
+        if (regIdx >= 0) {
+            const m = /default:\s*(\S+)/.exec(text.slice(regIdx, regIdx + 600));
+            if (m) defaultPreset = m[1];
+        }
+        if (!defaultPreset && presets.length) defaultPreset = presets[0].value;
+        return { presets, defaultPreset };
+    }
+
+    /**
+     * 「新会话」可选的模型与 agent preset（模型与 dsh-runtime-patch.yml 同源，
+     * preset 从 profile patch 读取）。宿主未启动 / profile 未启用 preset 模式时
+     * 对应列表为空，客户端会退回默认值。
      */
     modelCatalogData() {
-        return Array.isArray(this.modelCatalog) ? this.modelCatalog : [];
+        const presetInfo = this._presetCatalog();
+        return {
+            models: Array.isArray(this.modelCatalog) ? this.modelCatalog : [],
+            presets: presetInfo.presets,
+            defaultPreset: presetInfo.defaultPreset,
+        };
     }
 
     _writeOverlay(provision, userModels = []) {
