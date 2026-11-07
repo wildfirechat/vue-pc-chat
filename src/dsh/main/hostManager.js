@@ -477,6 +477,15 @@ export default class DshHostManager {
         }
         env.DSH_HOME = process.env.WF_DSH_HOME || bundledHome;
         env.DSH_PROFILE = profile;
+        // 内置 Python（Office 技能）不要往安装包目录写 __pycache__：会破坏 macOS 代码签名。
+        env.PYTHONDONTWRITEBYTECODE = '1';
+        // 内置 Office 运行时（LibreOffice + Python）：profile 的 office 行按该变量启用。
+        const primaryRuntime = path.join(this._runtimeRoot(), 'primary-runtime');
+        try {
+            if (fs.existsSync(path.join(primaryRuntime, 'runtime.json'))) {
+                env.DSH_PRIMARY_RUNTIME = primaryRuntime;
+            }
+        } catch (e) { /* ignore */ }
         // 强制桌面端默认权限：不继承构建机/宿主机的 DSH 权限模式（例如
         // 用户全局设了 danger-full-access，不能悄悄带进本应用）。
         env.DSH_PERMISSION_MODE = 'workspace-write';

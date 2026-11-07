@@ -433,6 +433,14 @@ if (fs.existsSync(path.join(pluginSource, 'dist', 'index.js'))) {
 }
 sanitizeProfile(profileDest);
 
+// Office（必选）：LibreOffice 引擎 + Python 运行时 + Office 技能资源。
+// 失败即构建失败，避免发出一个“没有 Office”的安装包。
+console.log('[prepare-dsh-runtime] preparing Office runtime (LibreOffice + Python)…');
+execFileSync(process.execPath, [path.join(root, 'scripts', 'prepare-office-runtime.js'), '--runtime', dest], {
+    stdio: 'inherit',
+    env: process.env,
+});
+
 const version = {
     node: process.version,
     dsh: (() => {

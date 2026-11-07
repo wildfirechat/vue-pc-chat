@@ -77,6 +77,17 @@ function baseRows(spec) {
         const build = TOOL_ROWS[key];
         if (build) rows.push(...build());
     }
+    // Office 技能默认解释器：随安装包内置的 Python 载荷（没有时禁用）。
+    rows.push({
+        id: 'workspace-dependencies',
+        name: '@deepseek-ai/dsh-tool-workspace-dependencies',
+        disabled: '!!js "!process.env.DSH_PRIMARY_RUNTIME && !process.env.DSH_BUNDLED_PRIMARY_RUNTIME"',
+        config: {
+            source: {
+                __raw: `!!js "process.getBuiltinModule('node:path').resolve(process.env.DSH_PRIMARY_RUNTIME ?? process.env.DSH_BUNDLED_PRIMARY_RUNTIME ?? '')"`,
+            },
+        },
+    });
     rows.push({
         id: 'compaction',
         name: 'cordis:group',
@@ -100,6 +111,7 @@ function q(value) {
 }
 
 function scalar(value) {
+    if (value && typeof value === 'object' && typeof value.__raw === 'string') return value.__raw;
     if (typeof value === 'boolean' || typeof value === 'number') return String(value);
     return q(value);
 }

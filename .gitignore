@@ -36,6 +36,11 @@ crash.log
 /build/dsh-runtime/dsh
 /build/dsh-runtime/profile
 /build/dsh-runtime/VERSION
+# Office 运行时（LibreOffice 引擎 + Python 载荷，构建时生成，约 270MB）
+/build/dsh-runtime/primary-runtime
+/build/dsh-runtime/office-skills
+/build/dsh-runtime/office-runtime.json
+/build/.office-cache
 
 # DSH build 依赖缓存
 /build/.dsh-deps

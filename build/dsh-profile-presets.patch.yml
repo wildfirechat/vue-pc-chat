@@ -104,6 +104,12 @@
             name: '@deepseek-ai/dsh-skill-filesystem'
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
+          # Office 技能默认解释器（随安装包内置的 Python）；没有 payload 时禁用。
+          - id: workspace-dependencies
+            name: '@deepseek-ai/dsh-tool-workspace-dependencies'
+            disabled: !!js "!process.env.DSH_PRIMARY_RUNTIME && !process.env.DSH_BUNDLED_PRIMARY_RUNTIME"
+            config:
+              source: !!js "process.getBuiltinModule('node:path').resolve(process.env.DSH_PRIMARY_RUNTIME ?? process.env.DSH_BUNDLED_PRIMARY_RUNTIME ?? '')"
           - id: command-goal
             name: '@deepseek-ai/dsh-command-goal'
           - id: tool-goal
@@ -254,6 +260,12 @@
             name: '@deepseek-ai/dsh-skill-filesystem'
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
+          # Office 技能默认解释器（随安装包内置的 Python）；没有 payload 时禁用。
+          - id: workspace-dependencies
+            name: '@deepseek-ai/dsh-tool-workspace-dependencies'
+            disabled: !!js "!process.env.DSH_PRIMARY_RUNTIME && !process.env.DSH_BUNDLED_PRIMARY_RUNTIME"
+            config:
+              source: !!js "process.getBuiltinModule('node:path').resolve(process.env.DSH_PRIMARY_RUNTIME ?? process.env.DSH_BUNDLED_PRIMARY_RUNTIME ?? '')"
           - id: command-goal
             name: '@deepseek-ai/dsh-command-goal'
           - id: tool-goal
@@ -584,9 +596,29 @@
                 - !!js process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:path').dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('@deepseek-ai/dsh-agent-preset/package.json')), 'skills')
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
+          # Office 技能默认解释器（随安装包内置的 Python）；没有 payload 时禁用。
+          - id: workspace-dependencies
+            name: '@deepseek-ai/dsh-tool-workspace-dependencies'
+            disabled: !!js "!process.env.DSH_PRIMARY_RUNTIME && !process.env.DSH_BUNDLED_PRIMARY_RUNTIME"
+            config:
+              source: !!js "process.getBuiltinModule('node:path').resolve(process.env.DSH_PRIMARY_RUNTIME ?? process.env.DSH_BUNDLED_PRIMARY_RUNTIME ?? '')"
           - id: present
             name: '@deepseek-ai/dsh-tool-present'
           - id: tool-plugin-manager
             name: '@deepseek-ai/dsh-plugin-manager/tools'
             disabled: !!js "!ctx.get('profileContext')"
 # <<< wildfire preset mode
+
+# ── Office（必选，随安装包内置 LibreOffice + Python；由 prepare-office-runtime 准备）──
+- insert:
+    # Office → PDF 转换服务（LibreOffice kit）
+    - id: office-to-pdf
+      name: '@deepseek-ai/dsh-office-to-pdf'
+    # Word/PPT/Excel 技能（office-docx / office-pptx / office-xlsx）
+    - id: skill-office
+      name: '@deepseek-ai/dsh-skill-office'
+      disabled: !!js "!process.env.DSH_PRIMARY_RUNTIME && !process.env.DSH_BUNDLED_PRIMARY_RUNTIME"
+      config:
+        assetRoot: !!js "process.getBuiltinModule('node:path').resolve(process.env.DSH_PRIMARY_RUNTIME ?? process.env.DSH_BUNDLED_PRIMARY_RUNTIME ?? '', '..', 'office-skills')"
+        node: !!js "process.execPath"
+
