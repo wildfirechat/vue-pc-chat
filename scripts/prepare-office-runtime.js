@@ -189,6 +189,35 @@ function sitePackages(pythonRoot, version) {
         : path.join(pythonRoot, 'lib', `python${short}`, 'site-packages');
 }
 
+/**
+ * 删除 Python 的字节码缓存：.pyc 是二进制文件，macOS 的 osx-sign 会逐个 codesign
+ * （带 --timestamp），1,000 多个 .pyc 会让签名多花十几分钟。运行时我们用
+ * PYTHONDONTWRITEBYTECODE=1，不会重新生成，也不会破坏安装包签名。
+ */
+function stripBytecode(root) {
+    let removed = 0;
+    const walk = (dir) => {
+        let entries = [];
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+        for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                if (entry.name === '__pycache__') {
+                    fs.rmSync(full, { recursive: true, force: true });
+                    removed++;
+                } else {
+                    walk(full);
+                }
+            } else if (entry.isFile() && entry.name.endsWith('.pyc')) {
+                fs.rmSync(full, { force: true });
+                removed++;
+            }
+        }
+    };
+    walk(root);
+    return removed;
+}
+
 function readPythonPackages(dir) {
     const out = {};
     if (!fs.existsSync(dir)) return out;
@@ -214,7 +243,8 @@ function preparePython(runtime, key, cacheDir, proxy) {
         try {
             const existing = JSON.parse(fs.readFileSync(runtimeFile, 'utf8'));
             if (existing.platform === process.platform && existing.arch === process.arch) {
-                log(`Python 运行时已存在: ${existing.python} (${existing.platform}-${existing.arch})`);
+                const stripped = stripBytecode(pythonRoot);
+                log(`Python 运行时已存在: ${existing.python} (${existing.platform}-${existing.arch})` + (stripped ? `，清理 ${stripped} 个字节码缓存` : ''));
                 return { pythonRoot, py, site, version: existing.python };
             }
         } catch (e) { /* 重建 */ }
@@ -264,7 +294,12 @@ function installPythonPackages(primary, pythonRoot, site, py, proxy) {
     ];
     if (proxy) pipArgs.push('--proxy', proxy);
     pipArgs.push(...OFFICE_PY_PACKAGES);
-    execFileSync(py, pipArgs, { stdio: 'inherit', env: { ...process.env, ...proxyEnv(proxy) } });
+    execFileSync(py, pipArgs, {
+        stdio: 'inherit',
+        env: { ...process.env, ...proxyEnv(proxy), PYTHONDONTWRITEBYTECODE: '1' },
+    });
+    const stripped = stripBytecode(pythonRoot);
+    if (stripped) log(`清理 ${stripped} 个 Python 字节码缓存（避免签名逐个处理 .pyc）`);
 
     const version = execFileSync(py, ['-c', "import sys;print('%d.%d.%d' % sys.version_info[:3])"], { encoding: 'utf8' }).trim();
     const packages = readPythonPackages(site);
@@ -279,6 +314,7 @@ function installPythonPackages(primary, pythonRoot, site, py, proxy) {
     const probe = execFileSync(py, ['-c', 'import docx, openpyxl, pptx; print("ok")'], {
         encoding: 'utf8',
         cwd: primary,
+        env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' },
     }).trim();
     if (probe !== 'ok') fail('Python Office 依赖导入校验失败');
     log(`Python 运行时就绪: ${version}, ${Object.keys(packages).length} 个包`);
