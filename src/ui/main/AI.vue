@@ -243,7 +243,8 @@
                             </span>
                         </div>
                         <p class="dsh-muted">
-                            群里的语音消息会先转成文字再交给 DSH；需要可用的 ASR 服务（例如 asr-api）。
+                            群里的语音消息会先转成文字再交给 DSH。默认取客户端配置的 ASR 地址（asr-api）。
+                            该接口需要关闭鉴权（asr-api 的 <code>server.need_auth=false</code>），否则插件请求会被 401 拒绝；
                             留空则关闭，语音消息按文件处理。
                         </p>
                         <label class="dsh-field">
@@ -568,6 +569,7 @@ export default {
             creatingSession: false,
             asrServer: '',
             asrServerDraft: '',
+            asrServerDefault: '',
             savingAsr: false,
             activeTab: 'overview',
             logText: '',
@@ -613,13 +615,17 @@ export default {
             if (id === 'models') this.refreshProvision(true);
         },
         async loadAsrSettings() {
+            // 客户端已配置的 ASR 地址（src/config.js 的 ASR_SERVER）：作为默认值预填，
+            // 用户点保存后才真正启用（会重启 Host 并把 asrServer 写进插件配置）。
+            this.asrServerDefault = Config.getAsrServer() || '';
             try {
                 const res = await getDshLocalSettings();
-                const server = (res && res.ok && res.settings && res.settings.asrServer) || '';
-                this.asrServer = server;
-                this.asrServerDraft = server;
+                const saved = (res && res.ok && res.settings && res.settings.asrServer) || '';
+                this.asrServer = saved;
+                this.asrServerDraft = saved || this.asrServerDefault;
             } catch (e) {
                 this.asrServer = '';
+                this.asrServerDraft = this.asrServerDefault;
             }
         },
         async saveAsr() {
