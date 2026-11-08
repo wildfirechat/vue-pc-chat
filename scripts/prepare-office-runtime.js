@@ -105,7 +105,7 @@ function proxyEnv(proxy) {
 function download(url, dest, proxy) {
     fs.rmSync(`${dest}.part`, { force: true });
     const args = [
-        '-L', '--fail', '--retry', '3', '--retry-delay', '2', '--retry-all-errors',
+        '-L', '--fail', '--retry', '3', '--retry-delay', '2',
         '--max-time', '1800', '--connect-timeout', '30',
         '-o', `${dest}.part`, url,
     ];
