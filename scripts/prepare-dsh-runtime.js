@@ -123,6 +123,26 @@ function copyDir(from, to) {
     fs.cpSync(from, to, { recursive: true, dereference: true, force: true });
 }
 
+/** 把临时 npm 安装的 node_modules 合并进目标目录，不覆盖已有包。 */
+function mergeNodeModules(fromRoot, toRoot) {
+    fs.mkdirSync(toRoot, { recursive: true });
+    for (const entry of fs.readdirSync(fromRoot, { withFileTypes: true })) {
+        if (!entry.isDirectory() || entry.name === '.bin') continue;
+        if (entry.name.startsWith('@')) {
+            const scopeFrom = path.join(fromRoot, entry.name);
+            const scopeTo = path.join(toRoot, entry.name);
+            for (const sub of fs.readdirSync(scopeFrom, { withFileTypes: true })) {
+                if (!sub.isDirectory()) continue;
+                const dest = path.join(scopeTo, sub.name);
+                if (!fs.existsSync(dest)) copyDir(path.join(scopeFrom, sub.name), dest);
+            }
+        } else {
+            const dest = path.join(toRoot, entry.name);
+            if (!fs.existsSync(dest)) copyDir(path.join(fromRoot, entry.name), dest);
+        }
+    }
+}
+
 function materializeSymlinks(root) {
     let count = 0;
     for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
@@ -271,7 +291,24 @@ function ensureNativeAddon(depsDir) {
             continue;
         }
         console.log(`[prepare-dsh-runtime] installing native addon ${req.name}@${version}`);
-        runNpm(['install', '--prefix', depsDir, '--no-save', '--no-package-lock', '--include=optional', `${req.name}@${version}`]);
+        // 不能直接 --prefix depsDir 安装：depsDir 没有 package.json，npm 会把
+        // 现有 node_modules 里的 dsh 依赖当成 extraneous 全部删掉。先装到独立
+        // 临时目录，再把原生包合并进 depsDir。
+        const tempDir = path.join(root, 'build', '.native-deps', req.name.replace(/[\\/@]/g, '_'));
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        fs.mkdirSync(tempDir, { recursive: true });
+        try {
+            try {
+                runNpm(['install', '--prefix', tempDir, '--no-save', '--no-package-lock', '--engine-strict=false', '--include=optional', `${req.name}@${version}`]);
+            } catch (e) {
+                fail(`cannot install native addon ${req.name}@${version}: ${e.message}`);
+            }
+            const installedTemp = path.join(tempDir, 'node_modules', req.name);
+            if (!fs.existsSync(installedTemp)) fail(`native addon not installed: ${req.name}`);
+            mergeNodeModules(path.join(tempDir, 'node_modules'), path.join(depsDir, 'node_modules'));
+        } finally {
+            fs.rmSync(tempDir, { recursive: true, force: true });
+        }
         if (!fs.existsSync(installed)) fail(`native addon not installed: ${req.name}`);
     }
 }
