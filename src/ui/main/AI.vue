@@ -8,7 +8,7 @@
             allow="microphone; camera"
         ></iframe>
 
-        <div v-else class="dsh-panel">
+        <div v-else class="dsh-panel" :class="{ 'with-window-controls': reserveWindowControls }">
             <header class="dsh-header">
                 <div>
                     <div class="dsh-eyebrow">LOCAL AGENT</div>
@@ -454,6 +454,12 @@ export default {
     computed: {
         aiPortalUrl() {
             return Config.AI_PORTAL_URL;
+        },
+        reserveWindowControls() {
+            // Windows/Linux 主窗口右上角是自绘的最小化/最大化/关闭按钮；
+            // 设置页顶部内容需要从按钮下方开始，避免“返回 DSH”等按钮被压住。
+            const misc = store.state.misc;
+            return !!(misc.isElectron && (misc.isElectronWindowsOrLinux || misc.isOhos));
         },
         stateText() {
             const map = {
@@ -1009,6 +1015,10 @@ export default {
     padding: 28px 32px 40px;
     background: var(--background-primary, #fff);
     color: var(--text-primary, #1f2329);
+}
+/* Windows/Linux 上避开右上角 30px 高的自绘窗口按钮 */
+.dsh-panel.with-window-controls {
+    padding-top: calc(var(--height-titlebar, 30px) + 6px);
 }
 
 .dsh-inline-input {

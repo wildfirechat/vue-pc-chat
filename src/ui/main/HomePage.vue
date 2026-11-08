@@ -97,7 +97,7 @@
                 <AI v-show="route.path === '/home/ai'"/>
             </router-view>
             <div v-if="sharedMiscState.connectionStatus === -1" class="unconnected">网络连接断开</div>
-            <div v-show="this.$router.currentRoute.value.path !== '/home/h-wp'" class="drag-area" :style="dragAreaLeft"></div>
+            <div v-show="showDragArea" class="drag-area" :style="dragAreaLeft"></div>
 
             <!-- 备份进度窗口 -->
             <BackupView v-if="sharedMiscState.isElectron" class="backup-progress-modal"  />
@@ -483,6 +483,14 @@ export default {
                     left: 'calc(60px + var(--list-panel-width))'
                 }
             }
+        },
+        showDragArea() {
+            const path = this.$router.currentRoute.value.path;
+            // DSH 工作区和 DSH 设置页没有会话列表，顶部右侧是自己的操作按钮。
+            // 这个 60px 高的透明区域带 -webkit-app-region: drag，在 Windows 下会吃掉
+            // 顶部按钮的点击（拖拽区优先于 DOM 事件），所以这两个整页路由不再挂载它；
+            // 窗口仍可通过顶部 30px 的标题拖拽区移动。
+            return path !== '/home/h-wp' && path !== '/home/dsh' && path !== '/home/ai';
         },
         voipContainerStyle() {
             const style = {
