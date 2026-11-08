@@ -54,6 +54,8 @@ const IpcEventType = {
     DSH_PRESET_IMPORT: 'dsh-preset-import',
     DSH_PRESET_IMPORT_APPLY: 'dsh-preset-import-apply',
     DSH_PRESET_ADD_SKILLS: 'dsh-preset-add-skills',
+    DSH_PRESET_LIST_SKILLS: 'dsh-preset-list-skills',
+    DSH_PRESET_READ_SKILL: 'dsh-preset-read-skill',
     DSH_AI_AGENT_STATUS: 'dsh-ai-agent-status',
     DSH_AI_AGENT_LOGIN: 'dsh-ai-agent-login',
     DSH_AI_AGENT_SET_SERVER: 'dsh-ai-agent-set-server',

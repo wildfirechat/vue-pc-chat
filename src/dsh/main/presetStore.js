@@ -257,6 +257,29 @@ function copyDir(src, dest) {
     }
 }
 
+/** 只读取 SKILL.md frontmatter 的 name/description，用于设置页展示。 */
+function readSkillMeta(file) {
+    const out = { name: '', description: '' };
+    try {
+        const text = fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '');
+        const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+        if (!m) return out;
+        for (const line of m[1].split(/\r?\n/)) {
+            const kv = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
+            if (!kv) continue;
+            const key = kv[1];
+            if (key !== 'name' && key !== 'description') continue;
+            let value = kv[2].trim();
+            if ((value.startsWith('"') && value.endsWith('"'))
+                || (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+            }
+            out[key] = value;
+        }
+    } catch (e) { /* ignore */ }
+    return out;
+}
+
 export default class PresetStore {
     constructor({ dshHome, runtimeRoot, profileName, logger }) {
         this.dshHome = dshHome;
@@ -468,13 +491,50 @@ export default class PresetStore {
 
     /** 技能目录下的现有技能（名称）。 */
     listSkills() {
+        return this.listSkillDetails().map((s) => s.name);
+    }
+
+    /** 技能目录下的现有技能（含 SKILL.md frontmatter 里的展示名和描述）。 */
+    listSkillDetails() {
         try {
             return fs.readdirSync(this.skillsDir, { withFileTypes: true })
-                .filter((e) => e.isDirectory() && fs.existsSync(path.join(this.skillsDir, e.name, 'SKILL.md')))
-                .map((e) => e.name);
+                .filter((e) => e.isDirectory() && !e.name.startsWith('.')
+                    && fs.existsSync(path.join(this.skillsDir, e.name, 'SKILL.md')))
+                .map((e) => {
+                    const dir = path.join(this.skillsDir, e.name);
+                    const meta = readSkillMeta(path.join(dir, 'SKILL.md'));
+                    return {
+                        name: e.name,
+                        displayName: meta.name || e.name,
+                        description: meta.description || '',
+                        path: dir,
+                    };
+                })
+                .sort((a, b) => a.name.localeCompare(b.name));
         } catch (e) {
             return [];
         }
+    }
+
+    /** 读取一个技能的 SKILL.md 内容，供设置页预览。 */
+    readSkill(name) {
+        const base = String(name || '').trim();
+        if (!SKILL_RE.test(base)) throw new Error('技能名称不合法');
+        const dir = path.join(this.skillsDir, base);
+        const file = path.join(dir, 'SKILL.md');
+        if (!fs.existsSync(file)) throw new Error('技能不存在或缺少 SKILL.md');
+        const stat = fs.statSync(file);
+        if (stat.size > 1024 * 1024) throw new Error('SKILL.md 过大，无法预览');
+        const meta = readSkillMeta(file);
+        return {
+            name: base,
+            displayName: meta.name || base,
+            description: meta.description || '',
+            path: dir,
+            file,
+            size: stat.size,
+            content: fs.readFileSync(file, 'utf8'),
+        };
     }
 
     /** 把一个目录作为技能装进 $DSH_HOME/skills/<name>，返回技能名。 */
@@ -502,6 +562,8 @@ export default class PresetStore {
             try { return JSON.parse(fs.readFileSync(path.join(this.runtimeRoot, 'VERSION'), 'utf8')).dsh || ''; }
             catch (e) { return ''; }
         })();
+        const exportSkills = spec.skills.filter((skill) => fs.existsSync(path.join(this.skillsDir, skill)));
+        spec.skills = exportSkills;
         zip.file('manifest.json', JSON.stringify({
             format: PRESET_FORMAT,
             version: PRESET_FORMAT_VERSION,
@@ -524,8 +586,6 @@ export default class PresetStore {
             '包内只包含组合定义与技能文件，不包含可执行代码。',
             '',
         ].join('\n'));
-        const exportSkills = spec.skills.filter((skill) => fs.existsSync(path.join(this.skillsDir, skill)));
-        spec.skills = exportSkills;
         for (const skill of exportSkills) {
             const dir = path.join(this.skillsDir, skill);
             for (const file of walkFiles(dir)) {

@@ -338,6 +338,11 @@
                     <DshPresets/>
                 </section>
 
+                <!-- 技能 -->
+                <section v-else-if="activeTab === 'skills'" class="dsh-section">
+                    <DshSkills/>
+                </section>
+
                 <!-- 插件 -->
                 <section v-else-if="activeTab === 'plugins'" class="dsh-section">
                     <DshPlugins embedded/>
@@ -446,11 +451,12 @@ import TextMessageContent from "../../wfc/messages/textMessageContent";
 import ModifyGroupInfoType from "../../wfc/model/modifyGroupInfoType";
 import DshModelSettings from "./dsh/DshModelSettings.vue";
 import DshPresets from "./dsh/DshPresets.vue";
+import DshSkills from "./dsh/DshSkills.vue";
 import DshPlugins from "./dsh/DshPlugins.vue";
 
 export default {
     name: 'AI',
-    components: { DshModelSettings, DshPlugins, DshPresets },
+    components: { DshModelSettings, DshPlugins, DshPresets, DshSkills },
     computed: {
         aiPortalUrl() {
             return Config.AI_PORTAL_URL;
@@ -557,6 +563,7 @@ export default {
                 { id: 'permissions', label: '权限' },
                 { id: 'models', label: '模型' },
                 { id: 'presets', label: '预设' },
+                { id: 'skills', label: '技能' },
                 { id: 'plugins', label: '插件' },
                 { id: 'routing', label: '路由' },
                 { id: 'logs', label: '日志' },

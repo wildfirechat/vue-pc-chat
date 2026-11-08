@@ -2063,6 +2063,22 @@ ipcMain.handle(IPCEventType.DSH_PRESET_ADD_SKILLS, async () => {
     }
 });
 
+ipcMain.handle(IPCEventType.DSH_PRESET_LIST_SKILLS, () => {
+    try {
+        return { ok: true, dir: dshHostManager.presets.skillsDir, skills: dshHostManager.presets.listSkillDetails() };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e), skills: [] };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_PRESET_READ_SKILL, (event, name) => {
+    try {
+        return { ok: true, skill: dshHostManager.presets.readSkill(String(name || '')) };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
 ipcMain.handle(IPCEventType.DSH_LIST_DIRECTORY, (event, dir) => {
     return dshHostManager.listDirectory(dir || '');
 });

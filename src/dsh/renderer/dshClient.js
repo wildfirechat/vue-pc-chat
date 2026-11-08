@@ -348,6 +348,24 @@ export async function addDshPresetSkills() {
     return ipcRenderer.invoke(IpcEventType.DSH_PRESET_ADD_SKILLS);
 }
 
+/** 列出 $DSH_HOME/skills 下全部技能（含展示名/描述）。 */
+export async function listDshPresetSkills() {
+    try {
+        return await ipcRenderer.invoke(IpcEventType.DSH_PRESET_LIST_SKILLS);
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e), skills: [] };
+    }
+}
+
+/** 读取一个技能的 SKILL.md 内容。 */
+export async function readDshPresetSkill(name) {
+    try {
+        return await ipcRenderer.invoke(IpcEventType.DSH_PRESET_READ_SKILL, name);
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+}
+
 // ── 本地设置 ────────────────────────────────────────────────────────────────
 
 /** 读取本地设置（目前只有 asrServer）。 */

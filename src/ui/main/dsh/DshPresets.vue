@@ -46,11 +46,15 @@
             <div class="dsh-preset-modal">
                 <h2>{{ editing ? '编辑预设' : '新建预设' }}</h2>
                 <p class="dsh-preset-hint">预设只组合客户端内置的官方工具，不含可执行代码；保存后对新会话生效。</p>
-                <label class="dsh-preset-field">
+                <label v-if="editing" class="dsh-preset-field">
                     <span>预设 ID</span>
-                    <input v-model.trim="form.id" :disabled="editing" placeholder="例如 code-review"/>
-                    <small>小写字母/数字/短横线，保存后不可修改（会话按它记录）</small>
+                    <input :value="form.id" disabled/>
+                    <small>ID 已固定，不能修改</small>
                 </label>
+                <div v-else class="dsh-preset-field">
+                    <span>预设 ID</span>
+                    <p class="dsh-preset-id-auto">保存时根据“标题拼音 + 时间戳”自动生成</p>
+                </div>
                 <label class="dsh-preset-field">
                     <span>名称</span>
                     <input v-model.trim="form.name" placeholder="例如 代码审查"/>
@@ -77,15 +81,39 @@
                     <textarea v-model="form.persona" rows="6" placeholder="你是…，负责…；回答时…"></textarea>
                 </label>
                 <div class="dsh-preset-field">
-                    <span>技能</span>
-                    <div class="dsh-preset-skills">
-                        <span v-for="s in form.skills" :key="s" class="dsh-preset-chip">
+                    <div class="dsh-preset-skill-head">
+                        <span>技能</span>
+                        <div class="dsh-preset-skill-head-actions">
+                            <button class="dsh-preset-link" :disabled="busy || skillsLoading" @click="loadSkills">刷新</button>
+                            <button class="dsh-preset-link" :disabled="busy" @click="addSkills">＋ 添加技能目录</button>
+                        </div>
+                    </div>
+                    <p v-if="skillsLoading" class="dsh-preset-skill-empty">正在读取技能…</p>
+                    <p v-else-if="skillsError" class="dsh-preset-skill-error">
+                        {{ skillsError }}
+                        <button class="dsh-preset-link" @click="loadSkills">重试</button>
+                    </p>
+                    <p v-else-if="!allSkills.length" class="dsh-preset-skill-empty">
+                        还没有安装技能。先点“添加技能目录”导入一个包含 SKILL.md 的目录。
+                    </p>
+                    <div v-else class="dsh-preset-skill-list">
+                        <label v-for="s in allSkills" :key="s.name" class="dsh-preset-skill-item">
+                            <input type="checkbox" :value="s.name" v-model="form.skills"/>
+                            <span class="dsh-preset-skill-copy">
+                                <strong>{{ s.displayName || s.name }}</strong>
+                                <small class="mono">{{ s.name }}</small>
+                                <small v-if="s.description" class="dsh-preset-skill-desc">{{ s.description }}</small>
+                            </span>
+                        </label>
+                    </div>
+                    <div v-if="missingSkills.length" class="dsh-preset-missing-skills">
+                        <span>已失效：</span>
+                        <span v-for="s in missingSkills" :key="s" class="dsh-preset-chip">
                             {{ s }}
                             <button class="dsh-preset-chip-x" title="移除引用" @click="removeSkill(s)">×</button>
                         </span>
-                        <button class="dsh-preset-link" :disabled="busy" @click="addSkills">＋ 添加技能目录</button>
                     </div>
-                    <small>技能是放在 $DSH_HOME/skills 的 SKILL.md 知识库；导出预设包时会一起带上。</small>
+                    <small>勾选后会随预设包导出；启用“技能”工具后，Agent 才能发现并加载这些技能。</small>
                 </div>
                 <p v-if="error" class="dsh-preset-error">{{ error }}</p>
                 <div class="dsh-preset-modal-actions">
@@ -146,10 +174,12 @@ import {
     deleteDshPreset,
     exportDshPreset,
     inspectDshPresetImport,
+    listDshPresetSkills,
     listDshPresets,
     saveDshPreset,
     setDshDefaultPreset,
 } from '../../../dsh/renderer/dshClient';
+import pinyin from '../../../vendor/pinyin';
 
 const EMPTY_FORM = () => ({
     id: '',
@@ -166,6 +196,9 @@ export default {
         return {
             items: [],
             tools: [],
+            allSkills: [],
+            skillsLoading: false,
+            skillsError: '',
             defaultId: '',
             loadError: '',
             busy: false,
@@ -183,6 +216,14 @@ export default {
     },
     created() {
         this.load();
+        this.loadSkills();
+    },
+    computed: {
+        missingSkills() {
+            if (this.skillsLoading || this.skillsError) return [];
+            const all = new Set(this.allSkills.map(s => s.name));
+            return (this.form.skills || []).filter(s => !all.has(s));
+        },
     },
     methods: {
         async load() {
@@ -195,6 +236,21 @@ export default {
             this.items = Array.isArray(res.items) ? res.items : [];
             this.tools = Array.isArray(res.tools) ? res.tools : [];
             this.defaultId = res.default || '';
+        },
+        async loadSkills() {
+            if (this.skillsLoading) return;
+            this.skillsLoading = true;
+            this.skillsError = '';
+            try {
+                const res = await listDshPresetSkills();
+                if (!res || !res.ok) {
+                    this.skillsError = (res && res.error) || '读取技能列表失败';
+                    return;
+                }
+                this.allSkills = Array.isArray(res.skills) ? res.skills : [];
+            } finally {
+                this.skillsLoading = false;
+            }
         },
         isDefault(id) {
             return this.defaultId === id;
@@ -223,6 +279,7 @@ export default {
             this.error = '';
             this.form = EMPTY_FORM();
             this.showForm = true;
+            this.loadSkills();
         },
         openEdit(item) {
             this.editing = true;
@@ -236,19 +293,44 @@ export default {
                 skills: Array.isArray(item.skills) ? [...item.skills] : [],
             };
             this.showForm = true;
+            this.loadSkills();
         },
         closeForm() {
             if (this.saving) return;
             this.showForm = false;
             this.error = '';
         },
+        presetIdFromTitle(title) {
+            // 中文走拼音转写；英文/数字保留，其他字符折叠为短横线。
+            let romanized = String(title || '').trim();
+            try {
+                romanized = pinyin(romanized, {style: 0}).join(' ');
+            } catch (e) { /* 转写失败时按原文处理 */ }
+            let base = romanized
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')
+                .slice(0, 24)
+                .replace(/-+$/g, '');
+            if (!base) base = 'preset';
+            let stamp = Date.now();
+            let id = `${base}-${stamp}`;
+            while (this.items.some(item => item.id === id)) {
+                stamp += 1;
+                id = `${base}-${stamp}`;
+            }
+            return id;
+        },
         async addSkills() {
             if (this.busy) return;
             this.busy = true;
             try {
                 const res = await addDshPresetSkills();
-                if (res && res.ok && res.name && !this.form.skills.includes(res.name)) {
-                    this.form.skills.push(res.name);
+                if (res && res.ok && res.name) {
+                    await this.loadSkills();
+                    if (!this.form.skills.includes(res.name)) {
+                        this.form.skills.push(res.name);
+                    }
                     this.$notify({ title: '技能已添加', text: res.name, type: 'success' });
                 } else if (res && !res.ok && !res.canceled) {
                     this.error = res.error || '添加技能失败';
@@ -262,11 +344,16 @@ export default {
         },
         async save() {
             if (this.saving) return;
+            if (!String(this.form.name || '').trim()) {
+                this.error = '请填写预设名称';
+                return;
+            }
             this.error = '';
             this.saving = true;
             try {
+                const id = this.editing ? this.form.id : this.presetIdFromTitle(this.form.name);
                 const res = await saveDshPreset({
-                    id: this.form.id,
+                    id,
                     name: this.form.name,
                     description: this.form.description,
                     persona: this.form.persona,
@@ -442,7 +529,35 @@ export default {
 .dsh-preset-tool span { display: flex; flex-direction: column; gap: 1px; }
 .dsh-preset-tool strong { font-size: 12px; color: #1f2329; font-weight: 500; }
 .dsh-preset-tool small { color: #9aa0a8; font-size: 10px; }
-.dsh-preset-skills { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.dsh-preset-id-auto {
+    margin: 0; padding: 8px 9px; border: 1px dashed #d8dde5; border-radius: 7px;
+    background: #fafbfc; color: #8a8f99; font-size: 11px; line-height: 1.5;
+}
+.dsh-preset-skill-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dsh-preset-skill-head-actions { display: flex; align-items: center; gap: 10px; }
+.dsh-preset-skill-list {
+    display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow-y: auto;
+    padding: 6px; border: 1px solid #e5e6eb; border-radius: 8px; background: #fafbfc;
+}
+.dsh-preset-skill-item {
+    display: flex; align-items: flex-start; gap: 8px; padding: 6px 7px;
+    border-radius: 6px; cursor: pointer;
+}
+.dsh-preset-skill-item:hover { background: #f2f3f5; }
+.dsh-preset-skill-item input { width: 18px; height: 18px; min-width: 18px; margin: 3px 0 0; flex: 0 0 auto; }
+.dsh-preset-skill-copy { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dsh-preset-skill-copy strong { color: #1f2329; font-size: 12px; font-weight: 500; }
+.dsh-preset-skill-copy small { color: #9aa0a8; font-size: 10px; line-height: 1.4; }
+.dsh-preset-skill-desc {
+    color: #6b7280 !important;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.dsh-preset-skill-empty {
+    margin: 0; padding: 10px; border: 1px dashed #e1e4e8; border-radius: 8px;
+    color: #8a8f99; font-size: 11px; line-height: 1.5;
+}
+.dsh-preset-skill-error { margin: 0; color: #b42318; font-size: 11px; line-height: 1.5; }
+.dsh-preset-missing-skills { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: #b42318; font-size: 11px; }
 .dsh-preset-preview { display: grid; grid-template-columns: 64px 1fr; gap: 6px 10px; margin: 0 0 14px; font-size: 12px; }
 .dsh-preset-preview dt { color: #8a8f99; }
 .dsh-preset-preview dd { margin: 0; color: #1f2329; word-break: break-all; }
