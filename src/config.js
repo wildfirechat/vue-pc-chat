@@ -37,13 +37,13 @@ export default class Config {
     static APP_BACKUP_SERVER = null;
 
     // 接龙服务地址
-    static COLLECTION_SERVER = null;   // 未部署接龙服务
+    static COLLECTION_SERVER = 'https://aiwork-im.lgdg.cc/collection';
 
     // 接龙服务备选地址，双网环境下使用
     static COLLECTION_BACKUP_SERVER = null;
 
     // 投票服务地址
-    static POLL_SERVER = null;         // 未部署投票服务
+    static POLL_SERVER = 'https://aiwork-im.lgdg.cc/poll';
 
     // 投票服务备选地址，双网环境下使用
     static POLL_BACKUP_SERVER = null;
@@ -56,7 +56,7 @@ export default class Config {
 
     // 语音转文字服务地址，如果没有部署语音转文字服务，或者不需要语音转文字的话，可置为 null
     // 语音转文字服务项目：https://gitee.com/wfchat/asr-api ，请求时会在 HTTP header authCode 中带上从 IM 服务获取的认证码，由 asr-api 校验
-    static ASR_SERVER = null;          // 未部署语音转文字
+    static ASR_SERVER = 'https://aiwork-im.lgdg.cc/asr/api/recognize';
 
     // 语音转文字服务备选地址，双网环境下使用
     static ASR_BACKUP_SERVER = null;
@@ -64,7 +64,7 @@ export default class Config {
     // 实时语音输入服务地址，配置之后，发送语音按钮后面会显示语音输入按钮，点击后边说边把识别结果写入输入框。不需要的话，可置为 null
     // 请配置为 asr-api 的实时语音识别地址，例如 wss://example.com/asr/api/stream，连接时会在 HTTP header authCode 中带上从 IM 服务获取的认证码
     // 内网测试时也可以直连 wf-voice 的 WebSocket 地址（默认端口 12436），例如 ws://192.168.1.100:12436。wf-voice 本身没有鉴权，也不支持 wss，请勿直接暴露到公网
-    static ASR_STREAM_SERVER = null;   // 未部署语音转文字（流式）
+    static ASR_STREAM_SERVER = 'wss://aiwork-im.lgdg.cc/asr/api/stream';
 
     // 实时语音输入服务备选地址，双网环境下使用
     static ASR_STREAM_BACKUP_SERVER = null;
