@@ -101,8 +101,8 @@ export default class Config {
     // 上线时请一定要切换成你们自己的服务。可以购买腾讯云或者阿里云的轻量服务器，价格很便宜，可以避免影响到您的用户体验。<br>
     // ICE_SERVERS 是数组数据，可以同时配置多个主备 turn 地址，不需要按双网动态选择
     static ICE_SERVERS = [
-        ['turn:172.16.198.165:3478', 'wfchat', 'WFpocTurn8Pass'],
-        ['turn:172.16.198.169:3478', 'wfchat', 'WFpocTurn8Pass']
+        ['turn:aiwork-im.lgdg.cc:3478', 'wfchat', 'WFpocTurn8Pass'],
+        ['turn:aiwork-im.lgdg.cc:3479', 'wfchat', 'WFpocTurn8Pass']
     ];
 
     static LANGUAGE = 'zh_CN';
