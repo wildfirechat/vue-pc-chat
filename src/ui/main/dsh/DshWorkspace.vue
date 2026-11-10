@@ -854,7 +854,8 @@ export default {
             const robotId = this.localRobotId;
             if (!robotId) throw new Error('机器人未开通');
             const conv = new Conversation(0, robotId, 0);
-            const content = new AgentCommandMessageContent('create', undefined, Date.now(), robotId, undefined, path, name, options);
+            // silent：本地客户端发起的创建，插件不要回“工作区群已创建”之类的单聊通知
+            const content = new AgentCommandMessageContent('create', undefined, Date.now(), robotId, undefined, path, name, options, true);
             await new Promise((resolve, reject) => {
                 wfc.sendConversationMessage(conv, content, [], null, null,
                     () => resolve(), (e) => reject(e));
@@ -1151,8 +1152,9 @@ export default {
             const ok = window.confirm('删除会话会解散该群组并销毁会话，工作区目录和文件会保留。确定删除？');
             if (!ok) return;
             const conversation = s.conversation || new Conversation(1, s.groupId, 2);
+            // silent：本地删除会话，插件不要回“工作区群已销毁”的单聊通知
             const content = new AgentCommandMessageContent('set', '/destroy', Date.now() % 100000,
-                this.localRobotId || undefined);
+                this.localRobotId || undefined, undefined, '', '', null, true);
             wfc.sendConversationMessage(conversation, content, [], null, null, () => {
                 if (this.selectedGroupId === s.groupId) {
                     this.selectedGroupId = '';

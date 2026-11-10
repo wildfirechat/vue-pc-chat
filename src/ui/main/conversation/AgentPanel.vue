@@ -418,7 +418,9 @@ export default {
         },
         /** 发送 207 面板指令（透明消息，不显示在消息流），带目标机器人 robotId。 */
         sendCommand(op, cmd) {
-            const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000, this.robotUid || undefined);
+            // 本地面板操作：silent=true，插件不往单聊/群聊回成功 tip
+            const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000, this.robotUid || undefined,
+                undefined, '', '', null, op === 'set');
             wfc.sendConversationMessage(this.conversation, content);
         },
 

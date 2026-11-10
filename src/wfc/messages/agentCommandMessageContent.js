@@ -22,8 +22,9 @@ export default class AgentCommandMessageContent extends MessageContent {
     effort; // op=create 时的初始推理等级
     sandbox; // op=create 时的初始沙箱权限模式
     preset; // op=create 时的初始 agent preset
+    silent; // 本地客户端操作：插件不要往单聊发成功类通知（远端用户操作仍发）
 
-    constructor(op, cmd, seq, robotId, sessionId, path = '', name = '', options = null) {
+    constructor(op, cmd, seq, robotId, sessionId, path = '', name = '', options = null, silent = false) {
         super(MessageContentType.AGENT_COMMAND);
         this.op = op;
         this.cmd = cmd;
@@ -37,6 +38,7 @@ export default class AgentCommandMessageContent extends MessageContent {
         this.effort = opts.effort || '';
         this.sandbox = opts.sandbox || '';
         this.preset = opts.preset || '';
+        this.silent = silent === true;
     }
 
     digest() {
@@ -54,6 +56,7 @@ export default class AgentCommandMessageContent extends MessageContent {
         if (this.effort) data.effort = this.effort;
         if (this.sandbox) data.sandbox = this.sandbox;
         if (this.preset) data.preset = this.preset;
+        if (this.silent) data.silent = true;
         payload.content = JSON.stringify(data);
         payload.searchableContent = '';
         return payload;
@@ -74,6 +77,7 @@ export default class AgentCommandMessageContent extends MessageContent {
             this.effort = d.effort;
             this.sandbox = d.sandbox;
             this.preset = d.preset;
+            this.silent = d.silent === true;
         } catch (e) {
             // 非 JSON 内容忽略
         }

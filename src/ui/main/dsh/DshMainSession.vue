@@ -266,7 +266,8 @@ export default {
                     return;
                 }
                 const conv = new Conversation(0, robotId, 0);
-                const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000, robotId);
+                const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000, robotId,
+                    undefined, '', '', null, op === 'set');
                 wfc.sendConversationMessage(conv, content, [], null, null,
                     () => resolve(), (e) => reject(e));
             });
