@@ -31,19 +31,19 @@ export default class Config {
     // 默认的app server使用端口是8888，注意端口号别忘记了。
     // 上线建议使用https，使用https更安全。
     //static APP_SERVER = 'http://app.wildfirechat.net:8888';
-    static APP_SERVER = 'https://aiwork-im.lgdg.cc/app';
+    static APP_SERVER = 'https://lt.wildfirechat.net/app';
 
     // APP SERVER 备选地址，双网环境下使用
     static APP_BACKUP_SERVER = null;
 
     // 接龙服务地址
-    static COLLECTION_SERVER = 'https://aiwork-im.lgdg.cc/collection';
+    static COLLECTION_SERVER = null;
 
     // 接龙服务备选地址，双网环境下使用
     static COLLECTION_BACKUP_SERVER = null;
 
     // 投票服务地址
-    static POLL_SERVER = 'https://aiwork-im.lgdg.cc/poll';
+    static POLL_SERVER = 'https://lt.wildfirechat.net/poll';
 
     // 投票服务备选地址，双网环境下使用
     static POLL_BACKUP_SERVER = null;
@@ -56,7 +56,7 @@ export default class Config {
 
     // 语音转文字服务地址，如果没有部署语音转文字服务，或者不需要语音转文字的话，可置为 null
     // 语音转文字服务项目：https://gitee.com/wfchat/asr-api ，请求时会在 HTTP header authCode 中带上从 IM 服务获取的认证码，由 asr-api 校验
-    static ASR_SERVER = 'https://aiwork-im.lgdg.cc/asr/api/recognize';
+    static ASR_SERVER = null;
 
     // 语音转文字服务备选地址，双网环境下使用
     static ASR_BACKUP_SERVER = null;
@@ -64,7 +64,7 @@ export default class Config {
     // 实时语音输入服务地址，配置之后，发送语音按钮后面会显示语音输入按钮，点击后边说边把识别结果写入输入框。不需要的话，可置为 null
     // 请配置为 asr-api 的实时语音识别地址，例如 wss://example.com/asr/api/stream，连接时会在 HTTP header authCode 中带上从 IM 服务获取的认证码
     // 内网测试时也可以直连 wf-voice 的 WebSocket 地址（默认端口 12436），例如 ws://192.168.1.100:12436。wf-voice 本身没有鉴权，也不支持 wss，请勿直接暴露到公网
-    static ASR_STREAM_SERVER = 'wss://aiwork-im.lgdg.cc/asr/api/stream';
+    static ASR_STREAM_SERVER = null;
 
     // 实时语音输入服务备选地址，双网环境下使用
     static ASR_STREAM_BACKUP_SERVER = null;
@@ -75,7 +75,7 @@ export default class Config {
 
     // 组织结构服务地址，如果没有部署组织结构服务，或者不需要组织结构的话，可置为 null
     // 组织结构项目：https://github.com/wildfirechat/organization-platform 或 https://gitee.com/wfchat/organization-platform
-    static ORGANIZATION_SERVER = 'https://aiwork-im.lgdg.cc/org';
+    static ORGANIZATION_SERVER = 'https://lt.wildfirechat.net/org';
 
     // 组织结构服务备选地址，双网环境下使用
     static ORGANIZATION_BACKUP_SERVER = null;
@@ -101,9 +101,8 @@ export default class Config {
     // 上线时请一定要切换成你们自己的服务。可以购买腾讯云或者阿里云的轻量服务器，价格很便宜，可以避免影响到您的用户体验。<br>
     // ICE_SERVERS 是数组数据，可以同时配置多个主备 turn 地址，不需要按双网动态选择
     static ICE_SERVERS = [
-        ['turn:aiwork-im.lgdg.cc:3478', 'wfchat', 'WFpocTurn8Pass'],
-        ['turn:aiwork-im.lgdg.cc:3479', 'wfchat', 'WFpocTurn8Pass']
-    ];
+        ['turn:lt.wildfirechat.net:3478', 'wfchat', 'WFpocTurn8Pass'],
+            ];
 
     static LANGUAGE = 'zh_CN';
 
@@ -130,7 +129,7 @@ export default class Config {
 
     static SECRET_CHAT_MEDIA_DECODE_SERVER_PORT = 7982;
     // 如果不支持工作台，将其置空即可
-    static OPEN_PLATFORM_WORK_SPACE_URL = 'https://aiwork-im.lgdg.cc/open/work.html';
+    static OPEN_PLATFORM_WORK_SPACE_URL = null;
 
     // 工作台备选地址，双网环境下使用
     static OPEN_PLATFORM_WORK_SPACE_BACKUP_URL = null;
@@ -317,7 +316,7 @@ export default class Config {
      */
     static stickerBaseUrl() {
         // 动态表情的 baseUrl，一定要求以 / 结尾
-        let stickerBaseUrl = 'https://aiwork-im.lgdg.cc/web-static/sticker/';   // 纯内网：由 NG 托管（/web-static/sticker/）
+        let stickerBaseUrl = 'https://lt.wildfirechat.net/web-static/sticker/';   // 纯内网：由 NG 托管（/web-static/sticker/）
         // 实例代码
         // 双网环境时，将动态表情地址切换到备选网络
         // if (Config.isUseBackupAddress()) {
