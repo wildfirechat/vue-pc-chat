@@ -36,7 +36,7 @@
                         <button class="dsh-top-btn" @click="showCreate = true">新建工作区</button>
                     </div>
                     <div v-for="ws in filteredWorkspaces" :key="ws.key" class="dsh-ws-block">
-                        <div class="dsh-ws-head" :class="{ 'menu-open': workspaceMenuKey === ws.key }">
+                        <div class="dsh-ws-head" :class="{ 'menu-open': workspaceMenuKey === ws.key, active: isWorkspaceActive(ws) }">
                             <button class="dsh-ws-toggle" @click="toggleWorkspace(ws.key)">
                                 <span class="dsh-ws-slot">
                                     <i class="icon-ion-folder dsh-ws-folder"></i>
@@ -497,6 +497,10 @@ export default {
         try { wfc.eventEmitter.off('groupInfosUpdate', this.load); } catch (e) { /* ignore */ }
     },
     methods: {
+        isWorkspaceActive(ws) {
+            if (!ws || !this.selectedGroupId) return false;
+            return (ws.sessions || []).some((s) => s.groupId === this.selectedGroupId);
+        },
         async loadPaths() {
             try { this.workspacePaths = (await getDshWorkspaces()) || {}; } catch (e) { this.workspacePaths = {}; }
         },
@@ -1336,6 +1340,8 @@ export default {
 .dsh-ws-block { margin-bottom: 2px; }
 .dsh-ws-head { position: relative; display: flex; align-items: center; height: 34px; border-radius: 8px; padding: 0 6px 0 0; color: #1f2329; }
 .dsh-ws-head:hover, .dsh-ws-head.menu-open { background: #f2f3f5; }
+.dsh-ws-head.active { background: #ebeff4; }
+.dsh-ws-head.active .dsh-ws-name { color: #111827; }
 .dsh-ws-toggle { display: flex; align-items: center; justify-content: flex-start; gap: 6px; flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: inherit; font-size: 16px; font-weight: 500; line-height: 20px; padding: 0; cursor: pointer; text-align: left; }
 .dsh-ws-slot { width: 18px; height: 20px; display: inline-flex; align-items: center; justify-content: flex-start; flex: 0 0 auto; color: #8a8f99; font-size: 16px; }
 .dsh-ws-folder { display: inline-flex; color: #fff; -webkit-text-stroke: .8px #a0a5ad; }
@@ -1359,7 +1365,7 @@ export default {
 .dsh-session-list { display: flex; flex-direction: column; gap: 1px; }
 .dsh-session-row { position: relative; display: flex; align-items: center; height: 32px; padding: 0 6px 0 24px; gap: 6px; border-radius: 8px; cursor: pointer; color: #1f2329; }
 .dsh-session-row:hover, .dsh-session-row.menu-open { background: #f2f3f5; }
-.dsh-session-row.active { background: #eef1f5; }
+.dsh-session-row.active { background: #e1e5eb; }
 .dsh-session-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 20px; }
 .dsh-session-status {
     position: absolute; left: 2px; top: 50%; transform: translateY(-50%);
