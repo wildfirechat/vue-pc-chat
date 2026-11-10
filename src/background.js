@@ -1962,6 +1962,31 @@ ipcMain.handle(IPCEventType.DSH_SET_ASR_SERVER, async (event, url) => {
     }
 });
 
+ipcMain.handle(IPCEventType.DSH_GET_MAIN_SESSION, () => {
+    try {
+        return { ok: true, settings: dshHostManager.settings.get().mainSession };
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e) };
+    }
+});
+
+ipcMain.handle(IPCEventType.DSH_SET_MAIN_SESSION, async (event, mainSession) => {
+    try {
+        const settings = dshHostManager.settings.set({ mainSession: mainSession || {} });
+        let status = dshHostManager.getStatus();
+        if (status && status.state === 'running') {
+            status = await dshHostManager.restart();
+        }
+        return { ok: true, settings: settings.mainSession, status };
+    } catch (e) {
+        return {
+            ok: false,
+            error: e && e.message ? e.message : String(e),
+            status: dshHostManager.getStatus(),
+        };
+    }
+});
+
 // ── 用户自定义 Agent 预设 ────────────────────────────────────────────────────
 ipcMain.handle(IPCEventType.DSH_PRESET_LIST, () => {
     try {

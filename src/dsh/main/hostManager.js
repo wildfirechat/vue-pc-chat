@@ -239,6 +239,25 @@ export default class DshHostManager {
         const aiUsable = !!(ai.baseUrl && ai.apiKey && ai.enabled === true
             && ai.configured === true && modelIds.length);
 
+        const localSettings = this.settings ? this.settings.get() : {};
+        const mainSession = localSettings.mainSession || {};
+        const mainSessionLines = [
+            '    mainSession:',
+            `      enabled: ${mainSession.enabled !== false}`,
+            Array.isArray(mainSession.groups) && mainSession.groups.length
+                ? `      groups: ${JSON.stringify(mainSession.groups)}`
+                : null,
+            mainSession.workspace ? `      workspace: ${JSON.stringify(mainSession.workspace)}` : null,
+            `      bufferLimit: ${Number(mainSession.bufferLimit) > 0 ? Number(mainSession.bufferLimit) : 200}`,
+            `      injectLimit: ${Number(mainSession.injectLimit) > 0 ? Number(mainSession.injectLimit) : 30}`,
+            `      notify: ${mainSession.notify !== false}`,
+            `      notifyCooldownMs: ${Number(mainSession.notifyCooldownMs) >= 0 ? Number(mainSession.notifyCooldownMs) : 600000}`,
+            Array.isArray(mainSession.notifyKeywords) && mainSession.notifyKeywords.length
+                ? `      notifyKeywords: ${JSON.stringify(mainSession.notifyKeywords)}`
+                : null,
+            `      groupReply: ${JSON.stringify(mainSession.groupReply === 'owner' ? 'owner' : 'group')}`,
+        ];
+
         const lines = [
             '- id: wildfire',
             '  config:',
@@ -252,12 +271,9 @@ export default class DshHostManager {
             '    model:',
             '      allowModelCommand: true',
             // 语音消息转文字：配置后插件先转写再交给 Agent（为空 = 关闭）。
-            (this.settings && this.settings.get().asrServer)
-                ? `    asrServer: ${JSON.stringify(this.settings.get().asrServer)}`
-                : null,
-            // 主会话：owner 私聊 + line0 普通群旁观共用上下文。
-            '    mainSession:',
-            '      enabled: true',
+            localSettings.asrServer ? `    asrServer: ${JSON.stringify(localSettings.asrServer)}` : null,
+            // 主会话：owner 私聊 + line0 普通群旁观共用上下文（设置页可改）。
+            ...mainSessionLines,
             '    session:',
             '      preset: standard',
             // 权限默认值：个人机器人只服务 owner；群成员可对话，但危险工具

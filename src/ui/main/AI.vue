@@ -343,6 +343,11 @@
                     <DshSkills/>
                 </section>
 
+                <!-- 主会话 -->
+                <section v-else-if="activeTab === 'mainSession'" class="dsh-section">
+                    <DshMainSession/>
+                </section>
+
                 <!-- 插件 -->
                 <section v-else-if="activeTab === 'plugins'" class="dsh-section">
                     <DshPlugins embedded/>
@@ -452,11 +457,12 @@ import ModifyGroupInfoType from "../../wfc/model/modifyGroupInfoType";
 import DshModelSettings from "./dsh/DshModelSettings.vue";
 import DshPresets from "./dsh/DshPresets.vue";
 import DshSkills from "./dsh/DshSkills.vue";
+import DshMainSession from "./dsh/DshMainSession.vue";
 import DshPlugins from "./dsh/DshPlugins.vue";
 
 export default {
     name: 'AI',
-    components: { DshModelSettings, DshPlugins, DshPresets, DshSkills },
+    components: { DshModelSettings, DshPlugins, DshPresets, DshSkills, DshMainSession },
     computed: {
         aiPortalUrl() {
             return Config.AI_PORTAL_URL;
@@ -564,6 +570,7 @@ export default {
                 { id: 'models', label: '模型' },
                 { id: 'presets', label: '预设' },
                 { id: 'skills', label: '技能' },
+                { id: 'mainSession', label: '主会话' },
                 { id: 'plugins', label: '插件' },
                 { id: 'routing', label: '路由' },
                 { id: 'logs', label: '日志' },

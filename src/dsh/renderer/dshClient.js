@@ -382,3 +382,18 @@ export async function getDshLocalSettings() {
 export async function setDshAsrServer(url) {
     return ipcRenderer.invoke(IpcEventType.DSH_SET_ASR_SERVER, url || '');
 }
+
+/** 读取主会话设置。 */
+export async function getDshMainSession() {
+    if (!isElectron()) return { ok: false, settings: {} };
+    try {
+        return await ipcRenderer.invoke(IpcEventType.DSH_GET_MAIN_SESSION);
+    } catch (e) {
+        return { ok: false, error: e && e.message ? e.message : String(e), settings: {} };
+    }
+}
+
+/** 保存主会话设置；Host 运行中会自动重启使其生效。 */
+export async function setDshMainSession(mainSession) {
+    return ipcRenderer.invoke(IpcEventType.DSH_SET_MAIN_SESSION, mainSession || {});
+}

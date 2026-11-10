@@ -4,8 +4,9 @@ import path from 'path';
 /**
  * 客户端本地设置（不属于服务端开通信息，也不进模型配置）。
  *
- * 目前只有一项：`asrServer` —— 语音消息转文字的服务地址。宿主插件的
- * `asrServer` 配置会把群里的语音先转成文本再交给 Agent；为空 = 关闭。
+ * - `asrServer`：语音消息转文字服务地址；
+ * - `mainSession`：主会话（owner 私聊 + line0 普通群旁观）的各项开关，
+ *   保存后写入 Host overlay 并重启 Host 生效。
  */
 export default class SettingsStore {
     constructor(userDataPath) {
@@ -23,13 +24,32 @@ export default class SettingsStore {
 
     get() {
         const data = this.load();
+        const ms = data.mainSession && typeof data.mainSession === 'object' ? data.mainSession : {};
         return {
             asrServer: String(data.asrServer || '').trim(),
+            mainSession: {
+                enabled: ms.enabled !== false,
+                groups: Array.isArray(ms.groups) ? ms.groups.map((g) => String(g)).filter(Boolean) : [],
+                workspace: String(ms.workspace || '').trim(),
+                bufferLimit: Number(ms.bufferLimit) > 0 ? Number(ms.bufferLimit) : 200,
+                injectLimit: Number(ms.injectLimit) > 0 ? Number(ms.injectLimit) : 30,
+                notify: ms.notify !== false,
+                notifyCooldownMs: Number(ms.notifyCooldownMs) >= 0 ? Number(ms.notifyCooldownMs) : 600000,
+                notifyKeywords: Array.isArray(ms.notifyKeywords)
+                    ? ms.notifyKeywords.map((k) => String(k)).filter(Boolean)
+                    : [],
+                groupReply: ms.groupReply === 'owner' ? 'owner' : 'group',
+            },
         };
     }
 
     set(patch) {
-        const data = { ...this.load(), ...(patch || {}) };
+        const next = { ...(patch || {}) };
+        const data = { ...this.load(), ...next };
+        if (next.mainSession && typeof next.mainSession === 'object') {
+            const current = (data.mainSession && typeof data.mainSession === 'object') ? data.mainSession : {};
+            data.mainSession = { ...current, ...next.mainSession };
+        }
         try {
             fs.writeFileSync(this.file, `${JSON.stringify(data, null, 2)}\n`, { mode: 0o600 });
         } catch (e) {
