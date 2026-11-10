@@ -39,6 +39,13 @@ export default class SettingsStore {
                     ? ms.notifyKeywords.map((k) => String(k)).filter(Boolean)
                     : [],
                 groupReply: ms.groupReply === 'owner' ? 'owner' : 'group',
+                history: {
+                    enabled: !ms.history || ms.history.enabled !== false,
+                    dir: String((ms.history && ms.history.dir) || '').trim(),
+                    retainDays: Number(ms.history && ms.history.retainDays) >= 0
+                        ? Number(ms.history.retainDays)
+                        : 0,
+                },
             },
         };
     }
@@ -49,6 +56,12 @@ export default class SettingsStore {
         if (next.mainSession && typeof next.mainSession === 'object') {
             const current = (data.mainSession && typeof data.mainSession === 'object') ? data.mainSession : {};
             data.mainSession = { ...current, ...next.mainSession };
+            if (next.mainSession.history && typeof next.mainSession.history === 'object') {
+                data.mainSession.history = {
+                    ...((current.history && typeof current.history === 'object') ? current.history : {}),
+                    ...next.mainSession.history,
+                };
+            }
         }
         try {
             fs.writeFileSync(this.file, `${JSON.stringify(data, null, 2)}\n`, { mode: 0o600 });

@@ -67,6 +67,30 @@
             </section>
 
             <section class="dsh-ms-card">
+                <h3>历史文件</h3>
+                <p class="dsh-ms-hint">
+                    把旁观的群消息按「天/群」追加到 Markdown 文件，agent 可以用 grep/glob/read 检索更早的上下文。
+                    默认永久保留。
+                </p>
+                <label class="dsh-ms-check">
+                    <input type="checkbox" v-model="settings.history.enabled"/>
+                    <span>写入历史文件</span>
+                </label>
+                <div class="dsh-ms-row">
+                    <label class="dsh-ms-field grow">
+                        <span>保留天数（0 = 永久）</span>
+                        <input v-model.number="settings.history.retainDays" type="number" min="0" step="1"/>
+                    </label>
+                    <label class="dsh-ms-field grow">
+                        <span>目录（留空 = 主会话目录下 group-history）</span>
+                        <input v-model.trim="settings.history.dir" placeholder="默认 <workspace>/group-history"/>
+                    </label>
+                    <button class="dsh-ms-btn" type="button" @click="pickHistoryDir">选择…</button>
+                </div>
+                <p class="dsh-ms-hint">目录：{{ historyPathHint }}</p>
+            </section>
+
+            <section class="dsh-ms-card">
                 <h3>会话预设（动态）</h3>
                 <p class="dsh-ms-hint">
                     主会话当前使用 <strong>{{ currentPreset || '未知' }}</strong>。切换后立即生效：
@@ -130,6 +154,7 @@ function emptySettings() {
         notifyCooldownMs: 600000,
         notifyKeywords: [],
         groupReply: 'group',
+        history: { enabled: true, dir: '', retainDays: 0 },
     };
 }
 
@@ -150,6 +175,13 @@ export default {
             error: '',
         };
     },
+    computed: {
+        historyPathHint() {
+            if (this.settings.history && this.settings.history.dir) return this.settings.history.dir;
+            const base = this.settings.workspace || '（默认主会话目录）';
+            return `${base}/group-history`;
+        },
+    },
     created() {
         this.load().then(() => this.refreshPreset());
         this.loadPresets();
@@ -161,7 +193,12 @@ export default {
                 this.error = (res && res.error) || '读取主会话设置失败';
                 return;
             }
-            this.settings = { ...emptySettings(), ...(res.settings || {}) };
+            const incoming = res.settings || {};
+            this.settings = {
+                ...emptySettings(),
+                ...incoming,
+                history: { ...emptySettings().history, ...(incoming.history || {}) },
+            };
             this.groupsText = (this.settings.groups || []).join('\n');
             this.keywordsText = (this.settings.notifyKeywords || []).join(',');
             this.cooldownMinutes = Math.round((Number(this.settings.notifyCooldownMs) || 0) / 60000);
@@ -173,6 +210,10 @@ export default {
         async pickWorkspace() {
             const result = await pickDshDirectory();
             if (result && result.ok && result.path) this.settings.workspace = result.path;
+        },
+        async pickHistoryDir() {
+            const result = await pickDshDirectory();
+            if (result && result.ok && result.path) this.settings.history.dir = result.path;
         },
         splitList(text) {
             return String(text || '')
@@ -195,13 +236,23 @@ export default {
                     notifyCooldownMs: Math.max(0, Math.round((Number(this.cooldownMinutes) || 0) * 60000)),
                     notifyKeywords: this.splitList(this.keywordsText),
                     groupReply: this.settings.groupReply === 'owner' ? 'owner' : 'group',
+                    history: {
+                        enabled: !!this.settings.history.enabled,
+                        dir: String(this.settings.history.dir || '').trim(),
+                        retainDays: Math.max(0, Number(this.settings.history.retainDays) || 0),
+                    },
                 };
                 const res = await setDshMainSession(mainSession);
                 if (!res || !res.ok) {
                     this.error = (res && res.error) || '保存失败';
                     return;
                 }
-                this.settings = { ...emptySettings(), ...(res.settings || mainSession) };
+                const applied = res.settings || mainSession;
+                this.settings = {
+                    ...emptySettings(),
+                    ...applied,
+                    history: { ...emptySettings().history, ...(applied.history || {}) },
+                };
                 this.$notify({ title: '主会话设置已保存', text: 'Host 已按新配置重启', type: 'success' });
             } finally {
                 this.saving = false;

@@ -622,3 +622,10 @@
         assetRoot: !!js "process.getBuiltinModule('node:path').resolve(process.env.DSH_PRIMARY_RUNTIME ?? process.env.DSH_BUNDLED_PRIMARY_RUNTIME ?? '', '..', 'office-skills')"
         node: !!js "process.execPath"
 
+# ── 会话历史全文检索（SQLite FTS5；openAt: first-search，首次检索才加载 sqlite）──
+# 覆盖 dsh-base 的 path: ':memory:' / openAt: never；索引落在 DSH home，重启后仍可检索。
+- id: session-query-sqlite
+  config:
+    path: !!js dshHomePath('session-search.db')
+    openAt: first-search
+

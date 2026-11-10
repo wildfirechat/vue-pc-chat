@@ -241,6 +241,7 @@ export default class DshHostManager {
 
         const localSettings = this.settings ? this.settings.get() : {};
         const mainSession = localSettings.mainSession || {};
+        const mainHistory = mainSession.history || {};
         const mainSessionLines = [
             '    mainSession:',
             `      enabled: ${mainSession.enabled !== false}`,
@@ -256,6 +257,10 @@ export default class DshHostManager {
                 ? `      notifyKeywords: ${JSON.stringify(mainSession.notifyKeywords)}`
                 : null,
             `      groupReply: ${JSON.stringify(mainSession.groupReply === 'owner' ? 'owner' : 'group')}`,
+            '      history:',
+            `        enabled: ${mainHistory.enabled !== false}`,
+            `        retainDays: ${Number(mainHistory.retainDays) >= 0 ? Number(mainHistory.retainDays) : 0}`,
+            mainHistory.dir ? `        dir: ${JSON.stringify(mainHistory.dir)}` : null,
         ];
 
         const lines = [
