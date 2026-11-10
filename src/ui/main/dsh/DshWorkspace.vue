@@ -110,12 +110,12 @@
                         <div class="dsh-draft-hero">
                             <div class="dsh-empty-hint-mark">✦</div>
                             <h2>开始一个新会话</h2>
-                            <p>描述你想让 DSH 做什么。只有发送第一条消息后，才会创建会话和工作区群。</p>
+                            <p>给新会话起个名字（可留空），点创建即可建好会话；进入会话后再开始对话。</p>
                         </div>
                         <div class="dsh-draft-composer">
                             <textarea ref="draftInput" v-model="draft.text" :disabled="draft.submitting"
                                       class="dsh-draft-input" rows="4"
-                                      placeholder="例如：检查登录接口的报错日志并修复"
+                                      placeholder="给新会话起个名字，例如：登录修复（可留空）"
                                       @keydown="onDraftKeydown"></textarea>
                             <div class="dsh-draft-toolbar">
                                 <div class="dsh-draft-tools-left">
@@ -201,8 +201,8 @@
                                             <p v-if="!draftEffortOptions.length" class="dsh-pop-empty">当前模型未声明思考等级</p>
                                         </div>
                                     </div>
-                                    <button class="dsh-send-btn" :disabled="draft.submitting || !draft.text.trim()"
-                                            :title="draft.submitting ? '正在创建会话…' : '发送（Enter）'" @click="submitDraft">
+                                    <button class="dsh-send-btn" :disabled="draft.submitting"
+                                            :title="draft.submitting ? '正在创建会话…' : '创建会话（Enter）'" @click="submitDraft">
                                         <i v-if="!draft.submitting" class="icon-ion-ios-arrow-up"></i>
                                         <span v-else class="dsh-send-spinner"></span>
                                     </button>
@@ -751,10 +751,6 @@ export default {
             const draft = this.draft;
             if (!draft || draft.submitting) return;
             const text = String(draft.text || '').trim();
-            if (!text) {
-                if (this.$refs.draftInput) this.$refs.draftInput.focus();
-                return;
-            }
             if (!this.ensureCreateReady()) return;
             this.draftMenu = '';
             const ws = this.workspaces.find(w => w.key === draft.workspaceKey) || null;
@@ -788,12 +784,8 @@ export default {
                     this.workspaceAliases = { ...this.workspaceAliases, [found.path]: pendingName };
                     this.saveWorkspaceAliases();
                 }
-                // waitForNewGroup 会选中新会话并清掉草稿，这里把第一条消息发进去。
-                try {
-                    await this.sendTextMessage(found.conversation, text);
-                } catch (e) {
-                    this.$notify({ title: '会话已创建，但首条消息发送失败', text: (e && e.message) || '请重新输入后发送', type: 'error' });
-                }
+                // 只创建会话，不发送任何消息；waitForNewGroup 已选中新会话并清掉草稿。
+                this.$notify({ title: '会话已创建', text: '进入会话后即可开始对话', type: 'success' });
             } catch (e) {
                 if (this.draft) this.draft.submitting = false;
                 this.$notify({ title: '创建会话失败', text: (e && e.message) || '请确认机器人在线', type: 'error' });
