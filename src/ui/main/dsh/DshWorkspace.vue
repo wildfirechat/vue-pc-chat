@@ -126,16 +126,20 @@
                                             <i class="icon-ion-chevron-down dsh-chip-caret"></i>
                                         </button>
                                         <div v-if="draftMenu === 'workspace'" class="dsh-pop" @click.stop>
-                                            <button class="dsh-pop-item" :class="{active: !draft.workspaceKey}"
+                                            <button class="dsh-pop-item" :class="{active: !draft.workspaceKey && !draft.pendingPath}"
                                                     @click="pickDraftWorkspace('')">
                                                 <span>自动分配新目录</span>
-                                                <i v-if="!draft.workspaceKey" class="icon-ion-checkmark"></i>
+                                                <i v-if="!draft.workspaceKey && !draft.pendingPath" class="icon-ion-checkmark"></i>
                                             </button>
                                             <button v-for="ws in workspaces" :key="ws.key" class="dsh-pop-item"
                                                     :class="{active: draft.workspaceKey === ws.key}"
                                                     @click="pickDraftWorkspace(ws.key)">
                                                 <span>{{ ws.name }}</span>
                                                 <i v-if="draft.workspaceKey === ws.key" class="icon-ion-checkmark"></i>
+                                            </button>
+                                            <div class="dsh-pop-sep"></div>
+                                            <button class="dsh-pop-item" @click="openNewWorkspaceFromDraft">
+                                                <span>＋ 新建工作区…</span>
                                             </button>
                                         </div>
                                     </div>
@@ -243,7 +247,7 @@
         <div v-if="showCreate" class="dsh-modal-mask" @click.self="showCreate = false">
             <div class="dsh-modal">
                 <h2>新建工作区</h2>
-                <p class="dsh-modal-hint">工作区是一个本地目录；机器人会为该目录创建第一个会话群。</p>
+                <p class="dsh-modal-hint">工作区是一个本地目录。确认后会进入新会话页，输入第一条消息才真正创建会话。</p>
                 <label class="dsh-field">
                     <span>工作区名称（可选）</span>
                     <input v-model.trim="newWorkspaceName" placeholder="例如：登录修复"/>
@@ -258,8 +262,8 @@
                 <p class="dsh-modal-tip">目录必须在机器人允许的工作区内；不存在时机器人会提示。</p>
                 <div class="dsh-modal-actions">
                     <button class="dsh-top-btn ghost" :disabled="creating" @click="showCreate = false">取消</button>
-                    <button class="dsh-top-btn" :disabled="creating || !canCreate" @click="createWorkspace">
-                        {{ creating ? '正在创建…' : '创建工作区' }}
+                    <button class="dsh-top-btn" :disabled="!canCreate" @click="createWorkspace">
+                        下一步：新会话
                     </button>
                 </div>
             </div>
@@ -383,6 +387,12 @@ export default {
         },
         draftWorkspaceLabel() {
             if (!this.draft) return '';
+            if (this.draft.pendingPath) {
+                if (this.draft.pendingName) return `新建：${this.draft.pendingName}`;
+                if (this.draft.pendingPath === 'auto') return '新建工作区（自动目录）';
+                const parts = String(this.draft.pendingPath).split(/[\\/]/).filter(Boolean);
+                return `新建：${parts[parts.length - 1] || this.draft.pendingPath}`;
+            }
             const ws = this.workspaces.find(w => w.key === this.draft.workspaceKey);
             return ws ? ws.name : '自动分配';
         },
@@ -620,6 +630,9 @@ export default {
                 effort: '',
                 sandbox: perm,
                 preset: '',
+                // 新建工作区时暂存的目录/名称：输入第一条消息后才真正创建
+                pendingPath: '',
+                pendingName: '',
             };
             this.loadDraftCatalog();
             this.selectedGroupId = '';
@@ -667,8 +680,19 @@ export default {
             this.draftMenu = '';
         },
         pickDraftWorkspace(key) {
-            if (this.draft) this.draft.workspaceKey = key;
+            if (this.draft) {
+                this.draft.workspaceKey = key;
+                // 手动选了已有工作区/自动目录，就不再沿用“新建工作区”的暂存目录
+                this.draft.pendingPath = '';
+                this.draft.pendingName = '';
+            }
             this.draftMenu = '';
+        },
+        openNewWorkspaceFromDraft() {
+            this.draftMenu = '';
+            this.newWorkspacePath = '';
+            this.newWorkspaceName = '';
+            this.showCreate = true;
         },
         pickDraftPreset(id) {
             if (this.draft) this.draft.preset = id;
@@ -734,8 +758,8 @@ export default {
             if (!this.ensureCreateReady()) return;
             this.draftMenu = '';
             const ws = this.workspaces.find(w => w.key === draft.workspaceKey) || null;
-            let path = '';
-            if (ws) {
+            let path = draft.pendingPath || '';
+            if (!path && ws) {
                 path = ws.path || (ws.sessions[0] && ws.sessions[0].path) || '';
                 if (!path && ws.sessions[0]) {
                     const panel = getAgentPanelDataFor(ws.sessions[0].conversation, this.localRobotId);
@@ -746,7 +770,7 @@ export default {
             draft.submitting = true;
             const before = new Set(this.workspaces.flatMap(w => w.sessions.map(s => s.groupId)));
             try {
-                await this.sendCreateCommand(path, this.fallbackTitle(text) || '新会话', {
+                await this.sendCreateCommand(path, draft.pendingName || this.fallbackTitle(text) || '新会话', {
                     model: draft.model,
                     effort: draft.effort,
                     sandbox: draft.sandbox,
@@ -757,6 +781,12 @@ export default {
                     draft.submitting = false;
                     this.$notify({ title: '未检测到新会话', text: '创建请求已发送，请打开机器人单聊查看结果（目录无效/等待确认时会提示）。', type: 'info' });
                     return;
+                }
+                // 新建工作区：把用户填的名称记为目录别名（同一目录下的会话共用）。
+                const pendingName = String(draft.pendingName || '').trim();
+                if (pendingName && found.path) {
+                    this.workspaceAliases = { ...this.workspaceAliases, [found.path]: pendingName };
+                    this.saveWorkspaceAliases();
                 }
                 // waitForNewGroup 会选中新会话并清掉草稿，这里把第一条消息发进去。
                 try {
@@ -846,33 +876,22 @@ export default {
             const result = await pickDshDirectory();
             if (result && result.ok && result.path) this.newWorkspacePath = result.path;
         },
-        async createWorkspace() {
-            if (this.creating || !this.ensureCreateReady()) return;
-            this.creating = true;
-            const before = new Set(this.workspaces.flatMap(ws => ws.sessions.map(s => s.groupId)));
-            try {
-                const path = this.newWorkspacePath || 'auto';
-                await this.sendCreateCommand(path, '新会话');
-                this.showCreate = false;
-                this.newWorkspacePath = '';
-                const found = await this.waitForNewGroup(before, path === 'auto' ? '' : path);
-                if (found) {
-                    const name = this.newWorkspaceName.trim();
-                    if (name) {
-                        if (found.path) {
-                            this.workspaceAliases = { ...this.workspaceAliases, [found.path]: name };
-                            this.saveWorkspaceAliases();
-                        }
-                    }
-                    this.newWorkspaceName = '';
-                    this.$notify({ title: '工作区已创建', type: 'success' });
-                }
-                else this.$notify({ title: '未检测到新工作区', text: '创建请求已发送，请打开机器人单聊查看结果（目录无效/等待确认时会提示）。', type: 'info' });
-            } catch (e) {
-                this.$notify({ title: '创建工作区失败', text: (e && e.message) || '请确认机器人在线', type: 'error' });
-            } finally {
-                this.creating = false;
-            }
+        createWorkspace() {
+            if (!this.ensureCreateReady()) return;
+            const path = this.newWorkspacePath.trim() || 'auto';
+            const name = this.newWorkspaceName.trim();
+            this.showCreate = false;
+            this.newWorkspacePath = '';
+            this.newWorkspaceName = '';
+            // 不立即建群：进入新会话页，等第一条消息再创建（和「新会话」一致）。
+            if (!this.draft) this.openDraft(null);
+            if (!this.draft) return;
+            this.draft.pendingPath = path;
+            this.draft.pendingName = name;
+            this.draft.workspaceKey = '';
+            this.$nextTick(() => {
+                if (this.$refs.draftInput) this.$refs.draftInput.focus();
+            });
         },
         async applyGroupName(s, name) {
             const clean = String(name || '').trim();
