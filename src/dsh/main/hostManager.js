@@ -255,6 +255,9 @@ export default class DshHostManager {
             (this.settings && this.settings.get().asrServer)
                 ? `    asrServer: ${JSON.stringify(this.settings.get().asrServer)}`
                 : null,
+            // 主会话：owner 私聊 + line0 普通群旁观共用上下文。
+            '    mainSession:',
+            '      enabled: true',
             '    session:',
             '      preset: standard',
             // 权限默认值：个人机器人只服务 owner；群成员可对话，但危险工具
