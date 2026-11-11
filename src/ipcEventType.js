@@ -29,6 +29,8 @@ const IpcEventType = {
     SHOW_SETTINGS_WINDOW: 'show-settings-window',
     // 退出登录、被踢下线等回到登录页时，关掉所有子窗口
     CLOSE_SUB_WINDOWS: 'close-sub-windows',
+    // 子窗口路由页面已画出来，主进程收到后再显示窗口（background.js showWhenContentReady）
+    WINDOW_CONTENT_READY: 'window-content-ready',
     OPEN_MAIN_DEV_TOOLS: 'open-main-dev-tools',
     CHECK_FOR_UPDATES: 'check-for-updates',
     // 主进程发起的检查更新（菜单、托盘、启动时），交给主窗口按双网选好更新地址后，再发 CHECK_FOR_UPDATES

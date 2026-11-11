@@ -4,7 +4,6 @@ import EventType from "./wfc/client/wfcEvent";
 import ConversationType from "./wfc/model/conversationType";
 import {eq, gt, lt, numberValue} from "./wfc/util/longUtil";
 import helper from "./ui/util/helper";
-import convert from './vendor/pinyin'
 import GroupType from "./wfc/model/groupType";
 import {imageThumbnail, videoDuration, videoThumbnail} from "./ui/util/imageUtil";
 import MessageContentMediaType from "./wfc/messages/messageContentMediaType";
@@ -69,6 +68,17 @@ const pinyinCache = new Map();
 // String.prototype.localeCompare 每次调用都要重新解析 locale 并构造排序规则，联系人上万时
 // 一次排序有十几万次比较，开销很可观。复用同一个 Collator，语义不变但快一个数量级
 const nameCollator = new Intl.Collator();
+
+// 拼音字典压缩后还有近 2MB、两万多条赋值语句，模块一加载就要整段执行。
+// 设置、聊天记录、媒体预览等子窗口用不到，第一次转换时再加载，不拖慢窗口打开
+let pinyinConvert;
+
+function convert(hans, options) {
+    if (!pinyinConvert) {
+        pinyinConvert = require('./vendor/pinyin');
+    }
+    return pinyinConvert(hans, options);
+}
 
 function convertPinyinCached(name) {
     if (!name || typeof name !== 'string') {
@@ -783,15 +793,27 @@ let store = {
         if (this.state.misc.isMainWindow) {
             return;
         }
+        this.ensureDefaultConversationList();
+        let loadOptions = this.state.misc.subWindowLoadDataOptions;
+        if (!loadOptions.loadFriendList || this.state.contact.friendList.length === 0) {
+            loadOptions.loadFriendList = true;
+            this._loadFriendList();
+        }
+    },
+
+    /**
+     * 子窗口按需加载最近会话列表，并记下来，之后重连时也一起刷新。
+     * 设置窗口只有「备份与恢复」选会话时用，会话多时同步拉取很慢，不在窗口打开时加载
+     */
+    ensureDefaultConversationList() {
+        if (this.state.misc.isMainWindow) {
+            return;
+        }
         let loadOptions = this.state.misc.subWindowLoadDataOptions || {};
         this.state.misc.subWindowLoadDataOptions = loadOptions;
         if (!loadOptions.loadDefaultConversationList || this.state.conversation.conversationInfoList.length === 0) {
             loadOptions.loadDefaultConversationList = true;
             this._loadDefaultConversationList();
-        }
-        if (!loadOptions.loadFriendList || this.state.contact.friendList.length === 0) {
-            loadOptions.loadFriendList = true;
-            this._loadFriendList();
         }
     },
 

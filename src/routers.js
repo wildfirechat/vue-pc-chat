@@ -1,25 +1,28 @@
-import HomePage from './ui/main/HomePage'
-import LoginPage from './ui/main/LoginPage'
-import ConversationPage from './ui/main/ConversationPage'
-import ContactPage from './ui/main/ContactPage'
-import SettingPage from './ui/main/setting/SettingPage'
-import Single from "./ui/voip/Single";
-import Multi from "./ui/voip/Multi";
-import FileRecordPage from "./ui/fileRecord/FileRecordPage";
-import FavPage from "./ui/main/fav/FavPage";
-import WorkspacePage from "./ui/workspace/WorkspacePage";
-import Conference from "./ui/voip/conference/Conference";
-import CompositeMessagePage from "./ui/main/CompositeMessagePage";
-import MessageHistoryPage from "./ui/main/MessageHistoryPage";
-import ConversationMessageHistoryPage from "./ui/main/ConversationMessageHistoryPage";
-import ConversationMessageSearchPage from "./ui/main/search/ConversationMessageSearchPage";
-import MessageContextPage from "./ui/main/search/MessageContextPage";
-import ConversationFloatPage from "./ui/main/ConversationFloatPage";
-import ConferencePortalPage from "./ui/voip/conference/ConferencePortalPage";
-import MessagePage from "./ui/main/MessagePage.vue";
-import MultimediaPreviewPage from "./ui/main/MultimediaPreviewPage.vue";
-import SingleRemoteControl from "./ui/voip/SingleRemoteControl.vue";
-import AI from "./ui/main/AI.vue";
+// 路由页面按需加载：每个窗口只加载、执行自己用到的页面代码。
+// 设置、聊天记录等子窗口原来要把会话、通话、会议等全部页面的代码都跑一遍，打开时白屏时间长。
+// 主界面的几个 tab 同属一个 chunk，进主界面时一次加载
+const HomePage = () => import(/* webpackChunkName: "home" */ './ui/main/HomePage');
+const LoginPage = () => import(/* webpackChunkName: "login" */ './ui/main/LoginPage');
+const ConversationPage = () => import(/* webpackChunkName: "home" */ './ui/main/ConversationPage');
+const ContactPage = () => import(/* webpackChunkName: "home" */ './ui/main/ContactPage');
+const SettingPage = () => import(/* webpackChunkName: "setting" */ './ui/main/setting/SettingPage');
+const Single = () => import(/* webpackChunkName: "voip-single" */ './ui/voip/Single');
+const Multi = () => import(/* webpackChunkName: "voip-multi" */ './ui/voip/Multi');
+const FileRecordPage = () => import(/* webpackChunkName: "files" */ './ui/fileRecord/FileRecordPage');
+const FavPage = () => import(/* webpackChunkName: "home" */ './ui/main/fav/FavPage');
+const WorkspacePage = () => import(/* webpackChunkName: "workspace" */ './ui/workspace/WorkspacePage');
+const Conference = () => import(/* webpackChunkName: "voip-conference" */ './ui/voip/conference/Conference');
+const CompositeMessagePage = () => import(/* webpackChunkName: "composite" */ './ui/main/CompositeMessagePage');
+const MessageHistoryPage = () => import(/* webpackChunkName: "message-history" */ './ui/main/MessageHistoryPage');
+const ConversationMessageHistoryPage = () => import(/* webpackChunkName: "conversation-message-history" */ './ui/main/ConversationMessageHistoryPage');
+const ConversationMessageSearchPage = () => import(/* webpackChunkName: "conversation-search" */ './ui/main/search/ConversationMessageSearchPage');
+const MessageContextPage = () => import(/* webpackChunkName: "message-context" */ './ui/main/search/MessageContextPage');
+const ConversationFloatPage = () => import(/* webpackChunkName: "conversation-window" */ './ui/main/ConversationFloatPage');
+const ConferencePortalPage = () => import(/* webpackChunkName: "home" */ './ui/voip/conference/ConferencePortalPage');
+const MessagePage = () => import(/* webpackChunkName: "message" */ './ui/main/MessagePage.vue');
+const MultimediaPreviewPage = () => import(/* webpackChunkName: "mmpreview" */ './ui/main/MultimediaPreviewPage.vue');
+const SingleRemoteControl = () => import(/* webpackChunkName: "voip-single-rc" */ './ui/voip/SingleRemoteControl.vue');
+const AI = () => import(/* webpackChunkName: "home" */ './ui/main/AI.vue');
 
 const routers = [
     {

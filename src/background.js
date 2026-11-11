@@ -1064,7 +1064,6 @@ const createMainWindow = async () => {
                 fileWindow = null;
             });
             win.webContents.session.on('will-download', downloadHandler);
-            win.show();
             fileWindow = win;
         } else {
             fileWindow.show();
@@ -1087,7 +1086,6 @@ const createMainWindow = async () => {
                 win.loadURL('about:blank')
             });
             win.center();
-            win.show();
             multimediaPreviewWindow = win;
         } else {
             multimediaPreviewWindow.webContents.loadURL(args.url);
@@ -1110,7 +1108,6 @@ const createMainWindow = async () => {
         win.on('close', () => {
             compositeMessageWindows.delete(url);
         });
-        win.show();
     });
 
     ipcMain.on(IPCEventType.OPEN_H5_APP_WINDOW, async (event, args) => {
@@ -1122,7 +1119,6 @@ const createMainWindow = async () => {
             win.on('close', () => {
                 openPlatformAppHostWindows.delete(args.hostUrl);
             });
-            win.show();
         } else {
             win.webContents.send('new-open-platform-app-tab', args);
             win.show();
@@ -1164,7 +1160,6 @@ const createMainWindow = async () => {
             conversationMessageHistoryMessageWindow.on('close', () => {
                 conversationMessageHistoryMessageWindow = null;
             });
-            conversationMessageHistoryMessageWindow.show();
         } else {
             let url = args.url + ('?' + query)
             try {
@@ -1185,7 +1180,6 @@ const createMainWindow = async () => {
             messageHistoryMessageWindow.on('close', () => {
                 messageHistoryMessageWindow = null;
             });
-            messageHistoryMessageWindow.show();
         } else {
             messageHistoryMessageWindow.show();
             messageHistoryMessageWindow.focus();
@@ -1216,7 +1210,6 @@ const createMainWindow = async () => {
         // 用 closed：设置窗口备份中会在 beforeunload 里拦下关窗，close 事件发出时窗口不一定真关了
         win.on('closed', onClosed);
         clampToScreen(win, mainWindow);
-        win.show();
         return win;
     };
 
@@ -1251,7 +1244,6 @@ const createMainWindow = async () => {
                     }
                 );
             });
-            win.show();
             conversationWindowMap.set(key, win);
         } else {
             win.show();
@@ -1461,9 +1453,43 @@ function closeSubWindows() {
     });
 }
 
+// 子窗口最多等页面多久再显示。页面出错、通知发不出来时，到时间也显示，免得点了没反应
+const SUB_WINDOW_SHOW_TIMEOUT = 1000;
+
+// 子窗口先隐藏创建，页面内容画出来再显示，不然打开时要先白屏一段时间。
+// 渲染进程在路由页面渲染完、画出一帧后发 WINDOW_CONTENT_READY（见 main.js）。
+// 不用 ready-to-show：路由页面是按需加载的，App 外壳一画出来它就触发了，这时页面内容还没出来
+function showWhenContentReady(win) {
+    let timer = null;
+    const show = () => {
+        if (timer === null) {
+            return;
+        }
+        clearTimeout(timer);
+        timer = null;
+        if (win.isDestroyed()) {
+            return;
+        }
+        win.webContents.ipc.removeListener(IPCEventType.WINDOW_CONTENT_READY, show);
+        // 等待期间再点一次入口，窗口已经被 show 出来了
+        if (!win.isVisible()) {
+            win.show();
+        }
+    };
+    win.webContents.ipc.on(IPCEventType.WINDOW_CONTENT_READY, show);
+    timer = setTimeout(show, SUB_WINDOW_SHOW_TIMEOUT);
+    win.once('closed', () => {
+        clearTimeout(timer);
+        timer = null;
+    });
+}
+
+// 创建子窗口。加载应用自己的页面时，窗口等页面画出来后自动显示（showWhenContentReady），调用方不用再 show
 function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, showTitle = true, webSecurity = false, minimizable = true, extraOptions = {}) {
+    let deferShow = isInternalUrl(url);
     let win = new BrowserWindow(
         {
+            show: !deferShow,
             width: w,
             height: h,
             minWidth: mw,
@@ -1487,6 +1513,9 @@ function createWindow(url, w, h, mw, mh, resizable = true, maximizable = true, s
     );
     win.removeMenu();
 
+    if (deferShow) {
+        showWhenContentReady(win);
+    }
     win.loadURL(url);
     console.log('create windows url', url)
     if(win.webContents.setWindowOpenHandler){

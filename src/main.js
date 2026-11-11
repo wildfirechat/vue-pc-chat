@@ -82,10 +82,7 @@ app.use(CoolLightBox)
                 subWindowLoadDataOptions.loadFriendList = true
                 subWindowLoadDataOptions.loadDefaultConversationList = true
             }
-            if (path.startsWith('/setting')) {
-                // 设置窗口的「备份与恢复」要选会话
-                subWindowLoadDataOptions.loadDefaultConversationList = true
-            }
+            // 设置窗口「备份与恢复」要选会话，进到选会话界面时再加载（store.ensureDefaultConversationList），不拖慢窗口打开
             if ( path.startsWith('/workspace')) {
                 subWindowLoadDataOptions.loadFriendList = true
             }
@@ -201,3 +198,11 @@ app.config.globalProperties.$xss = (html) => {
 app.config.globalProperties.$set = (obj, key, value) => obj[key] = value
 
 app.mount('#app');
+
+// 子窗口由主进程先隐藏创建，路由页面（按需加载）渲染完、画出一帧后通知主进程显示（background.js showWhenContentReady）
+if (isElectron()) {
+    const notifyContentReady = () => {
+        requestAnimationFrame(() => setTimeout(() => ipcRenderer.send(IPCEventType.WINDOW_CONTENT_READY)));
+    };
+    router.isReady().then(notifyContentReady, notifyContentReady);
+}

@@ -88,6 +88,8 @@ export default {
         ConversationBackupItemView
     },
     data() {
+        // 设置窗口打开时没加载会话列表，用到时再加载
+        store.ensureDefaultConversationList();
         return {
             conversations: store.state.conversation.conversationInfoList,
             selectedConversations: new Set(),

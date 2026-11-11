@@ -8,6 +8,19 @@
 <!--      用于 vue-devtools 调试-->
 <!--    <script src="http://localhost:8098"></script>-->
     <title>野火IM</title>
+    <script>
+      // 应用代码跑起来前先按主题设好 data-theme（和 store.applyTheme 一致），深色模式打开窗口时不先闪一下白
+      (function () {
+        try {
+          var theme = localStorage.getItem('theme') || 'system';
+          if (theme === 'system') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>
