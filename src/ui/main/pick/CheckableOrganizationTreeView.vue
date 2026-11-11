@@ -101,24 +101,45 @@ export default {
         }
     },
     mounted() {
-        // this.loadAndShowOrganization(this.sharedContactState.currentOrganization);
-        organizationServerApi.getRootOrganization()
-            .then(orgs => {
-                this.rootOrganizations = orgs;
-                if (orgs.length === 1) {
-                    this.loadAndShowOrganization(orgs[0])
-                } else if (orgs.length > 1) {
-                    this.showRootOrganizations();
+        this.loadRootOrganizations().then(orgs => {
+            if (orgs.length === 0) {
+                if (organizationServerApi.isServiceAvailable) {
+                    this.$notify({
+                        text: '组织结构服务异常',
+                        type: 'error',
+                    });
                 }
-            })
-            .catch(error => {
-                this.$notify({
-                    text: error.message,
-                    type: "error",
-                });
-            })
+                return;
+            }
+            if (orgs.length === 1) {
+                this.loadAndShowOrganization(orgs[0])
+            } else if (orgs.length > 1) {
+                this.showRootOrganizations();
+            }
+        })
     },
     methods: {
+        /**
+         * 加载根组织。组织结构服务的登录是登录成功后异步发起的，组件挂载时可能还没有 token，
+         * 这里失败后补一次登录再重试；搜索时也会兜底调用，避免根组织为空导致搜不到人。
+         */
+        async loadRootOrganizations() {
+            if (this.rootOrganizations.length) {
+                return this.rootOrganizations;
+            }
+            try {
+                this.rootOrganizations = (await organizationServerApi.getRootOrganization()) || [];
+            } catch (e) {
+                console.error('load root organizations failed', e);
+                try {
+                    await organizationServerApi.login();
+                    this.rootOrganizations = (await organizationServerApi.getRootOrganization()) || [];
+                } catch (e2) {
+                    console.error('load root organizations failed after login', e2);
+                }
+            }
+            return this.rootOrganizations;
+        },
         loadAndShowOrganization(org) {
             if (org.id === ALL_ROOT_ORGANIZATIONS_NODE_ID) {
                 this.showRootOrganizations();
@@ -153,8 +174,9 @@ export default {
                 })
         },
         async search(keyword) {
-            // 在根组织列表时，搜索所有根组织
-            let orgIds = this.currentOrgId ? [this.currentOrgId] : this.rootOrganizations.map(o => o.id);
+            // 在根组织列表时，搜索所有根组织；根组织还没加载出来就先加载
+            const rootOrganizations = await this.loadRootOrganizations();
+            let orgIds = this.currentOrgId ? [this.currentOrgId] : rootOrganizations.map(o => o.id);
             if (orgIds.length === 0) return;
             try {
                 let resultList = await Promise.all(orgIds.map(orgId => organizationServerApi.searchEmployee(orgId, keyword)));
