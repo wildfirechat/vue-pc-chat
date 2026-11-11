@@ -38,10 +38,10 @@ export class AvEngineKitProxy {
     pendingIncomingCallTimer = null;
     // 等待弹出来电界面期间收到的同一通电话的后续消息
     pendingIncomingMessages = [];
-    isSupportVoip = false;
-    hasMicrophone = false;
-    hasSpeaker = false;
-    hasWebcam = false;
+    isSupportVoip = true;
+    hasMicrophone = true;
+    hasSpeaker = true;
+    hasWebcam = true;
 
     /**
      * 无法正常弹出音视频通话窗口是的回调
