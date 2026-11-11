@@ -31,7 +31,7 @@ export class WfcManager {
                     || ev === EventType.UserOnlineEvent
                     || ev === EventType.SendMessage
                     || ev === EventType.ConnectToServer
-                    || ev === EventType.connectedToServer
+                    || ev === EventType.ConnectedToServer
                     || ev === EventType.MessageStatusUpdate) {
                     self.eventEmitter.emit(ev, ...args)
                 } else {
@@ -39,6 +39,10 @@ export class WfcManager {
                         self.eventEmitter.emit(ev, ...args)
                     } else {
                         // ignore
+                        if(ev === EventType.ReceiveMessage && args[0].messageContent.type >= 400 && args[0].messageContent.type < 500) {
+                            console.error('emit voip message while not connected', ev, ...args)
+                            self.eventEmitter.emit(ev, ...args)
+                        }
                     }
                 }
             }
@@ -114,7 +118,7 @@ export class WfcManager {
 
     /**
      * 启用数据校验。需要在connect之前调用。注意必须和服务器同时配置，否则无法连接。
-     * 
+     *
      * @param {boolean} enabled 是否启用
      */
     setDataVerify(enabled) {
@@ -123,7 +127,7 @@ export class WfcManager {
 
     /**
      * 设置加密最大时间段（分钟）。需要在connect之前调用。注意必须和服务器同时配置，否则无法连接。
-     * 
+     *
      * @param {int} minutes 有效时间
      */
     setEncryptMaxMinutes(minutes) {
@@ -165,7 +169,7 @@ export class WfcManager {
 
     /**
      * 设置使用websocket作为长链接，在connect之前调用
-     * @param {boolean} enable 
+     * @param {boolean} enable
      */
     setUseWebsocket(enable) {
         impl.setUseWebsocket(enable);
@@ -173,7 +177,7 @@ export class WfcManager {
 
     /**
      * 设置使用websocket作为长链接
-     * @param {boolean} enable 
+     * @param {boolean} enable
      */
     isUseWebsocket() {
         return impl.isUseWebsocket();
@@ -1167,13 +1171,13 @@ export class WfcManager {
 
     /**
      * 发送加群邀请
-     * 
+     *
      * @param {string} groupId 群组ID
      * @param {[string]} memberIds 被邀请成员ID列表
-     * @param {string} reason 
-     * @param {string} extra 
-     * @param {function ()} successCB 
-     * @param {function (number)} failCB 
+     * @param {string} reason
+     * @param {string} extra
+     * @param {function ()} successCB
+     * @param {function (number)} failCB
      */
     sendJoinGroupRequest(groupId, memberIds, reason, extra, successCB, failCB) {
         impl.sendJoinGroupRequest(groupId, memberIds, reason, extra, successCB, failCB);
@@ -1181,14 +1185,14 @@ export class WfcManager {
 
     /**
      * 处理加群邀请
-     * 
+     *
      * @param {string} groupId 群组ID
      * @param {string} memberId 被邀请成员ID，不能为空
-     * @param {string} inviter 邀请人，不能为空 
-     * @param {int}} status 1是同意，2是拒绝。不能有其他值 
+     * @param {string} inviter 邀请人，不能为空
+     * @param {int}} status 1是同意，2是拒绝。不能有其他值
      * @param {string} memberExtra 同意时，群组成员的extra
-     * @param {function ()} successCB 
-     * @param {function (number)} failCB 
+     * @param {function ()} successCB
+     * @param {function (number)} failCB
      */
     handleJoinGroupRequest(groupId, memberId, inviter, status, memberExtra, successCB, failCB) {
         impl.handleJoinGroupRequest(groupId, memberId, inviter, status, memberExtra, successCB, failCB);
@@ -1196,11 +1200,11 @@ export class WfcManager {
 
     /**
      * 获取收到的加群请求
-     * 
+     *
      * @param groupId 群组ID，不能为空
      * @param memberId 被邀请成员ID，可以为空，为空时获取群内所有邀请。
      * @param status 状态，0是未处理，1是已同意，2是已拒绝。-1是所有。
-     * 
+     *
      * @returns {[JoinGroupRequest]}
      */
     getJoinGroupRequests(groupId, memberId, status) {
@@ -1209,7 +1213,7 @@ export class WfcManager {
 
     /**
      * 清理加群请求列表
-     * 
+     *
      * @param groupId 群组ID，不能为空
      * @param memberId 被邀请成员ID，可以为空，为空时清理群内所有邀请。
      * @param status 状态，0是未处理，1是已同意，2是已拒绝。-1是所有。
@@ -1220,7 +1224,7 @@ export class WfcManager {
 
     /**
      * 获取所有加群请求的未读数
-     * 
+     *
      * @returns {int}
      */
     getAllJoinGroupRequestUnread() {
@@ -1229,7 +1233,7 @@ export class WfcManager {
 
     /**
      * 获取指定群内的加群请求的未读数
-     * 
+     *
      * @param {string} groupId 群组成员ID
      * @returns {int}
      */
@@ -1239,7 +1243,7 @@ export class WfcManager {
 
     /**
      * 清理指定群内的加群请求的未读数
-     * 
+     *
      * @param {string} groupId 群组成员ID
      */
     clearJoinGroupRequestUnread(groupId) {
@@ -1248,9 +1252,9 @@ export class WfcManager {
 
     /**
      * 清理远端的加群申请
-     * 
-     * @param {function ()} successCB 
-     * @param {function (number)} failCB 
+     *
+     * @param {function ()} successCB
+     * @param {function (number)} failCB
      */
     clearRemoteJoinGroupRequest(successCB, failCB) {
         impl.clearRemoteJoinGroupRequest(successCB, failCB);
@@ -1309,7 +1313,7 @@ export class WfcManager {
 
     /**
      * 当前设备是否被锁定
-     * 
+     *
      * @returns 是否被锁定
      */
     isLocked() {
