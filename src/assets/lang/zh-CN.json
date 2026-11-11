@@ -184,6 +184,16 @@
         "font_size_large": "大",
         "font_size_preview": "调节字体大小，会话和联系人列表也会随之缩放"
     },
+    "sidebar": {
+        "message": "消息",
+        "contact": "联系人",
+        "fav": "收藏",
+        "workspace": "工作台",
+        "conference": "会议",
+        "ai": "AI",
+        "more": "更多",
+        "setting": "设置"
+    },
     "common": {
         "add": "添加",
         "remove": "移除",

@@ -170,6 +170,16 @@
         "font_size_large": "Large",
         "font_size_preview": "Adjust font size; conversation and contact lists scale accordingly"
     },
+    "sidebar": {
+        "message": "Chats",
+        "contact": "Contacts",
+        "fav": "Favorites",
+        "workspace": "Work",
+        "conference": "Meeting",
+        "ai": "AI",
+        "more": "More",
+        "setting": "Settings"
+    },
     "common": {
         "add": "Add",
         "remove": "Remove",
