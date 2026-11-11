@@ -1646,6 +1646,25 @@ app.on('ready', () => {
             };
         }
 
+        // electron-screenshots 自身没有处理 Esc：截图时按 Esc 没反应，只能去点「取消」按钮。
+        // 这里监听截图页面（BrowserView）的键盘事件，按 Esc 时走和「取消」按钮完全相同的 ipc，
+        // 由库自己复位并隐藏截图窗口，同时触发下面注册的 cancel 回调（恢复主窗口显示等）。
+        // $view 在 Screenshots 构造时就创建好了，所以这里绑定一次即可。
+        {
+            const screenshotWebContents = screenshots && screenshots.$view && screenshots.$view.webContents;
+            if (screenshotWebContents && !screenshotWebContents.isDestroyed()) {
+                screenshotWebContents.on('before-input-event', (event, input) => {
+                    if (input.type !== 'keyDown' || (input.key !== 'Escape' && input.code !== 'Escape')) {
+                        return;
+                    }
+                    console.log('[screenshots] esc pressed, cancel');
+                    // 阻止 Esc 继续传给页面（避免编辑文字时被输入框吃掉）
+                    event.preventDefault();
+                    ipcMain.emit('SCREENSHOTS:cancel');
+                });
+            }
+        }
+
         const onScreenShotEnd = (result) => {
             console.log('onScreenShotEnd', isMainWindowFocusedWhenStartScreenshot, screenShotWindowId);
             if (isMainWindowFocusedWhenStartScreenshot) {
