@@ -10,43 +10,12 @@ import wfc from "../../client/wfc";
 import MessageConfig from "../../client/messageConfig";
 import DetectRTC from 'detectrtc';
 import Config from "../../../config";
-import ConnectionStatus from "../../client/connectionStatus";
-import {longValue, numberValue, stringValue} from '../../util/longUtil'
+import {longValue, numberValue} from '../../util/longUtil'
 import Conversation from "../../../wfc/model/conversation";
 
 import CallEndReason from "./callEndReason";
 import CallByeMessageContent from "../messages/callByeMessageContent";
 import WfcAVEngineKit from "./avenginekit";
-
-// 音视频相关的信令消息类型。同步阶段（ConnectionStatusReceiveing）收到的消息，协议栈只写本地库，
-// 不会逐条回调 ReceiveMessage（UI 在同步完成后从本地库整体重载），音视频 SDK 需要补一遍，
-// 否则登录前打进来的音视频通话在登录后不会弹出接听界面
-const VOIP_MESSAGE_CONTENT_TYPES = new Set([
-    MessageContentType.VOIP_CONTENT_TYPE_START,
-    MessageContentType.VOIP_CONTENT_TYPE_ACCEPT,
-    MessageContentType.VOIP_CONTENT_TYPE_END,
-    MessageContentType.VOIP_CONTENT_TYPE_SIGNAL,
-    MessageContentType.VOIP_CONTENT_TYPE_MODIFY,
-    MessageContentType.VOIP_CONTENT_TYPE_ACCEPT_T,
-    MessageContentType.VOIP_CONTENT_TYPE_ADD_PARTICIPANT,
-    MessageContentType.VOIP_CONTENT_TYPE_MUTE_VIDEO,
-    MessageContentType.VOIP_Join_Call_Request,
-    MessageContentType.CONFERENCE_CONTENT_TYPE_KICKOFF_MEMBER,
-    MessageContentType.CONFERENCE_CONTENT_TYPE_CHANGE_MODE,
-    MessageContentType.CONFERENCE_CONTENT_TYPE_COMMAND,
-    MessageContentType.VOIP_REMOTE_CONTROL_INVITE,
-    MessageContentType.VOIP_REMOTE_CONTROL_REQUEST,
-    MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_INVITE,
-    MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_REQUEST,
-    MessageContentType.VOIP_REMOTE_CONTROL_END,
-].filter(type => typeof type === 'number'));
-
-// 来电/通话的响铃超时是 60 秒：音视频引擎的 callTimeout 拿「服务器当前时间 - start 消息的 timestamp」
-// 和 60 秒比较，超时就 endCall 结束通话。所以同步到但已经超过 60 秒的信令再补发已经没有意义
-// （补出来也只会弹一下窗口，马上被引擎超时关掉）。
-// 消息时间戳都是服务器时间，比较前要按 serverDeltaTime 折算成服务器当前时间，写法和引擎一致：
-// serverNow = 本地当前时间 + getServerDeltaTime()
-const VOIP_SIGNAL_VALID_TIME = 60 * 1000;
 
 // main window renderer process -> main process -> voip window renderer process
 // voip window renderer process -> main process -> main window renderer process
@@ -69,12 +38,6 @@ export class AvEngineKitProxy {
     pendingIncomingCallTimer = null;
     // 等待弹出来电界面期间收到的同一通电话的后续消息
     pendingIncomingMessages = [];
-    // 登录后第一次同步/重连同步：同步阶段收到的信令消息不会以 ReceiveMessage 事件回调，
-    // 同步完成后需要从本地库补发一次（见 replaySyncedVoipMessages）
-    syncPhaseSeen = false;
-    initialSyncReplayed = false;
-    // 已处理过的信令消息 uid，同步补发和实时接收可能是同一条消息，不能重复处理
-    handledVoipMessageUids = new Set();
     isSupportVoip = false;
     hasMicrophone = false;
     hasSpeaker = false;
@@ -205,72 +168,6 @@ export class AvEngineKitProxy {
 
     onConnectionStatusChange = (status) => {
         this.emitToVoip('connectionStatus', status);
-        if (status === ConnectionStatus.ConnectionStatusReceiveing) {
-            // 进入同步阶段：这期间收到的消息只会写本地库，不会回调 ReceiveMessage
-            this.syncPhaseSeen = true;
-        } else if (status === ConnectionStatus.ConnectionStatusConnected) {
-            // 启动后第一次连接成功，或者刚经历过一次同步：把同步期间落库的信令消息补发给音视频 SDK
-            if (this.syncPhaseSeen || !this.initialSyncReplayed) {
-                this.syncPhaseSeen = false;
-                this.initialSyncReplayed = true;
-                // 让连接成功后的其他收尾（会话列表、用户信息等）先跑，再补发
-                setTimeout(() => this.replaySyncedVoipMessages(), 0);
-            }
-        }
-    }
-
-    /**
-     * 把同步阶段收到的信令消息补发给音视频 SDK。
-     *
-     * 登录前打进来的音视频通话，start/end 等信令是在同步阶段收到的：协议栈只把它们写进本地库，
-     * 不逐条回调 ReceiveMessage（UI 层在连接成功后从本地库整体重载），音视频 SDK 因此收不到来电，
-     * 登录后不会弹出接听界面。这里在同步完成后，从本地库把最近的通话信令按时间顺序重放一遍。
-     *
-     * 过期的来电由 onReceiveMessage 里的时间窗判断丢弃；同步到的 start/end 成对消息由
-     * endedCallIds 处理（先收到 start 再收到 end，就不弹界面）。
-     */
-    replaySyncedVoipMessages() {
-        try {
-            if (!wfc.isLogin()) {
-                return;
-            }
-            // 服务器当前时间 = 本地当前时间 + 和服务器的时间差（同音视频引擎 callTimeout 的算法）
-            let serverNow = (new Date()).valueOf() + (wfc.getServerDeltaTime() || 0);
-            let conversationInfos = wfc.getConversationList([ConversationType.Single, ConversationType.Group], [0]) || [];
-            let replayedConversationCount = 0;
-            for (let i = 0; i < conversationInfos.length && replayedConversationCount < 10; i++) {
-                let conversationInfo = conversationInfos[i];
-                let lastMessage = conversationInfo.lastMessage;
-                let lastTimestamp = lastMessage ? numberValue(lastMessage.timestamp) : numberValue(conversationInfo.timestamp);
-                // 会话的最后一条消息比其中的信令还新，所以按同一个时间窗过滤：60 秒内没有活动的会话，
-                // 不可能还有还没处理过的来电
-                if (!lastTimestamp || serverNow - lastTimestamp > VOIP_SIGNAL_VALID_TIME) {
-                    continue;
-                }
-                replayedConversationCount++;
-                let msgs = wfc.getMessages(conversationInfo.conversation, 0, true, 50) || [];
-                // 按时间顺序重放：start 先于 end/accept，界面才能正常弹出或被取消
-                msgs.sort((a, b) => numberValue(a.timestamp) - numberValue(b.timestamp));
-                msgs.forEach(msg => {
-                    let content = msg && msg.messageContent;
-                    if (!content || !VOIP_MESSAGE_CONTENT_TYPES.has(content.type)) {
-                        return;
-                    }
-                    // 超过响铃超时时间的信令不补发，避免弹出一个马上又被引擎超时关掉的窗口
-                    let msgTimestamp = numberValue(msg.timestamp);
-                    if (!msgTimestamp || serverNow - msgTimestamp > VOIP_SIGNAL_VALID_TIME) {
-                        console.log('synced voip message outdated, ignore', content.type, content.callId,
-                            msgTimestamp, serverNow);
-                        return;
-                    }
-                    console.log('replay synced voip message', content.type, content.callId, msg.messageUid);
-                    this.onReceiveMessage(msg);
-                });
-            }
-            console.log('replay synced voip messages done, conversations', replayedConversationCount);
-        } catch (e) {
-            console.warn('replay synced voip messages error', e);
-        }
     }
 
     // 收到消息时，timestamp已经过修正，后面使用时，不用考虑和服务器的时间差
@@ -289,10 +186,10 @@ export class AvEngineKitProxy {
             return;
         }
 
-        // 服务器当前时间 = 本地当前时间 + 和服务器的时间差（同音视频引擎 callTimeout 的算法）
-        let serverNow = (new Date()).valueOf() + (wfc.getServerDeltaTime() || 0);
-        if (serverNow - numberValue(msg.timestamp) >= VOIP_SIGNAL_VALID_TIME) {
-            // 已经超过响铃超时时间，消息失效，不做处理
+        let now = (new Date()).valueOf();
+        let delta = wfc.getServerDeltaTime();
+        if (now - (numberValue(msg.timestamp) - delta) >= 90 * 1000) {
+            // 消息已失效，不做处理
             console.log('avengineProxy, message outdated, just ignore', msg);
             return;
         }
@@ -348,16 +245,6 @@ export class AvEngineKitProxy {
                     && content.type !== MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_INVITE
                     && content.type !== MessageContentType.VOIP_REMOTE_CONTROL_ACCEPT_REQUEST) {
                     return;
-                }
-                // 同一条信令只处理一次：登录同步后补发的消息，可能和实时收到的消息重复
-                let messageUidStr = stringValue(msg.messageUid);
-                if (this.handledVoipMessageUids.has(messageUidStr)) {
-                    console.log('voip message already handled, ignore', messageUidStr);
-                    return;
-                }
-                this.handledVoipMessageUids.add(messageUidStr);
-                if (this.handledVoipMessageUids.size > 300) {
-                    this.handledVoipMessageUids.delete(this.handledVoipMessageUids.values().next().value);
                 }
 
                 let participantUserInfos = [];
