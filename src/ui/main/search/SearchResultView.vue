@@ -13,7 +13,7 @@
                             <div class="search-result-item contact" @click.stop="chatToContact(user)">
                                 <img :src="user.portrait">
                                 <span class="single-line">{{ user.displayName }}</span>
-                                <button v-if="isNormalUser(user) && !isFriend(user.uid)" @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
+                                <button v-if="canAddFriend(user)" @click.stop="addFriend(user)">{{ $t('common.add') }}</button>
                             </div>
                         </li>
                     </ul>
@@ -359,11 +359,16 @@ export default {
         isFriend(userId) {
             return wfc.isMyFriend(userId);
         },
-        isNormalUser(user) {
-            return user && user.type === 0 && user.uid !== Config.FILE_HELPER_ID;
+        // 是否显示「添加」：只要还不是好友就显示，机器人（type != 0）也一样；
+        // 自己和文件传输助手没有加好友的意义，排除掉
+        canAddFriend(user) {
+            return !!user
+                && user.uid !== Config.FILE_HELPER_ID
+                && user.uid !== wfc.getUserId()
+                && !this.isFriend(user.uid);
         },
         addFriend(user) {
-            if (!this.isNormalUser(user) || this.isFriend(user.uid)) {
+            if (!this.canAddFriend(user)) {
                 return;
             }
             this.$modal.show(

@@ -461,12 +461,14 @@ export default {
         isNormalUser() {
             return this.userInfo.type === 0 && !this.isFileHelper;
         },
+        // 好友判断只看关系本身：机器人（type != 0）也可以是好友
         isFriend() {
-            return this.isNormalUser
-                && (wfc.getUserId() === this.userInfo.uid || wfc.isMyFriend(this.userInfo.uid));
+            return wfc.getUserId() === this.userInfo.uid || wfc.isMyFriend(this.userInfo.uid);
         },
+        // 是否显示「添加好友」：只要还不是好友就显示，机器人也一样；
+        // 文件传输助手是服务端内置账号，不显示
         canAddFriend() {
-            return this.isNormalUser && !this.isFriend && this.sameOrgChecked && !this.isSameOrganization;
+            return !this.isFileHelper && !this.isFriend && this.sameOrgChecked && !this.isSameOrganization;
         },
         isSelf() {
             return this.userInfo.uid === wfc.getUserId();
