@@ -21,14 +21,14 @@ export default class Config {
     // APP SERVER的地址，不能省略http(s)前缀。
     // 默认的app server使用端口是8888，注意端口号别忘记了。
     // 上线建议使用https，使用https更安全。
-    static APP_SERVER = 'http://192.168.1.87:8888';
-    // static APP_SERVER = 'https://app.wildfirechat.net';
+    //static APP_SERVER = 'http://192.168.1.87:8888';
+    static APP_SERVER = 'https://app.wildfirechat.net';
 
     // APP SERVER 备选地址，双网环境下使用
     static APP_BACKUP_SERVER = null;
     // AI Agent 服务地址（客户端 /provision、/v1 使用）。
     // 必须是客户端可达的地址，不能写 127.0.0.1；当前本机局域网 IP 为 192.168.1.87。
-    static AI_AGENT_SERVER = 'http://192.168.1.87:8090';
+    static AI_AGENT_SERVER = 'https://work.wildfirechat.net';
     static AI_AGENT_BACKUP_SERVER = null;
 
     // 接龙服务地址
