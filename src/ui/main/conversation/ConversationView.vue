@@ -108,7 +108,7 @@
                 <MessageInputView :conversationInfo="sharedConversationState.currentConversationInfo"
                                   v-show="!sharedConversationState.enableMessageMultiSelection"
                                   :store-instance="activeStore"
-                                  :input-options="inputOptions"
+                                  :input-options="effectiveInputOptions"
                                   :muted="muted"
                                   :resized="messageInputViewResized"
                                   ref="messageInputView"/>
@@ -1174,6 +1174,21 @@ export default {
     },
 
     computed: {
+        /**
+         * DSH 会话只保留聊天输入：隐藏表情、对讲、群接龙、群投票。
+         * 普通会话沿用调用方传入的 inputOptions，不受影响。
+         */
+        effectiveInputOptions() {
+            const base = this.inputOptions || {};
+            if (!this.dshMode) return base;
+            return {
+                ...base,
+                disableEmoji: true,
+                disablePtt: true,
+                disableCollecton: true,
+                disablePoll: true,
+            };
+        },
         agentStateText() {
             const label = this.agentState ? agentStateLabel(this.agentState.state) : null;
             if (!label) return '';
