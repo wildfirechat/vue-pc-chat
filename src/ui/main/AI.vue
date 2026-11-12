@@ -103,7 +103,7 @@
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">额度</span>
                                 <strong>{{ quotaText(myStats.quota) }}</strong>
-                                <span class="dsh-stat-sub">今日剩余 {{ myStats.quota.dailyRemaining < 0 ? '不限' : myStats.quota.dailyRemaining }}</span>
+                                <span class="dsh-stat-sub">今日剩余 {{ myStats.quota.dailyTokenRemaining < 0 ? '不限' : formatToken(myStats.quota.dailyTokenRemaining) }} tokens</span>
                             </div>
                             <div class="dsh-stat">
                                 <span class="dsh-stat-label">本月 Tokens</span>
@@ -724,7 +724,7 @@ export default {
         quotaText(quota) {
             if (!quota) return '-';
             if (quota.monthlyBudgetCny > 0) return '¥' + Math.max(0, quota.monthRemainingCny).toFixed(2);
-            if (quota.dailyRequestLimit > 0) return Math.max(0, quota.dailyRemaining) + ' 次';
+            if (quota.dailyTokenLimit > 0) return this.formatToken(Math.max(0, quota.dailyTokenRemaining)) + ' tokens';
             return '不限';
         },
         startRenameRobot() {
