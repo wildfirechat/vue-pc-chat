@@ -76,8 +76,6 @@
                                 </div>
                                 <div v-if="sessionMenuId === s.groupId" class="dsh-row-menu" @click.stop>
                                     <button @click="renameSession(s)">重命名</button>
-                                    <button @click="openSessionInIm(s)">在消息中打开</button>
-                                    <button @click="copySessionId(s)">复制群 ID</button>
                                     <div class="dsh-row-menu-sep"></div>
                                     <button class="danger" @click="deleteSession(s)">删除</button>
                                 </div>
@@ -268,6 +266,30 @@
                 </div>
             </div>
         </div>
+
+        <div v-if="renameDialog" class="dsh-modal-mask" @click.self="cancelRename">
+            <div class="dsh-modal">
+                <h2>{{ renameDialog.type === 'workspace' ? '重命名工作区' : '重命名会话' }}</h2>
+                <p class="dsh-modal-hint">
+                    {{ renameDialog.type === 'workspace'
+                        ? '只修改本地显示名称，不会改变目录。'
+                        : '会同时修改群名和会话列表里的名称（由机器人执行）。' }}
+                </p>
+                <label class="dsh-field">
+                    <span>名称</span>
+                    <input ref="renameInput" v-model.trim="renameDraft" maxlength="64"
+                           placeholder="输入新的名称"
+                           @keyup.enter="confirmRename" @keyup.esc="cancelRename"/>
+                </label>
+                <p v-if="renameError" class="dsh-rename-error">{{ renameError }}</p>
+                <div class="dsh-modal-actions">
+                    <button class="dsh-top-btn ghost" :disabled="renaming" @click="cancelRename">取消</button>
+                    <button class="dsh-top-btn" :disabled="renaming || !renameDraft.trim()" @click="confirmRename">
+                        {{ renaming ? '保存中…' : '保存' }}
+                    </button>
+                </div>
+            </div>
+        </div>
     </section>
 </template>
 
@@ -279,7 +301,6 @@ import DshFilePreviewer from './DshFilePreviewer.vue';
 import store from '../../../store';
 import wfc from '../../../wfc/client/wfc';
 import Conversation from '../../../wfc/model/conversation';
-import ModifyGroupInfoType from '../../../wfc/model/modifyGroupInfoType';
 import AgentCommandMessageContent from '../../../wfc/messages/agentCommandMessageContent';
 import ConnectionStatus from '../../../wfc/client/connectionStatus';
 import { getDshStatus, getDshWorkspaces, openDshPath, pickDshDirectory, generateDshTitle, getDshModelCatalog } from '../../../dsh/renderer/dshClient';
@@ -307,6 +328,10 @@ export default {
             showCreate: false,
             newWorkspacePath: '',
             newWorkspaceName: '',
+            renameDialog: null,
+            renameDraft: '',
+            renameError: '',
+            renaming: false,
             draft: null,
             draftMenu: '',
             draftCatalog: [],
@@ -827,13 +852,12 @@ export default {
         saveWorkspaceAliases() {
             try { localStorage.setItem('dsh-workspace-aliases', JSON.stringify(this.workspaceAliases)); } catch (e) { /* ignore */ }
         },
-        async renameWorkspace(ws) {
+        renameWorkspace(ws) {
             if (!ws || !ws.path) return;
-            const name = window.prompt('工作区名称', ws.name || '');
-            if (name === null || !name.trim() || name.trim() === ws.name) return;
-            this.workspaceAliases = { ...this.workspaceAliases, [ws.path]: name.trim() };
-            this.saveWorkspaceAliases();
-            ws.name = name.trim();
+            this.renameError = '';
+            this.renameDraft = ws.name || '';
+            this.renameDialog = { type: 'workspace', workspaceKey: ws.key, path: ws.path };
+            this.focusRenameInput();
         },
         openSettings() {
             this.$router.push('/home/ai');
@@ -908,24 +932,6 @@ export default {
             this.draft.workspaceKey = '';
             this.$nextTick(() => {
                 if (this.$refs.draftInput) this.$refs.draftInput.focus();
-            });
-        },
-        async applyGroupName(s, name) {
-            const clean = String(name || '').trim();
-            if (!clean) return false;
-            try {
-                await this.modifyGroupName(s.groupId, clean);
-                s.name = clean;
-                return true;
-            } catch (e) {
-                this.$notify({ title: '会话重命名失败', text: (e && e.message) || '', type: 'error' });
-                return false;
-            }
-        },
-        modifyGroupName(groupId, name) {
-            return new Promise((resolve, reject) => {
-                wfc.modifyGroupInfo(groupId, ModifyGroupInfoType.Modify_Group_Name, name, [2], null,
-                    () => resolve(), (e) => reject(e));
             });
         },
         loadAutoTitled() {
@@ -1104,7 +1110,7 @@ export default {
             try {
                 const fallback = this.fallbackTitle(text);
                 if (!fallback) return;
-                await this.modifyGroupName(groupId, fallback);
+                await this.renameGroupViaRobot(groupId, fallback);
                 this.markAutoTitled(groupId);
                 this.updateLocalGroupName(groupId, fallback);
                 try {
@@ -1114,7 +1120,7 @@ export default {
                     if (result && result.ok && result.title) {
                         const title = this.truncateUtf8(this.cleanTitle(result.title), 80);
                         if (title && title !== fallback) {
-                            await this.modifyGroupName(groupId, title);
+                            await this.renameGroupViaRobot(groupId, title);
                             this.updateLocalGroupName(groupId, title);
                         }
                     }
@@ -1146,14 +1152,101 @@ export default {
             this.workspaceMenuKey = '';
             this.sessionMenuId = '';
         },
-        async renameSession(s) {
+        renameSession(s) {
             this.sessionMenuId = '';
-            const name = window.prompt('重命名会话', s.name || '');
-            if (name === null || !name.trim() || name.trim() === s.name) return;
-            const ok = await this.applyGroupName(s, name);
-            if (ok) {
-                this.autoTitleSeq[s.groupId] = (this.autoTitleSeq[s.groupId] || 0) + 1;
-                this.markAutoTitled(s.groupId);
+            this.renameError = '';
+            this.renameDraft = s.name || '';
+            this.renameDialog = { type: 'session', groupId: s.groupId };
+            this.focusRenameInput();
+        },
+        cancelRename() {
+            if (this.renaming) return;
+            this.renameDialog = null;
+            this.renameDraft = '';
+            this.renameError = '';
+        },
+        focusRenameInput() {
+            this.$nextTick(() => {
+                const el = this.$refs.renameInput;
+                if (el) { el.focus(); el.select(); }
+            });
+        },
+        renameGroupViaRobot(groupId, name) {
+            const clean = String(name || '').trim();
+            if (!clean) return Promise.resolve();
+            return this.sendPanelCommand(new Conversation(1, groupId, 2), 'set', `/rename ${clean}`);
+        },
+        sendPanelCommand(conversation, op, cmd) {
+            return new Promise((resolve, reject) => {
+                const robotId = this.localRobotId;
+                if (!robotId) {
+                    reject(new Error('机器人尚未开通'));
+                    return;
+                }
+                const content = new AgentCommandMessageContent(op, cmd, Date.now() % 100000, robotId);
+                wfc.sendConversationMessage(conversation, content, [], null, null,
+                    () => resolve(), (e) => reject(e));
+            });
+        },
+        async confirmRename() {
+            if (this.renaming) return;
+            const dialog = this.renameDialog;
+            if (!dialog) return;
+            const name = String(this.renameDraft || '').trim();
+            if (!name) return;
+            this.renaming = true;
+            this.renameError = '';
+            try {
+                if (dialog.type === 'workspace') {
+                    const ws = this.workspaces.find((w) => w.key === dialog.workspaceKey);
+                    const path = (ws && ws.path) || dialog.path || '';
+                    if (!path) throw new Error('工作区没有目录，无法重命名');
+                    this.workspaceAliases = { ...this.workspaceAliases, [path]: name };
+                    this.saveWorkspaceAliases();
+                    if (ws) ws.name = name;
+                    this.renameDialog = null;
+                    this.$notify({ title: '工作区已重命名', type: 'success' });
+                    return;
+                }
+                const groupId = dialog.groupId;
+                const session = this.workspaces
+                    .flatMap((w) => w.sessions)
+                    .find((x) => x.groupId === groupId);
+                const conversation = (session && session.conversation)
+                    || new Conversation(1, groupId, 2);
+                // 群主是机器人：由机器人执行改群名（客户端成员没有权限）。
+                await this.sendPanelCommand(conversation, 'set', `/rename ${name}`);
+                let renamed = false;
+                for (let i = 0; i < 12; i++) {
+                    await new Promise((r) => setTimeout(r, 300));
+                    try {
+                        const info = wfc.getGroupInfo(groupId);
+                        if (info && info.name === name) { renamed = true; break; }
+                    } catch (e) { /* ignore */ }
+                }
+                if (!renamed) {
+                    await this.load();
+                    const fresh = this.workspaces
+                        .flatMap((w) => w.sessions)
+                        .find((x) => x.groupId === groupId);
+                    renamed = !!(fresh && fresh.name === name);
+                }
+                if (!renamed) {
+                    this.renameError = '重命名失败：机器人可能不在线或没有群管理权限';
+                    return;
+                }
+                const fresh = this.workspaces
+                    .flatMap((w) => w.sessions)
+                    .find((x) => x.groupId === groupId);
+                if (fresh) fresh.name = name;
+                this.autoTitleSeq[groupId] = (this.autoTitleSeq[groupId] || 0) + 1;
+                this.markAutoTitled(groupId);
+                this.renameDialog = null;
+                this.$notify({ title: '会话已重命名', type: 'success' });
+            } catch (e) {
+                this.renameError = (e && e.message) || '重命名失败';
+            } finally {
+                this.renaming = false;
             }
         },
         deleteSession(s) {
@@ -1188,16 +1281,6 @@ export default {
             }, (e) => {
                 this.$notify({ title: '删除失败', text: (e && e.message) || '无法发送删除指令', type: 'error' });
             });
-        },
-        openSessionInIm(s) {
-            this.sessionMenuId = '';
-            store.setCurrentConversation(s.conversation);
-            this.$router.push('/home');
-        },
-        async copySessionId(s) {
-            try { await navigator.clipboard.writeText(s.groupId); } catch (e) { /* ignore */ }
-            this.sessionMenuId = '';
-            this.$notify({ title: '群 ID 已复制', type: 'info' });
         },
         async openWorkspaceDir(ws) {
             if (ws && ws.path) await openDshPath(ws.path);
@@ -1410,6 +1493,7 @@ export default {
 .dsh-field input:focus { border-color: #1d4ed8; }
 .dsh-modal-tip { font-size: 11px; color: #9aa0a8; margin: -4px 0 14px; }
 .dsh-modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.dsh-rename-error { margin: -4px 0 10px; color: #b42318; font-size: 12px; line-height: 1.5; }
 @media (max-width: 900px) {
     .dsh-session-column { flex-basis: var(--dsh-sidebar-width); min-width: var(--dsh-sidebar-width); }
 }
