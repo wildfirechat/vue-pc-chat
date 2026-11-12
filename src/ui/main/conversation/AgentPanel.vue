@@ -22,19 +22,6 @@
         <div class="agent-agent-body">
             <div v-if="loading" class="agent-agent-loading">正在加载会话状态…</div>
             <template v-else>
-                <!-- 会话（DSH 历史会话；选中恢复上下文） -->
-                <div class="agent-agent-row">
-                    <label class="agent-agent-label">会话</label>
-                    <div class="agent-agent-row">
-                        <span class="agent-agent-cwd-current">{{ currentSessionShort || '未激活' }}</span>
-                        <button
-                            class="agent-agent-btn agent-agent-btn-sm"
-                            :disabled="applying || sessionLoading"
-                            @click="openSessionPicker"
-                        >选择</button>
-                    </div>
-                </div>
-
                 <!-- 模型 -->
                 <div class="agent-agent-row">
                     <label class="agent-agent-label">模型</label>
@@ -61,16 +48,6 @@
                         <option value="" disabled>— 选择等级 —</option>
                         <option v-for="e in effortOptions" :key="e.value" :value="e.value">{{ e.label }}</option>
                     </select>
-                </div>
-
-                <!-- 工作目录：点切换弹出独立选择窗口 -->
-                <div class="agent-agent-row agent-agent-row-col">
-                    <label class="agent-agent-label">工作目录</label>
-                    <div class="agent-agent-row">
-                        <span class="agent-agent-cwd-current">{{ currentCwd || '未设置' }}</span>
-                        <button class="agent-agent-btn agent-agent-btn-sm" :disabled="applying" @click="openCwdPicker">切换</button>
-                    </div>
-                    <p class="agent-agent-hint">切换目录 = 切换会话（该目录上下文可恢复）</p>
                 </div>
 
                 <!-- 沙箱模式 -->
