@@ -1505,6 +1505,7 @@ function applyAiAgentConfig(provision, cfg) {
             maxTokens: cfg.maxTokens,
             contextWindow: cfg.contextWindow,
             allowedModels: Array.isArray(cfg.allowedModels) ? cfg.allowedModels : [],
+            allowCustomModel: cfg.allowCustomModel !== false,
             expiresAt: cfg.expiresAt || 0,
             enabled: cfg.enabled !== false,
             configured: cfg.configured === true,
@@ -1534,6 +1535,7 @@ function provisionFingerprint(provision) {
         ai.baseUrl, ai.apiKey, ai.model, ai.reasoningEffort,
         Number(ai.maxTokens || 0), Number(ai.contextWindow || 0),
         Array.isArray(ai.allowedModels) ? ai.allowedModels.join(',') : '',
+        ai.allowCustomModel !== false,
         ai.enabled === true, ai.configured === true,
         robot.robotId, robot.robotSecret, robot.gatewayUrl,
     ].map((v) => String(v == null ? '' : v)).join('\u0001');

@@ -114,6 +114,7 @@ export default class DshProvisionStore {
                 maxTokens: ai.maxTokens,
                 contextWindow: ai.contextWindow,
                 allowedModels: ai.allowedModels || [],
+                allowCustomModel: ai.allowCustomModel !== false,
                 expiresAt: ai.expiresAt,
                 enabled: ai.enabled !== false,
                 configured: ai.configured === true,

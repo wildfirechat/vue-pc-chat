@@ -214,8 +214,13 @@ export default class DshHostManager {
      */
     modelCatalogData() {
         const presetInfo = this._presetCatalog();
+        const allowCustom = !this.provision
+            || !this.provision.ai
+            || this.provision.ai.allowCustomModel !== false;
+        const models = (Array.isArray(this.modelCatalog) ? this.modelCatalog : [])
+            .filter((m) => allowCustom || m.provider === 'default');
         return {
-            models: Array.isArray(this.modelCatalog) ? this.modelCatalog : [],
+            models,
             presets: presetInfo.presets,
             defaultPreset: presetInfo.defaultPreset,
         };
@@ -313,7 +318,10 @@ export default class DshHostManager {
         // relay: no clientKey, quota, billing or audit is applied to them.
         const customProviders = [];
         const customByProvider = new Map();
-        for (const m of (Array.isArray(userModels) ? userModels : [])) {
+        // 管理员关闭自定义模型后，不再把本地自定义 provider 写进 Host；
+        // 已添加的配置仍保留在本地，重新打开后自动恢复。
+        const customAllowed = ai.allowCustomModel !== false;
+        for (const m of (customAllowed && Array.isArray(userModels) ? userModels : [])) {
             if (!m || !m.baseUrl || !m.model || !m.apiKey) continue;
             const providerId = String(m.providerId || '').trim().toLowerCase();
             if (!providerId || providerId === 'default' || !/^[a-z0-9][a-z0-9_-]*$/.test(providerId)) continue;

@@ -670,7 +670,13 @@ export default {
             const draft = this.draft;
             if (!draft) return;
             if (!draft.preset) draft.preset = defaultPreset;
-            if (draft.model) return;
+            if (draft.model) {
+                // 管理员关闭自定义模型后，已选的本地自定义模型不再可选：回退到默认。
+                const stillAvailable = this.draftCatalog.some(m => `${m.provider}/${m.id}` === draft.model);
+                if (stillAvailable) return;
+                draft.model = '';
+                draft.effort = '';
+            }
             const def = this.draftCatalog.find(m => m.isDefault) || this.draftCatalog[0];
             if (def) {
                 draft.model = `${def.provider}/${def.id}`;

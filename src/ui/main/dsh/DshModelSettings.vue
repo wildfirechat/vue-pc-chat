@@ -5,7 +5,12 @@
                 <h2>模型配置</h2>
                 <p>服务端默认模型经过 AI 服务中转；自定义模型直连 Provider，不经过服务端认证、配额和计费。</p>
             </div>
-            <button class="dsh-btn primary" @click="openAdd">＋ 添加自定义模型</button>
+            <button v-if="allowCustomModel" class="dsh-btn primary" @click="openAdd">＋ 添加自定义模型</button>
+        </div>
+
+        <div v-if="!allowCustomModel" class="dsh-model-warning">
+            <strong>管理员已关闭自定义模型</strong>
+            <p>不能再添加自定义模型；已添加的自定义模型不会出现在模型候选列表里（本地配置仍保留，管理员重新开启后恢复）。</p>
         </div>
 
         <div v-if="serverModel" class="dsh-model-card server">
@@ -39,8 +44,8 @@
             <p>可以让管理员在 AI 服务后台配置默认模型，也可以添加自定义模型直连使用。</p>
         </div>
         <div v-if="serverModel && !serverConfigured" class="dsh-model-warning">
-            <strong>{{ ai && ai.enabled === false ? 'AI 服务已被管理员停用' : '服务端默认模型缺少 API Key' }}</strong>
-            <p v-if="ai && ai.enabled === false">请联系管理员恢复账号后再试。</p>
+            <strong>{{ aiLive.enabled === false ? 'AI 服务已被管理员停用' : '服务端默认模型缺少 API Key' }}</strong>
+            <p v-if="aiLive.enabled === false">请联系管理员恢复账号后再试。</p>
             <p v-else>默认模型不可修改；可以补齐服务端 Key，或添加自定义模型直连。</p>
         </div>
 
@@ -50,10 +55,11 @@
                     <div>
                         <strong>{{ m.name }}</strong>
                         <span class="dsh-model-badge user">自定义</span>
+                        <span v-if="!allowCustomModel" class="dsh-model-badge">服务端已禁用</span>
                         <span v-if="!serverModel && m.id === models[0].id" class="dsh-model-badge default">默认</span>
                     </div>
                     <div class="dsh-model-actions">
-                        <button class="dsh-link-btn" @click="openEdit(m)">编辑</button>
+                        <button v-if="allowCustomModel" class="dsh-link-btn" @click="openEdit(m)">编辑</button>
                         <button class="dsh-link-btn danger" @click="remove(m)">删除</button>
                     </div>
                 </div>
@@ -112,7 +118,8 @@
 
 <script>
 import wfc from '../../../wfc/client/wfc';
-import { addDshModel, deleteDshModel, getDshModels, updateDshModel } from '../../../dsh/renderer/dshClient';
+import { addDshModel, deleteDshModel, getDshModels, syncDshConfig, updateDshModel } from '../../../dsh/renderer/dshClient';
+import { dshState } from '../../../dsh/renderer/state';
 
 export default {
     name: 'DshModelSettings',
@@ -130,12 +137,18 @@ export default {
         };
     },
     computed: {
+        aiLive() {
+            return (dshState.provision && dshState.provision.ai) || this.ai || {};
+        },
+        allowCustomModel() {
+            return this.aiLive.allowCustomModel !== false;
+        },
         serverModel() {
-            const ai = this.ai || {};
+            const ai = this.aiLive;
             return ai.model && ai.baseUrl ? ai : null;
         },
         serverModels() {
-            const ai = this.ai || {};
+            const ai = this.aiLive;
             const out = [];
             const add = (value) => {
                 const model = String(value || '').trim();
@@ -146,15 +159,23 @@ export default {
             return out;
         },
         serverConfigured() {
-            return !!(this.ai && this.ai.configured === true);
+            return this.aiLive.configured === true;
         },
         serverStateText() {
-            if (this.ai && this.ai.enabled === false) return '已停用';
+            if (this.aiLive.enabled === false) return '已停用';
             return this.serverConfigured ? '已配置' : '缺少 API Key';
+        },
+    },
+    watch: {
+        allowCustomModel(value) {
+            if (!value) this.showForm = false;
         },
     },
     created() {
         window.addEventListener('dsh-provision-updated', this.load);
+        // 打开设置时同步一次服务端配置，避免管理员关掉开关后客户端仍长时间
+        // 显示可添加/可选；只有配置真的变化时主进程才会重启 Host。
+        syncDshConfig().catch(() => {});
     },
     mounted() {
         this.load();
@@ -173,6 +194,7 @@ export default {
             try { this.models = (await getDshModels(wfc.getUserId())) || []; } catch (e) { this.models = []; }
         },
         openAdd() {
+            if (!this.allowCustomModel) return;
             this.editing = null;
             this.form = this.emptyForm();
             this.formError = '';
@@ -190,6 +212,7 @@ export default {
         },
         async save() {
             if (this.saving) return;
+            if (!this.allowCustomModel) return;
             this.formError = '';
             this.saving = true;
             try {

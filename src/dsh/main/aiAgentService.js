@@ -156,6 +156,7 @@ export default class DshAiAgentService {
             maxTokens: c.maxTokens,
             contextWindow: c.contextWindow,
             allowedModels: c.allowedModels || [],
+            allowCustomModel: c.allowCustomModel !== false,
             source: c.source || {},
             enabled: c.enabled !== false,
             configured: c.configured === true,
@@ -313,6 +314,7 @@ export default class DshAiAgentService {
             baseUrl: c.baseUrl || '',
             expiresAt: Number(c.expiresAt) || 0,
             allowedModels: c.allowedModels || [],
+            allowCustomModel: c.allowCustomModel !== false,
             source: c.source || {},
             apiKeyMasked: c.apiKey ? `${String(c.apiKey).slice(0, 8)}…${String(c.apiKey).slice(-4)}` : '',
         };
