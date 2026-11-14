@@ -1,0 +1,1159 @@
+/**
+ * Interactive seams: bridge dsh's human-in-the-loop surfaces to Wildfire IM
+ * using the structured DSH card protocol (types 200-206).
+ *
+ * - ask_user → DSH_Question card (200); user replies via DSH_Answer (201)
+ *   or plain text (custom answer fallback)
+ * - tool approval → DSH_Approval card (202); user replies via
+ *   DSH_ApprovalResult (203)
+ * - cards are updated in place via updateMessage (answered / approved /
+ *   rejected / expired)
+ *
+ * Deployment note: the `ctx.userQuestions` seam differs by dsh version.
+ * - dsh <= 0.1.1-rc.2: one `registerProvider()` per context. In the `dsh web`
+ *   profile the Host apiproxy already registers one, so our registration
+ *   throws `DUPLICATE_PROVIDER` there — we catch it, log, and rely on the GUI.
+ *   In an IM-first custom profile we are the only provider.
+ * - dsh >= 0.1.2-rc.1: `registerProvider()` is gone; answerers compose on the
+ *   Agent-scoped `user-questions/request` Cordis waterfall. We register a
+ *   listener and call `next()` for conversations we do not own, so the Web GUI
+ *   (or any later answerer) still gets the request.
+ * The two seams are feature-detected at runtime, so one build serves both.
+ */
+import { randomUUID } from "node:crypto";
+import { getInteractionConfig } from "./config.js";
+import { deepEqual } from "./utils.js";
+import { AGENT_TYPE, summarizeApproval, summarizeCommandResult, summarizeGoal, summarizeQuestion, summarizeTasks, } from "./protocol.js";
+/**
+ * 任务卡（type 208）里**已完成**任务项最多保留的条数；运行中/等待中的项不受限。
+ * 防止长会话里 subagent 完成记录无限累积（详见 `pruneTaskItems`）。
+ */
+const MAX_FINISHED_TASK_ITEMS = 12;
+/** Card status payloads for updateMessage (button states + user selection). */
+function cardStatusPayload(kind, state, extra) {
+    return { cardKind: kind, state, ...(extra ?? {}) };
+}
+export class InteractionManager {
+    config;
+    logger;
+    cards;
+    resolveKeyForSession;
+    resolveTurnOwner;
+    resolveRobotOwner;
+    audit;
+    conversations = new Map();
+    pendingQuestions = new Map();
+    pendingApprovals = new Map();
+    registered = false;
+    // Conversation state accumulator (scope=31 user setting), coalesced 300ms.
+    // 按会话 key 分槽：多个会话并发推送时互不覆盖（旧实现单槽 + key 覆盖，
+    // 300ms 窗口内第二个会话会把第一个会话的状态更新吞掉）。
+    stateTimer;
+    pendingStates = new Map();
+    /** 上次 flush 的完整 payload（按 key），每次 flush 从它合并，保证累计字段不丢。 */
+    fullState = new Map();
+    constructor(config, logger, cards, resolveKeyForSession = () => undefined, resolveTurnOwner = () => undefined, resolveRobotOwner = () => undefined, audit) {
+        this.config = getInteractionConfig(config);
+        this.logger = logger;
+        this.cards = cards;
+        this.resolveKeyForSession = resolveKeyForSession;
+        this.resolveTurnOwner = resolveTurnOwner;
+        this.resolveRobotOwner = resolveRobotOwner;
+        this.audit = audit;
+    }
+    /** Remember where to reply for a conversation (updated on every inbound message). */
+    remember(key, sender, conv) {
+        this.conversations.set(key, { sender, conv });
+    }
+    getConversation(key) {
+        return this.conversations.get(key);
+    }
+    /**
+     * 向会话发一条**一次性**告警文本（同一 key + code 只发一次）。
+     * 用于「agent preset 挂载失败 → 本会话没有工具」这类必须让用户看到的降级：
+     * 插件仍会继续提供服务，但不能让它悄悄发生。
+     * 会话未激活（没记住回复目标）时丢弃，只留日志。
+     */
+    notifyWarning(key, code, text) {
+        const target = this.getConversation(key);
+        if (!target)
+            return;
+        const id = `${code}:${key}`;
+        if (this.warnedKeys.has(id))
+            return;
+        this.warnedKeys.add(id);
+        void this.cards.sendText(target, text).catch((err) => {
+            this.logger?.warn?.(`[wildfire] warning message send failed: ${String(err)}`);
+        });
+    }
+    /**
+     * Register the userQuestions provider and the approval answerer.
+     * Safe to call once; swallows DUPLICATE_PROVIDER from the web profile.
+     */
+    register(ctx) {
+        if (this.registered)
+            return;
+        this.registered = true;
+        if (this.config.askUserEnabled) {
+            // Shared answerer: map the asking agent back to its IM conversation.
+            // Throws when the agent is not one of ours (the registerProvider path
+            // turns that into a tool error; the waterfall path falls through to the
+            // next answerer instead).
+            const answer = async (request) => {
+                const key = request?.agent
+                    ? this.resolveKeyForSession(String(request.agent.session?.id))
+                    : undefined;
+                if (!key)
+                    throw new Error("no wildfire conversation for this agent");
+                return this.ask(key, request);
+            };
+            try {
+                const userQuestions = ctx.get("userQuestions");
+                if (typeof userQuestions?.registerProvider === "function") {
+                    // dsh <= 0.1.1-rc.2: single UI provider registration.
+                    userQuestions.registerProvider({ ask: answer });
+                    this.logger?.info?.("[wildfire] userQuestions provider registered (registerProvider; ask_user via IM)");
+                }
+                else {
+                    // dsh >= 0.1.2-rc.1: `registerProvider()` was replaced by the
+                    // Agent-scoped `user-questions/request` waterfall. Unscoped listeners
+                    // receive scoped dispatch (dsh-scope filter), so registering on the
+                    // root context is enough. `next()` keeps other answerers in play.
+                    ctx.on("user-questions/request", async (request, next) => {
+                        const key = request?.agent
+                            ? this.resolveKeyForSession(String(request.agent.session?.id))
+                            : undefined;
+                        if (!key)
+                            return next();
+                        try {
+                            return await answer(request);
+                        }
+                        catch (err) {
+                            this.logger?.warn?.(`[wildfire] userQuestions answerer failed (falling through): ${String(err?.message ?? err)}`);
+                            return next();
+                        }
+                    });
+                    this.logger?.info?.("[wildfire] userQuestions answerer registered (waterfall user-questions/request; ask_user via IM)");
+                }
+            }
+            catch (err) {
+                if (String(err?.code ?? err?.message ?? err).includes("DUPLICATE_PROVIDER")) {
+                    this.logger?.warn?.("[wildfire] userQuestions provider already registered (web profile); GUI answers questions");
+                }
+                else {
+                    this.logger?.warn?.(`[wildfire] userQuestions provider registration failed: ${String(err)}`);
+                }
+            }
+        }
+        if (this.config.approvalEnabled) {
+            ctx.on("approval/request", async (req, next) => {
+                const key = req?.agent ? this.resolveKeyForSession(String(req.agent.session?.id)) : undefined;
+                if (!key)
+                    return next();
+                try {
+                    return await this.requestApproval(key, req);
+                }
+                catch (err) {
+                    this.logger?.warn?.(`[wildfire] approval answerer failed: ${String(err)}`);
+                    return "unavailable";
+                }
+            });
+            this.logger?.info?.("[wildfire] approval answerer registered (approvals via IM)");
+        }
+    }
+    /** Only the turn sender (ask_user) / designated approver (approval), or an admin, may decide. */
+    canDecide(expected, sender, isAdmin) {
+        if (isAdmin)
+            return true;
+        if (!expected || !sender)
+            return true;
+        return sender === expected;
+    }
+    /**
+     * Handle a structured DSH_Answer (201). Returns true when consumed.
+     * Plain text replies are handled by `handleTextReply`.
+     */
+    handleAnswer(key, payload, sender, isAdmin = false) {
+        const question = this.pendingQuestions.get(key);
+        if (!question || question.qid !== payload.qid)
+            return false;
+        if (!this.canDecide(question.ownerSender, sender, isAdmin)) {
+            this.audit?.record("interaction.denied", {
+                actor: sender,
+                conversation: key,
+                interaction: "question",
+                requestedBy: question.ownerSender,
+            });
+            return false; // bystander cannot answer
+        }
+        this.pendingQuestions.delete(key);
+        clearTimeout(question.timer);
+        const answer = this.normalizeAnswers(payload, question.questions);
+        question.resolve(answer);
+        // 更新卡片：保留原问题内容 + 标记已作答 + 带上用户的选择
+        this.updateCardState(question.cardMessageId, "question", "answered", {
+            qid: question.qid,
+            questions: question.questions,
+            answers: answer.answers,
+        });
+        this.pushStatus(key, { state: "running" });
+        return true;
+    }
+    /**
+     * Handle a structured DSH_ApprovalResult (203). Returns true when consumed.
+     */
+    handleApprovalResult(key, payload, sender, isAdmin = false) {
+        const approval = this.pendingApprovals.get(key);
+        if (!approval || approval.aid !== payload.aid)
+            return false;
+        if (!this.canDecide(approval.ownerSender, sender, isAdmin)) {
+            this.audit?.record("interaction.denied", {
+                actor: sender,
+                conversation: key,
+                interaction: "approval",
+                aid: approval.aid,
+                requestedBy: approval.requestedBy,
+                approver: approval.ownerSender,
+            });
+            return false;
+        }
+        this.pendingApprovals.delete(key);
+        clearTimeout(approval.timer);
+        const outcome = payload.action === "approve" ? "allowed-once" : "rejected";
+        this.audit?.record("approval.decided", {
+            actor: sender,
+            conversation: key,
+            aid: approval.aid,
+            toolName: approval.toolName,
+            requestedBy: approval.requestedBy,
+            approver: approval.ownerSender,
+            outcome,
+            source: "card",
+        });
+        approval.resolve(outcome);
+        // 更新卡片：保留审批信息 + 用户的选择（同意/拒绝）
+        this.updateCardState(approval.cardMessageId, "approval", outcome === "allowed-once" ? "approved" : "rejected", {
+            aid: approval.aid,
+            toolName: approval.toolName,
+            ...(approval.reason ? { reason: approval.reason } : {}),
+            ...(approval.requestedBy ? { requestedBy: approval.requestedBy } : {}),
+            action: payload.action,
+        });
+        this.pushStatus(key, { state: "running" });
+        return true;
+    }
+    /**
+     * Handle a plain-text reply: if a card is pending for this conversation the
+     * text is the custom answer; otherwise false (message flows to the agent).
+     */
+    handleTextReply(key, text, sender, isAdmin = false) {
+        const question = this.pendingQuestions.get(key);
+        if (question) {
+            if (!this.canDecide(question.ownerSender, sender, isAdmin)) {
+                this.audit?.record("interaction.denied", {
+                    actor: sender,
+                    conversation: key,
+                    interaction: "question",
+                    requestedBy: question.ownerSender,
+                });
+                return false;
+            }
+            this.pendingQuestions.delete(key);
+            clearTimeout(question.timer);
+            const textAnswer = this.parseTextAnswer(text, question.questions);
+            question.resolve(textAnswer);
+            // 更新卡片：保留原问题 + 文本选择
+            this.updateCardState(question.cardMessageId, "question", "answered", {
+                qid: question.qid,
+                questions: question.questions,
+                answers: textAnswer.answers,
+            });
+            this.pushStatus(key, { state: "running" });
+            return true;
+        }
+        const approval = this.pendingApprovals.get(key);
+        if (approval) {
+            if (!this.canDecide(approval.ownerSender, sender, isAdmin)) {
+                this.audit?.record("interaction.denied", {
+                    actor: sender,
+                    conversation: key,
+                    interaction: "approval",
+                    aid: approval.aid,
+                    requestedBy: approval.requestedBy,
+                    approver: approval.ownerSender,
+                });
+                return false;
+            }
+            this.pendingApprovals.delete(key);
+            clearTimeout(approval.timer);
+            const outcome = this.parseApproval(text);
+            this.audit?.record("approval.decided", {
+                actor: sender,
+                conversation: key,
+                aid: approval.aid,
+                toolName: approval.toolName,
+                requestedBy: approval.requestedBy,
+                approver: approval.ownerSender,
+                outcome,
+                source: "text",
+            });
+            approval.resolve(outcome);
+            // 更新卡片：保留审批信息 + 文本选择（同意/拒绝）
+            this.updateCardState(approval.cardMessageId, "approval", outcome === "allowed-once" ? "approved" : "rejected", {
+                aid: approval.aid,
+                toolName: approval.toolName,
+                ...(approval.reason ? { reason: approval.reason } : {}),
+                ...(approval.requestedBy ? { requestedBy: approval.requestedBy } : {}),
+                action: outcome === "allowed-once" ? "approve" : "reject",
+            });
+            this.pushStatus(key, { state: "running" });
+            return true;
+        }
+        return false;
+    }
+    /** Whether a pending interaction waits on this conversation (query only). */
+    hasPending(key) {
+        return this.pendingQuestions.has(key) || this.pendingApprovals.has(key);
+    }
+    /**
+     * Expire the conversation's pending cards (question/approval) and resolve
+     * the blocked agent waits — used by `/stop` so no zombie cards or hanging
+     * asks remain after the turn is cancelled. Returns how many cards expired.
+     */
+    expirePending(key) {
+        let count = 0;
+        const question = this.pendingQuestions.get(key);
+        if (question) {
+            this.pendingQuestions.delete(key);
+            clearTimeout(question.timer);
+            question.resolve({ answers: [] });
+            this.updateCardState(question.cardMessageId, "question", "expired");
+            count++;
+        }
+        const approval = this.pendingApprovals.get(key);
+        if (approval) {
+            this.pendingApprovals.delete(key);
+            clearTimeout(approval.timer);
+            approval.resolve("cancelled");
+            this.updateCardState(approval.cardMessageId, "approval", "expired");
+            count++;
+        }
+        return count;
+    }
+    /**
+     * Update the conversation runtime state via the scope=31 user setting
+     * (type=1 状态). Coalesced within 300ms; group members see the state in
+     * their user settings instead of the message feed.
+     *
+     * 字段合并语义：本次 flush 与上次 flush 的完整 payload 合并后发送，
+     * 所以累计字段（model/cwd/sessionId/usage/context/cacheHitRatePct）不会
+     * 因某次推送没带而丢失。清除语义：state=running（新回合开始）会清除
+     * reason/error；state≠waiting_user 时 interaction 不发送。
+     * 去重语义：flush 结果与最后一次【已发送】状态完全一致时跳过网络推送。
+     */
+    pushStatus(key, data) {
+        this.logger?.info?.(`[wildfire] pushStatus: key=${key}, state=${data.state ?? "-"}, reason=${data.reason ?? "-"}`);
+        const acc = this.pendingStates.get(key) ?? { key };
+        for (const field of [
+            "state", "phase", "toolName", "model", "reasoningEffort",
+            "interaction", "reason", "error", "cwd", "sessionId", "goal", "progress",
+            "lastChange",
+        ]) {
+            if (data[field] !== undefined)
+                acc[field] = data[field];
+        }
+        this.pendingStates.set(key, acc);
+        this.scheduleStateFlush();
+    }
+    /** Merge agent activity (thinking/tool) into the runtime state. */
+    pushProgress(key, data) {
+        const acc = this.pendingStates.get(key) ?? { key };
+        if (data.phase)
+            acc.phase = data.phase;
+        if (data.toolName)
+            acc.toolName = data.toolName;
+        this.pendingStates.set(key, acc);
+        this.scheduleStateFlush();
+    }
+    scheduleStateFlush() {
+        if (this.stateTimer)
+            return;
+        this.stateTimer = setTimeout(() => {
+            this.stateTimer = undefined;
+            this.flushState();
+        }, 300);
+        this.stateTimer.unref?.();
+    }
+    flushState() {
+        const entries = [...this.pendingStates.entries()];
+        this.pendingStates.clear();
+        for (const [key, acc] of entries)
+            this.flushStateForKey(key, acc);
+    }
+    flushStateForKey(key, acc) {
+        // prev = 该会话最后一次【已发送】的完整状态快照（发送按 best-effort，失败不回滚）
+        const prev = this.fullState.get(key);
+        const next = { ...(prev ?? {}) };
+        const state = acc.state ?? next.state ?? "running";
+        next.state = state;
+        if (acc.phase !== undefined) {
+            if (state === "done" || state === "idle")
+                delete next.phase;
+            else
+                next.phase = acc.phase;
+        }
+        if (acc.toolName !== undefined) {
+            if (state === "done")
+                delete next.toolName;
+            else
+                next.toolName = acc.toolName;
+        }
+        if (acc.model !== undefined)
+            next.model = acc.model;
+        if (acc.reasoningEffort !== undefined)
+            next.reasoningEffort = acc.reasoningEffort;
+        // B 类：交互/结果态（state=running 新回合开始 → 清除上一回合的 reason/error）
+        if (acc.interaction !== undefined) {
+            if (state === "waiting_user")
+                next.interaction = acc.interaction;
+            else
+                delete next.interaction;
+        }
+        if (state === "running") {
+            delete next.reason;
+            delete next.error;
+            delete next.lastChange; // 新回合开始：清掉上一轮面板/命令变更提示
+        }
+        else {
+            if (acc.reason !== undefined)
+                next.reason = acc.reason;
+            if (acc.error !== undefined)
+                next.error = acc.error;
+        }
+        if (acc.lastChange !== undefined)
+            next.lastChange = acc.lastChange;
+        if (acc.cwd !== undefined)
+            next.cwd = acc.cwd;
+        if (acc.sessionId !== undefined)
+            next.sessionId = acc.sessionId;
+        if (acc.goal !== undefined)
+            next.goal = acc.goal;
+        if (acc.progress !== undefined)
+            next.progress = acc.progress;
+        // 状态去重：与最后一次已发送状态完全一致时跳过推送，
+        // 省一次 updateConversationUserSetting 往返（300ms 合并 + 去重双层节流）
+        if (prev && deepEqual(prev, next))
+            return;
+        this.fullState.set(key, next);
+        this.cards
+            .setConversationState(key, next)
+            .catch((err) => this.logger?.warn?.(`[wildfire] conversation state update failed: ${String(err)}`));
+    }
+    // ─────────────────────── Token 统计通道（scope=31 type=2） ───────────────────────
+    // 统计是低频累积数据，与运行状态（type=1）分开推送：回合结束必推
+    // （含出错/取消），不受状态推送路径影响。
+    /** Token 统计累积（按 key 覆盖式：每次回合结束推全量最新统计）。 */
+    fullMetrics = new Map();
+    /**
+     * 回合结束推送 Token 统计（scope=31, type=2）。`metrics` 为 undefined 时
+     * （如新会话首个请求前）跳过，保留上一次统计。
+     */
+    pushMetrics(key, metrics) {
+        if (!metrics || typeof metrics !== "object")
+            return;
+        const payload = {
+            ...metrics,
+            metricsAt: Date.now(),
+        };
+        this.fullMetrics.set(key, payload);
+        this.logger?.info?.(`[wildfire] pushMetrics: key=${key}, out=${payload.turn?.outputTokens ?? "-"}, tok/s=${payload.speed?.tokensPerSec ?? "-"}, cacheHit=${payload.cacheHitRatePct ?? "-"}%`);
+        this.cards
+            .setConversationMetrics(key, payload)
+            .catch((err) => this.logger?.warn?.(`[wildfire] conversation metrics update failed: ${String(err)}`));
+    }
+    /**
+     * 重置 Token 统计（scope=31 type=2 清空）——工作目录切换后调用：
+     * 统计属于旧会话，切目录后必须清掉，避免客户端误读旧目录的累计值；
+     * 新会话首回合结束 pushMetrics 重新写入。
+     */
+    resetMetrics(key) {
+        this.fullMetrics.delete(key);
+        this.logger?.info?.(`[wildfire] resetMetrics: key=${key}`);
+        this.cards
+            .setConversationMetrics(key, {})
+            .catch((err) => this.logger?.warn?.(`[wildfire] conversation metrics reset failed: ${String(err)}`));
+    }
+    // ─────────────────────── AI 面板数据通道（scope=31 type=3） ───────────────────────
+    // 组合查询结果（模型目录/effort/沙箱/计划/cwd/目录列表），覆盖式写
+    // （面板打开发 DSH_Command query 后读取；每次更新后插件重写刷新）。
+    /** AI 面板数据（按 key 覆盖式最新快照）。 */
+    fullPanelData = new Map();
+    /**
+     * 推送 AI 面板数据（scope=31, type=3）。覆盖式：每次组合查询/更新后整份刷新。
+     * 不含 dirs（目录列表不受控，走 209 按需应答，见 INTERACTION_DESIGN.md §10）。
+     */
+    pushPanelData(key, data) {
+        if (!data || typeof data !== "object")
+            return;
+        this.fullPanelData.set(key, data);
+        this.logger?.info?.(`[wildfire] pushPanelData: key=${key}, model=${data.model?.current ?? "-"}`);
+        this.cards
+            .setConversationPanelData(key, data)
+            .catch((err) => this.logger?.warn?.(`[wildfire] conversation panel data update failed: ${String(err)}`));
+    }
+    /**
+     * 发送 207 指令的应答（209 Agent_Command_Result，persistFlag=4 Transparent：
+     * 不落库、不显示、不计数）。当前用于 op=dirs 目录列表按需获取。
+     * 目标 = 该会话最近一次入站消息的会话（群/私聊）+ 同一 line。
+     */
+    sendCommandResult(key, data) {
+        const target = this.getConversation(key);
+        if (!target) {
+            this.logger?.warn?.(`[wildfire] sendCommandResult: no conversation target for key=${key}`);
+            return;
+        }
+        this.cards
+            .sendCard(target, AGENT_TYPE.COMMAND_RESULT, data, summarizeCommandResult(data), 4)
+            .catch((err) => this.logger?.warn?.(`[wildfire] command result send failed: ${String(err)}`));
+    }
+    /**
+     * Send a goal card (DSH_Goal, ver:2) to a conversation.
+     * 归一化发射：调用方传 v1/DSH 语义字段（objective/phase/roundsStarted）时，
+     * 统一转成通用 v2 载荷（title/state/stage/updatedAt），并保留 v1 字段供旧客户端回退。
+     */
+    sendGoal(key, data) {
+        const target = this.getConversation(key);
+        if (!target)
+            return;
+        const payload = {
+            ver: 2,
+            gid: data.gid,
+            title: data.title ?? data.objective ?? "",
+            state: (data.state ?? data.phase ?? "active"),
+            stage: data.stage ?? (data.roundsStarted !== undefined ? `round ${data.roundsStarted}` : undefined),
+            progress: data.progress,
+            updatedAt: Date.now(),
+            // v1 兼容字段（旧客户端回退渲染）
+            objective: data.objective,
+            phase: data.phase,
+            roundsStarted: data.roundsStarted,
+        };
+        this.cards
+            .sendCard(target, AGENT_TYPE.GOAL, payload, summarizeGoal(payload), 1)
+            .catch((err) => this.logger?.warn?.(`[wildfire] goal card send failed: ${String(err)}`));
+    }
+    // ─────────────────────── 任务进度卡片（208 DSH_TaskProgress） ───────────────────────
+    // 一张卡片一个会话：首次 sendCard 记录 messageId，之后 updateMessage 原地更新。
+    // 数据源：subagent/start、subagent/end 事件（parent Agent → IM 会话 key）。
+    /** key → 任务卡片 messageId（首次发送后记录，用于 updateMessage）。 */
+    taskCardIds = new Map();
+    /** key → 任务卡片发送中（sendCard 未 resolve 前不重复发，避免并发产生多张孤儿卡）。 */
+    taskCardPending = new Set();
+    /** key → taskId → 任务项。 */
+    taskItems = new Map();
+    /** 已绑定 subagent 事件监听的 agent scope（WeakSet：防重复绑定，也防递归死循环）。 */
+    boundTaskScopes = new WeakSet();
+    /** key → 任务卡发送中收到的"脏"标记：sendCard 落定后补一次刷新（修并发丢失窗口）。 */
+    taskCardDirty = new Set();
+    /** 已发过的一次性告警（`${code}:${key}`）：同一问题只提醒一次，避免刷屏。 */
+    warnedKeys = new Set();
+    /** 全局 ctx（registerTaskFeed 注入，用于 turn/end 后把后台任务同步进卡片）。 */
+    ctx;
+    /**
+     * 注册任务卡片数据源。
+     * 1) subagent 事件是 scoped 分发（按 parent agent 的 scope 载体），全局
+     *    ctx.on 收不到——必须在每个 agent 的 setup(agentCtx) 里绑定
+     *    （见 bindAgentScope），并在派生子代理时递归绑定其 scope（嵌套子代理）。
+     * 2) 全局 `session/event` firehose 的 turn/end 触发一次后台任务同步
+     *    （kind:"job" 项，来源 `jobs.list(agent)`，随轮次结束刷新）。
+     */
+    registerTaskFeed(ctx) {
+        this.ctx = ctx;
+        ctx.on("session/event", (session, event) => {
+            try {
+                if (event?.type !== "turn/end")
+                    return;
+                const key = this.resolveKeyForSession(String(session?.id));
+                if (!key)
+                    return;
+                void this.syncJobs(key, String(session?.id));
+            }
+            catch (err) {
+                this.logger?.warn?.(`[wildfire] task feed turn/end handling failed: ${String(err)}`);
+            }
+        });
+        this.logger?.info?.("[wildfire] task feed ready (bind per-agent scope via setup, jobs sync on turn/end)");
+    }
+    /**
+     * 绑定一个 agent 的 scope 到任务卡片：在该 agent 内监听其派生的
+     * subagent/start、subagent/end（agent.ts 的 create/resume setup 调用）。
+     * 派生子代理时对子代理 scope 递归调用同一绑定，覆盖嵌套（workflow 式
+     * fan-out 的二级及以下子代理）——scope 形状按 dsh-agent 常见形态探测
+     * （child.ctx / child.agentCtx / child 自身），探测不到时静默降级为
+     * 仅直系子代理（与旧行为一致）。
+     */
+    bindAgentScope(agentCtx, agent) {
+        this.bindTaskScope(agentCtx, agent);
+    }
+    /** 绑定一个 scope（含递归：已有子代理 + 新建子代理）。 */
+    bindTaskScope(scope, parentAgent) {
+        if (!scope || typeof scope.on !== "function" || this.boundTaskScopes.has(scope))
+            return;
+        this.boundTaskScopes.add(scope);
+        // parent agent：优先用调用方传入的（dsh 0.1.5 的 setup 第二参数就是 agent）。
+        // cordis 4 下访问未声明 inject 的 scope 属性会抛
+        // "cannot get property ... without inject"，因此 scope.agent 回退必须包保护
+        // ——该异常曾导致整个 agent 创建回滚（面板提示"会话未激活"、IM 无响应）。
+        let parent = parentAgent;
+        if (!parent) {
+            try {
+                parent = scope?.agent;
+            }
+            catch {
+                parent = undefined;
+            }
+        }
+        scope.on("subagent/start", (info) => {
+            try {
+                const key = this.resolveKeyForSession(String(parent?.session?.id));
+                if (!key)
+                    return;
+                this.upsertTask(key, this.subagentTaskId(info), {
+                    kind: "subagent",
+                    id: String(info?.id ?? ""),
+                    label: this.subagentLabel(parent, info),
+                    status: "running",
+                    updatedAt: Date.now(),
+                });
+                // 递归：给刚创建的子代理 scope 也绑定监听（嵌套子代理通知）。
+                // dsh 实际事件形状是 {runId, provider, id, local}，父 agent 上没有
+                // subagents 访问器——按子会话 id 从 agents 注册表解析活跃子代理；
+                // 子代理尚未发布时静默跳过（只跟踪到直系，与旧行为一致）。
+                try {
+                    const child = this.ctx?.get?.("agents")?.get?.(String(info?.id));
+                    if (child)
+                        this.bindTaskScope(child?.ctx ?? child, child);
+                }
+                catch {
+                    // 忽略
+                }
+            }
+            catch (err) {
+                this.logger?.warn?.(`[wildfire] subagent/start handling failed: ${String(err)}`);
+            }
+        });
+        scope.on("subagent/end", (info) => {
+            try {
+                const key = this.resolveKeyForSession(String(parent?.session?.id));
+                if (!key)
+                    return;
+                const failed = this.isSubagentFailed(info);
+                const killed = this.isSubagentKilled(info);
+                const status = killed ? "killed" : failed ? "failed" : "done";
+                this.upsertTask(key, this.subagentTaskId(info), {
+                    kind: "subagent",
+                    id: String(info?.id ?? ""),
+                    label: this.subagentLabel(parent, info),
+                    status,
+                    ...(status === "failed" ? { reason: this.subagentFailReason(info) } : {}),
+                    ...(status === "killed" ? { reason: "子任务已终止" } : {}),
+                    ...(info?.result ? { result: String(info.result).slice(0, 200) } : {}),
+                    updatedAt: Date.now(),
+                });
+            }
+            catch (err) {
+                this.logger?.warn?.(`[wildfire] subagent/end handling failed: ${String(err)}`);
+            }
+        });
+        // 已有子代理（如 resume 后 scope 里残留）：递归补绑
+        this.bindExistingChildren(parent);
+    }
+    /** 遍历 parent.subagents（Map 或对象）递归绑定。 */
+    bindExistingChildren(parent) {
+        if (!parent)
+            return;
+        const children = parent?.subagents;
+        if (!children)
+            return;
+        const entries = typeof children.values === "function" ? [...children.values()] : Object.values(children);
+        for (const child of entries) {
+            if (!child)
+                continue;
+            this.bindTaskScope(child?.ctx ?? child?.agentCtx ?? child, child);
+        }
+    }
+    /** 任务项 id：runId 优先（start/end 两事件一致才可原地覆盖）。 */
+    subagentTaskId(info) {
+        return String(info?.runId ?? info?.id ?? info?.taskId ?? "");
+    }
+    /** 失败判定：兼容 stopReason / status / error 多种字段形态。 */
+    isSubagentFailed(info) {
+        const sr = String(info?.stopReason ?? info?.status ?? "");
+        return sr === "error" || sr === "failed" || !!info?.error;
+    }
+    isSubagentKilled(info) {
+        const sr = String(info?.stopReason ?? info?.status ?? "");
+        return sr === "killed" || sr === "cancelled" || sr === "cancel" || sr === "aborted";
+    }
+    subagentFailReason(info) {
+        return String(info?.error ?? info?.reason ?? "子任务执行失败");
+    }
+    /**
+     * 把 agent 当前的后台任务同步进任务卡片（kind:"job"）。
+     * 在 turn/end 时调用：先清掉旧 job 项，再按 jobs.list(agent) 重建，
+     * 保证卡片里的后台任务与 jobs 服务一致（不再出现已消失的任务）。
+     */
+    async syncJobs(key, sessionId) {
+        try {
+            const jobs = this.ctx?.get?.("jobs");
+            const agents = this.ctx?.get?.("agents");
+            const got = agents?.get?.(sessionId);
+            const agent = got?.agent ?? got;
+            if (!jobs || !agent)
+                return;
+            const list = (await Promise.resolve(jobs.list(agent))) ?? [];
+            const byKey = this.taskItems.get(key) ?? new Map();
+            for (const [taskId, item] of [...byKey]) {
+                if (item.kind === "job")
+                    byKey.delete(taskId);
+            }
+            for (const job of list) {
+                const id = String(job?.id ?? "");
+                if (!id)
+                    continue;
+                const status = this.mapJobStatus(job?.status);
+                byKey.set(id, {
+                    kind: "job",
+                    id,
+                    label: String(job?.label ?? ""),
+                    status,
+                    ...(status === "failed" ? { reason: "后台任务失败" } : {}),
+                    ...(status === "killed" ? { reason: "后台任务已终止" } : {}),
+                    updatedAt: Date.now(),
+                });
+            }
+            this.taskItems.set(key, byKey);
+            this.pruneTaskItems(key);
+            this.flushTaskCard(key);
+        }
+        catch (err) {
+            this.logger?.warn?.(`[wildfire] task card job sync failed: ${String(err)}`);
+        }
+    }
+    /** 后台任务状态 → 卡片状态（客户端仅识别 running/done/failed/completed/killed）。 */
+    mapJobStatus(status) {
+        switch (String(status ?? "")) {
+            case "running":
+            case "stopping":
+                return "running";
+            case "completed":
+                return "completed";
+            case "killed":
+            case "cancelled":
+                return "killed";
+            case "failed":
+            case "error":
+                return "failed";
+            default:
+                return "running";
+        }
+    }
+    /**
+     * 子任务标签：优先从 agents 注册表解析子代理的 descriptor/meta label
+     * （尽力而为），当前 dsh 无这些访问器时回退为 provider 名；
+     * 仍缺失时返回 undefined（客户端显示 id 前缀）。
+     */
+    subagentLabel(parent, info) {
+        try {
+            const childAgent = this.ctx?.get?.("agents")?.get?.(String(info?.id));
+            const label = childAgent?.descriptor?.label ?? childAgent?.meta?.label;
+            if (typeof label === "string" && label.trim())
+                return label.trim();
+        }
+        catch {
+            // 忽略
+        }
+        if (info && typeof info.provider === "string" && info.provider.trim()) {
+            return info.provider.trim();
+        }
+        return undefined;
+    }
+    /** 记录/更新一个任务项并刷新卡片。 */
+    upsertTask(key, taskId, item) {
+        let byKey = this.taskItems.get(key);
+        if (!byKey) {
+            byKey = new Map();
+            this.taskItems.set(key, byKey);
+        }
+        byKey.set(taskId, item);
+        this.pruneTaskItems(key);
+        this.flushTaskCard(key);
+    }
+    /** 终态（不会再变）的任务项：running/waiting 之外都算。 */
+    isFinishedTask(status) {
+        return status !== "running" && status !== "waiting";
+    }
+    /**
+     * 修剪任务项：**运行中/等待中的项全保留**，已完成项只留最近
+     * {@link MAX_FINISHED_TASK_ITEMS} 条。
+     *
+     * 背景：每次派生 subagent 都会新增一条（key = runId），完成事件只更新状态、
+     * 从不删除；长会话里会累积成百上千条，任务卡（type 208 原地更新）就越滚越大
+     * ——曾出现单条任务卡里上百条历史任务。job 项虽然每轮 turn/end 由
+     * `jobs.list()` 重建，同样受这道闸约束。
+     */
+    pruneTaskItems(key) {
+        const byKey = this.taskItems.get(key);
+        if (!byKey)
+            return;
+        const finished = [];
+        for (const entry of byKey) {
+            if (this.isFinishedTask(entry[1].status))
+                finished.push(entry);
+        }
+        if (finished.length <= MAX_FINISHED_TASK_ITEMS)
+            return;
+        finished.sort((a, b) => (b[1].updatedAt ?? 0) - (a[1].updatedAt ?? 0));
+        let dropped = 0;
+        for (const [id] of finished.slice(MAX_FINISHED_TASK_ITEMS)) {
+            if (byKey.delete(id))
+                dropped += 1;
+        }
+        if (dropped > 0) {
+            this.logger?.debug?.(`[wildfire] task items pruned: key=${key}, dropped=${dropped}, kept=${byKey.size}`);
+        }
+    }
+    /** 向会话发/更新任务卡片（一张卡：首次 sendCard，之后 updateMessage）。 */
+    flushTaskCard(key) {
+        const target = this.getConversation(key);
+        if (!target)
+            return;
+        const items = [...(this.taskItems.get(key) ?? new Map()).values()];
+        // 没有任务时不发送/不原地清空任务卡（避免"暂无任务"噪音消息）：无任务状态
+        // 由 scope=31 状态通道（会话标题栏 idle/done 等）表达；已有卡保留最后一次有内容展示。
+        if (items.length === 0) {
+            this.taskCardDirty.delete(key);
+            return;
+        }
+        // ver:2 通用任务卡：kind/status 为开放枚举（subagent/job 是 DSH provider 的具体取值）
+        const payload = {
+            ver: 2,
+            flowId: key,
+            tasks: items,
+            updatedAt: Date.now(),
+        };
+        const existingId = this.taskCardIds.get(key);
+        if (existingId) {
+            this.cards
+                .updateCard(existingId, AGENT_TYPE.TASK_PROGRESS, payload, summarizeTasks(payload))
+                .catch((err) => {
+                // 原地更新失败（如用户删了卡片/卡片不存在）：重置后补发一张新卡
+                this.logger?.warn?.(`[wildfire] task card update failed, re-sending: ${String(err)}`);
+                this.taskCardIds.delete(key);
+                this.flushTaskCard(key);
+            });
+            return;
+        }
+        // 发送中不重复发：并发 subagent/start 只发一张卡，messageId 返回后记录；
+        // 期间的新状态记"脏"，sendCard 落定后补一次刷新（修并发丢失窗口）。
+        if (this.taskCardPending.has(key)) {
+            this.taskCardDirty.add(key);
+            return;
+        }
+        this.taskCardPending.add(key);
+        this.cards
+            .sendCard(target, AGENT_TYPE.TASK_PROGRESS, payload, summarizeTasks(payload), 1)
+            .then((messageId) => {
+            if (messageId)
+                this.taskCardIds.set(key, messageId);
+        })
+            .catch((err) => this.logger?.warn?.(`[wildfire] task card send failed: ${String(err)}`))
+            .finally(() => {
+            this.taskCardPending.delete(key);
+            if (this.taskCardDirty.delete(key)) {
+                this.flushTaskCard(key);
+            }
+        });
+    }
+    /** 重置任务卡片状态（切目录/重置会话时调用：旧会话任务卡不再更新）。 */
+    resetTaskCards(key) {
+        this.taskCardIds.delete(key);
+        this.taskCardPending.delete(key);
+        this.taskCardDirty.delete(key);
+        this.taskItems.delete(key);
+    }
+    /** Reset everything (plugin stop). */
+    dispose() {
+        this.taskCardIds.clear();
+        this.taskCardPending.clear();
+        this.taskCardDirty.clear();
+        this.taskItems.clear();
+        this.warnedKeys.clear();
+        for (const pending of this.pendingQuestions.values()) {
+            clearTimeout(pending.timer);
+            pending.resolve({ answers: [] });
+            this.updateCardState(pending.cardMessageId, "question", "expired");
+        }
+        for (const pending of this.pendingApprovals.values()) {
+            clearTimeout(pending.timer);
+            pending.resolve("unavailable");
+            this.updateCardState(pending.cardMessageId, "approval", "expired");
+        }
+        this.pendingQuestions.clear();
+        this.pendingApprovals.clear();
+        this.conversations.clear();
+    }
+    /** Ask the questions to the IM user via a DSH_Question card. */
+    async ask(key, request) {
+        const target = this.getConversation(key);
+        if (!target)
+            throw new Error(`no conversation target for ${key}`);
+        if (this.pendingQuestions.has(key)) {
+            throw new Error("another question is already waiting for this conversation");
+        }
+        const questions = request?.questions ?? [];
+        if (!Array.isArray(questions) || questions.length === 0) {
+            throw new Error("ask requires at least one question");
+        }
+        const qid = randomUUID();
+        const data = { qid, questions };
+        let cardMessageId;
+        try {
+            cardMessageId = await this.cards.sendCard(target, AGENT_TYPE.QUESTION, data, summarizeQuestion(data), 1);
+            this.logger?.info?.(`[wildfire] question card: qid=${qid}, messageId=${cardMessageId}`);
+        }
+        catch (err) {
+            this.logger?.warn?.(`[wildfire] question card send failed, falling back to text: ${err.message}`);
+            await this.cards.sendText(target, `🤔 需要你确认：\n${this.formatQuestions(questions)}\n\n直接回复即可（可附说明）`);
+        }
+        this.pushStatus(key, { state: "waiting_user", interaction: "question" });
+        const ownerSender = this.resolveTurnOwner(key) ?? target.sender;
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                this.pendingQuestions.delete(key);
+                this.logger?.warn?.(`[wildfire] ask_user timed out: key=${key}`);
+                this.updateCardState(cardMessageId, "question", "expired");
+                this.pushStatus(key, { state: "running" });
+                resolve({ answers: [] });
+            }, this.config.askUserTimeoutMs);
+            timer.unref?.();
+            this.pendingQuestions.set(key, { key, qid, questions, resolve, timer, ownerSender, cardMessageId });
+        });
+    }
+    /**
+     * One-off question card outside the agent ask_user flow — used by commands
+     * such as `/cwd` create-confirmation. Same DSH_Question card + text-answer
+     * machinery as `ask()`, but resolves with the raw AgentAnswerPayload (or null
+     * on timeout / when another card is already pending for this conversation).
+     */
+    async askDirect(key, questions, opts = {}) {
+        const target = this.getConversation(key);
+        if (!target)
+            return null;
+        if (this.pendingQuestions.has(key)) {
+            this.logger?.warn?.(`[wildfire] askDirect skipped: another question pending for ${key}`);
+            return null;
+        }
+        if (!Array.isArray(questions) || questions.length === 0)
+            return null;
+        const qid = randomUUID();
+        const data = { qid, questions };
+        let cardMessageId;
+        try {
+            cardMessageId = await this.cards.sendCard(target, AGENT_TYPE.QUESTION, data, summarizeQuestion(data), 1);
+            this.logger?.info?.(`[wildfire] askDirect card: qid=${qid}, messageId=${cardMessageId}`);
+        }
+        catch (err) {
+            this.logger?.warn?.(`[wildfire] askDirect card send failed, falling back to text: ${err.message}`);
+            await this.cards.sendText(target, `🤔 需要你确认：\n${this.formatQuestions(questions)}\n\n直接回复即可（可附说明）`);
+        }
+        this.pushStatus(key, { state: "waiting_user", interaction: "question" });
+        const ownerSender = opts.ownerSender ?? target.sender;
+        const timeoutMs = opts.timeoutMs ?? this.config.askUserTimeoutMs;
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                this.pendingQuestions.delete(key);
+                this.logger?.warn?.(`[wildfire] askDirect timed out: key=${key}`);
+                this.updateCardState(cardMessageId, "question", "expired");
+                this.pushStatus(key, { state: "running" });
+                resolve(null);
+            }, timeoutMs);
+            timer.unref?.();
+            this.pendingQuestions.set(key, {
+                key,
+                qid,
+                questions,
+                resolve: (value) => resolve(value),
+                timer,
+                ownerSender,
+                cardMessageId,
+            });
+        });
+    }
+    /** Ask the IM user to approve/deny one tool action via a DSH_Approval card. */
+    async requestApproval(key, req) {
+        const target = this.getConversation(key);
+        if (!target)
+            return "unavailable";
+        if (this.pendingApprovals.has(key))
+            return "unavailable";
+        const aid = randomUUID();
+        const turnOwner = this.resolveTurnOwner(key) ?? String(target.sender ?? "");
+        const robotOwner = this.config.approvalOwnerOnly ? this.resolveRobotOwner?.() : undefined;
+        if (this.config.approvalOwnerOnly && !robotOwner) {
+            this.logger?.warn?.(`[wildfire] approvalOwnerOnly set but robot owner unknown; falling back to turn sender: key=${key}`);
+        }
+        // Sensitive actions in a guest turn must be approved by the robot owner
+        // (approvalOwnerOnly), never by the guest who triggered them.
+        const approver = robotOwner || turnOwner;
+        const data = {
+            aid,
+            toolName: req?.toolName ?? "工具",
+            ...(req?.reason ? { reason: req.reason } : {}),
+            ...(turnOwner ? { requestedBy: turnOwner } : {}),
+            ...(approver && approver !== turnOwner ? { approver } : {}),
+        };
+        let cardMessageId;
+        try {
+            cardMessageId = await this.cards.sendCard(target, AGENT_TYPE.APPROVAL, data, summarizeApproval(data), 1);
+        }
+        catch (err) {
+            this.logger?.warn?.(`[wildfire] approval card send failed, falling back to text: ${err.message}`);
+            const who = data.approver && data.approver !== data.requestedBy
+                ? `\n发起人: ${data.requestedBy}\n审批人: ${data.approver}`
+                : "";
+            await this.cards.sendText(target, `🔐 工具审批：${data.toolName} 请求执行${data.reason ? `\n原因: ${data.reason}` : ""}${who}\n\n回复「${this.config.approvedLabel}」放行，或「${this.config.deniedLabel}」拒绝`);
+        }
+        this.audit?.record("approval.requested", {
+            actor: turnOwner,
+            conversation: key,
+            aid,
+            toolName: data.toolName,
+            requestedBy: turnOwner,
+            approver,
+            ...(data.reason ? { reason: data.reason } : {}),
+        });
+        this.logger?.info?.(`[wildfire] approval requested: key=${key}, tool=${data.toolName ?? "-"}, requestedBy=${turnOwner || "-"}, approver=${approver || "-"}`);
+        this.pushStatus(key, { state: "waiting_user", interaction: "approval" });
+        return new Promise((resolve) => {
+            const timer = setTimeout(() => {
+                this.pendingApprovals.delete(key);
+                this.audit?.record("approval.timeout", {
+                    conversation: key,
+                    aid,
+                    toolName: data.toolName,
+                    requestedBy: turnOwner,
+                    approver,
+                });
+                this.logger?.warn?.(`[wildfire] approval timed out: key=${key}`);
+                this.updateCardState(cardMessageId, "approval", "expired");
+                this.pushStatus(key, { state: "running" });
+                resolve("cancelled");
+            }, this.config.approvalTimeoutMs);
+            timer.unref?.();
+            this.pendingApprovals.set(key, {
+                key,
+                aid,
+                toolName: data.toolName,
+                ...(data.reason ? { reason: data.reason } : {}),
+                resolve,
+                timer,
+                ownerSender: approver,
+                requestedBy: turnOwner,
+                cardMessageId,
+            });
+        });
+    }
+    /** Update a card's state in place via updateMessage (best effort). */
+    updateCardState(messageId, kind, state, extra) {
+        if (!messageId)
+            return;
+        this.cards
+            .updateCard(messageId, kind === "question" ? AGENT_TYPE.QUESTION : AGENT_TYPE.APPROVAL, cardStatusPayload(kind, state, extra), state)
+            .then(() => {
+            // updateMessage 返回后（resolved）即视为成功
+            this.logger?.info?.(`[wildfire] card state updated: messageId=${messageId}, kind=${kind}, state=${state}`);
+        })
+            .catch((err) => {
+            // error 级别：GUI-less profile 隐藏 warn，必须用 error 才能看到失败原因
+            this.logger?.error?.(`[wildfire] card state update FAILED: messageId=${messageId}, kind=${kind}, state=${state}: ${String(err)}`);
+        });
+    }
+    /** Normalize a structured DSH_Answer against the original questions. */
+    normalizeAnswers(payload, questions) {
+        const byId = new Map(questions.map((q) => [q.id, q]));
+        const answers = (payload.answers ?? []).map((a) => {
+            const q = byId.get(a.id);
+            const options = Array.isArray(q?.options) ? q.options : [];
+            const selected = (a.selected ?? []).filter((label) => options.length === 0 || options.some((o) => o.label === label));
+            return { id: a.id, selected, ...(a.custom ? { custom: a.custom } : {}) };
+        });
+        return { answers };
+    }
+    /** Parse a plain-text reply into the userQuestions answer shape. */
+    parseTextAnswer(text, questions) {
+        const answers = questions.map((q, i) => {
+            const id = q.id ?? `q${i + 1}`;
+            const options = Array.isArray(q.options) ? q.options : [];
+            const isMulti = Boolean(q.multiSelect);
+            if (options.length === 0) {
+                return { id, selected: [], custom: text };
+            }
+            const parts = isMulti ? text.split(/[,，、\s]+/) : [text];
+            const selected = [];
+            let custom;
+            for (const part of parts) {
+                const trimmed = part.trim();
+                const byLabel = options.find((o) => o.label === trimmed);
+                const byIndex = /^\d+$/.test(trimmed) ? options[Number(trimmed) - 1] : undefined;
+                if (byLabel)
+                    selected.push(byLabel.label);
+                else if (byIndex)
+                    selected.push(byIndex.label);
+                else if (isMulti)
+                    custom = trimmed;
+                else {
+                    custom = trimmed;
+                    break;
+                }
+            }
+            return { id, selected, ...(custom !== undefined ? { custom } : {}) };
+        });
+        return { answers };
+    }
+    /** Parse a plain-text reply into an approval outcome. */
+    parseApproval(text) {
+        const t = text.trim();
+        const approved = this.config.approvedLabel;
+        const denied = this.config.deniedLabel;
+        // 否定形式优先：`不<关键词>` 是反向选择（"不同意" 含 "同意"，直接 includes
+        // 会误放行；"不拒绝" 同理应放行）。
+        if (approved && t.includes(`不${approved}`))
+            return "rejected";
+        if (denied && t.includes(`不${denied}`))
+            return "allowed-once";
+        if (approved && t.includes(approved))
+            return "allowed-once";
+        if (denied && t.includes(denied))
+            return "rejected";
+        if (/^(是|好|ok|yes|允许|同意|放行|可以|1)/i.test(t))
+            return "allowed-once";
+        if (/^(否|不|no|不行|不要|拒绝|不允许|0)/i.test(t))
+            return "rejected";
+        return "unavailable";
+    }
+    /** Format questions for the text fallback. */
+    formatQuestions(questions) {
+        return questions
+            .map((q, qi) => {
+            const header = q.header ? `【${q.header}】` : "";
+            const detail = q.detail ? `\n${q.detail}` : "";
+            const options = Array.isArray(q.options) && q.options.length > 0
+                ? `\n选项: ${q.options.map((o, oi) => `${oi + 1}. ${o.label}`).join(" / ")}${q.multiSelect ? "（可多选，逗号分隔）" : ""}`
+                : "";
+            return `${qi + 1}. ${header}${q.question}${detail}${options}`;
+        })
+            .join("\n");
+    }
+}
+//# sourceMappingURL=interactive.js.map

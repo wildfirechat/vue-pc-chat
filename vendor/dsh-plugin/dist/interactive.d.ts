@@ -1,0 +1,372 @@
+/**
+ * Interactive seams: bridge dsh's human-in-the-loop surfaces to Wildfire IM
+ * using the structured DSH card protocol (types 200-206).
+ *
+ * - ask_user → DSH_Question card (200); user replies via DSH_Answer (201)
+ *   or plain text (custom answer fallback)
+ * - tool approval → DSH_Approval card (202); user replies via
+ *   DSH_ApprovalResult (203)
+ * - cards are updated in place via updateMessage (answered / approved /
+ *   rejected / expired)
+ *
+ * Deployment note: the `ctx.userQuestions` seam differs by dsh version.
+ * - dsh <= 0.1.1-rc.2: one `registerProvider()` per context. In the `dsh web`
+ *   profile the Host apiproxy already registers one, so our registration
+ *   throws `DUPLICATE_PROVIDER` there — we catch it, log, and rely on the GUI.
+ *   In an IM-first custom profile we are the only provider.
+ * - dsh >= 0.1.2-rc.1: `registerProvider()` is gone; answerers compose on the
+ *   Agent-scoped `user-questions/request` Cordis waterfall. We register a
+ *   listener and call `next()` for conversations we do not own, so the Web GUI
+ *   (or any later answerer) still gets the request.
+ * The two seams are feature-detected at runtime, so one build serves both.
+ */
+import type { WildfireConfig } from "./config.js";
+import { type AgentCommandResultPayload, type AgentAnswerPayload, type AgentApprovalResultPayload, type AgentGoalPayload, type AgentQuestionItem } from "./protocol.js";
+/** 目标工具状态（goal tool，随 DSH_Goal 卡片推送）。 */
+export interface GoalState {
+    phase: string;
+    roundsStarted: number;
+    objective: string;
+}
+/** 可选进度（预留：当前无数据源时客户端不显示）。 */
+export interface ProgressState {
+    current: number;
+    total: number;
+    label?: string;
+}
+/** 会话累计 token 用量（dsh-token-meter 投影，provider 真实计数）。 */
+export interface UsageState {
+    /** 未命中缓存的输入 tokens。 */
+    promptTokens: number;
+    /** 输出 tokens（含 reasoning）。 */
+    outputTokens: number;
+    /** 命中缓存的输入 tokens。 */
+    cacheReadTokens: number;
+    /** 缓存写入 tokens。 */
+    cacheWriteTokens: number;
+    /** 四桶之和。 */
+    totalTokens: number;
+}
+/** 本轮 token 增量（快照差分 + 插件本地计时）。 */
+export interface TurnState {
+    inputTokens: number;
+    outputTokens: number;
+    cacheHitTokens: number;
+    durationMs: number;
+}
+/** 上下文占用（token-meter contextPressure 投影）。 */
+export interface ContextState {
+    /** 下一请求预估 prompt 成本（projectedTokens）。 */
+    usedTokens: number;
+    /** 模型上下文窗口容量。 */
+    windowTokens: number;
+    /** 占用百分比（0-100，一位小数）。 */
+    usedPct: number;
+}
+/** 本轮生成速度（插件本地计时）。 */
+export interface SpeedState {
+    /** 输出 token 数 / 耗时（tok/s）。 */
+    tokensPerSec: number;
+    /** 首字延迟（ms）。 */
+    ttftMs: number;
+}
+/** Agent runtime state, pushed via the scope=31 conversation user setting. */
+export interface RuntimeState {
+    state?: "idle" | "running" | "waiting_user" | "done";
+    phase?: "thinking" | "tool" | "done";
+    toolName?: string;
+    model?: string;
+    reasoningEffort?: string;
+    /** 正在等待哪种卡片（state=waiting_user 时有效）。 */
+    interaction?: "question" | "approval";
+    /** 上一回合结束原因（新回合开始时清除）。 */
+    reason?: "completed" | "error" | "cancelled";
+    /** 出错信息（reason=error 时）。 */
+    error?: string;
+    /** 会话工作目录。 */
+    cwd?: string;
+    /** DSH 会话 id。 */
+    sessionId?: string;
+    /** 目标工具状态。 */
+    goal?: GoalState;
+    /** 进度（预留）。 */
+    progress?: ProgressState;
+    /** 最近一次面板/命令变更说明（如 "模型 → deepseek-v4-pro"）；新回合开始时清除。 */
+    lastChange?: string;
+}
+/**
+ * Token 统计（独立通道：scope=31 type=2 计量，与运行状态 type=1 分开）。
+ * 低频累积数据，仅在回合结束时推送；不受状态推送路径影响（出错/取消也推）。
+ */
+export interface MetricsState {
+    /** 会话累计用量（dsh-token-meter 投影，provider 真实计数）。 */
+    usage?: UsageState;
+    /** 本轮增量（快照差分 + 插件本地计时）。 */
+    turn?: TurnState;
+    /** 上下文占用（下一请求预估 / 模型窗口）。 */
+    context?: ContextState;
+    /** 累计缓存命中率（0-100）。 */
+    cacheHitRatePct?: number;
+    /** 本轮生成速度（本地计时）。 */
+    speed?: SpeedState;
+    /** 统计生成时间（Unix ms，客户端判断时效）。 */
+    metricsAt?: number;
+    /** 统计所属 DSH 会话 id（客户端对比当前会话：跨会话的旧统计不显示）。 */
+    sessionId?: string;
+}
+/** Where to deliver a card/text for a conversation. */
+export interface ConversationTarget {
+    sender: string;
+    conv: {
+        type: number;
+        target: string;
+        line: number;
+    };
+}
+/** Resolve the IM conversation key for a dsh session id. */
+export type SessionKeyResolver = (sessionId: string) => string | undefined;
+/** Resolve the sender who owns the in-flight turn of a conversation. */
+export type TurnOwnerResolver = (key: string) => string | undefined;
+/** Resolve the robot owner (read from getProfile after connecting). */
+export type RobotOwnerResolver = () => string | undefined;
+/** Minimal audit sink (the plugin's AuditLog satisfies it). */
+export interface AuditSink {
+    record(kind: string, fields?: Record<string, unknown>): void;
+}
+/** IM send surface (wired in index.ts). */
+export interface CardSender {
+    sendText(target: ConversationTarget, text: string): Promise<void>;
+    /** Send a card; returns the messageId for later updateMessage, if available. */
+    sendCard(target: ConversationTarget, type: number, data: unknown, summary: string, persistFlag: number): Promise<string | undefined>;
+    updateCard(messageId: string, type: number, data: unknown, summary: string): Promise<void>;
+    /**
+     * Set the conversation-scoped user setting carrying the agent runtime state
+     * (scope=31, type=1 状态). Carries what used to be DSH_Status/DSH_Progress
+     * messages so the whole group sees the state via user settings instead of
+     * the message feed.
+     */
+    setConversationState(key: string, payload: Record<string, unknown>): Promise<void>;
+    /**
+     * Set the conversation-scoped user setting carrying the agent Token 统计
+     * (scope=31, type=2 计量). 与运行状态（type=1）分开：统计是低频累积数据，
+     * 独立推送、不受状态路径影响。
+     */
+    setConversationMetrics(key: string, payload: Record<string, unknown>): Promise<void>;
+    /**
+     * Set the conversation-scoped user setting carrying the AI 面板数据
+     * (scope=31, type=3 面板数据)：组合查询结果（模型目录/effort/沙箱/计划/cwd/
+     * 目录列表），面板打开与每次更新后刷新。
+     */
+    setConversationPanelData(key: string, payload: Record<string, unknown>): Promise<void>;
+}
+export declare class InteractionManager {
+    private config;
+    private logger;
+    private cards;
+    private resolveKeyForSession;
+    private resolveTurnOwner;
+    private resolveRobotOwner;
+    private audit?;
+    private conversations;
+    private pendingQuestions;
+    private pendingApprovals;
+    private registered;
+    private stateTimer;
+    private pendingStates;
+    /** 上次 flush 的完整 payload（按 key），每次 flush 从它合并，保证累计字段不丢。 */
+    private fullState;
+    constructor(config: WildfireConfig, logger: any, cards: CardSender, resolveKeyForSession?: SessionKeyResolver, resolveTurnOwner?: TurnOwnerResolver, resolveRobotOwner?: RobotOwnerResolver, audit?: AuditSink);
+    /** Remember where to reply for a conversation (updated on every inbound message). */
+    remember(key: string, sender: string, conv: {
+        type: number;
+        target: string;
+        line: number;
+    }): void;
+    getConversation(key: string): ConversationTarget | undefined;
+    /**
+     * 向会话发一条**一次性**告警文本（同一 key + code 只发一次）。
+     * 用于「agent preset 挂载失败 → 本会话没有工具」这类必须让用户看到的降级：
+     * 插件仍会继续提供服务，但不能让它悄悄发生。
+     * 会话未激活（没记住回复目标）时丢弃，只留日志。
+     */
+    notifyWarning(key: string, code: string, text: string): void;
+    /**
+     * Register the userQuestions provider and the approval answerer.
+     * Safe to call once; swallows DUPLICATE_PROVIDER from the web profile.
+     */
+    register(ctx: any): void;
+    /** Only the turn sender (ask_user) / designated approver (approval), or an admin, may decide. */
+    private canDecide;
+    /**
+     * Handle a structured DSH_Answer (201). Returns true when consumed.
+     * Plain text replies are handled by `handleTextReply`.
+     */
+    handleAnswer(key: string, payload: AgentAnswerPayload, sender: string, isAdmin?: boolean): boolean;
+    /**
+     * Handle a structured DSH_ApprovalResult (203). Returns true when consumed.
+     */
+    handleApprovalResult(key: string, payload: AgentApprovalResultPayload, sender: string, isAdmin?: boolean): boolean;
+    /**
+     * Handle a plain-text reply: if a card is pending for this conversation the
+     * text is the custom answer; otherwise false (message flows to the agent).
+     */
+    handleTextReply(key: string, text: string, sender: string, isAdmin?: boolean): boolean;
+    /** Whether a pending interaction waits on this conversation (query only). */
+    hasPending(key: string): boolean;
+    /**
+     * Expire the conversation's pending cards (question/approval) and resolve
+     * the blocked agent waits — used by `/stop` so no zombie cards or hanging
+     * asks remain after the turn is cancelled. Returns how many cards expired.
+     */
+    expirePending(key: string): number;
+    /**
+     * Update the conversation runtime state via the scope=31 user setting
+     * (type=1 状态). Coalesced within 300ms; group members see the state in
+     * their user settings instead of the message feed.
+     *
+     * 字段合并语义：本次 flush 与上次 flush 的完整 payload 合并后发送，
+     * 所以累计字段（model/cwd/sessionId/usage/context/cacheHitRatePct）不会
+     * 因某次推送没带而丢失。清除语义：state=running（新回合开始）会清除
+     * reason/error；state≠waiting_user 时 interaction 不发送。
+     * 去重语义：flush 结果与最后一次【已发送】状态完全一致时跳过网络推送。
+     */
+    pushStatus(key: string, data: RuntimeState): void;
+    /** Merge agent activity (thinking/tool) into the runtime state. */
+    pushProgress(key: string, data: RuntimeState): void;
+    private scheduleStateFlush;
+    private flushState;
+    private flushStateForKey;
+    /** Token 统计累积（按 key 覆盖式：每次回合结束推全量最新统计）。 */
+    private fullMetrics;
+    /**
+     * 回合结束推送 Token 统计（scope=31, type=2）。`metrics` 为 undefined 时
+     * （如新会话首个请求前）跳过，保留上一次统计。
+     */
+    pushMetrics(key: string, metrics: MetricsState | undefined): void;
+    /**
+     * 重置 Token 统计（scope=31 type=2 清空）——工作目录切换后调用：
+     * 统计属于旧会话，切目录后必须清掉，避免客户端误读旧目录的累计值；
+     * 新会话首回合结束 pushMetrics 重新写入。
+     */
+    resetMetrics(key: string): void;
+    /** AI 面板数据（按 key 覆盖式最新快照）。 */
+    private fullPanelData;
+    /**
+     * 推送 AI 面板数据（scope=31, type=3）。覆盖式：每次组合查询/更新后整份刷新。
+     * 不含 dirs（目录列表不受控，走 209 按需应答，见 INTERACTION_DESIGN.md §10）。
+     */
+    pushPanelData(key: string, data: Record<string, unknown>): void;
+    /**
+     * 发送 207 指令的应答（209 Agent_Command_Result，persistFlag=4 Transparent：
+     * 不落库、不显示、不计数）。当前用于 op=dirs 目录列表按需获取。
+     * 目标 = 该会话最近一次入站消息的会话（群/私聊）+ 同一 line。
+     */
+    sendCommandResult(key: string, data: AgentCommandResultPayload): void;
+    /**
+     * Send a goal card (DSH_Goal, ver:2) to a conversation.
+     * 归一化发射：调用方传 v1/DSH 语义字段（objective/phase/roundsStarted）时，
+     * 统一转成通用 v2 载荷（title/state/stage/updatedAt），并保留 v1 字段供旧客户端回退。
+     */
+    sendGoal(key: string, data: AgentGoalPayload): void;
+    /** key → 任务卡片 messageId（首次发送后记录，用于 updateMessage）。 */
+    private taskCardIds;
+    /** key → 任务卡片发送中（sendCard 未 resolve 前不重复发，避免并发产生多张孤儿卡）。 */
+    private taskCardPending;
+    /** key → taskId → 任务项。 */
+    private taskItems;
+    /** 已绑定 subagent 事件监听的 agent scope（WeakSet：防重复绑定，也防递归死循环）。 */
+    private boundTaskScopes;
+    /** key → 任务卡发送中收到的"脏"标记：sendCard 落定后补一次刷新（修并发丢失窗口）。 */
+    private taskCardDirty;
+    /** 已发过的一次性告警（`${code}:${key}`）：同一问题只提醒一次，避免刷屏。 */
+    private warnedKeys;
+    /** 全局 ctx（registerTaskFeed 注入，用于 turn/end 后把后台任务同步进卡片）。 */
+    private ctx;
+    /**
+     * 注册任务卡片数据源。
+     * 1) subagent 事件是 scoped 分发（按 parent agent 的 scope 载体），全局
+     *    ctx.on 收不到——必须在每个 agent 的 setup(agentCtx) 里绑定
+     *    （见 bindAgentScope），并在派生子代理时递归绑定其 scope（嵌套子代理）。
+     * 2) 全局 `session/event` firehose 的 turn/end 触发一次后台任务同步
+     *    （kind:"job" 项，来源 `jobs.list(agent)`，随轮次结束刷新）。
+     */
+    registerTaskFeed(ctx: any): void;
+    /**
+     * 绑定一个 agent 的 scope 到任务卡片：在该 agent 内监听其派生的
+     * subagent/start、subagent/end（agent.ts 的 create/resume setup 调用）。
+     * 派生子代理时对子代理 scope 递归调用同一绑定，覆盖嵌套（workflow 式
+     * fan-out 的二级及以下子代理）——scope 形状按 dsh-agent 常见形态探测
+     * （child.ctx / child.agentCtx / child 自身），探测不到时静默降级为
+     * 仅直系子代理（与旧行为一致）。
+     */
+    bindAgentScope(agentCtx: any, agent?: any): void;
+    /** 绑定一个 scope（含递归：已有子代理 + 新建子代理）。 */
+    private bindTaskScope;
+    /** 遍历 parent.subagents（Map 或对象）递归绑定。 */
+    private bindExistingChildren;
+    /** 任务项 id：runId 优先（start/end 两事件一致才可原地覆盖）。 */
+    private subagentTaskId;
+    /** 失败判定：兼容 stopReason / status / error 多种字段形态。 */
+    private isSubagentFailed;
+    private isSubagentKilled;
+    private subagentFailReason;
+    /**
+     * 把 agent 当前的后台任务同步进任务卡片（kind:"job"）。
+     * 在 turn/end 时调用：先清掉旧 job 项，再按 jobs.list(agent) 重建，
+     * 保证卡片里的后台任务与 jobs 服务一致（不再出现已消失的任务）。
+     */
+    private syncJobs;
+    /** 后台任务状态 → 卡片状态（客户端仅识别 running/done/failed/completed/killed）。 */
+    private mapJobStatus;
+    /**
+     * 子任务标签：优先从 agents 注册表解析子代理的 descriptor/meta label
+     * （尽力而为），当前 dsh 无这些访问器时回退为 provider 名；
+     * 仍缺失时返回 undefined（客户端显示 id 前缀）。
+     */
+    private subagentLabel;
+    /** 记录/更新一个任务项并刷新卡片。 */
+    private upsertTask;
+    /** 终态（不会再变）的任务项：running/waiting 之外都算。 */
+    private isFinishedTask;
+    /**
+     * 修剪任务项：**运行中/等待中的项全保留**，已完成项只留最近
+     * {@link MAX_FINISHED_TASK_ITEMS} 条。
+     *
+     * 背景：每次派生 subagent 都会新增一条（key = runId），完成事件只更新状态、
+     * 从不删除；长会话里会累积成百上千条，任务卡（type 208 原地更新）就越滚越大
+     * ——曾出现单条任务卡里上百条历史任务。job 项虽然每轮 turn/end 由
+     * `jobs.list()` 重建，同样受这道闸约束。
+     */
+    private pruneTaskItems;
+    /** 向会话发/更新任务卡片（一张卡：首次 sendCard，之后 updateMessage）。 */
+    private flushTaskCard;
+    /** 重置任务卡片状态（切目录/重置会话时调用：旧会话任务卡不再更新）。 */
+    resetTaskCards(key: string): void;
+    /** Reset everything (plugin stop). */
+    dispose(): void;
+    /** Ask the questions to the IM user via a DSH_Question card. */
+    private ask;
+    /**
+     * One-off question card outside the agent ask_user flow — used by commands
+     * such as `/cwd` create-confirmation. Same DSH_Question card + text-answer
+     * machinery as `ask()`, but resolves with the raw AgentAnswerPayload (or null
+     * on timeout / when another card is already pending for this conversation).
+     */
+    askDirect(key: string, questions: AgentQuestionItem[], opts?: {
+        timeoutMs?: number;
+        ownerSender?: string;
+    }): Promise<AgentAnswerPayload | null>;
+    /** Ask the IM user to approve/deny one tool action via a DSH_Approval card. */
+    private requestApproval;
+    /** Update a card's state in place via updateMessage (best effort). */
+    private updateCardState;
+    /** Normalize a structured DSH_Answer against the original questions. */
+    private normalizeAnswers;
+    /** Parse a plain-text reply into the userQuestions answer shape. */
+    private parseTextAnswer;
+    /** Parse a plain-text reply into an approval outcome. */
+    private parseApproval;
+    /** Format questions for the text fallback. */
+    private formatQuestions;
+}
+//# sourceMappingURL=interactive.d.ts.map

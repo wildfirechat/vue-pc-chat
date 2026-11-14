@@ -1,0 +1,384 @@
+/**
+ * Per-conversation model / reasoning-effort selection.
+ *
+ * Resolution order (first match wins):
+ *   runtime override (from `/model` / `/effort` commands, this process)
+ *   > session durable record (`model/selection` event / `request/header`)
+ *   > `model.map[conversationKey]` (or bare id)
+ *   > `model.default` preset
+ *   > dsh `agentDefaultModel.currentSelection()`
+ *
+ * The durable record makes model/effort a **workspace property**: a resumed
+ * session keeps what it was last using (per sessionId = conversation × cwd)
+ * instead of snapping back to the deployment default. `/model` and `/effort`
+ * write both the live selection and the session record.
+ *
+ * Unlike the workspace (cwd), applying a selection to an existing agent takes
+ * effect on its next request, so a model switch does NOT reset the context.
+ */
+
+import type { WildfireConfig, WildfireModelConfig } from "./config.js";
+import { getModelConfig } from "./config.js";
+
+/** Effective model settings (default preset id stays optional). */
+type EffectiveModelConfig = Required<Omit<WildfireModelConfig, "default">> & {
+  default?: string;
+};
+
+/** A dsh ModelSelection: provider/model plus an optional reasoning effort. */
+export interface ModelSelection {
+  provider: string;
+  model: string;
+  reasoningEffort?: string;
+}
+
+/** One entry of the DSH runtime model catalog (`ctx.llm`). */
+export interface ModelCatalogEntry {
+  provider: string;
+  id: string;
+  name: string;
+}
+
+export class ModelSelector {
+  private config: EffectiveModelConfig;
+  private ctx: any;
+  private logger: any;
+  private overrides = new Map<string, ModelSelection>();
+
+  constructor(config: WildfireConfig, ctx: any, logger?: any) {
+    this.config = getModelConfig(config);
+    this.ctx = ctx;
+    this.logger = logger;
+  }
+
+  /**
+   * Resolve the effective selection for a conversation key.
+   *
+   * @param key - IM conversation key.
+   * @param session - live dsh session, when available. Its durable record
+   *   (last `model/selection` event, else the last `request/header` config)
+   *   makes the model/effort a **workspace property**: a resumed session keeps
+   *   what it was last using instead of snapping back to the deployment default.
+   *
+   * Precedence: runtime override (this process) > session's durable record >
+   * `model.map[key]` > `model.default` > dsh `agentDefaultModel`.
+   */
+  async resolve(key: string, session?: any): Promise<ModelSelection> {
+    const candidates: Array<{ selection: ModelSelection; source: string }> = [];
+    const override = this.overrides.get(key);
+    if (override) candidates.push({ selection: override, source: "runtime override" });
+
+    const durable = readDurableSelection(session);
+    if (durable) candidates.push({ selection: durable, source: "session record" });
+
+    const mappedId = this.mapLookup(key);
+    if (mappedId) {
+      const preset = this.config.allowed[mappedId];
+      if (preset) candidates.push({ selection: preset, source: "model.map" });
+      else {
+        this.logger?.warn?.(
+          `[wildfire-model] map of ${key} points to unknown preset "${mappedId}", falling back`
+        );
+      }
+    }
+
+    if (this.config.default) {
+      const preset = this.config.allowed[this.config.default];
+      if (preset) candidates.push({ selection: preset, source: "model.default" });
+      else {
+        this.logger?.warn?.(
+          `[wildfire-model] default preset "${this.config.default}" not found in allowed`
+        );
+      }
+    }
+
+    const current = this.ctx?.get?.("agentDefaultModel")?.currentSelection?.();
+    if (current?.provider && current?.model) {
+      candidates.push({
+        selection: {
+          provider: current.provider,
+          model: current.model,
+          reasoningEffort: current.reasoningEffort,
+        },
+        source: "agentDefaultModel",
+      });
+    }
+
+    for (const { selection, source } of candidates) {
+      // 客户端或旧配置可能指向已不存在/未注册 adapter 的 provider（例如
+      // deepseek-official 在禁用内置 DeepSeek 路由后）。选到这种 provider
+      // 会让整轮直接 NO_ADAPTER，因此跳过并继续找下一个可用来源。
+      if (this.isAvailable(selection) === false) {
+        this.logger?.warn?.(
+          `[wildfire-model] skip ${source} selection ${selection.provider}/${selection.model}: provider has no registered adapter`
+        );
+        continue;
+      }
+      return { ...selection };
+    }
+
+    const fallback = await this.firstAvailableSelection();
+    if (fallback) {
+      this.logger?.warn?.(
+        `[wildfire-model] no valid configured selection; falling back to ${fallback.provider}/${fallback.model}`
+      );
+      return fallback;
+    }
+    throw new Error(
+      "no model selection available: configure model.allowed / model.default or check the dsh agentDefaultModel"
+    );
+  }
+
+  /**
+   * Whether the provider currently has a registered llm adapter.
+   * Returns undefined when the llm service cannot be inspected (allow).
+   */
+  isAvailable(selection: { provider?: string } | undefined): boolean | undefined {
+    if (!selection || !selection.provider) return false;
+    let llm: any;
+    try {
+      llm = this.ctx?.get?.("llm");
+    } catch {
+      llm = undefined;
+    }
+    if (!llm?.listProviders) return undefined;
+    try {
+      const providers = llm.listProviders() ?? [];
+      // 启动阶段 adapter 尚未注册时不要误判：留空视为“无法检查”。
+      if (providers.length === 0) return undefined;
+      return providers.some((p: any) => String(p?.id) === String(selection.provider));
+    } catch {
+      return undefined;
+    }
+  }
+
+  /** First model of the first registered provider (prefers the "default" relay). */
+  private async firstAvailableSelection(): Promise<ModelSelection | undefined> {
+    let llm: any;
+    try {
+      llm = this.ctx?.get?.("llm");
+    } catch {
+      llm = undefined;
+    }
+    if (!llm?.listProviders) return undefined;
+    let providers: any[] = [];
+    try {
+      providers = llm.listProviders() ?? [];
+    } catch {
+      return undefined;
+    }
+    const ordered = [...providers].sort((a: any, b: any) =>
+      (a?.id === "default" ? -1 : 0) - (b?.id === "default" ? -1 : 0)
+    );
+    for (const provider of ordered) {
+      try {
+        const models = (await llm.listModels?.(provider.id)) ?? [];
+        if (models.length > 0) {
+          const model = models[0];
+          return { provider: String(provider.id), model: String(model.id ?? model.model) };
+        }
+      } catch {
+        // try next provider
+      }
+    }
+    return undefined;
+  }
+
+  /** Alias for resolve(); used by `/model` queries. */
+  async peek(key: string, session?: any): Promise<ModelSelection> {
+    return this.resolve(key, session);
+  }
+
+  /** The in-memory runtime override for a conversation, if any. */
+  peekOverride(key: string): ModelSelection | undefined {
+    const override = this.overrides.get(key);
+    return override ? { ...override } : undefined;
+  }
+
+  /** Apply a preset by id as the conversation's runtime override. */
+  applyPreset(key: string, presetId: string): ModelSelection | null {
+    const preset = this.config.allowed[presetId];
+    if (!preset) return null;
+    if (this.isAvailable(preset) === false) {
+      this.logger?.warn?.(
+        `[wildfire-model] preset "${presetId}" points to provider "${preset.provider}" without a registered adapter; ignoring`
+      );
+      return null;
+    }
+    const selection: ModelSelection = { ...preset };
+    this.overrides.set(key, selection);
+    this.logger?.info?.(
+      `[wildfire-model] override: ${key} -> ${selection.provider}/${selection.model}${selection.reasoningEffort ? ` (effort=${selection.reasoningEffort})` : ""}`
+    );
+    return selection;
+  }
+
+  /**
+   * Apply an explicit provider/model from the runtime catalog, KEEPING the
+   * conversation's current reasoning effort (unlike applyPreset, which adopts
+   * the preset's effort). Used by `/model <provider/model|id>`.
+   */
+  async applyModel(key: string, provider: string, modelId: string): Promise<ModelSelection> {
+    const current = await this.resolve(key);
+    const selection: ModelSelection = { ...current, provider, model: modelId };
+    if (this.isAvailable(selection) === false) {
+      this.logger?.warn?.(
+        `[wildfire-model] model ${provider}/${modelId} ignored: provider has no registered adapter`
+      );
+      return current;
+    }
+    this.setOverride(key, selection);
+    return selection;
+  }
+
+  /**
+   * Aggregate the DSH runtime model catalog (`ctx.llm`): every registered
+   * provider's advertised models — the same source as the web UI model
+   * selector. Returns [] when the llm service is unavailable; a provider
+   * whose listing fails is skipped with a warning.
+   */
+  async listCatalog(): Promise<ModelCatalogEntry[]> {
+    let llm: any;
+    try {
+      llm = this.ctx?.get?.("llm");
+    } catch {
+      llm = undefined;
+    }
+    if (!llm) return [];
+    const entries: ModelCatalogEntry[] = [];
+    for (const provider of llm.listProviders?.() ?? []) {
+      try {
+        const models = (await llm.listModels(provider.id)) ?? [];
+        for (const model of models) {
+          entries.push({ provider: String(provider.id), id: String(model.id), name: String(model.name ?? model.id) });
+        }
+      } catch (err: any) {
+        this.logger?.warn?.(`[wildfire-model] listModels(${provider.id}) failed: ${err?.message ?? String(err)}`);
+      }
+    }
+    return entries;
+  }
+
+  /** Apply a selection directly (used by `/effort` to keep the current model). */
+  setOverride(key: string, selection: ModelSelection): void {
+    if (this.isAvailable(selection) === false) {
+      this.logger?.warn?.(
+        `[wildfire-model] override ignored for ${key}: provider "${selection.provider}" has no registered adapter`
+      );
+      return;
+    }
+    this.overrides.set(key, { ...selection });
+    this.logger?.info?.(
+      `[wildfire-model] override: ${key} -> ${selection.provider}/${selection.model}${selection.reasoningEffort ? ` (effort=${selection.reasoningEffort})` : ""}`
+    );
+  }
+
+  /** Clear the runtime override for a conversation. */
+  clearOverride(key: string): void {
+    this.overrides.delete(key);
+  }
+
+  /** Human-readable preset list for `/model` replies. */
+  listPresets(): string[] {
+    const names = Object.keys(this.config.allowed);
+    if (names.length === 0) return [];
+    return names.map((id) => {
+      const p = this.config.allowed[id];
+      const effort = p.reasoningEffort ? ` / effort=${p.reasoningEffort}` : "";
+      return `${id}: ${p.provider}/${p.model}${effort}`;
+    });
+  }
+
+  /** Map lookup supporting both the full key and the bare id after the prefix. */
+  private mapLookup(key: string): string | undefined {
+    if (this.config.map[key]) return this.config.map[key];
+    const stripped = key.replace(/^wildfire:(user|group):/i, "");
+    if (stripped !== key && this.config.map[stripped]) return this.config.map[stripped];
+    return undefined;
+  }
+}
+
+/**
+ * 会话（工作现场）里记录的上次模型选择。
+ *
+ * 两个来源，都是 dsh 自己写进会话日志的持久事实：
+ *  1. `model/selection` —— 显式切换意图（本插件 `/model` `/effort` 与 dsh GUI 都会写）；
+ *  2. `request/header`  —— 最近一次真实请求实际用的 provider/model/effort。
+ *
+ * 0.1.2 移除了 `session.events`（改用 `snapshotEvents()`）；两者都做兼容。
+ */
+export function readDurableSelection(session: any): ModelSelection | undefined {
+  if (!session) return undefined;
+  try {
+    const events: any[] = session.snapshotEvents?.() ?? session.events ?? [];
+    const fromEvents = readDurableSelectionFromEvents(events);
+    if (fromEvents) return fromEvents;
+    const header = session.requestHeader?.()?.config;
+    if (header?.provider && header?.model) {
+      return {
+        provider: String(header.provider),
+        model: String(header.model),
+        ...(header.reasoningEffort ? { reasoningEffort: String(header.reasoningEffort) } : {}),
+      };
+    }
+  } catch {
+    // 日志/头部读取失败：按「没有记录」处理，落回配置默认
+  }
+  return undefined;
+}
+
+/** 读取事件流里最后一条指定类型事件的 `data`（倒序扫描）。 */
+export function readLastEventData(
+  events: readonly any[] | undefined,
+  type: string
+): any | undefined {
+  if (!events || events.length === 0) return undefined;
+  for (let i = events.length - 1; i >= 0; i--) {
+    if (events[i]?.type === type) return events[i].data ?? {};
+  }
+  return undefined;
+}
+
+/**
+ * 从事件流（磁盘上的会话日志）里恢复模型选择，**无需激活会话**：
+ * 最后一条 `model/selection` → 最后一条 `request/header` 的 config。
+ */
+export function readDurableSelectionFromEvents(
+  events: readonly any[] | undefined
+): ModelSelection | undefined {
+  const selection = readLastEventData(events, "model/selection");
+  if (selection?.provider && selection?.model) {
+    return {
+      provider: String(selection.provider),
+      model: String(selection.model),
+      ...(selection.reasoningEffort ? { reasoningEffort: String(selection.reasoningEffort) } : {}),
+    };
+  }
+  const config = readLastEventData(events, "request/header")?.header?.config;
+  if (config?.provider && config?.model) {
+    return {
+      provider: String(config.provider),
+      model: String(config.model),
+      ...(config.reasoningEffort ? { reasoningEffort: String(config.reasoningEffort) } : {}),
+    };
+  }
+  return undefined;
+}
+
+/**
+ * 把选择写进会话日志（`model/selection`），使模型/推理等级成为**会话级**
+ * 持久状态：重启或切换目录后 resume 该会话时由 {@link readDurableSelection}
+ * 恢复。dsh GUI 的模型选择器读同一份记录，因此两侧保持一致。
+ */
+export function persistSelection(session: any, selection: ModelSelection, logger?: any): void {
+  if (!session?.append) return;
+  try {
+    session.append("model/selection", {
+      provider: selection.provider,
+      model: selection.model,
+      ...(selection.reasoningEffort ? { reasoningEffort: selection.reasoningEffort } : {}),
+    });
+  } catch (err: any) {
+    logger?.warn?.(`[wildfire-model] persist model selection failed: ${String(err?.message ?? err)}`);
+  }
+}

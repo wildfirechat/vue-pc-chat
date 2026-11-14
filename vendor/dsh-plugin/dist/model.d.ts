@@ -1,0 +1,111 @@
+/**
+ * Per-conversation model / reasoning-effort selection.
+ *
+ * Resolution order (first match wins):
+ *   runtime override (from `/model` / `/effort` commands, this process)
+ *   > session durable record (`model/selection` event / `request/header`)
+ *   > `model.map[conversationKey]` (or bare id)
+ *   > `model.default` preset
+ *   > dsh `agentDefaultModel.currentSelection()`
+ *
+ * The durable record makes model/effort a **workspace property**: a resumed
+ * session keeps what it was last using (per sessionId = conversation × cwd)
+ * instead of snapping back to the deployment default. `/model` and `/effort`
+ * write both the live selection and the session record.
+ *
+ * Unlike the workspace (cwd), applying a selection to an existing agent takes
+ * effect on its next request, so a model switch does NOT reset the context.
+ */
+import type { WildfireConfig } from "./config.js";
+/** A dsh ModelSelection: provider/model plus an optional reasoning effort. */
+export interface ModelSelection {
+    provider: string;
+    model: string;
+    reasoningEffort?: string;
+}
+/** One entry of the DSH runtime model catalog (`ctx.llm`). */
+export interface ModelCatalogEntry {
+    provider: string;
+    id: string;
+    name: string;
+}
+export declare class ModelSelector {
+    private config;
+    private ctx;
+    private logger;
+    private overrides;
+    constructor(config: WildfireConfig, ctx: any, logger?: any);
+    /**
+     * Resolve the effective selection for a conversation key.
+     *
+     * @param key - IM conversation key.
+     * @param session - live dsh session, when available. Its durable record
+     *   (last `model/selection` event, else the last `request/header` config)
+     *   makes the model/effort a **workspace property**: a resumed session keeps
+     *   what it was last using instead of snapping back to the deployment default.
+     *
+     * Precedence: runtime override (this process) > session's durable record >
+     * `model.map[key]` > `model.default` > dsh `agentDefaultModel`.
+     */
+    resolve(key: string, session?: any): Promise<ModelSelection>;
+    /**
+     * Whether the provider currently has a registered llm adapter.
+     * Returns undefined when the llm service cannot be inspected (allow).
+     */
+    isAvailable(selection: {
+        provider?: string;
+    } | undefined): boolean | undefined;
+    /** First model of the first registered provider (prefers the "default" relay). */
+    private firstAvailableSelection;
+    /** Alias for resolve(); used by `/model` queries. */
+    peek(key: string, session?: any): Promise<ModelSelection>;
+    /** The in-memory runtime override for a conversation, if any. */
+    peekOverride(key: string): ModelSelection | undefined;
+    /** Apply a preset by id as the conversation's runtime override. */
+    applyPreset(key: string, presetId: string): ModelSelection | null;
+    /**
+     * Apply an explicit provider/model from the runtime catalog, KEEPING the
+     * conversation's current reasoning effort (unlike applyPreset, which adopts
+     * the preset's effort). Used by `/model <provider/model|id>`.
+     */
+    applyModel(key: string, provider: string, modelId: string): Promise<ModelSelection>;
+    /**
+     * Aggregate the DSH runtime model catalog (`ctx.llm`): every registered
+     * provider's advertised models — the same source as the web UI model
+     * selector. Returns [] when the llm service is unavailable; a provider
+     * whose listing fails is skipped with a warning.
+     */
+    listCatalog(): Promise<ModelCatalogEntry[]>;
+    /** Apply a selection directly (used by `/effort` to keep the current model). */
+    setOverride(key: string, selection: ModelSelection): void;
+    /** Clear the runtime override for a conversation. */
+    clearOverride(key: string): void;
+    /** Human-readable preset list for `/model` replies. */
+    listPresets(): string[];
+    /** Map lookup supporting both the full key and the bare id after the prefix. */
+    private mapLookup;
+}
+/**
+ * 会话（工作现场）里记录的上次模型选择。
+ *
+ * 两个来源，都是 dsh 自己写进会话日志的持久事实：
+ *  1. `model/selection` —— 显式切换意图（本插件 `/model` `/effort` 与 dsh GUI 都会写）；
+ *  2. `request/header`  —— 最近一次真实请求实际用的 provider/model/effort。
+ *
+ * 0.1.2 移除了 `session.events`（改用 `snapshotEvents()`）；两者都做兼容。
+ */
+export declare function readDurableSelection(session: any): ModelSelection | undefined;
+/** 读取事件流里最后一条指定类型事件的 `data`（倒序扫描）。 */
+export declare function readLastEventData(events: readonly any[] | undefined, type: string): any | undefined;
+/**
+ * 从事件流（磁盘上的会话日志）里恢复模型选择，**无需激活会话**：
+ * 最后一条 `model/selection` → 最后一条 `request/header` 的 config。
+ */
+export declare function readDurableSelectionFromEvents(events: readonly any[] | undefined): ModelSelection | undefined;
+/**
+ * 把选择写进会话日志（`model/selection`），使模型/推理等级成为**会话级**
+ * 持久状态：重启或切换目录后 resume 该会话时由 {@link readDurableSelection}
+ * 恢复。dsh GUI 的模型选择器读同一份记录，因此两侧保持一致。
+ */
+export declare function persistSelection(session: any, selection: ModelSelection, logger?: any): void;
+//# sourceMappingURL=model.d.ts.map

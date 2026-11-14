@@ -462,14 +462,19 @@ console.log(`[prepare-dsh-runtime] materialized ${materializeSymlinks(profileDes
 
 // Ensure the bundled profile uses the local plugin build (dist + package.json),
 // not an older tgz that happened to be installed in the source profile.
-const pluginSource = process.env.DSH_PLUGIN_SOURCE || path.resolve(root, '..', 'robot-gateway', 'dsh-plugin.js');
+const siblingPlugin = path.resolve(root, '..', 'robot-gateway', 'dsh-plugin.js');
+const vendoredPlugin = path.resolve(root, 'vendor', 'dsh-plugin');
+// 优先本地同级的插件源码仓库（开发方便），没有时使用随项目提交的
+// vendor/dsh-plugin（源码+dist），保证脱离 robot-gateway 也能构建。
+const pluginSource = process.env.DSH_PLUGIN_SOURCE
+    || (fs.existsSync(path.join(siblingPlugin, 'dist', 'index.js')) ? siblingPlugin : vendoredPlugin);
 const pluginTarget = path.join(profileDest, 'node_modules', '@wildfirechat', 'dsh-wildfire');
 if (fs.existsSync(path.join(pluginSource, 'dist', 'index.js'))) {
     fs.mkdirSync(pluginTarget, { recursive: true });
     fs.rmSync(path.join(pluginTarget, 'dist'), { recursive: true, force: true });
     fs.cpSync(path.join(pluginSource, 'dist'), path.join(pluginTarget, 'dist'), { recursive: true, dereference: true, force: true });
     fs.copyFileSync(path.join(pluginSource, 'package.json'), path.join(pluginTarget, 'package.json'));
-    console.log(`[prepare-dsh-runtime] bundled plugin from ${pluginSource}`);
+    console.log(`[prepare-dsh-runtime] bundled plugin from ${pluginSource}${pluginSource === vendoredPlugin ? ' (vendored)' : ''}`);
 } else {
     console.warn(`[prepare-dsh-runtime] plugin dist not found at ${pluginSource}; using profile copy`);
 }

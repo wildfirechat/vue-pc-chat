@@ -1,0 +1,150 @@
+/**
+ * Configuration for the Wildfire IM channel plugin.
+ *
+ * The config object comes from the dsh profile's patch layer, e.g.
+ * `~/.dsh/profiles/web/cordis.patch.yml`:
+ *
+ *   - insert:
+ *       - id: wildfire
+ *         name: '@wildfirechat/dsh-wildfire'
+ *         config:
+ *           gatewayUrl: ws://127.0.0.1:8884/robot/gateway
+ *           robotId: your_robot_id
+ *           robotSecret: your_robot_secret
+ */
+import { dshHomePath } from "./utils.js";
+/**
+ * Resolve the plugin config: the loader-provided `config` argument wins,
+ * falling back to `ctx.model.config` (Cordis Config-driven plugins).
+ */
+export function getConfig(ctx, config) {
+    const cfg = config ?? ctx.model?.config ?? {};
+    if (cfg.enabled === false) {
+        throw new Error("wildfire plugin is disabled");
+    }
+    return cfg;
+}
+/** Validate required fields; returns an error message or null. */
+export function validateConfig(config) {
+    if (!config.gatewayUrl)
+        return "gatewayUrl is required";
+    if (!config.robotId)
+        return "robotId is required";
+    if (!config.robotSecret)
+        return "robotSecret is required";
+    return null;
+}
+/** Effective AI line (group-chat AI session line). Default 2. */
+export function getAiLine(config) {
+    return config.aiLine ?? 2;
+}
+/** Effective whitelist settings with defaults applied. */
+export function getWhitelistConfig(config) {
+    return {
+        enabled: config.whiteList?.enabled ?? false,
+        allowedUsers: config.whiteList?.allowedUsers ?? [],
+        allowedGroups: config.whiteList?.allowedGroups ?? [],
+        deniedMessage: config.whiteList?.deniedMessage ?? "不允许使用",
+        includeOwner: config.whiteList?.includeOwner ?? true,
+        persistFile: config.whiteList?.persistFile ?? dshHomePath("wildfire-allowlist.json"),
+    };
+}
+/** Effective session settings with defaults applied. */
+export function getSessionConfig(config) {
+    return {
+        idleTimeoutMs: config.session?.idleTimeoutMs ?? 24 * 60 * 60 * 1000,
+        maxSessions: config.session?.maxSessions ?? 200,
+        preset: config.session?.preset ?? "standard",
+    };
+}
+/** Effective streaming settings with defaults applied. */
+export function getStreamingConfig(config) {
+    return {
+        throttleMs: config.streaming?.throttleMs ?? 300,
+        initialPlaceholder: config.streaming?.initialPlaceholder ?? "…",
+    };
+}
+/** Effective workspace settings with defaults applied. */
+export function getWorkspaceConfig(config) {
+    return {
+        mode: config.workspace?.mode ?? "global",
+        path: config.workspace?.path ?? process.cwd(),
+        sessionDir: config.workspace?.sessionDir ?? "",
+        map: config.workspace?.map ?? {},
+        allowedRoots: config.workspace?.allowedRoots ?? [],
+        allowCwdCommand: config.workspace?.allowCwdCommand ?? false,
+        persist: config.workspace?.persist ?? true,
+        persistFile: config.workspace?.persistFile ?? dshHomePath("wildfire-workspaces.json"),
+        catalog: config.workspace?.catalog ?? [],
+        autoRoot: config.workspace?.autoRoot ?? "",
+        // 项目根目录回退链：root → autoRoot → 第一个 allowedRoot → path
+        root: config.workspace?.root ??
+            config.workspace?.autoRoot ??
+            config.workspace?.allowedRoots?.[0] ??
+            config.workspace?.path ??
+            process.cwd(),
+    };
+}
+/** Effective access settings with defaults applied. */
+export function getAccessConfig(config) {
+    return {
+        adminUsers: config.access?.adminUsers ?? [],
+        adminGroups: config.access?.adminGroups ?? [],
+        groupOwnerCanManage: config.access?.groupOwnerCanManage ?? true,
+        privateOwnerOnly: config.access?.privateOwnerOnly ?? false,
+    };
+}
+/** Effective model settings with defaults applied (`default` stays optional). */
+export function getModelConfig(config) {
+    return {
+        default: config.model?.default,
+        allowed: config.model?.allowed ?? {},
+        map: config.model?.map ?? {},
+        allowModelCommand: config.model?.allowModelCommand ?? false,
+    };
+}
+/** Effective media settings with defaults applied. */
+export function getMediaConfig(config) {
+    return {
+        downloadDir: config.media?.downloadDir ?? "/tmp/wildfire-media",
+        outboundEnabled: config.media?.outboundEnabled ?? true,
+    };
+}
+/** Effective interaction settings with defaults applied. */
+export function getInteractionConfig(config) {
+    return {
+        askUserEnabled: config.interaction?.askUserEnabled ?? true,
+        approvalEnabled: config.interaction?.approvalEnabled ?? true,
+        askUserTimeoutMs: config.interaction?.askUserTimeoutMs ?? 300000,
+        approvalTimeoutMs: config.interaction?.approvalTimeoutMs ?? 120000,
+        approvedLabel: config.interaction?.approvedLabel ?? "同意",
+        deniedLabel: config.interaction?.deniedLabel ?? "拒绝",
+        approvalOwnerOnly: config.interaction?.approvalOwnerOnly ?? false,
+    };
+}
+export function getMainSessionConfig(config) {
+    const c = config.mainSession ?? {};
+    return {
+        enabled: c.enabled === true,
+        groups: Array.isArray(c.groups) ? c.groups.map((g) => String(g)).filter(Boolean) : [],
+        workspace: c.workspace ? String(c.workspace) : dshHomePath("main-workspace"),
+        bufferLimit: Number(c.bufferLimit) > 0 ? Number(c.bufferLimit) : 200,
+        injectLimit: Number(c.injectLimit) > 0 ? Number(c.injectLimit) : 30,
+        notify: c.notify !== false,
+        notifyCooldownMs: Number(c.notifyCooldownMs) >= 0 ? Number(c.notifyCooldownMs) : 10 * 60 * 1000,
+        notifyKeywords: Array.isArray(c.notifyKeywords) ? c.notifyKeywords.map((k) => String(k)).filter(Boolean) : [],
+        groupReply: c.groupReply === "owner" ? "owner" : "group",
+        history: {
+            enabled: c.history?.enabled !== false,
+            dir: String(c.history?.dir || "").trim(),
+            retainDays: Number(c.history?.retainDays) >= 0 ? Number(c.history?.retainDays) : 0,
+        },
+    };
+}
+export function getSecurityConfig(config) {
+    return {
+        maxMessagesPerMinute: config.security?.maxMessagesPerMinute ?? 0,
+        allowGuestTurns: config.security?.allowGuestTurns ?? true,
+    };
+}
+//# sourceMappingURL=config.js.map

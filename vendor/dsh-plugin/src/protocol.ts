@@ -1,0 +1,314 @@
+/**
+ * Agent × Wildfire IM structured interaction protocol (agent-agnostic).
+ *
+ * The 200-209 segment is the official Wildfire AI-interaction reservation
+ * (INTERACTION_DESIGN.md §2.1); the protocol is NOT DSH-specific — any agent
+ * provider (DSH / openclaw / …) may use the same cards, states and channels.
+ *
+ * Payload convention:
+ *   payload.type              = AGENT_* type number
+ *   payload.content           = JSON string (structured data)
+ *   payload.searchableContent = human summary (search/notification visible)
+ *   payload.persistFlag       = set by the sender (cards persist)
+ *
+ * scope=31 conversation user settings carry runtime state/metrics/panel:
+ * key = `<convType>-<line>-<target>_<type>_<机器人uid>` (server appends the
+ * writing robot's uid), payload JSON is provider-agnostic.
+ */
+
+/**
+ * Wildfire IM message type numbers for agent interactions.
+ * (Formerly exported as DSH_TYPE; AGENT_* is the canonical name.)
+ */
+export const AGENT_TYPE = {
+  QUESTION: 200, // 机器人→用户 提问卡片（含选项）
+  ANSWER: 201, // 用户→机器人 结构化回答
+  APPROVAL: 202, // 机器人→用户 工具审批卡片
+  APPROVAL_RESULT: 203, // 用户→机器人 审批结果
+  // 204/205 已废弃：进度与状态改走 scope=31 会话用户设置推送（见 interactive.ts）
+  GOAL: 206, // 机器人→用户 目标进度卡片（ver:2 通用载荷，见 AgentGoalPayload）
+  COMMAND: 207, // 用户→机器人 AI 面板指令（透明消息，客户端不渲染）
+  TASK_PROGRESS: 208, // 机器人→用户 任务进度卡片（ver:2 通用载荷，updateMessage 原地更新）
+  COMMAND_RESULT: 209, // 机器人→用户 207 指令的应答（透明消息，客户端不渲染；见 §10）
+} as const;
+
+export type AgentType = (typeof AGENT_TYPE)[keyof typeof AGENT_TYPE];
+
+/** 兼容别名（内部旧引用；wire 类型号不变）。 */
+export const DSH_TYPE = AGENT_TYPE;
+export type DSHType = AgentType;
+
+/** 发出本载荷的 agent 身份（多 agent 会话中用于归属展示；缺省 = 会话默认 agent）。 */
+export interface AgentRef {
+  provider: string; // dsh | openclaw | …（开放枚举）
+  agentId: string; // provider 内唯一
+  label?: string; // 展示名
+  model?: string; // 当前模型（可选）
+}
+
+export interface AgentQuestionOption {
+  label: string;
+  description?: string;
+}
+
+export interface AgentQuestionItem {
+  id: string;
+  header?: string;
+  question: string;
+  detail?: string;
+  options?: AgentQuestionOption[];
+  multiSelect?: boolean;
+  /** 可选增强（如 DSH plan-review 审阅样式）；通用客户端忽略即可。 */
+  intent?: { kind: string; approve?: string };
+}
+
+export interface AgentQuestionPayload {
+  qid: string;
+  questions: AgentQuestionItem[];
+}
+
+export interface AgentAnswerPayload {
+  qid: string;
+  answers: Array<{ id: string; selected: string[]; custom?: string }>;
+}
+
+export interface AgentApprovalPayload {
+  aid: string;
+  toolName: string;
+  reason?: string;
+  /**
+   * Who started the turn that needs approval (group guest or owner). Older
+   * clients ignore both fields; the card still renders tool + reason.
+   */
+  requestedBy?: string;
+  /** Who is allowed to decide (robot owner when approvalOwnerOnly is on). */
+  approver?: string;
+}
+
+export interface AgentApprovalResultPayload {
+  aid: string;
+  action: "approve" | "reject";
+}
+
+/** 通用目标/长任务状态（ver:2；v1 兼容字段 objective/phase/roundsStarted 仅供旧客户端回退）。 */
+export type AgentGoalState = "active" | "paused" | "blocked" | "complete" | "cancelled";
+
+export interface AgentGoalMilestone {
+  label: string;
+  done: boolean;
+}
+
+export interface AgentGoalPayload {
+  ver?: 2;
+  gid: string;
+  /** 目标标题（v2 主字段；旧客户端回退到 objective）。 */
+  title?: string;
+  /** 当前阶段名（自由文本，如 "计划审批中" / "round 3"）。 */
+  stage?: string;
+  state: AgentGoalState;
+  /** 0-100。 */
+  progress?: number;
+  milestones?: AgentGoalMilestone[];
+  updatedAt: number;
+  agent?: AgentRef;
+  // ---- v1 兼容字段（DSH provider 发射时保留，旧客户端继续渲染） ----
+  objective?: string;
+  phase?: string;
+  roundsStarted?: number;
+}
+
+/** Agent 任务项（ver:2 开放 kind；status 通用五态 + 兼容别名 completed/killed）。 */
+export interface AgentTaskItem {
+  /** 任务种类（开放字符串：subagent / job / step / tool / phase …）。 */
+  kind: string;
+  id: string;
+  label?: string;
+  /** running / done / failed / completed(兼容=done) / killed(兼容=cancelled) / waiting。 */
+  status: "running" | "done" | "failed" | "completed" | "killed" | "waiting";
+  reason?: string;
+  result?: string;
+  detail?: string;
+  /** 0-100。 */
+  progress?: number;
+  updatedAt: number;
+}
+
+export interface AgentTaskProgressPayload {
+  ver?: 2;
+  /** 本次任务流实例（同一 flowId 由 updateMessage 原地更新）。 */
+  flowId?: string;
+  tasks: AgentTaskItem[];
+  updatedAt: number;
+  agent?: AgentRef;
+}
+
+/**
+ * Agent_Command (207)：用户→agent 的静默指令通道（客户端不渲染）。
+ * - op=query  → 组合查询：agent 聚合面板数据写入 scope=31 type=3，不回复消息
+ * - op=set    → 更新：cmd 为 provider 词表命令（如 DSH 的 "/model xxx"），
+ *               执行后写 type=1 状态 lastChange 并刷新 type=3
+ * - op=dirs   → 目录列表按需获取：应答走 209 Agent_Command_Result（透明消息），
+ *               不再内联在 type=3 里（列表不受控，会撑爆设置值；见 §10）
+ * - op=create → 在单聊静默创建 DSH 工作区群（path/name 可选）
+ * 公共 op（interrupt/ping）为协议扩展点，由各 provider 按需实现。
+ */
+export interface AgentCommandPayload {
+  op: "query" | "set" | "interrupt" | "ping" | "dirs" | "sessions" | "switch" | "create";
+  /**
+   * op=set 时的 provider 词表命令。当前支持：
+   * `/model <provider/model|预设>`、`/effort <等级>`、`/cwd <路径|clear>`、
+   * `/sandbox <模式>`、`/plan <on|off>`、`/compact`、`/reset`、`/mode <interrupt|queue>`、
+   * `/preset <presetId>`（能力档位，见 INTERACTION_DESIGN.md §11）、
+   * `/approval <ask|never>`（工具审批策略，同 §11）、`/destroy`。
+   */
+  cmd?: string;
+  /** 客户端请求序号（幂等/去重/应答关联）。 */
+  seq?: number;
+  /** 目标 agent（缺省 = 会话默认 agent）。 */
+  agent?: AgentRef;
+  /** 目标机器人（多机器人会话寻址；缺省 = 本消息会话对应的机器人）。 */
+  robotId?: string;
+  /** op=switch 时要切换到的目标 session id（来自 op=sessions 列表）。 */
+  sessionId?: string;
+  /** op=create 时的工作区目录；空/auto 表示自动分配。 */
+  path?: string;
+  /** op=create 时的会话/群名称。 */
+  name?: string;
+  /**
+   * op=create 时新会话的初始配置（客户端「新会话」页选择；建群后、首条消息
+   * 前写入会话级覆盖，因此第一轮就生效）：
+   * - model: `provider/model`（来自运行时模型目录）
+   * - effort: 推理等级 id（模型声明的等级之一）
+   * - sandbox: read-only | workspace-write | danger-full-access（与权限预设同名
+   *   时同时对齐审批策略，与 `/sandbox` 语义一致）
+   * - preset: agent preset id（profile 未提供 agentPresets 服务时忽略）
+   */
+  model?: string;
+  effort?: string;
+  sandbox?: string;
+  preset?: string;
+  /**
+   * 本地客户端发起的操作（如桌面端「新会话」「删除会话」）：插件不往单聊发
+   * 成功类通知；远端用户（手打命令/其他端）不传此字段，仍会收到回执。
+   */
+  silent?: boolean;
+}
+
+/**
+ * Agent_Command_Result (209) — 207 指令的应答载荷（机器人→用户，persistFlag=4 Transparent）。
+ * 当前仅 op=dirs（目录列表按需获取，见 INTERACTION_DESIGN.md §10）。
+ * 客户端按 seq 关联 pending 请求；seq 不匹配或已超时的应答直接丢弃。
+ */
+/** 会话列表项（op=sessions 应答；一个 IM 会话在 DSH 侧可有多个历史 session）。 */
+export interface AgentSessionSummary {
+  /** DSH session id（wildfire-<会话哈希>-<目录哈希>[-<epoch>]）。 */
+  id: string;
+  /** 会话标题（首条用户消息的前 40 字，便于面板识别；无则空）。 */
+  title?: string;
+  /** 该会话绑定的工作目录（绝对路径）。 */
+  cwd?: string;
+  /** 创建时间（毫秒）。 */
+  createdAt?: number;
+  /** 最近活跃时间（毫秒；取会话日志 mtime，取不到时回退 createdAt）。 */
+  updatedAt?: number;
+  /** 事件条数（后端能廉价提供时才有）。 */
+  eventCount?: number;
+  /** 日志字节数（后端能廉价提供时才有）。 */
+  sizeBytes?: number;
+  /** 是否为该会话当前正在使用的 session。 */
+  current?: boolean;
+}
+
+export interface AgentCommandResultPayload {
+  ver: 1;
+  /** 对应请求的 op（当前只有 dirs）。 */
+  op: "dirs" | string;
+  /** 回显请求 207 的 seq。 */
+  seq?: number;
+  /** 目标机器人（与请求一致；多机器人会话寻址）。 */
+  robotId?: string;
+  /** 应答时的当前工作目录（绝对路径）。 */
+  cwd?: string;
+  /** 目录列表的来源目录（项目根，绝对路径；dirs 是它的一级子目录）。 */
+  root?: string;
+  /** 目录名列表（非全路径，按名称升序）。 */
+  dirs?: string[];
+  /** 截断前的目录总数。 */
+  total?: number;
+  /** 是否因超过上限被截断。 */
+  truncated?: boolean;
+  /** op=sessions 应答：最近会话列表（最多 10 条，按最近活跃倒序）。 */
+  sessions?: AgentSessionSummary[];
+  /** op=sessions/switch 应答：当前生效的 session id。 */
+  sessionId?: string;
+  /** op=switch 应答：是否切换成功。 */
+  ok?: boolean;
+  /** op=switch 失败时的可读原因。 */
+  error?: string;
+}
+
+/** Build a message payload object (shape consumed by the Wildfire SDK sendMessage). */
+export function buildPayload(
+  type: number,
+  data: unknown,
+  summary: string,
+  persistFlag: number
+): any {
+  return {
+    type,
+    content: JSON.stringify(data),
+    searchableContent: summary,
+    persistFlag,
+  };
+}
+
+/** Parse payload.content JSON; returns null on failure. */
+export function parseContent<T>(payload: any): T | null {
+  try {
+    const raw = typeof payload?.content === "string" ? payload.content : null;
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Human summary for a question card (searchable/notification text). */
+export function summarizeQuestion(data: AgentQuestionPayload): string {
+  const first = data.questions[0];
+  return first ? `🤔 ${first.header ? `【${first.header}】` : ""}${first.question}` : "🤔 需要你确认";
+}
+
+/** Human summary for an approval card. */
+export function summarizeApproval(data: AgentApprovalPayload): string {
+  const who = data.approver && data.approver !== data.requestedBy ? `，审批人 ${data.approver}` : "";
+  return `🔐 工具审批：${data.toolName}${data.reason ? `（${data.reason}）` : ""}${who}`;
+}
+
+/** Human summary for a goal card (ver:2 title / v1 objective). */
+export function summarizeGoal(data: AgentGoalPayload): string {
+  const title = data.title || data.objective || "目标";
+  return `🎯 ${title}（${data.state ?? data.phase ?? ""}）`;
+}
+
+/** Task card summary (searchableContent/notification visible). */
+export function summarizeTasks(data: AgentTaskProgressPayload): string {
+  const running = data.tasks.filter((t) => t.status === "running").length;
+  const total = data.tasks.length;
+  if (total === 0) return "🧩 任务：无";
+  return running > 0 ? `🧩 任务 ${total}（${running} 运行中）` : `🧩 任务 ${total}（${data.tasks.every((t) => t.status === "failed") ? "全部失败" : "全部完成"}）`;
+}
+
+/** Human summary for a 207 command result (209; searchableContent — not rendered). */
+export function summarizeCommandResult(data: AgentCommandResultPayload): string {
+  if (data?.op === "dirs") {
+    const n = data.dirs?.length ?? 0;
+    return data.truncated ? `📂 AI 目录列表（${n}/${data.total ?? n}，已截断）` : `📂 AI 目录列表（${n}）`;
+  }
+  if (data?.op === "sessions") {
+    return `🧠 最近会话（${data.sessions?.length ?? 0}）`;
+  }
+  if (data?.op === "switch") {
+    return data.ok ? "🧠 已切换会话" : `🧠 切换会话失败${data.error ? `：${data.error}` : ""}`;
+  }
+  return "📂 AI 指令应答";
+}
