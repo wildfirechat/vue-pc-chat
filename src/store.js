@@ -215,6 +215,10 @@ let store = {
             if (updatedUidSet.has(selfUid)) {
                 this._loadSelfUserInfo();
             }
+            let aiRobotIds = Config.getAiRobotIds();
+            if (aiRobotIds.some(id => updatedUidSet.has(id))) {
+                this._deferLoadAiRobotList();
+            }
             // TODO 其他相关逻辑
         });
 
@@ -674,7 +678,7 @@ let store = {
         (isMainWindow || loadOptions.loadChannelList) && this._loadChannelList();
         (isMainWindow || loadOptions.loadFriendList) && this._loadFriendList();
         (isMainWindow || loadOptions.loadFavContactList) && this._loadFavContactList();
-        isMainWindow && this._loadAiRobotList();
+        (isMainWindow || loadOptions.loadFriendList) && this._loadAiRobotList();
         (isMainWindow || loadOptions.loadFriendRequestList) && this._loadFriendRequest();
         (isMainWindow || loadOptions.loadDefaultConversationList) && this._loadDefaultConversationList();
         this._loadSelfUserInfo();
@@ -753,6 +757,10 @@ let store = {
         this._deferReload('favContactList', () => this._loadFavContactList());
     },
 
+    _deferLoadAiRobotList() {
+        this._deferReload('aiRobotList', () => this._loadAiRobotList());
+    },
+
     _deferLoadFavGroupList() {
         this._deferReload('favGroupList', () => this._loadFavGroupList());
     },
@@ -792,6 +800,9 @@ let store = {
         if (!loadOptions.loadFriendList || this.state.contact.friendList.length === 0) {
             loadOptions.loadFriendList = true;
             this._loadFriendList();
+        }
+        if (this.state.contact.aiRobotList.length === 0 && Config.getAiRobotIds().length > 0) {
+            this._loadAiRobotList();
         }
     },
 
@@ -2051,8 +2062,9 @@ let store = {
     },
 
     _loadAiRobotList() {
-        if (Config.AI_ROBOT) {
-            let aiUserInfos = this.getUserInfos([Config.AI_ROBOT], '');
+        let aiRobotIds = Config.getAiRobotIds();
+        if (aiRobotIds.length > 0) {
+            let aiUserInfos = this.getUserInfos(aiRobotIds, '');
             aiUserInfos.forEach(u => {
                 u._category = 'AI 助手';
             });
@@ -2332,11 +2344,24 @@ let store = {
         if (!users || !filter || !filter.trim()) {
             return users;
         }
+        let lowerFilter = filter.toLowerCase();
         let queryPinyin = convertPinyinCached(filter).pinyin;
+        let seenUids = new Set();
         let result = users.filter(u => {
-            return u.displayName.indexOf(filter) > -1 || u._displayName.indexOf(filter) > -1 || u._displayName.indexOf(queryPinyin) > -1
-                || u._pinyin.indexOf(filter) > -1 || u._pinyin.indexOf(queryPinyin) > -1
-                || u._firstLetters.indexOf(filter) > -1 || u._firstLetters.indexOf(queryPinyin) > -1
+            if (seenUids.has(u.uid)) {
+                return false;
+            }
+            let matched = (u.displayName && u.displayName.toLowerCase().indexOf(lowerFilter) > -1)
+                || (u._displayName && u._displayName.toLowerCase().indexOf(lowerFilter) > -1)
+                || (u._displayName && u._displayName.indexOf(queryPinyin) > -1)
+                || (u._pinyin && u._pinyin.indexOf(lowerFilter) > -1)
+                || (u._pinyin && u._pinyin.indexOf(queryPinyin) > -1)
+                || (u._firstLetters && u._firstLetters.indexOf(lowerFilter) > -1)
+                || (u._firstLetters && u._firstLetters.indexOf(queryPinyin) > -1);
+            if (matched) {
+                seenUids.add(u.uid);
+            }
+            return matched;
         });
         return result;
     },

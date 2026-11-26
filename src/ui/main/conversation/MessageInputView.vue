@@ -1102,9 +1102,10 @@ export default {
             let type = conversation.conversationType;
 
             let mentionMenuItems = [];
-            if(Config.AI_ROBOT){
-                let aiRobotId = Config.AI_ROBOT;
-                let aiUserInfos = this.activeStore.getUserInfos([aiRobotId]);
+            let aiRobotIds = Config.getAiRobotIds();
+            let aiRobotIdSet = new Set(aiRobotIds);
+            if (aiRobotIds.length > 0) {
+                let aiUserInfos = this.activeStore.getUserInfos(aiRobotIds, '');
                 for (let aiInfo of aiUserInfos) {
                     mentionMenuItems.push({
                         key: aiInfo._displayName,
@@ -1116,7 +1117,6 @@ export default {
                         robot: true,
                     });
                 }
-
             }
             if(type === ConversationType.Group) {
                 let groupInfo = wfc.getGroupInfo(conversation.target);
@@ -1138,6 +1138,9 @@ export default {
                         groupMemberUserInfos = this.activeStore.getGroupMemberUserInfos(conversation.target, false);
                     }
                     groupMemberUserInfos.forEach((e) => {
+                        if (aiRobotIdSet.has(e.uid)) {
+                            return;
+                        }
                         mentionMenuItems.push({
                             key: e._displayName,
                             keyIgnoreFriendAlias: e._displayNameIgnoreFriendAlias,

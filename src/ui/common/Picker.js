@@ -19,7 +19,7 @@ export default {
                 PickUserView,
                 {
                     title: options.title,
-                    users: options.users ? options.users : store.state.contact.favContactList.concat(store.state.contact.friendList),
+                    users: options.users ? options.users : store.state.contact.aiRobotList.concat(store.state.contact.favContactList).concat(store.state.contact.friendList),
                     initialCheckedUsers: options.initialCheckedUsers,
                     uncheckableUsers: options.uncheckableUsers,
                     showCategoryLabel: options.showCategoryLabel !== false,

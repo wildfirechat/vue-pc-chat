@@ -167,8 +167,8 @@ export default class Config {
     // 是否启用登录页滑动验证码
     static ENABLE_LOGIN_SLIDE_VERIFY = true
 
-    // AI机器人ID
-    static AI_ROBOT = "FireRobot";
+    // AI机器人ID列表，支持配置多个，不需要时可置为空数组 [] 或 null
+    static AI_ROBOTS = ['FireRobot'];
 
     // 禁止发送的文件类型
     static DISABLED_SEND_FILE_TYPES = ['exe', 'bat', 'apk'];
@@ -236,6 +236,18 @@ export default class Config {
 
     static getMinutesUrl() {
         return Config._selectServer(Config.MINUTES_URL, Config.MINUTES_BACKUP_URL);
+    }
+
+    /**
+     * 获取配置的 AI 机器人 ID 列表（兼容单个字符串配置）
+     * @return {string[]}
+     */
+    static getAiRobotIds() {
+        if (!Config.AI_ROBOTS) {
+            return [];
+        }
+        let ids = Array.isArray(Config.AI_ROBOTS) ? Config.AI_ROBOTS : [Config.AI_ROBOTS];
+        return [...new Set(ids.filter(id => typeof id === 'string' && id.trim().length > 0))];
     }
 
     static getWFCPlatform() {
