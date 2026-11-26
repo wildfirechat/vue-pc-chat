@@ -10,27 +10,7 @@
                 </div>
                 <!-- 与「发起群聊」（PickUserView）一致：组织服务可用时，可从组织结构选人 / 选部门 -->
                 <div v-if="orgServiceAvailable" class="pick-category-container">
-                    <div @click="expandOrganizationSection = !expandOrganizationSection" class="category-item-container">
-                        <i class="arrow right" v-bind:class="{down: expandOrganizationSection}"></i>
-                        <div class="category-item">
-                            <span class="title">组织结构</span>
-                        </div>
-                    </div>
-                    <div v-show="expandOrganizationSection" class="organization-section">
-                        <div v-if="organizationPathList.length" class="pick-source-nav">
-                            <div ref="organizationPathNav" class="pick-source-nav-scroll">
-                                <ul>
-                                    <li v-for="org in organizationPathList" :key="org.id">
-                                        <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <CheckableOrganizationTreeView
-                            ref="checkableOrganizationTreeView"
-                            :search-query="query"
-                            @organization-path-update="onOrganizationPathUpdate"/>
-                    </div>
+                    <CheckableOrganizationTreeView :search-query="query"/>
 
                     <div @click="expandContactSection = !expandContactSection" class="category-item-container">
                         <i class="arrow right" v-bind:class="{down: expandContactSection}"></i>
@@ -131,8 +111,6 @@ export default {
             activeStore: activeStore,
             sharedPickState: activeStore.state.pick,
             query: '',
-            organizationPathList: [],
-            expandOrganizationSection: !this.users.some(user => user.uid !== Config.FILE_HELPER_ID),
             expandContactSection: true,
             defaultOrganizationPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
             orgServiceAvailable: organizationServerApi.isServiceAvailable,
@@ -146,20 +124,6 @@ export default {
 
         unpickOrganization(org) {
             this.activeStore.pickOrUnpickOrganization(org);
-        },
-
-        onOrganizationPathUpdate(orgPathList) {
-            this.organizationPathList = orgPathList;
-            this.$nextTick(() => {
-                const nav = this.$refs.organizationPathNav;
-                if (nav) {
-                    nav.scrollLeft = nav.scrollWidth;
-                }
-            });
-        },
-
-        loadAndShowOrganization(org) {
-            this.$refs.checkableOrganizationTreeView.loadAndShowOrganization(org);
         },
 
         clearPicked() {
@@ -369,60 +333,6 @@ export default {
 
 .down {
     transform: rotate(45deg);
-}
-
-.organization-section :deep(.organization-tree-container) {
-    height: auto;
-    max-height: none;
-}
-
-.pick-source-nav {
-    box-sizing: border-box;
-    padding: 8px 16px 0 20px;
-    width: 100%;
-}
-
-.pick-source-nav-scroll {
-    width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-}
-
-.pick-source-nav ul {
-    display: flex;
-    flex-wrap: nowrap;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.pick-source-nav li {
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-.pick-source-nav a {
-    text-decoration: none;
-    font-size: var(--font-size-base);
-    white-space: nowrap;
-}
-
-.pick-source-nav li:not(:last-child)::after {
-    display: inline-block;
-    margin: 0 8px;
-    color: var(--text-secondary-strong);
-    content: ">";
-}
-
-.pick-source-nav li:not(:last-child) a {
-    color: var(--accent-color);
-}
-
-.pick-source-nav li:last-child a {
-    color: var(--text-secondary-strong);
-    pointer-events: none;
 }
 
 .user-list-container .back {

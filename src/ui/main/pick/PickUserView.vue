@@ -8,27 +8,7 @@
             </div>
             <template v-if="showOrganization && orgServiceAvailable">
                 <div class="pick-category-container">
-                    <div @click="toggleOrganizationSection" class="category-item-container">
-                        <i class="arrow right" v-bind:class="{down: expandOrganizationSection}"></i>
-                        <div class="category-item">
-                            <span class="title">组织结构</span>
-                        </div>
-                    </div>
-                    <div v-show="expandOrganizationSection" class="organization-section">
-                        <div v-if="organizationPathList.length" class="pick-source-nav">
-                            <div ref="organizationPathNav" class="pick-source-nav-scroll">
-                                <ul>
-                                    <li v-for="org in organizationPathList" :key="org.id">
-                                        <a href="#" @click.prevent="loadAndShowOrganization(org)">{{ org.name }}</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <CheckableOrganizationTreeView
-                            ref="checkableOrganizationTreeView"
-                            :search-query="filterQuery"
-                            @organization-path-update="onOrganizationPathUpdate"/>
-                    </div>
+                    <CheckableOrganizationTreeView :search-query="filterQuery"/>
 
                     <div @click="toggleContactSection" class="category-item-container">
                         <i class="arrow right" v-bind:class="{down: expandContactSection}"></i>
@@ -150,37 +130,13 @@ export default {
         return {
             sharedPickState: store.state.pick,
             filterQuery: '',
-            organizationPathList: [],
-            expandOrganizationSection: this.users.length === 0,
-            // 搜索开始前组织结构是否展开（清空搜索时恢复）
-            orgExpandedBeforeSearch: null,
             expandContactSection: true,
             defaultOrganizationPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
             orgServiceAvailable: organizationServerApi.isServiceAvailable,
         }
     },
-    watch: {
-        // 搜索时自动展开组织结构：添加群成员等场景进来时该分类是收起的，
-        // 不展开的话搜到的人被折叠在下面看不到；清空搜索后恢复成搜索前的展开状态
-        // （添加群成员这类原本就是收起的场景，清空后自动合上）
-        filterQuery(query) {
-            if (query && query.trim()) {
-                if (this.orgExpandedBeforeSearch === null) {
-                    this.orgExpandedBeforeSearch = this.expandOrganizationSection;
-                }
-                this.expandOrganizationSection = true;
-            } else if (this.orgExpandedBeforeSearch !== null) {
-                this.expandOrganizationSection = this.orgExpandedBeforeSearch;
-                this.orgExpandedBeforeSearch = null;
-            }
-        },
-    },
 
     methods: {
-        toggleOrganizationSection() {
-            this.expandOrganizationSection = !this.expandOrganizationSection;
-        },
-
         toggleContactSection() {
             this.expandContactSection = !this.expandContactSection;
         },
@@ -198,20 +154,6 @@ export default {
 
         isUserUncheckable(user) {
             return this.uncheckableUsers && this.uncheckableUsers.findIndex(u => u.uid === user.uid) >= 0;
-        },
-
-        onOrganizationPathUpdate(orgPathList) {
-            this.organizationPathList = orgPathList;
-            this.$nextTick(() => {
-                const nav = this.$refs.organizationPathNav;
-                if (nav) {
-                    nav.scrollLeft = nav.scrollWidth;
-                }
-            });
-        },
-
-        loadAndShowOrganization(org) {
-            this.$refs.checkableOrganizationTreeView.loadAndShowOrganization(org);
         },
 
         cancel() {
@@ -419,63 +361,6 @@ export default {
 .down {
     transform: rotate(45deg);
     -webkit-transform: rotate(45deg);
-}
-
-
-.organization-section :deep(.organization-tree-container) {
-    height: auto;
-    max-height: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.pick-source-nav {
-    box-sizing: border-box;
-    padding: 8px 16px 0 20px;
-    width: 100%;
-}
-
-.pick-source-nav-scroll {
-    width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-}
-
-.pick-source-nav ul {
-    display: flex;
-    flex-wrap: nowrap;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.pick-source-nav li {
-    flex-shrink: 0;
-    white-space: nowrap;
-}
-
-.pick-source-nav a {
-    text-decoration: none;
-    font-size: var(--font-size-base);
-    white-space: nowrap;
-}
-
-.pick-source-nav li:not(:last-child)::after {
-    display: inline-block;
-    margin: 0 8px;
-    color: var(--text-secondary-strong);
-    content: ">";
-}
-
-.pick-source-nav li:not(:last-child) a {
-    color: var(--accent-color);
-}
-
-.pick-source-nav li:last-child a {
-    color: var(--text-secondary-strong);
-    pointer-events: none;
 }
 
 .pick-category-container .friend-list-container {
