@@ -15,6 +15,8 @@ export default {
                     options.failCB && options.failCB(-1);
                 }
             };
+            const modalWidth = Math.min(760, Math.max(600, window.innerWidth - 80));
+            const modalHeight = Math.min(600, Math.max(480, window.innerHeight - 64));
             this.$modal.show(
                 PickUserView,
                 {
@@ -29,8 +31,9 @@ export default {
                 null, // componentSlots
                 {
                     name: 'pick-user-modal',
-                    width: 600,
-                    height: 480,
+                    width: modalWidth,
+                    height: modalHeight,
+                    adaptive: true,
                     clickToClose: false,
                     escToClose: true,
                 }, {

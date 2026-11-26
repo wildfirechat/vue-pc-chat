@@ -28,6 +28,8 @@ export default {
                         }
                     };
 
+                    const modalWidth = Math.min(760, Math.max(600, window.innerWidth - 80));
+                    const modalHeight = Math.min(600, Math.max(480, window.innerHeight - 64));
                     this.$modal.show(
                         ForwardMessageByPickConversationView,
                         {
@@ -35,8 +37,9 @@ export default {
                             messages: messages
                         },null, {
                             name: 'forward-by-pick-conversation-modal',
-                            width: 600,
-                            height: 480,
+                            width: modalWidth,
+                            height: modalHeight,
+                            adaptive: true,
                             clickToClose: false,
                         }, {
                             'before-close': beforeClose,
@@ -63,6 +66,8 @@ export default {
                             reject();
                         }
                     };
+                    const modalWidth = Math.min(760, Math.max(600, window.innerWidth - 80));
+                    const modalHeight = Math.min(600, Math.max(480, window.innerHeight - 64));
                     this.$modal.show(
                         ForwardMessageByCreateConversationView,
                         {
@@ -71,8 +76,9 @@ export default {
                             users: store.state.contact.aiRobotList.concat(store.state.contact.favContactList).concat(store.state.contact.friendList),
                         }, null, {
                             name: 'forward-by-create-conversation-modal',
-                            width: 600,
-                            height: 480,
+                            width: modalWidth,
+                            height: modalHeight,
+                            adaptive: true,
                             clickToClose: false,
                         }, {
                             'before-close': beforeClose,

@@ -10,22 +10,24 @@
                 <div class="pick-category-container">
                     <CheckableOrganizationTreeView :search-query="filterQuery"/>
 
-                    <div @click="toggleContactSection" class="category-item-container">
-                        <i class="arrow right" v-bind:class="{down: expandContactSection}"></i>
-                        <div class="category-item">
-                            <span class="title">联系人</span>
-                            <span class="desc">{{ filterUsers.length }}</span>
+                    <div class="contact-category-section">
+                        <div @click="toggleContactSection" class="category-item-container">
+                            <i class="arrow right" v-bind:class="{down: expandContactSection}"></i>
+                            <div class="category-item">
+                                <span class="title">联系人</span>
+                                <span class="desc">{{ filterUsers.length }}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div v-show="expandContactSection" class="friend-list-container">
-                        <CheckableUserListView :enable-pick="true"
-                                               :users="filterUsers"
-                                               :initial-checked-users="initialCheckedUsers"
-                                               :uncheckable-users="uncheckableUsers"
-                                               :show-category-label="showCategoryLabel && !filterQuery"
-                                               :padding-left="'20px'"
-                                               :virtual-list-style="{ 'max-height': '600px', 'overflow-y': 'auto' }"
-                                               enable-category-label-sticky/>
+                        <div v-show="expandContactSection" class="friend-list-container">
+                            <CheckableUserListView :enable-pick="true"
+                                                   :users="filterUsers"
+                                                   :initial-checked-users="initialCheckedUsers"
+                                                   :uncheckable-users="uncheckableUsers"
+                                                   :show-category-label="showCategoryLabel && !filterQuery"
+                                                   :padding-left="'20px'"
+                                                   :virtual-list-style="{ 'max-height': '600px', 'overflow-y': 'auto' }"
+                                                   enable-category-label-sticky/>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -55,7 +57,7 @@
                         <button @click="onPickUser(user)" class="unpick-button">X</button>
                     </div>
                     <div class="flex-row flex-align-center">
-                        <p class="name single-line">{{ user._displayName }}</p>
+                        <p class="name single-line">{{ user._displayName || user.displayName }}</p>
                         <p v-if="isExternalDomainUser(user)" class="single-line" style="color: var(--text-warning); border-radius: 2px;  padding: 1px 2px; font-size: 9px">{{ domainName(user) }}</p>
                     </div>
                 </div>
@@ -240,28 +242,31 @@ export default {
 
 .contact-list-container {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     background-color: var(--background-item-normal);
+    border-right: 1px solid var(--border-primary);
     overflow: hidden;
 }
 
 .contact-list-container .input-container {
     position: relative;
     display: flex;
+    align-items: center;
     width: 100%;
+    flex-shrink: 0;
 }
 
 .input-container input {
-    height: 25px;
-    margin: 16px;
+    height: 32px;
+    margin: 14px 16px;
     flex: 1;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-tertiary);
     background-color: var(--background-primary);
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 0 28px 0 30px;
     text-align: left;
     outline: none;
     color: var(--text-primary);
@@ -283,18 +288,21 @@ export default {
 
 .input-container i {
     position: absolute;
-    top: 20px;
-    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 26px;
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
+    pointer-events: none;
 }
 
 .input-container .clear-btn {
     position: absolute;
-    top: 15px;
-    right: 28px;
-    height: 25px;
-    line-height: 25px;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 24px;
+    height: 24px;
+    line-height: 24px;
     cursor: pointer;
     color: var(--text-secondary-strong);
     font-size: var(--font-size-lg);
@@ -313,15 +321,20 @@ export default {
 }
 
 .category-item-container {
+    position: sticky;
+    top: 0;
+    z-index: 3;
     height: 40px;
     display: flex;
     align-items: center;
-    margin-left: 16px;
+    padding-left: 16px;
     color: var(--text-primary);
     font-size: var(--font-size-base);
     border-top: 1px solid var(--border-tertiary);
     background-color: var(--background-secondary);
     transition: background var(--duration-fast);
+    cursor: pointer;
+    user-select: none;
 }
 
 .category-item {
@@ -367,6 +380,11 @@ export default {
     overflow: visible;
 }
 
+.pick-category-container :deep(.contact-item .label.sticky) {
+    top: 40px;
+    z-index: 2;
+}
+
 .contact-list-container > .friend-list-container {
     flex: 1;
     min-height: 0;
@@ -375,13 +393,14 @@ export default {
 
 .checked-contact-list-container {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background-color: var(--background-primary);
 }
 
 .checked-contact-list-container header {
-    height: 55px;
+    height: 60px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -393,13 +412,13 @@ export default {
     font-size: var(--font-size-lg);
     font-weight: 500;
     color: var(--text-primary);
-    margin-left: 30px;
+    margin-left: 24px;
 }
 
 .checked-contact-list-container header span {
     font-size: var(--font-size-xs);
     color: var(--text-secondary);
-    margin-right: 20px;
+    margin-right: 24px;
 }
 
 
@@ -407,7 +426,7 @@ export default {
     height: 100%;
     flex: 1;
     display: flex;
-    padding: 0 30px;
+    padding: 12px 20px;
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: flex-start;
@@ -416,18 +435,19 @@ export default {
 }
 
 .checked-contact-list-container .content .picked-user-container {
-    width: 33%;
+    width: 25%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     column-count: 1;
     justify-content: center;
     align-items: center;
-    padding: 4px 8px;
+    padding: 8px 4px;
 }
 
 .checked-contact-list-container .content .picked-user-container .name {
     text-align: center;
-    max-width: 80px;
+    max-width: 76px;
     font-size: var(--font-size-xs);
 }
 
@@ -461,6 +481,7 @@ export default {
     align-items: center;
     justify-content: center;
     line-height: 1;
+    cursor: pointer;
     transition: background var(--duration-fast), color var(--duration-fast);
 }
 
@@ -471,20 +492,26 @@ export default {
 }
 
 .checked-contact-list-container footer {
-    height: 55px;
+    height: 60px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-bottom: 8px;
+    padding: 0 24px;
+    gap: 12px;
+    border-top: 1px solid var(--border-primary);
+    flex-shrink: 0;
 }
 
 footer button {
-    padding: 5px 30px;
+    height: 32px;
+    min-width: 88px;
+    padding: 0 20px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-primary);
     font-size: var(--font-size-sm);
     color: var(--text-primary);
     background: transparent;
+    cursor: pointer;
     transition: background var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
 }
 
@@ -495,8 +522,6 @@ footer button.cancel:hover {
 footer button.confirm {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
-    margin-left: 20px;
-    margin-right: 20px;
     color: var(--text-on-accent);
 }
 
