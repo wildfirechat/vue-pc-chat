@@ -68,7 +68,7 @@ export default {
                         {
                             forwardType: forwardType,
                             messages: messages,
-                            users: store.state.contact.friendList,
+                            users: store.state.contact.aiRobotList.concat(store.state.contact.favContactList).concat(store.state.contact.friendList),
                         }, null, {
                             name: 'forward-by-create-conversation-modal',
                             width: 600,

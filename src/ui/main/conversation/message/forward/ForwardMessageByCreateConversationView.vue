@@ -42,6 +42,7 @@
                     <div v-show="expandContactSection">
                         <CheckableUserListView :enable-pick="true"
                                                :users="filteredUsers"
+                                               :show-category-label="!query || !query.trim()"
                                                :padding-left="'20px'"
                                                :virtual-list-style="{ 'max-height': '600px', 'overflow-y': 'auto' }"
                                                :enable-category-label-sticky="true"/>
@@ -51,6 +52,7 @@
                                        class="user-list"
                                        :enable-pick="true"
                                        :users="filteredUsers"
+                                       :show-category-label="!query || !query.trim()"
                                        :padding-left="'20px'"
                                        :enable-category-label-sticky="true"/>
             </div>
@@ -231,9 +233,9 @@ export default {
             return this.sharedPickState.users.length > 0 || this.sharedPickState.organizations.length > 0;
         },
         filteredUsers() {
-            let result ;
+            let result;
             if (this.query && this.query.trim()) {
-                result = this.activeStore.filterContact(this.query)
+                result = this.activeStore.filterUsers(this.users, this.query);
             } else {
                 result = this.users;
             }
