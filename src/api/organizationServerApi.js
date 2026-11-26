@@ -174,6 +174,7 @@ export class OrganizationServerApi {
         userInfo.uid = employee.employeeId;
         userInfo.name = employee.employeeId;
         userInfo.displayName = employee.name;
+        userInfo._displayName = employee.name;
         userInfo.portrait = this.employeePortraitUrl(employee);
         userInfo.gender = employee.gender;
         userInfo.mobile = employee.mobile;

@@ -357,10 +357,13 @@ export default {
 <style lang="css" scoped>
 
 .category-item-container {
+    position: sticky;
+    top: 0;
+    z-index: 3;
     height: 40px;
     display: flex;
     align-items: center;
-    margin-left: 16px;
+    padding-left: 16px;
     color: var(--text-primary);
     font-size: var(--font-size-base);
     border-top: 1px solid var(--border-tertiary);
@@ -415,9 +418,13 @@ export default {
 }
 
 .pick-source-nav {
+    position: sticky;
+    top: 40px;
+    z-index: 2;
     box-sizing: border-box;
-    padding: 8px 16px 0 20px;
+    padding: 8px 16px 6px 20px;
     width: 100%;
+    background-color: var(--background-item-normal);
 }
 
 .pick-source-nav-scroll {

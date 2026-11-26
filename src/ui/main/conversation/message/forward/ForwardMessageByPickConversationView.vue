@@ -182,13 +182,13 @@ export default {
 }
 
 .conversation-list-panel .input-container input {
-    height: 25px;
-    margin: 16px 20px 0 16px;
+    height: 32px;
+    margin: 14px 16px 8px 16px;
     flex: 1;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     border: 1px solid var(--border-tertiary);
     background-color: var(--background-primary);
-    padding-left: 8px;
+    padding: 0 12px;
     text-align: left;
     outline: none;
     color: var(--text-primary);
@@ -241,13 +241,15 @@ export default {
 
 .checked-conversation-list-container {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     background-color: var(--background-primary);
+    border-left: 1px solid var(--border-primary);
 }
 
 .checked-conversation-list-container header {
-    height: 55px;
+    height: 60px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -259,13 +261,13 @@ export default {
     font-size: var(--font-size-lg);
     font-weight: 500;
     color: var(--text-primary);
-    margin-left: 30px;
+    margin-left: 24px;
 }
 
 .checked-conversation-list-container header span {
     font-size: var(--font-size-xs);
     color: var(--text-secondary);
-    margin-right: 20px;
+    margin-right: 24px;
 }
 
 
@@ -273,7 +275,7 @@ export default {
     height: 100%;
     flex: 1;
     display: flex;
-    padding: 0 30px;
+    padding: 12px 20px;
     flex-wrap: wrap;
     justify-content: flex-start;
     align-items: flex-start;
@@ -282,19 +284,20 @@ export default {
 }
 
 .checked-conversation-list-container .content .picked-user-container {
-    width: 33%;
+    width: 25%;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     column-count: 1;
     justify-content: center;
     align-items: center;
-    padding: 4px 8px;
+    padding: 8px 4px;
     overflow: hidden;
 }
 
 .checked-conversation-list-container .content .picked-user-container .name {
     text-align: center;
-    max-width: 80px;
+    max-width: 76px;
     font-size: var(--font-size-xs);
 }
 
@@ -319,7 +322,7 @@ export default {
     width: 20px;
     height: 20px;
     border: 1px solid var(--border-primary);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-circle);
     top: 0;
     right: 0;
     background: var(--background-secondary);
@@ -328,6 +331,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
     transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
 }
 
@@ -342,22 +346,26 @@ export default {
 }
 
 .checked-conversation-list-container footer {
-    height: 55px;
+    height: 60px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin-bottom: 8px;
+    padding: 0 24px;
+    gap: 12px;
     flex-shrink: 0;
     border-top: 1px solid var(--border-primary);
 }
 
 .checked-conversation-list-container footer button {
-    padding: 4px 30px;
+    height: 32px;
+    min-width: 88px;
+    padding: 0 20px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-primary);
     background: transparent;
     color: var(--text-primary);
     font-size: var(--font-size-sm);
+    cursor: pointer;
     transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
 }
 
@@ -368,9 +376,7 @@ export default {
 .checked-conversation-list-container footer button.confirm {
     background-color: var(--accent-color);
     border-color: var(--accent-color);
-    margin-left: 20px;
     color: var(--text-on-accent);
-    margin-right: 20px;
 }
 
 .checked-conversation-list-container footer button.confirm:hover {
