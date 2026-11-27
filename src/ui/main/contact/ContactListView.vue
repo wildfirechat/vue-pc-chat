@@ -79,6 +79,24 @@
                         </div>
                         <ChatroomListView v-if="sharedContactState.expandChatroom"/>
                     </li>
+                    <li v-if="sharedContactState.organizationRobots.length">
+                        <div @click="toggleRobotList" class="category-item-container">
+                            <i class="arrow right" v-bind:class="{down: expandRobotList}"></i>
+                            <div class="category-item">
+                                <span class="title">机器人</span>
+                                <span class="desc">{{ sharedContactState.organizationRobots.length }}</span>
+                            </div>
+                        </div>
+                        <div v-if="expandRobotList" class="robot-list">
+                            <div v-for="robot in sharedContactState.organizationRobots"
+                                 :key="robot.uid"
+                                 class="robot-item"
+                                 @click="sendMessage(robot)">
+                                <img class="robot-avatar" :src="robot.portrait" alt="" @error="onRobotPortraitError">
+                                <span class="robot-name single-line">{{ robot._displayName || robot.displayName }}</span>
+                            </div>
+                        </div>
+                    </li>
                     <li>
                         <div @click="showContacts" class="category-item-container">
                             <i class="arrow right" v-bind:class="{down: sharedContactState.expandFriendList}"></i>
@@ -128,6 +146,7 @@ import Message from "../../../wfc/messages/message";
 import ChatroomListView from "./ChatroomListView.vue";
 import {markRaw} from "vue";
 import ExternalDomainListView from "./ExternalDomainListView.vue";
+import Config from "../../../config";
 
 export default {
     name: "ContactListView",
@@ -146,12 +165,19 @@ export default {
             contactItemView: markRaw(ContactItemView),
             rootOrganizations: [],
             restoringScroll: false,
+            // 联系人列表里的机器人分组默认收起，点击展开/关闭
+            expandRobotList: false,
+            defaultRobotPortraitUrl: Config.DEFAULT_ROBOT_PORTRAIT_URL,
         }
     },
     created() {
         this.$eventBus.$on('showContactContextMenu', ([event, userInfo]) => {
             this.showContactContextMenu(event, userInfo);
         });
+    },
+    mounted() {
+        // 确保联系人页有机器人数据（登录后已加载时直接复用）
+        store.loadOrganizationRobots();
     },
     activated() {
         // <keep-alive> resets scrollTop on reactivation, so restore the saved
@@ -205,6 +231,15 @@ export default {
         },
         showOrganization() {
             store.toggleOrganizationList();
+        },
+        toggleRobotList() {
+            this.expandRobotList = !this.expandRobotList;
+            if (this.expandRobotList) {
+                store.loadOrganizationRobots();
+            }
+        },
+        onRobotPortraitError(event) {
+            event.target.src = this.defaultRobotPortraitUrl;
         },
         showExternalDomains() {
             store.toggleExternalDomainList();
@@ -397,4 +432,38 @@ export default {
     -webkit-transform: rotate(45deg);
 }
 
+
+/* 联系人列表里的机器人分组：独立列表，不放进组织结构 */
+.robot-list {
+    background-color: var(--background-secondary);
+}
+
+.robot-item {
+    height: calc(48px * var(--layout-scale-row));
+    display: flex;
+    align-items: center;
+    padding-left: 32px;
+    padding-right: 16px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.robot-item:hover {
+    background-color: var(--background-item-hover);
+}
+
+.robot-avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+.robot-name {
+    flex: 1;
+    min-width: 0;
+}
 </style>

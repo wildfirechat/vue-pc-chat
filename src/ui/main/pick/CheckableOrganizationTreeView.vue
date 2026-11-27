@@ -262,7 +262,7 @@ export default {
                 if (rootOrganizations.length > 0 && this.orgSections.length === 0) {
                     this.orgSections = rootOrganizations.map(org => ({
                         rootOrg: org,
-                        expanded: true,
+                        expanded: false,
                         expandedBeforeSearch: null,
                         currentOrgId: org.id,
                         subOrganizations: [],

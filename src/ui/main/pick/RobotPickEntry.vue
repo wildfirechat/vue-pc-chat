@@ -1,23 +1,14 @@
 <template>
-    <!-- 选人页最外层的「机器人」分组：独立于组织树节点，只有组织架构里配了机器人才显示 -->
+    <!-- 选人页最外层的「机器人」分组：和组织架构/联系人一样点击展开，默认收起 -->
     <div v-show="visible && robotList.length > 0" class="robot-pick-entry">
-        <div v-if="!opened" class="category-item-container" @click="open">
-            <!-- 分组勾选框：跟着机器人整体的勾选状态走，支持全部 / 部分选中 -->
-            <span v-if="multiSelect" class="checkbox-wrapper" @click.stop="toggleAll">
-                <input type="checkbox"
-                       :checked="allChecked"
-                       :indeterminate.prop="partlyChecked"
-                       :disabled="selectableRobots.length === 0">
-            </span>
-            <img class="robot-icon" :src="robotIcon" alt="">
+        <div class="category-item-container" @click="toggle">
+            <i class="arrow right" v-bind:class="{down: opened}"></i>
             <div class="category-item">
                 <span class="title">机器人</span>
-                <span class="desc">{{ pickedCount }}<template v-if="robotList.length !== pickedCount">/{{ robotList.length }}</template></span>
+                <span class="desc">{{ robotList.length }}</span>
             </div>
-            <i class="row-chevron icon-ion-ios-arrow-right"></i>
         </div>
-        <div v-else class="robot-pick-view">
-            <div class="back" @click="close">返回</div>
+        <div v-show="opened" class="robot-inline-list">
             <ul>
                 <li v-for="robot in filteredRobots" :key="robot.uid">
                     <div class="robot-item"
@@ -28,9 +19,9 @@
                                type="checkbox"
                                :checked="isPicked(robot)"
                                :disabled="isUncheckable(robot)">
+                        <span v-else class="radio" :class="{checked: isPicked(robot)}"></span>
                         <img class="avatar" :src="robot.portrait" alt="" @error="onPortraitError">
                         <span class="name single-line">{{ robot._displayName || robot.displayName }}</span>
-                        <i v-if="!multiSelect && isPicked(robot)" class="check-icon icon-ion-ios-checkmark"></i>
                     </div>
                 </li>
                 <li v-if="filteredRobots.length === 0">
@@ -150,32 +141,8 @@ export default {
                 }
             });
         },
-        open() {
-            this.opened = true;
-            this.$emit('open-change', true);
-            this.scrollCategoryToTop();
-        },
-        close() {
-            this.opened = false;
-            this.$emit('open-change', false);
-            this.scrollCategoryToTop();
-        },
-        // 切换列表后把选人页的滚动位置回到顶部，免得停在上一个列表的中间
-        scrollCategoryToTop() {
-            this.$nextTick(() => {
-                let container = this.$el && this.$el.closest ? this.$el.closest('.pick-category-container') : null;
-                if (container) {
-                    container.scrollTop = 0;
-                }
-            });
-        },
-        toggleAll() {
-            let pick = !this.allChecked;
-            this.selectableRobots.forEach(robot => {
-                if (store.isUserPicked(robot) !== pick) {
-                    store.pickOrUnpickUser(robot);
-                }
-            });
+        toggle() {
+            this.opened = !this.opened;
         },
         clickRobot(robot) {
             if (this.isUncheckable(robot)) {
@@ -194,7 +161,8 @@ export default {
             if (!store.isUserPicked(robot)) {
                 store.pickOrUnpickUser(robot);
             }
-            this.close();
+            // 单选：选中机器人后回到原选人流程，由原来的确定按钮提交
+            this.opened = false;
         },
         isPicked(robot) {
             return store.isUserPicked(robot);
@@ -240,94 +208,75 @@ export default {
 }
 
 .category-item .desc {
-    margin-right: 8px;
+    margin-right: 16px;
+    flex-shrink: 0;
     color: var(--text-secondary);
     font-size: var(--font-size-xs);
 }
 
-/* 带彩色背景的机器人图标（与组织 / 部门图标同一套视觉） */
-.robot-icon {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-    border-radius: var(--radius-sm);
-    margin-right: 8px;
+/* 机器人列表直接展开在分组下面，和联系人列表一致 */
+.robot-inline-list {
+    background-color: var(--background-primary);
 }
 
-.row-chevron {
-    flex-shrink: 0;
-    margin-right: 16px;
-    font-size: var(--font-size-lg);
-    color: var(--text-tertiary);
-}
-
-.checkbox-wrapper {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding-right: 10px;
-    flex-shrink: 0;
-}
-
-.checkbox-wrapper input[type="checkbox"] {
-    cursor: pointer;
-}
-
-.robot-pick-view .back {
-    height: 40px;
-    display: flex;
-    align-items: center;
-    padding-left: 16px;
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    background-color: var(--background-item-normal);
-    cursor: pointer;
-    transition: background var(--duration-fast);
-}
-
-.robot-pick-view .back:hover {
-    background-color: var(--background-item-hover);
-}
-
-.robot-pick-view ul {
+.robot-inline-list ul {
     list-style: none;
-    width: 100%;
+    margin: 0;
+    padding: 0;
 }
 
 .robot-item {
     display: flex;
     align-items: center;
-    height: 56px;
-    padding: 0 20px;
-    font-size: var(--font-size-base);
+    height: 48px;
+    padding: 0 16px 0 32px;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
     cursor: pointer;
 }
 
 .robot-item:hover {
-    background: var(--background-item-hover);
+    background-color: var(--background-item-hover);
 }
 
 .robot-item.checked {
-    background-color: var(--background-item-placeholder);
+    background-color: var(--background-selected-dim);
 }
 
 .robot-item.disabled {
-    pointer-events: none;
     opacity: 0.5;
+    pointer-events: none;
 }
 
 .robot-item .checkbox {
-    margin-right: 8px;
+    width: 16px;
+    height: 16px;
+    margin-right: 12px;
     flex-shrink: 0;
-    cursor: pointer;
+}
+
+.robot-item .radio {
+    width: 14px;
+    height: 14px;
+    margin-right: 12px;
+    flex-shrink: 0;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-circle);
+    background: transparent;
+}
+
+.robot-item .radio.checked {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
 }
 
 .robot-item .avatar {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
     flex-shrink: 0;
     border-radius: var(--radius-sm);
-    margin-right: 8px;
+    object-fit: cover;
 }
 
 .robot-item .name {
@@ -335,17 +284,30 @@ export default {
     min-width: 0;
 }
 
-.robot-item .check-icon {
-    flex-shrink: 0;
-    color: var(--accent-color);
-    font-size: var(--font-size-lg);
-}
-
 .no-result {
-    padding: 20px;
+    padding: 20px 32px;
     color: var(--text-secondary);
-    text-align: center;
-    font-size: var(--font-size-base);
+    text-align: left;
+    font-size: var(--font-size-sm);
 }
 
+.arrow {
+    border: solid var(--contact-arrow-border);
+    border-width: 0 1px 1px 0;
+    display: inline-block;
+    padding: 3px;
+    margin-right: 8px;
+    flex-shrink: 0;
+    transition: transform var(--duration-fast);
+}
+
+.right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}
+
+.down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
 </style>
