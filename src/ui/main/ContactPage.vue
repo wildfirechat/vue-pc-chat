@@ -13,6 +13,9 @@
         <OrganizationDetailView
             v-else-if="sharedContactState.currentOrganization"
             class="contact-detail-container"/>
+        <OrganizationRobotListView
+            v-else-if="sharedContactState.currentOrganizationRobots"
+            class="contact-detail-container"/>
         <DomainInfoView
             v-else-if="sharedContactState.currentExternalDomain"
             class="contact-detail-container"/>
@@ -50,6 +53,7 @@ import FriendRequestDetailView from "./contact/FrienRequestDetailView.vue";
 import ChannelListView from "./contact/ChannelListView";
 import ChannelDetailView from "./contact/ChannelDetailView";
 import OrganizationDetailView from "./contact/OrganizationTreeView.vue";
+import OrganizationRobotListView from "./contact/OrganizationRobotListView.vue";
 import ChatroomListView from "./contact/ChatroomListView.vue";
 import ChatroomDetailView from "./contact/ChatroomDetailView.vue";
 import DomainInfoView from "./contact/DomainInfoView.vue";
@@ -74,6 +78,7 @@ export default {
         GroupDetailView,
         ContactListPanel,
         OrganizationDetailView,
+        OrganizationRobotListView,
     },
 };
 </script>

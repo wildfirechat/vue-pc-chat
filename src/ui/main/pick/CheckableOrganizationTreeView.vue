@@ -151,6 +151,9 @@ export default {
             sections.forEach(section => {
                 this.loadOrganizationContent(section, section.rootOrg.id);
             });
+            // 组织结构已经取到了，顺手按根公司请求一次组织架构机器人（每个启动周期只请求一次）
+            store.loadOrganizationRobots();
+            this.notifyDepthChange();
             const keyword = (this.searchQuery || '').trim();
             if (keyword) {
                 this.search(keyword);
@@ -213,6 +216,16 @@ export default {
         toggleRootOrgSection(section) {
             section.expanded = !section.expanded;
         },
+        /**
+         * 把当前停在组织树第几层告诉选人页：「机器人」入口只在最外层显示，进到组织内部就隐藏
+         */
+        notifyDepthChange() {
+            let depth = 1;
+            this.orgSections.forEach(section => {
+                depth = Math.max(depth, section.pathList ? section.pathList.length : 1);
+            });
+            this.$emit('depth-change', depth);
+        },
         sectionDesc(section) {
             if (this.searchMode) {
                 return section.searchResults.length;
@@ -274,6 +287,7 @@ export default {
             } else {
                 section.pathList = [...section.pathList, org];
             }
+            this.notifyDepthChange();
             this.scrollNavToEnd(section.rootOrg.id);
             this.scrollSectionIntoView(section.rootOrg.id);
             this.loadOrganizationContent(section, org.id);

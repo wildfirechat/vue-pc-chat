@@ -78,6 +78,8 @@ export const pstore = (id) => defineStore(id, () => {
         currentExternalDomain: null,
         currentChatroom: null,
         currentUser: null,
+        // 第三栏显示「机器人」列表（组织架构机器人），与组织树互斥
+        currentOrganizationRobots: false,
 
         expandFriendRequestList: false,
         expandFriendList: true,
@@ -94,6 +96,8 @@ export const pstore = (id) => defineStore(id, () => {
         channelList: [],
         favContactList: [],
         aiRobotList: [],
+        // 组织架构机器人（UserInfo 列表），按 sort 升序、跨公司去重
+        organizationRobots: [],
 
         selfUserInfo: null,
         contextMenuUserInfo: null,
@@ -109,6 +113,7 @@ export const pstore = (id) => defineStore(id, () => {
             this.currentOrganization = null;
             this.currentChatroom = null;
             this.currentUser = null;
+            this.currentOrganizationRobots = false;
 
             this.expandFriendRequestList = false;
             this.expandFriendList = true;
@@ -122,6 +127,7 @@ export const pstore = (id) => defineStore(id, () => {
             this.channelList = [];
             this.favContactList = [];
             this.aiRobotList = [];
+            this.organizationRobots = [];
 
             this.selfUserInfo = null;
             this.contextMenuUserInfo = null;

@@ -518,6 +518,10 @@ export default {
                     }
                 }
                 organizationServerApi.login()
+                    .then(() => {
+                        // 组织结构服务登录成功后，按根公司取组织架构机器人（启动时只取一次）
+                        store.loadOrganizationRobots();
+                    })
                     .catch(r => {
                         console.error('organizationServer login failed', r)
                     });

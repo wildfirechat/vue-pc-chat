@@ -8,25 +8,36 @@
             </div>
             <template v-if="showOrganization && orgServiceAvailable">
                 <div class="pick-category-container">
-                    <CheckableOrganizationTreeView :search-query="filterQuery"/>
+                    <!-- 机器人：组织架构入口下独立的分组，只在选人页最外层显示 -->
+                    <RobotPickEntry :visible="!insideOrganization"
+                                    :search-query="filterQuery"
+                                    :initial-checked-users="initialCheckedUsers"
+                                    :uncheckable-users="uncheckableUsers"
+                                    @open-change="robotViewOpened = $event"/>
 
-                    <div class="contact-category-section">
-                        <div @click="toggleContactSection" class="category-item-container">
-                            <i class="arrow right" v-bind:class="{down: expandContactSection}"></i>
-                            <div class="category-item">
-                                <span class="title">联系人</span>
-                                <span class="desc">{{ filterUsers.length }}</span>
+                    <!-- 机器人列表打开时把组织树和联系人收起来，返回后原样恢复 -->
+                    <div v-show="!robotViewOpened">
+                        <CheckableOrganizationTreeView :search-query="filterQuery"
+                                                       @depth-change="insideOrganization = $event > 1"/>
+
+                        <div class="contact-category-section">
+                            <div @click="toggleContactSection" class="category-item-container">
+                                <i class="arrow right" v-bind:class="{down: expandContactSection}"></i>
+                                <div class="category-item">
+                                    <span class="title">联系人</span>
+                                    <span class="desc">{{ filterUsers.length }}</span>
+                                </div>
                             </div>
-                        </div>
-                        <div v-show="expandContactSection" class="friend-list-container">
-                            <CheckableUserListView :enable-pick="true"
-                                                   :users="filterUsers"
-                                                   :initial-checked-users="initialCheckedUsers"
-                                                   :uncheckable-users="uncheckableUsers"
-                                                   :show-category-label="showCategoryLabel && !filterQuery"
-                                                   :padding-left="'20px'"
-                                                   :virtual-list-style="{ 'max-height': '600px', 'overflow-y': 'auto' }"
-                                                   enable-category-label-sticky/>
+                            <div v-show="expandContactSection" class="friend-list-container">
+                                <CheckableUserListView :enable-pick="true"
+                                                       :users="filterUsers"
+                                                       :initial-checked-users="initialCheckedUsers"
+                                                       :uncheckable-users="uncheckableUsers"
+                                                       :show-category-label="showCategoryLabel && !filterQuery"
+                                                       :padding-left="'20px'"
+                                                       :virtual-list-style="{ 'max-height': '600px', 'overflow-y': 'auto' }"
+                                                       enable-category-label-sticky/>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -83,6 +94,7 @@
 import store from "../../../store";
 import CheckableUserListView from "../user/CheckableUserListView.vue";
 import CheckableOrganizationTreeView from "./CheckableOrganizationTreeView.vue";
+import RobotPickEntry from "./RobotPickEntry.vue";
 import Config from "../../../config";
 import organizationServerApi from "../../../api/organizationServerApi";
 import UserInfo from "../../../wfc/model/userInfo";
@@ -133,6 +145,10 @@ export default {
             sharedPickState: store.state.pick,
             filterQuery: '',
             expandContactSection: true,
+            // 机器人列表是否展开：展开时收起组织树和联系人
+            robotViewOpened: false,
+            // 是否已经进到某个组织内部：组织内部不显示机器人入口
+            insideOrganization: false,
             defaultOrganizationPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
             orgServiceAvailable: organizationServerApi.isServiceAvailable,
         }
@@ -229,7 +245,7 @@ export default {
         }
     },
 
-    components: {CheckableOrganizationTreeView, CheckableUserListView},
+    components: {RobotPickEntry, CheckableOrganizationTreeView, CheckableUserListView},
 }
 </script>
 

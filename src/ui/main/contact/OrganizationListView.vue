@@ -20,6 +20,16 @@
                     </div>
                 </div>
             </li>
+            <!-- 组织架构入口下独立的「机器人」item，和根组织 / 部门平级；没有机器人数据时不显示 -->
+            <li v-if="organizationRobots.length" @click="showRobots">
+                <div class="organization-item robot-item" v-bind:class="{active: sharedContactState.currentOrganizationRobots}">
+                    <img class="avatar robot-avatar" :src="robotPortraitUrl">
+                    <div class="item-info">
+                        <p class="single-line">机器人</p>
+                    </div>
+                    <span class="robot-count">{{ organizationRobots.length }}</span>
+                </div>
+            </li>
         </ul>
     </section>
 
@@ -41,9 +51,17 @@ export default {
             myOrganizations: [],
             defaultPortraitUrl: Config.DEFAULT_ORGANIZATION_PORTRAIT_URL,
             defaultDepartmentPortraitUrl: Config.DEFAULT_DEPARTMENT_PORTRAIT_URL,
+            robotPortraitUrl: Config.DEFAULT_ROBOT_PORTRAIT_URL,
         }
     },
+    computed: {
+        organizationRobots() {
+            return this.sharedContactState.organizationRobots;
+        },
+    },
     mounted() {
+        // 启动时已经请求过的话这里直接复用；组织结构服务没登录好时补一次
+        store.loadOrganizationRobots();
         organizationServerApi.getRootOrganization()
             .then(orgs => {
                 this.rootOrganizations = orgs;
@@ -73,6 +91,10 @@ export default {
         },
         showOrganization(organization) {
             store.setCurrentOrganization(organization)
+        },
+        // 进入独立的机器人列表（第三栏），与组织树节点分开
+        showRobots() {
+            store.setCurrentOrganizationRobots();
         },
     },
 }
@@ -104,6 +126,18 @@ export default {
     min-width: 0;
     overflow: hidden;
     padding-left: 8px;
+}
+
+/* 「机器人」item：带彩色背景的机器人图标，右侧显示个数，跟组织条目同一行高 */
+.robot-item .robot-avatar {
+    border-radius: var(--radius-sm);
+}
+
+.robot-count {
+    flex-shrink: 0;
+    margin-right: 8px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
 }
 
 .organization-item span {

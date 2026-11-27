@@ -54,6 +54,7 @@ import Long from "long";
 import StreamingTextGeneratedMessageContent from './wfc/messages/streamingTextGeneratedMessageContent'
 import StreamingTextGeneratingMessageContent from './wfc/messages/streamingTextGeneratingMessageContent'
 import StreamingTextCancelledMessageContent from './wfc/messages/streamingTextCancelledMessageContent'
+import organizationServerApi from './api/organizationServerApi'
 
 /**
  * 一些说明
@@ -93,6 +94,11 @@ let conversationSearchSeq = 0;
 
 // 会话名称搜索用的名称缓存：key 为 raw conversation 对象，见 store._getConversationDisplayNamesForSearch
 const conversationNameCache = new WeakMap();
+
+// 组织架构机器人缓存：按人存在 storageHelper 里，启动先恢复缓存，本次启动再向组织服务请求一次
+const ORG_ROBOTS_CACHE_PREFIX = 'organization-robots-';
+// 请求失败（组织结构服务还没登录好/网络抖动）后过一会儿再重试，避免每次展开入口都发请求
+const ORG_ROBOTS_RETRY_INTERVAL = 10 * 1000;
 
 /**
  * 判断是否为同一条消息。
@@ -643,6 +649,9 @@ let store = {
             if (key === 'theme') {
                 this.state.misc.theme = e.newValue || 'system';
                 this.applyTheme();
+            } else if (key.startsWith(ORG_ROBOTS_CACHE_PREFIX)) {
+                // 主窗口请求完机器人写了缓存，子窗口（独立会话窗口等）跟着刷新
+                this.restoreOrganizationRobots(true);
             } else if (key === 'fontScale') {
                 this.state.misc.fontScale = parseFloat(e.newValue) || 1;
                 this.applyFontScale();
@@ -681,6 +690,9 @@ let store = {
         (isMainWindow || loadOptions.loadFriendList) && this._loadAiRobotList();
         (isMainWindow || loadOptions.loadFriendRequestList) && this._loadFriendRequest();
         (isMainWindow || loadOptions.loadDefaultConversationList) && this._loadDefaultConversationList();
+        // 组织架构机器人：先恢复上次启动的缓存，再由主窗口按本次启动向组织服务请求一次
+        this.restoreOrganizationRobots();
+        isMainWindow && this.loadOrganizationRobots();
         this._loadSelfUserInfo();
         this._loadUserLocalSettings();
         this.state.conversation.isMessageReceiptEnable = wfc.isReceiptEnabled() && wfc.isUserReceiptEnabled();
@@ -804,6 +816,7 @@ let store = {
         if (this.state.contact.aiRobotList.length === 0 && Config.getAiRobotIds().length > 0) {
             this._loadAiRobotList();
         }
+        this.restoreOrganizationRobots();
     },
 
     _loadDefaultConversationList() {
@@ -2078,7 +2091,119 @@ let store = {
         this._loadFavGroupList();
     },
 
+    _orgRobotsCacheKey() {
+        let userId = wfc.getUserId();
+        return userId ? ORG_ROBOTS_CACHE_PREFIX + userId : '';
+    },
+
+    /**
+     * 组织架构机器人：先把上次缓存的恢复出来。组织结构服务的登录比 IM 慢，缓存能让入口在
+     * 请求回来之前就显示（对齐 iOS WFCUOrganizationCache 启动恢复 robots 的行为）
+     * @param {boolean} force 别的窗口更新缓存后强制再读一次
+     */
+    restoreOrganizationRobots(force = false) {
+        let key = this._orgRobotsCacheKey();
+        if (!key || (!force && this._orgRobotsRestoredKey === key)) {
+            return;
+        }
+        this._orgRobotsRestoredKey = key;
+        let robots;
+        try {
+            robots = JSON.parse(getItem(key) || 'null');
+        } catch (e) {
+            console.error('parse organization robots cache error', e);
+            return;
+        }
+        if (Array.isArray(robots) && robots.length > 0) {
+            this.state.contact.organizationRobots = robots
+                .filter(r => r && r.robotId)
+                .map(r => organizationServerApi.robotToUserInfo(r));
+        }
+    },
+
+    /**
+     * 登录 / 取到根组织后按根公司请求组织架构机器人，合并去重、缓存并刷新 UI。
+     * 联系人、选人、转发等多个入口同时进来时共用同一个请求，本次启动只请求一次
+     */
+    loadOrganizationRobots() {
+        this.restoreOrganizationRobots();
+        if (this._orgRobotsPromise) {
+            return this._orgRobotsPromise;
+        }
+        if (this._orgRobotsLoaded || Date.now() < (this._orgRobotsRetryAt || 0)) {
+            return Promise.resolve(this.state.contact.organizationRobots);
+        }
+        this._orgRobotsPromise = this._requestOrganizationRobots()
+            .catch(e => {
+                console.error('load organization robots failed', e);
+                this._orgRobotsRetryAt = Date.now() + ORG_ROBOTS_RETRY_INTERVAL;
+                return this.state.contact.organizationRobots;
+            })
+            .finally(() => {
+                this._orgRobotsPromise = null;
+            });
+        return this._orgRobotsPromise;
+    },
+
+    async _requestOrganizationRobots() {
+        // 请求过程中可能退出登录 / 换账号，回来时按发起时的账号判断，别把结果写给别人
+        let requestUserId = wfc.getUserId();
+        let rootOrganizations;
+        try {
+            rootOrganizations = await organizationServerApi.getRootOrganization();
+        } catch (e) {
+            // 组织结构服务的登录是 IM 登录成功后异步发起的，此时可能还没有 token，补一次登录再取
+            await organizationServerApi.login();
+            rootOrganizations = await organizationServerApi.getRootOrganization();
+        }
+        let companyIds = [...new Set((rootOrganizations || [])
+            .filter(o => o && o.id > 0)
+            .map(o => o.id))];
+        if (companyIds.length === 0) {
+            this._orgRobotsLoaded = true;
+            return this.state.contact.organizationRobots;
+        }
+        let results = await Promise.all(companyIds.map(companyId => organizationServerApi
+            .getCompanyRobots(companyId)
+            .catch(e => {
+                console.error('get company robots failed', companyId, e);
+                return null;
+            })));
+        // 全部公司都失败时保留缓存，避免网络抖动把机器人分组清空（对齐 iOS）
+        if (results.every(robots => robots === null)) {
+            this._orgRobotsRetryAt = Date.now() + ORG_ROBOTS_RETRY_INTERVAL;
+            return this.state.contact.organizationRobots;
+        }
+        let robotIds = new Set();
+        let robots = [];
+        // 按根公司顺序合并，同一机器人在多个公司重复时只显示一次
+        results.forEach((list, index) => {
+            (list || []).forEach(robot => {
+                if (!robot || !robot.robotId || robotIds.has(robot.robotId)) {
+                    return;
+                }
+                robotIds.add(robot.robotId);
+                robots.push({...robot, companyId: robot.companyId || companyIds[index]});
+            });
+        });
+        // 按 sort 升序；sort 相同的保持接口 / 公司的先后顺序
+        robots.sort((a, b) => (Number(a.sort) || 0) - (Number(b.sort) || 0));
+
+        if (wfc.getUserId() !== requestUserId) {
+            return this.state.contact.organizationRobots;
+        }
+        let cacheKey = this._orgRobotsCacheKey();
+        if (cacheKey) {
+            setItem(cacheKey, JSON.stringify(robots));
+        }
+        this.state.contact.organizationRobots = robots.map(r => organizationServerApi.robotToUserInfo(r));
+        this._orgRobotsLoaded = true;
+        this._orgRobotsRetryAt = 0;
+        return this.state.contact.organizationRobots;
+    },
+
     setCurrentFriendRequest(friendRequest) {
+        this.state.contact.currentOrganizationRobots = false;
         this.state.contact.currentFriendRequest = friendRequest;
         this.state.contact.currentFriend = null;
         this.state.contact.currentOrganization = null;
@@ -2089,6 +2214,7 @@ let store = {
     },
 
     setCurrentFriend(friend) {
+        this.state.contact.currentOrganizationRobots = false;
         this.state.contact.currentFriendRequest = null;
         this.state.contact.currentFriend = friend;
         this.state.contact.currentOrganization = null;
@@ -2099,6 +2225,7 @@ let store = {
     },
 
     setCurrentGroup(group) {
+        this.state.contact.currentOrganizationRobots = false;
         this.state.contact.currentFriendRequest = null;
         this.state.contact.currentFriend = null;
         this.state.contact.currentOrganization = null;
@@ -2109,6 +2236,7 @@ let store = {
     },
 
     setCurrentChannel(channel) {
+        this.state.contact.currentOrganizationRobots = false;
         this.state.contact.currentFriendRequest = null;
         this.state.contact.currentFriend = null;
         this.state.contact.currentOrganization = null;
@@ -2119,6 +2247,7 @@ let store = {
     },
 
     setCurrentOrganization(organization) {
+        this.state.contact.currentOrganizationRobots = false;
         this.state.contact.currentFriendRequest = null;
         this.state.contact.currentFriend = null;
         this.state.contact.currentGroup = null;
@@ -2129,6 +2258,7 @@ let store = {
     },
 
     setCurrentExternalDomain(domainInfo) {
+        this.state.contact.currentOrganizationRobots = false;
         this.state.contact.currentFriendRequest = null;
         this.state.contact.currentFriend = null;
         this.state.contact.currentGroup = null;
@@ -2138,7 +2268,22 @@ let store = {
         this.state.contact.currentExternalDomain = domainInfo;
     },
 
+    /**
+     * 联系人页第三栏显示组织架构机器人列表（与组织树互斥）
+     */
+    setCurrentOrganizationRobots() {
+        this.state.contact.currentFriendRequest = null;
+        this.state.contact.currentFriend = null;
+        this.state.contact.currentGroup = null;
+        this.state.contact.currentChannel = null;
+        this.state.contact.currentChatroom = null;
+        this.state.contact.currentOrganization = null;
+        this.state.contact.currentExternalDomain = null;
+        this.state.contact.currentOrganizationRobots = true;
+    },
+
     setCurrentChatroom(chatroom) {
+        this.state.contact.currentOrganizationRobots = false;
         this.state.contact.currentFriendRequest = null;
         this.state.contact.currentFriend = null;
         this.state.contact.currentGroup = null;
@@ -3025,6 +3170,11 @@ let store = {
         this.state.search._reset();
         this.state.pick._reset();
         this.state.misc._reset();
+        // 退出登录后下次登录要重新恢复缓存、重新请求一次机器人
+        this._orgRobotsLoaded = false;
+        this._orgRobotsRestoredKey = '';
+        this._orgRobotsRetryAt = 0;
+        this._orgRobotsPromise = null;
     },
 
     destroy() {

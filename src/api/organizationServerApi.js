@@ -76,6 +76,15 @@ export class OrganizationServerApi {
         return this._post('/api/organization/root');
     }
 
+    /**
+     * 公司根组织下配置的机器人（组织架构机器人），接口按 sort 升序返回
+     * @param {number} companyId 公司根组织 ID
+     * @return {Promise<Array>}
+     */
+    getCompanyRobots(companyId) {
+        return this._post('/api/company/robots', {companyId});
+    }
+
     getRelationShip(employeeId) {
         return this._post('/api/relationship/employee', {employeeId});
     }
@@ -188,6 +197,25 @@ export class OrganizationServerApi {
 
     employeePortraitUrl(employee) {
         return employee.portrait ? employee.portrait : Config.getAppServer() + '/avatar?name=' + encodeURIComponent(employee.name);
+    }
+
+    /**
+     * 组织架构机器人转成 UserInfo：机器人入口、机器人列表、选人（单选/多选）都用这套字段，
+     * 选人结果按 uid（即 robotId）回到原有的选人回调里
+     * @param {object} robot {companyId, robotId, robotName, portraitUrl, sort}
+     * @return {UserInfo}
+     */
+    robotToUserInfo(robot) {
+        let userInfo = new UserInfo();
+        userInfo.uid = robot.robotId;
+        userInfo.name = robot.robotName || robot.robotId;
+        userInfo.displayName = userInfo.name;
+        userInfo._displayName = userInfo.name;
+        userInfo.portrait = robot.portraitUrl ? robot.portraitUrl : Config.DEFAULT_ROBOT_PORTRAIT_URL;
+        //0 normal; 1 robot; 2 thing;
+        userInfo.type = 1;
+        userInfo.deleted = 0;
+        return userInfo;
     }
 
     // 加上服务前缀，与其他服务（如 app-server）区分开，host 相同时 token 不会互相覆盖
